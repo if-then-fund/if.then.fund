@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# This script can be used in hash-bang lines to invoke a Python script in the local
+# environment and following Django initialization. For Python 3.
+
+. .env/bin/activate
+
+export DJANGO_SETTINGS_MODULE=civresp.settings
+export PYTHONPATH=.
+
+python -u -W ignore /dev/stdin $@ << EOF;
+
+import django
+django.setup()
+
+import sys
+sys.argv.pop(0) # /dev/stdin (i.e. the name of this script)
+
+with open(sys.argv[0]) as f:
+    code = compile(f.read(), sys.argv[0], 'exec')
+    exec(code)
+EOF

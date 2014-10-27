@@ -1,0 +1,30 @@
+/* Global styles */
+
+@import url(http://fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic);
+@import url(http://fonts.googleapis.com/css?family=Roboto+Slab:400,300,700);
+
+body {
+	font-family: 'Noto Serif', serif;
+	font-size: 17px;
+}
+
+footer {
+	font-size: 14px;
+}
+
+.navbar, h1, h2, h3, h4, h5, h6 {
+	font-family: 'Roboto Slab', serif;
+}
+
+h1 {
+	margin: 1em 0;
+}
+
+h2 {
+	margin: 1.25em 0 1em 0;
+	font-size: 24px;
+}
+
+h3 {
+	font-size: 20px;
+}

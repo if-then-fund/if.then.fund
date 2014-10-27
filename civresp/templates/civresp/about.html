@@ -1,0 +1,55 @@
+{% extends "master.html" %}
+
+{% block title %}About{% endblock %}
+
+{% block head %}
+<style>
+
+.team h3 {
+	margin: 1.5em 0 1em 0;
+}
+	.team h3 span {
+		font-size: 80%;
+		font-weight: lighter;
+	}
+
+.team img {
+	float: left;
+	margin: 0 1.25em 0 0;
+	width: 130px;
+	height: 175px;
+	border: 1px solid #AAA;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<h1>About</h1>
+
+<div class="row">
+	<div class="col-sm-6">
+		<p>if.then.fund is a project to do stuff.</p>
+
+		<h2>How it works</h2>
+		<p>...</p>
+
+		<h2>Why it works</h2>
+		<p>...</p>
+	</div>
+
+	<div class="col-sm-6 team">
+		<h2>Team</h2>
+
+		<h3>Jonathan Zucker<span>, co-founder</span></h3>
+		<img class='team-photo' src='/static/team/zucker.jpeg'>
+		<p>Jonathan Zucker is a entrepreneur.</p>
+		<div class="clearfix"> </div>
+
+		<h3>Joshua Tauberer<span>, co-founder</span></h3>
+		<img class='team-photo' src='/static/team/tauberer.jpeg'>
+		<p>Joshua Tauberer is a entrepreneur.</p>
+		<div class="clearfix"> </div>
+	</div>
+</div>
+
+{% endblock %}
