@@ -14,6 +14,11 @@ class TriggerState(enum.Enum):
 	Executed = 3
 	Vacated = 4
 
+@django_enum
+class TextFormat(enum.Enum):
+	HTML = 0
+	Markdown = 1
+
 class Trigger(models.Model):
 	"""A future event that triggers a camapaign contribution, such as a roll call vote in Congress."""
 
@@ -25,12 +30,88 @@ class Trigger(models.Model):
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
-	slug = models.SlugField(help_text="The URL slug for this trigger.")
+	slug = models.SlugField(max_length=200, help_text="The URL slug for this trigger.")
 	description = models.TextField(help_text="Description text in Markdown.")
+	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 	state = EnumField(TriggerState, default=TriggerState.Draft, help_text="The current status of the trigger: Open (accepting pledges), Paused (not accepting pledges), Executed (funds distributed), Vacated (existing pledges invalidated).")
-	outcomes = JSONField(default=[], help_text="An array of information for each possible outcome of the trigger, e.g. ['Voted Yes', 'Voted No'].")
+	outcomes = JSONField(default=[], help_text="An array (order matters!) of information for each possible outcome of the trigger, e.g. ['Voted Yes', 'Voted No'].")
 
+	strings = JSONField(default={}, help_text="Display strings.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
+
+	total_pledged = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of pledges, i.e. prior to execution.")
+	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed (including pending contributions, but not vacated or aborted contributions).")
+
+	def get_absolute_url(self):
+		return "/a/%d/%s" % (self.id, self.slug)
+
+	### constructor
+
+	@staticmethod
+	def new_from_bill(bill_id, chamber):
+		# split/validate the bill ID
+		import re
+		m = re.match("^([a-z]+)(\d+)-(\d+)$", bill_id)
+		if not m: raise ValueError("Not a bill ID, e.g. hr1234-114.")
+		bill_type, bill_number, bill_congress = m.groups()
+		bill_type = { "hres": "house_resolution", "s": "senate_bill", "sjres": "senate_joint_resolution", "hr": "house_bill", "hconres": "house_concurrent_resolution", "sconres": "senate_concurrent_resolution", "hjres": "house_joint_resolution", "sres": "senate_resolution" }.get(bill_type)
+		if not bill_type: raise ValueError("Not a bill ID, e.g. hr1234-114.")
+
+		# validate chamber
+		if chamber not in ('s', 'h'): raise ValueError("Chamber must be one of 'h' or 's'.")
+		chamber_name = { 's': 'Senate', 'h': 'House' }[chamber]
+		chamber_actors = { 's': 'senators', 'h': 'representatives' }[chamber]
+
+		# get bill data from GovTrack
+		from pledge.utils import query_json_api
+		bill_search = query_json_api("https://www.govtrack.us/api/v2/bill", {
+			"bill_type": bill_type, "number": bill_number, "congress": bill_congress })
+		if len(bill_search['objects']) == 0: raise ValueError("Not a bill.")
+		if len(bill_search['objects']) > 1: raise ValueError("Matched multiple bills?")
+
+		bill = bill_search['objects'][0]
+		if not bill['is_alive']: raise ValueError("Bill is not alive.")
+
+		# we're going to cache the bill info, so add a timestamp for the retreival date
+		import datetime
+		bill['as_of'] = datetime.datetime.now().isoformat()
+
+		# create object
+		t = Trigger()
+		t.key = "usbill:" + bill_id + ":" + chamber
+		t.title = chamber_name + " Vote on " + bill['title']
+
+		from django.contrib.auth.models import User
+		t.owner = User.objects.get(username='admin')
+
+		from django.template.defaultfilters import slugify
+		t.slug = slugify(t.title)
+
+		t.description = "The %s will soon vote on %s." % (chamber_name, bill["title"])
+		t.description_format = TextFormat.Markdown
+
+		short_title = bill["display_number"]
+		t.outcomes = [
+			{ "vote_key": "+", "label": "Yes on %s" % short_title },
+			{ "vote_key": "-", "label": "No on %s" % short_title },
+		]
+		t.strings = {
+			"actors": chamber_actors,
+			"action": "vote",
+		}
+
+		t.extra = {
+			"type": "usbill",
+			"bill_id": bill_id,
+			"chamber": chamber,
+			"govtrack_bill_id": bill["id"],
+			"bill_info": bill,
+		}
+
+		# save and return
+		t.save()
+		return t
+
 
 class TriggerStatusUpdate(models.Model):
 	"""A status update about the Trigger providing further information to users looking at the Trigger that was not known when the Trigger was created."""
@@ -39,6 +120,7 @@ class TriggerStatusUpdate(models.Model):
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True)
 	text = models.TextField(help_text="Status update text in Markdown.")
+	text_format = EnumField(TextFormat, help_text="The format of the text.")
 
 class TriggerExecution(models.Model):
 	"""How a Trigger was executed."""
@@ -51,6 +133,7 @@ class TriggerExecution(models.Model):
 	cycle = models.IntegerField(help_text="The election cycle (year) that the trigger was executed in.")
 
 	description = models.TextField(help_text="Once a trigger is executed, additional text added to explain how funds were distributed.")
+	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
 class Actor(models.Model):
 	"""A public figure, e.g. elected official with an active election campaign, who might take an action."""
@@ -82,9 +165,9 @@ class Pledge(models.Model):
 	algorithm = models.IntegerField(default=0, help_text="In case we change our terms & conditions, or our explanation of how things work, an integer indicating the terms and expectations at the time the user made the pledge.")
 
 	desired_outcome = models.IntegerField(help_text="The outcome index that the user desires.")
-	amount = models.FloatField(help_text="The pledge amount in dollars.")
+	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The pledge amount in dollars, not including fees.")
 	incumb_challgr = models.FloatField(help_text="A float indicating how to split the pledge: -1 (to challenger only) <=> 0 (evenly split between incumbends and challengers) <=> +1 (to incumbents only)")
-	filter_party = models.CharField(max_length=1, choices=[('D', 'D'), ('R', 'R')], blank=True, null=True, help_text="Whether to filter contributions to one of the major parties ('D' or 'R'), or null to not filter.")
+	filter_party = models.CharField(max_length=3, blank=True, help_text="A string containing one or more of the characters 'D' 'R' and 'I' that filters contributions to only candidates whose party matches on of the included characters.")
 	filter_competitive = models.BooleanField(default=False, help_text="Whether to filter contributions to competitive races.")
 
 	cancelled = models.BooleanField(default=False, help_text="True if the user cancels the pledge prior to execution.")
@@ -104,10 +187,10 @@ class PledgeExecution(models.Model):
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 
-	charged = models.FloatField(help_text="The amount the user's account was actually charged, in dollars. It may differ from the pledge amount to ensure that contributions of whole-cent amounts could be made to candidates.")
+	charged = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount the user's account was actually charged, in dollars. It may differ from the pledge amount to ensure that contributions of whole-cent amounts could be made to candidates, and it will include fees.")
 	fees = JSONField(help_text="A dictionary representing all fees on the charge.")
-	contributions_executed = models.FloatField(help_text="The total amount of executed camapaign contributions to-date.")
-	contributions_pending = models.FloatField(help_text="The current total amount of pending camapaign contributions.")
+	contributions_executed = models.DecimalField(max_digits=6, decimal_places=2, help_text="The total amount of executed camapaign contributions to-date.")
+	contributions_pending = models.DecimalField(max_digits=6, decimal_places=2, help_text="The current total amount of pending camapaign contributions.")
 
 class Campaign(models.Model):
 	"""A candidate in a particular election cycle."""
@@ -143,7 +226,7 @@ class Contribution(models.Model):
 
 	status = EnumField(ContributionStatus, help_text="The status of the contribution: Pending (opponent not known), Executed, Vacated (no opponent exists)")
 	execution_time = models.DateTimeField(blank=True, null=True, db_index=True)
-	amount = models.FloatField(help_text="The amount of the contribution, in dollars.")
+	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount of the contribution, in dollars.")
 
 	is_opponent = models.BooleanField(default=False, help_text="Is the target the actor (False) or the general election opponent of the actor (True)?")
 	recipient = models.ForeignKey(Campaign, on_delete=models.PROTECT, help_text="The Campaign this contribution was sent to.")

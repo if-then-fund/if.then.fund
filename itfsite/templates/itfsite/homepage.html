@@ -17,7 +17,9 @@
 	</div>
 
 	<div class="col-sm-6 team">
-		
+		{% for t in triggers %}
+			<p><a href="{{t.get_absolute_url}}">{{t.title}}</a></p>
+		{% endfor %}
 	</div>
 </div>
 

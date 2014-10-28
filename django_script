@@ -5,7 +5,7 @@
 
 . .env/bin/activate
 
-export DJANGO_SETTINGS_MODULE=civresp.settings
+export DJANGO_SETTINGS_MODULE=itfsite.settings
 export PYTHONPATH=.
 
 python -u -W ignore /dev/stdin $@ << EOF;

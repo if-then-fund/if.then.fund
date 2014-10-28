@@ -1,0 +1,88 @@
+{% extends "master.html" %}
+{% load itfsite_utils %}
+
+{% block title %}{{trigger.title}}{% endblock %}
+
+{% block head %}
+<style>
+
+</style>
+{% endblock %}
+
+{% block body %}
+
+<h1>{{trigger.title}}</h1>
+
+{# DESCRIPTION #}
+
+{{trigger.description|render_text:trigger.description_format}}
+
+{% if trigger.extra.type == "usbill" %}
+	<p class="text-muted small">More info on this {{trigger.extra.bill_info.noun}} can be found on <a href="{{trigger.extra.bill_info.link}}">GovTrack</a>.</p>
+{% endif %}
+
+{# USER ACTION #}
+
+{% if trigger.state|stringformat:'s' == 'TriggerState.Draft' %}
+	<p>This trigger is in draft status.</p>
+
+{% elif trigger.state|stringformat:'s' == 'TriggerState.Open' or trigger.state|stringformat:'s' == 'TriggerState.Paused' or trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
+	<div class="row">
+		<div class="col-sm-7">
+			{% if trigger.state|stringformat:'s' == 'TriggerState.Open' %}
+				{% include "pledge/pledge-form.html" %}
+
+			{% elif trigger.state|stringformat:'s' == 'TriggerState.Paused' %}
+				<h2>Take action</h2>
+				<p>This action is paused. We may be about to convert the pledges into campaign contributions or we may be researching whether the event occurred.</p>
+
+			{% elif trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
+				<h2>Closed</h2>
+				<p>This action has been cancelled. We determined that the event will likely never occur and have vacated all of the pledges.</p>
+
+			{% endif %}
+		</div>
+
+		<div class="col-sm-5">
+			<h2>Pledged Contributions</h2>
+
+			<div>${{trigger.total_pledged}}</div>
+			<p>has been pledged on both sides of this issue.</p>
+
+			<p>We can&rsquo;t reveal any more information prior to the vote.</p>
+
+			{% if trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
+				<p class="text-danger">Pledges were vacated.</p>
+			{% endif %}
+		</div>
+	</div>
+
+{# REPORT WHAT HAPPENED #}
+
+{% elif trigger.state|stringformat:'s' == 'TriggerState.Executed' %}
+	<div class="row">
+		<div class="col-sm-6">
+			<h2>Take action</h2>
+			<p>Lorem and ipsum.</p>
+		</div>
+
+		<div class="col-sm-6">
+			<h2>Contributions</h2>
+
+
+		</div>
+	</div>
+{% endif %}
+		
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+	$(function() {
+		{% if trigger.state|stringformat:'s' == 'TriggerState.Open' %}
+			update_state();
+		{% endif %}
+	})
+</script>
+{% endblock %}

@@ -21,7 +21,7 @@ INSTALLED_APPS = (
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
 
-	'civresp',
+	'itfsite',
 	'pledge',
 )
 
@@ -46,8 +46,8 @@ DATABASES = {
 
 # Settings
 
-ROOT_URLCONF = 'civresp.urls'
-WSGI_APPLICATION = 'civresp.wsgi.application'
+ROOT_URLCONF = 'itfsite.urls'
+WSGI_APPLICATION = 'itfsite.wsgi.application'
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
