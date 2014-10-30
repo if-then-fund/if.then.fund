@@ -1,177 +1,365 @@
 <style>
 #make-pledge {
-	margin-top: 1em;
+  margin-top: 1em;
 }
 #make-pledge p {
-	margin: 1.5em 0;
-	text-align: center;
+  margin: 1.5em 0;
+  text-align: center;
 }
 #pledge-outcomes {
-	margin: 1em 0;
+  margin: 1em 0;
 }
 
+#make-pledge p.text-muted {
+  margin-top: -1.2em;
+}
 
 #pledge-amount {
-	margin: 1em auto;
-	max-width: 9em;
-	border: 1px solid #AAA;
+  margin: 1em auto;
+  max-width: 9em;
+  border: 1px solid #AAA;
 }
-	#pledge-amount .input-group-addon, #pledge-amount input {
-		border: none;
-		font-size: 24px;
-		text-align: right;
-	}
+  #pledge-amount .input-group-addon, #pledge-amount input {
+    border: none;
+    font-size: 24px;
+    text-align: right;
+  }
 
 #pledge-targets button {
-	max-width: 45%;
-	white-space: normal;
+  max-width: 45%;
+  white-space: normal;
 }
-	#pledge-targets button div {
-		font-size: 70%;
-		padding-top: 5px;
-		font-style: italic;
-	}
+  #pledge-targets button div {
+    font-size: 70%;
+    padding-top: 5px;
+    font-style: italic;
+  }
 
 
 #filter-party label {
-	font-weight: normal;
-	margin-right: 1em;
+  font-weight: normal;
+  margin-right: 1em;
 }
+
+#pledge-pay table {
+  width: 335px;
+}
+#pledge-pay label {
+  font-weight: normal;
+  font-size: 15px;
+  padding-right: 1em;
+}
+#pledge-pay td {
+  padding-bottom: .25em;
+}
+  #pledge-pay input[type=text] {
+    padding: 2px 3px;
+  }
+
+#pledge-pay .buttons {
+  text-align: right;
+}
+  #pledge-pay .buttons button {
+    margin: 1em 0 0 1em;
+  }
 </style>
 
 <h2>$peak up</h2>
 
-<p>Use this site to pledge a campaign contribution to {{trigger.strings.actors}} who {{trigger.strings.action}} the way you want.</p>
+<p>Use this site to schedule a campaign contribution to {{trigger.strings.actors}} who {{trigger.strings.action}} the way you want.</p>
 
 
 <div id="make-pledge">
-	<p>How do you want {{trigger.strings.actors}} to {{trigger.strings.action}}?</p>
+  <p>How do you want {{trigger.strings.actors}} to {{trigger.strings.action}}?</p>
 
-	<p id="pledge-outcomes" style="margin-left: 1em">
-	{% for outcome in trigger.outcomes %}
-		<button class="btn btn-lg" onclick="pledge_choose_outcome(this)">{{outcome.label}}</button>
-	{% endfor %}
-	</p>
+  <p id="pledge-outcomes" style="margin-left: 1em">
+  {% for outcome in trigger.outcomes %}
+    <button class="btn btn-lg" onclick="pledge_choose_outcome(this)">{{outcome.label}}</button>
+  {% endfor %}
+  </p>
+  <p class="small text-muted">(choose one)</p>
 
-	<p>After the {{trigger.strings.action}}, you will make a campaign contribution of</p>
+  <p>After the {{trigger.strings.action}}, you will make a campaign contribution of</p>
 
-	<div id="pledge-amount" class="input-group">
-	  <div class="input-group-addon">$</div>
-	  <input class="form-control" type="text" value="5.00" pattern="^[0-9]+(\.([0-9][0-9])?)?$"onkeyup="update_state()" onchange="update_state()">
-	</div>
+  <div id="pledge-amount" class="input-group">
+    <div class="input-group-addon">$</div>
+    <input class="form-control" type="text" value="5.00" pattern="^[0-9]+(\.([0-9][0-9])?)?$"onkeyup="update_state()" onchange="update_state()">
+  </div>
 
-	<p>to be split evenly to:</p>
+  <p>to be split evenly among:</p>
 
-	<p id="pledge-targets" style="margin-left: 1em">
-		<button class="btn btn-lg incumbents" onclick="pledge_choose_target(this)">
-			{{trigger.strings.actors|capfirst}} who {{trigger.strings.action}} <span class="fill-in"> </span>
-			<div>(keep &rsquo;em in)</div>
-		</button>
-		<button class="btn btn-lg challengers" onclick="pledge_choose_target(this)">
-			Opponents of {{trigger.strings.actors}} who {{trigger.strings.action}} <span class="fill-in"> </span>
-			<div>(throw &rsquo;em out)</div>
-		</button>
-		<br><span class="small text-muted">(you may choose both)</span>
-	</p>
+  <p id="pledge-targets" style="margin-left: 1em">
+    <button class="btn btn-lg incumbents" onclick="pledge_choose_target(this)">
+      {{trigger.strings.actors|capfirst}} who {{trigger.strings.action}} <span class="fill-in"> </span>
+      <div>(keep &rsquo;em in)</div>
+    </button>
+    <button class="btn btn-lg challengers" onclick="pledge_choose_target(this)">
+      Opponents of {{trigger.strings.actors}} who {{trigger.strings.action}} <span class="fill-in"> </span>
+      <div>(throw &rsquo;em out)</div>
+    </button>
+  </p>
+  <p class="small text-muted">(you may choose both)</p>
 
-	<p style="margin-top: 0">and only to candidates who are:</p>
+  <p style="margin-top: 0">who are:</p>
 
-	<p id="pledge-party">
-		<button class="btn btn-lg" onclick="pledge_filter_party(this)" data-value="R">
-			Republicans
-		</button>
+  <p id="pledge-party">
+    <button class="btn btn-lg" onclick="pledge_filter_party(this)" data-value="R">
+      Republicans
+    </button>
 
-		<button class="btn btn-lg" onclick="pledge_filter_party(this)" data-value="D">
-			Democrats
-		</button>
+    <button class="btn btn-lg" onclick="pledge_filter_party(this)" data-value="D">
+      Democrats
+    </button>
 
-		<button class="btn btn-lg" onclick="pledge_filter_party(this)" data-value="I">
-			3<sup>rd</sup> Party
-		</button>
+    <button class="btn btn-lg" onclick="pledge_filter_party(this)" data-value="I">
+      3<sup>rd</sup> Party
+    </button>
+  </p>
+  <p class="small text-muted">(you may choose more than one)</p>
 
-		<br><span class="small text-muted">(you may choose more than one)</span>
-	</p>
-
-	<p>
-		<button id="make-pledge-go" class="btn btn-lg disabled" onclick="pledge_go()">
-			Next &gt;
-		</button>
-	</p>
+  <p>
+    <button id="make-pledge-go" class="btn btn-lg disabled" onclick="pledge_go()">
+      Next &gt;
+    </button>
+  </p>
 </div>
 
+<div id="pledge-pay" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="pledge-payModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+  <div class="modal-content">
+    <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    <h4 class="modal-title" id="pledge-payModalTitle">Finish your pledged contribution</h4>
+    </div>
+    <div class="modal-body">
+    <ul class="nav nav-pills" role="tablist">
+      <li class="active"><a href="#pay-login" role="tab" data-toggle="tab">Returning user?</a></li>
+      <li><a href="#contributor" role="tab" data-toggle="tab">Contributor</a></li>
+      <li><a href="#payment" role="tab" data-toggle="tab">Payment</a></li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane active" id="pay-login">
+        <p style="margin-top: 1em">Have you been here before?</p>
+      </div>
+
+      <div class="tab-pane" id="contributor">
+        <div class="row">
+          <div class="col-md-6">
+            <p style="margin: 1em 0 1.5em 0;">The Federal Election Commission requires all contributors to federal campaigns to provide the following information:</p>
+
+            <table>
+              <tr>
+                <td><label for="contribNameFirst">First Name</label></td>
+                <td><input type="text" id="contribNameFirst"></td>
+              </tr>
+              <tr>
+                <td><label for="contribNameLast">Last Name</label></td>
+                <td><input type="text" id="contribNameLast"></td>
+              </tr>
+              <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Mailing Address</td></tr>
+              <tr>
+                <td><label for="contribAddress">Address</label></td>
+                <td><input type="text" id="contribAddress"></td>
+              </tr>
+              <tr>
+                <td><label for="contribCity">City</label></td>
+                <td><input type="text" id="contribCity"></td>
+              </tr>
+              <tr>
+                <td><label for="contribState">State/ZIP</label></td>
+                <td>
+                  <input type="text" id="contribState" maxlength="2" style="width: 60px">
+                  <input type="text" id="contribZip" maxlength="10" style="width: 169px;">
+                </td>
+              </tr>
+              <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Employment</td></tr>
+              <tr>
+                <td><label for="contribOccupation">Occupation</label></td>
+                <td><input type="text" id="contribOccupation" maxlength="10"></td>
+              </tr>
+              <tr>
+                <td><label for="contribEmployer">Employer</label></td>
+                <td><input type="text" id="contribEmployer" maxlength="10"></td>
+              </tr>
+              <tr><td colspan="2" class="small text-muted">If you are self-employed, retired, etc., indicate that as your occupation and write &ldquo;self&rdquo; or &ldquo;none&rdquo; as your employer.</td></tr>
+
+              <tr>
+                <td></td>
+                <td class="buttons">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
+                  <button type="button" class="btn btn-warning">Next &gt;</button>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <div class="panel panel-info">
+              <div class="panel-heading">Contributor requirements</div>
+              <div class="panel-body">
+                <p>You must be X.</p>
+              </div>
+            </div>
+          </div>
+        </div>        
+      </div>
+      <div class="tab-pane" id="payment">
+        <div class="row">
+          <div class="col-md-6">
+            <p style="margin: 1em 0 1.5em 0;">Enter your payment information:</p>
+
+            <table>
+              <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Credit Card</td></tr>
+              <tr>
+                <td><label for="billingCCNum">Number</label></td>
+                <td>
+                  <input type="text" class="cc-num" id="billingCCNum" pattern="\d*" novalidate autocomplete="cc-number" placeholder="0000 0000 0000 0000" required>
+                </td>
+              </tr>
+              <tr>
+                <td><label for="billingCCExp">Expiration</label></td>
+                <td>
+                  <input type="text" class="cc-exp" id="billingCCExp" pattern="\d+/\d+" novalidate placeholder="MM/YYYY">
+                </td>
+              </tr>
+              <tr>
+                <td><label for="billingCCCVC">CVC</label></td>
+                <td>
+                  <input type="text" class="cc-cvc" id="billingCCCVC" autocomplete="off">
+                </td>
+              </tr>
+
+              <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Billing Address</td></tr>
+              <tr>
+                <td><label for="billingName">Name</label></td>
+                <td><input type="text" id="billingName"></td>
+              </tr>
+              <tr>
+                <td><label for="billingAddress">Address</label></td>
+                <td><input type="text" id="billingAddress"></td>
+              </tr>
+              <tr>
+                <td><label for="billingCity">City</label></td>
+                <td><input type="text" id="billingCity"></td>
+              </tr>
+              <tr>
+                <td><label for="billingState">State/ZIP</label></td>
+                <td>
+                  <input type="text" id="billingState" maxlength="2" style="width: 60px">
+                  <input type="text" id="billingZip" maxlength="10" style="width: 169px;">
+                </td>
+              </tr>
+
+              <tr>
+                <td></td>
+                <td class="buttons">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
+                  <button type="button" class="btn btn-warning">Confirm</button>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <div class="panel panel-info">
+              <div class="panel-heading">Payment information</div>
+              <div class="panel-body">
+                <p>We will not charge your credit card until the {{trigger.strings.action}} occurs.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+  </div>
+</div>
+    
 <script>
+function pledge_init() {
+  $('input.cc-num').payment('formatCardNumber');
+  $('input.cc-exp').payment('formatCardExpiry');
+  $('input.cc-cvc').payment('formatCardCVC');
+
+  update_state();
+  pledge_go();
+}
+
 function toggle_buttons(group_selector, elem_clicked, multi) {
-	var active_class = 'active btn-success';
-	var state = !$(elem_clicked).hasClass(active_class);
-	if (!multi) $(group_selector).removeClass(active_class);
-	$(elem_clicked).toggleClass(active_class, state);
-	$(elem_clicked).blur();
-	update_state();
+  var active_class = 'active btn-success';
+  var state = !$(elem_clicked).hasClass(active_class);
+  if (!multi) $(group_selector).removeClass(active_class);
+  $(elem_clicked).toggleClass(active_class, state);
+  $(elem_clicked).blur();
+  update_state();
 }
 
 function pledge_choose_outcome(elem) {
-	toggle_buttons('#pledge-outcomes button', elem);
+  toggle_buttons('#pledge-outcomes button', elem);
 }
 function pledge_choose_target(elem) {
-	toggle_buttons('#pledge-targets button', elem, true);
+  toggle_buttons('#pledge-targets button', elem, true);
 }
 function pledge_filter_party(elem) {
-	toggle_buttons('#pledge-party button', elem, true);
+  toggle_buttons('#pledge-party button', elem, true);
 }
 
 function update_state() {
-	var valid = true;
+  var valid = true;
 
-	// outcome
-	var active_outcome = $('#pledge-outcomes button.active');
-	var alternate_outcome = $('#pledge-outcomes button:not(.active)');
-	if (active_outcome.length == 0) {
-		$('#pledge-targets .incumbents span.fill-in').text('how you want')
-		$('#pledge-targets .challengers span.fill-in').text('against how you want')
-		valid = false;
-	} else {
-		$('#pledge-targets .incumbents span.fill-in').text(active_outcome.text())
-		$('#pledge-targets .challengers span.fill-in').text(alternate_outcome.text())
-	}
+  // outcome
+  var active_outcome = $('#pledge-outcomes button.active');
+  var alternate_outcome = $('#pledge-outcomes button:not(.active)');
+  if (active_outcome.length == 0) {
+    $('#pledge-targets .incumbents span.fill-in').text('how you want')
+    $('#pledge-targets .challengers span.fill-in').text('against how you want')
+    valid = false;
+  } else {
+    $('#pledge-targets .incumbents span.fill-in').text(active_outcome.text())
+    $('#pledge-targets .challengers span.fill-in').text(alternate_outcome.text())
+  }
 
-	// make the target buttons the same height, seems to require
-	// a delay before getting the text content set above on the
-	// initial page load
-	setTimeout(function() {
-		$('#pledge-targets .btn').css({ height: 'auto' })
-		var max_height = 0;
-		$('#pledge-targets .btn').each(function() {
-			console.log(this, $(this).outerHeight())
-			max_height = Math.max(max_height, $(this).outerHeight());
-		})
-		$('#pledge-targets .btn').css({ height: max_height })
-	}, 100)
+  // make the target buttons the same height, seems to require
+  // a delay before getting the text content set above on the
+  // initial page load
+  setTimeout(function() {
+    $('#pledge-targets .btn').css({ height: 'auto' })
+    var max_height = 0;
+    $('#pledge-targets .btn').each(function() {
+      max_height = Math.max(max_height, $(this).outerHeight());
+    })
+    $('#pledge-targets .btn').css({ height: max_height })
+  }, 100)
 
-	// amount
-	function validate_number(val) {
-		var re = RegExp($('#pledge-amount input').attr('pattern'))
-		return re.test(val);
-	}
-	if (!validate_number($('#pledge-amount input').val())) {
-		$('#pledge-amount .input-group-addon').css({ color: '#666' })
-		valid = false;
-	} else {
-		$('#pledge-amount .input-group-addon').css({ color: 'green' })
-	}
+  // amount
+  function validate_number(val) {
+    var re = RegExp($('#pledge-amount input').attr('pattern'))
+    return re.test(val);
+  }
+  if (!validate_number($('#pledge-amount input').val())) {
+    $('#pledge-amount .input-group-addon').css({ color: '#666' })
+    valid = false;
+  } else {
+    $('#pledge-amount .input-group-addon').css({ color: 'green' })
+  }
 
-	// targets
-	if ($('#pledge-targets .btn.active').length == 0)
-		valid = false;
+  // targets
+  if ($('#pledge-targets .btn.active').length == 0)
+    valid = false;
 
-	// filters
-	if ($('#pledge-party .btn.active').length == 0)
-		valid = false;
+  // filters
+  if ($('#pledge-party .btn.active').length == 0)
+    valid = false;
 
-	if (!valid) {
-		$('#make-pledge-go').removeClass('btn-warning').addClass('disabled');
-	} else {
-		$('#make-pledge-go').addClass('btn-warning').removeClass('disabled');
-	}
-
+  if (!valid) {
+    $('#make-pledge-go').removeClass('btn-warning').addClass('disabled');
+  } else {
+    $('#make-pledge-go').addClass('btn-warning').removeClass('disabled');
+  }
 }
+
+function pledge_go() {
+  $('#pledge-pay').modal();
+}
+
 </script>

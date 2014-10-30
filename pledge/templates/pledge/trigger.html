@@ -78,10 +78,11 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="/static/js/ext/jquery.payment.js"> </script>
 <script>
 	$(function() {
 		{% if trigger.state|stringformat:'s' == 'TriggerState.Open' %}
-			update_state();
+			pledge_init();
 		{% endif %}
 	})
 </script>

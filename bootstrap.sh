@@ -17,6 +17,9 @@ pip install --upgrade \
 	"jsonfield" \
 	"enum3field"
 
+# Get remote libraries.
+wget -O itfsite/static/js/ext/jquery.payment.js https://raw.githubusercontent.com/stripe/jquery.payment/3dbada6a8c7fbb0d13ac121d0581a738d9576f53/lib/jquery.payment.js
+
 # Create database / migrate database.
 ./manage.py migrate
 
