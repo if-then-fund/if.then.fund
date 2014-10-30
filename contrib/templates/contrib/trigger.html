@@ -30,7 +30,7 @@
 	<div class="row">
 		<div class="col-sm-7">
 			{% if trigger.state|stringformat:'s' == 'TriggerState.Open' %}
-				{% include "pledge/pledge-form.html" %}
+				{% include "contrib/pledge-form.html" %}
 
 			{% elif trigger.state|stringformat:'s' == 'TriggerState.Paused' %}
 				<h2>Take action</h2>

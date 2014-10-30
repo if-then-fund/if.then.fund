@@ -4,7 +4,7 @@ def homepage(request):
 	# Renders a page that has no special processing.
 	# simplepage is validated by urls.py.
 
-	from pledge.models import Trigger
+	from contrib.models import Trigger
 	triggers = Trigger.objects.order_by('-created')[0:10]
 
 	return render(request, "itfsite/homepage.html", {

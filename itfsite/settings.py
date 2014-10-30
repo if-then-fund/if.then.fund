@@ -22,7 +22,7 @@ INSTALLED_APPS = (
 	'django.contrib.staticfiles',
 
 	'itfsite',
-	'pledge',
+	'contrib',
 )
 
 MIDDLEWARE_CLASSES = (

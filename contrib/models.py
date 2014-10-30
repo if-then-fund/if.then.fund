@@ -63,7 +63,7 @@ class Trigger(models.Model):
 		chamber_actors = { 's': 'senators', 'h': 'representatives' }[chamber]
 
 		# get bill data from GovTrack
-		from pledge.utils import query_json_api
+		from contrib.utils import query_json_api
 		bill_search = query_json_api("https://www.govtrack.us/api/v2/bill", {
 			"bill_type": bill_type, "number": bill_number, "congress": bill_congress })
 		if len(bill_search['objects']) == 0: raise ValueError("Not a bill.")

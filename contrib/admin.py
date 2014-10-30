@@ -1,5 +1,5 @@
 from django.contrib import admin
-from pledge.models import *
+from contrib.models import *
 
 class TriggerAdmin(admin.ModelAdmin):
     list_display = ['created', 'state', 'slug', 'title']

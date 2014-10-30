@@ -5,7 +5,7 @@ urlpatterns = patterns('',
 	url(r'^$', 'itfsite.views.homepage', name='homepage'),
 	url(r'^(about|legal)$', 'itfsite.views.simplepage', name='simplepage'),
 
-	url(r'^', include('pledge.urls')),
+	url(r'^', include('contrib.urls')),
 
 	url(r'^admin/', include(admin.site.urls)),
 )
