@@ -44,6 +44,7 @@
 		</div>
 
 		<div class="col-sm-5">
+			<div style="border-left: 1px solid #AAA; padding-left: 1em; color: #666; min-height: 20em">
 			<h2>Pledged Contributions</h2>
 
 			<div>${{trigger.total_pledged}}</div>
@@ -54,6 +55,7 @@
 			{% if trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
 				<p class="text-danger">Pledges were vacated.</p>
 			{% endif %}
+			</div>
 		</div>
 	</div>
 

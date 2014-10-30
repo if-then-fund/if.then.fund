@@ -10,6 +10,13 @@
   margin: 1em 0;
 }
 
+#make-pledge button {
+  border: 1px solid #BBB;
+}
+  #make-pledge button.active {
+    border-color: #3e8f3e;
+  }
+
 #make-pledge p.text-muted {
   margin-top: -1.2em;
 }
@@ -100,7 +107,7 @@
   </p>
   <p class="small text-muted">(you may choose both)</p>
 
-  <p style="margin-top: 0">who are:</p>
+  <p style="margin-top: 0">Only give to:</p>
 
   <p id="pledge-party">
     <button class="btn btn-lg" onclick="pledge_filter_party(this)" data-value="R">
@@ -132,15 +139,51 @@
     <h4 class="modal-title" id="pledge-payModalTitle">Finish your pledged contribution</h4>
     </div>
     <div class="modal-body">
-    <ul class="nav nav-pills" role="tablist">
-      <li class="active"><a href="#pay-login" role="tab" data-toggle="tab">Returning user?</a></li>
+    <ul class="nav nav-pills small" role="tablist">
+      <li class="active"><a href="#email" role="tab" data-toggle="tab">Email</a></li>
       <li><a href="#contributor" role="tab" data-toggle="tab">Contributor</a></li>
       <li><a href="#payment" role="tab" data-toggle="tab">Payment</a></li>
     </ul>
 
     <div class="tab-content">
-      <div class="tab-pane active" id="pay-login">
-        <p style="margin-top: 1em">Have you been here before?</p>
+      <div class="tab-pane active" id="email">
+        <p style="margin-top: 1em">What is your e-mail address?</p>
+
+        <table>
+          <tr>
+            <td colspan="2"><input type="email" id="emailEmail" class="form-control" placeholder="yourname@yourprovider.com"></td>
+          </tr>
+        </table>
+
+        <p style="margin-top: 1em">Do you have an if.then.fund password?</p>
+
+        <table>
+          <tr>
+            <td><input id="emailEmailNoPassword" type="radio" name="emailEmailHasPassword" checked></td>
+            <td><label for="emailEmailNoPassword">No, this is my first time here.</label></td>
+          </tr>
+          <tr>
+            <td><input id="emailEmailYesPassword" type="radio" name="emailEmailHasPassword"></td>
+            <td><label for="emailEmailYesPassword">Yes, I have a password:</label></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><input type="password" id="emailPassword" class="form-control" disabled>
+              <div class="small" style="margin-top: .5em">Forgot your password? TBD</div></td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <p id="login-error" class="text-danger" style="display: none; padding-top: 1em"></p>
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td class="buttons">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
+              <button type="button" class="btn btn-warning" onclick="do_pledge_login()">Next &gt;</button>
+            </td>
+          </tr>
+        </table>
       </div>
 
       <div class="tab-pane" id="contributor">
@@ -263,7 +306,7 @@
             <div class="panel panel-info">
               <div class="panel-heading">Payment information</div>
               <div class="panel-body">
-                <p>We will not charge your credit card until the {{trigger.strings.action}} occurs.</p>
+                <p>We will not charge your credit card until the {{trigger.strings.action}} occurs, and you can cancel this contribution any time before then.</p>
               </div>
             </div>
           </div>
@@ -277,6 +320,10 @@
     
 <script>
 function pledge_init() {
+  $('#emailEmailYesPassword, #emailEmailNoPassword').change(function() {
+    $('#emailPassword').prop('disabled', !$('#emailEmailYesPassword').prop('checked'));
+  });
+
   $('input.cc-num').payment('formatCardNumber');
   $('input.cc-exp').payment('formatCardExpiry');
   $('input.cc-cvc').payment('formatCardCVC');
@@ -360,6 +407,61 @@ function update_state() {
 
 function pledge_go() {
   $('#pledge-pay').modal();
+}
+
+function do_pledge_login() {
+  $('#emailEmail').popover('destroy');
+  $('#login-error').fadeOut();
+
+  if ($('#emailEmailYesPassword').prop('checked')) {
+    // User wants to log in.
+    ajax({
+      url: "/_ajax/login",
+      method: "POST",
+      data: {
+        email: $('#emailEmail').val(),
+        password: $('#emailPassword').val(),
+      },
+      success: function(response) {
+        if (response == "ValidateEmailResult.Invalid") {
+          $('#emailEmail').popover({ content: "That is not a valid email address." }).popover('show');
+          return;
+        }
+        if (response == "LoginResult.Inactive") {
+          $('#emailEmail').popover({ content: "Your account has been disabled." }).popover('show');
+          return;
+        }
+        if (response == "LoginResult.Incorrect") {
+          $('#login-error').text("Your email address or password does not match an account here.");
+          $('#login-error').slideDown();
+          return;
+        }
+
+        // Login succeeded.
+      }
+    })
+
+  } else {
+    // User provides his email address and is a new user.
+
+    // Start by validating it. Reject if the adddress is clearly
+    // invalid. In the future we may want to issue a different
+    // message for emails that are Valid but not Deliverable.
+    // We also silently skip Error and let the user go forward.
+    ajax({
+      url: "/_ajax/validate_email",
+      method: "POST",
+      data: {
+        email: $('#emailEmail').val()
+      },
+      success: function(response) {
+        if (response == "ValidateEmailResult.Invalid") {
+            $('#emailEmail').popover({ content: "That is not a valid email address." }).popover('show');
+            return;
+        }
+      }
+    })
+  }
 }
 
 </script>

@@ -1,7 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
+from twostream.decorators import anonymous_view
+
 from contrib.models import Trigger
 
+@anonymous_view
 def trigger(request, id, slug):
 	# get the object
 	trigger = get_object_or_404(Trigger, id=id)
