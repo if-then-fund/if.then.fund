@@ -139,7 +139,8 @@
     <h4 class="modal-title" id="pledge-payModalTitle">Finish your pledged contribution</h4>
     </div>
     <div class="modal-body">
-    <ul class="nav nav-pills small" role="tablist">
+
+    <ul class="nav nav-pills small" role="tablist" style="margin-bottom: 1em">
       <li class="active"><a href="#email" role="tab" data-toggle="tab">Email</a></li>
       <li><a href="#contributor" role="tab" data-toggle="tab">Contributor</a></li>
       <li><a href="#payment" role="tab" data-toggle="tab">Payment</a></li>
@@ -147,7 +148,7 @@
 
     <div class="tab-content">
       <div class="tab-pane active" id="email">
-        <p style="margin-top: 1em">What is your e-mail address?</p>
+        <p>What is your e-mail address?</p>
 
         <table>
           <tr>
@@ -188,8 +189,16 @@
 
       <div class="tab-pane" id="contributor">
         <div class="row">
-          <div class="col-md-6">
-            <p style="margin: 1em 0 1.5em 0;">The Federal Election Commission requires all contributors to federal campaigns to provide the following information:</p>
+          <div class="col-md-6 col-md-push-6">
+            <div class="panel panel-info">
+              <div class="panel-heading">Contributor requirements</div>
+              <div class="panel-body">
+                <p>You must be X.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-md-pull-6">
+            <p>The Federal Election Commission requires all contributors to federal campaigns to provide the following information:</p>
 
             <table>
               <tr>
@@ -219,11 +228,11 @@
               <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Employment</td></tr>
               <tr>
                 <td><label for="contribOccupation">Occupation</label></td>
-                <td><input type="text" id="contribOccupation" maxlength="10"></td>
+                <td><input type="text" id="contribOccupation"></td>
               </tr>
               <tr>
                 <td><label for="contribEmployer">Employer</label></td>
-                <td><input type="text" id="contribEmployer" maxlength="10"></td>
+                <td><input type="text" id="contribEmployer"></td>
               </tr>
               <tr><td colspan="2" class="small text-muted">If you are self-employed, retired, etc., indicate that as your occupation and write &ldquo;self&rdquo; or &ldquo;none&rdquo; as your employer.</td></tr>
 
@@ -231,25 +240,17 @@
                 <td></td>
                 <td class="buttons">
                   <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
-                  <button type="button" class="btn btn-warning">Next &gt;</button>
+                  <button type="button" class="btn btn-warning" onclick="do_contributor()">Next &gt;</button>
                 </td>
               </tr>
             </table>
-          </div>
-          <div class="col-md-6">
-            <div class="panel panel-info">
-              <div class="panel-heading">Contributor requirements</div>
-              <div class="panel-body">
-                <p>You must be X.</p>
-              </div>
-            </div>
           </div>
         </div>        
       </div>
       <div class="tab-pane" id="payment">
         <div class="row">
           <div class="col-md-6">
-            <p style="margin: 1em 0 1.5em 0;">Enter your payment information:</p>
+            <p>Enter your payment information:</p>
 
             <table>
               <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Credit Card</td></tr>
@@ -297,7 +298,7 @@
                 <td></td>
                 <td class="buttons">
                   <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
-                  <button type="button" class="btn btn-warning">Confirm</button>
+                  <button type="button" class="btn btn-warning" onclick="pledge_submit()">Confirm</button>
                 </td>
               </tr>
             </table>
@@ -459,9 +460,75 @@ function do_pledge_login() {
             $('#emailEmail').popover({ content: "That is not a valid email address." }).popover('show');
             return;
         }
+
+        $('a[href="#contributor"]').tab('show') 
       }
     })
   }
 }
 
+function do_contributor() {
+  var fields1 = ['contribNameFirst', 'contribNameLast', 'contribOccupation', 'contribEmployer'];
+  var fields_addr = ['contribAddress', 'contribCity', 'contribState', 'contribZip'];
+  var valid = true;
+
+  var required_fields = fields1.concat(fields_addr);
+  for (var i = 0; i < required_fields.length; i++) {
+    var elem = $('#' + required_fields[i]);
+    elem.popover('destroy');
+    if (!/\S/.test(elem.val())) {
+      valid = false;
+      elem.popover({ content: "Required." }).popover('show');
+    }
+  }
+
+  if (!valid) return;
+
+  // fill in the billing name based on the contributor
+  $('#billingName').val($('#contribNameFirst').val() + " " + $('#contribNameLast').val());
+
+  // copy the contributor address as the billing address
+  for (var i = 0; i < fields_addr.length; i++)
+    $('#' + fields_addr[i].replace(/^contrib/, 'billing')).val( $('#' + fields_addr[i]).val() );
+
+  $('a[href="#payment"]').tab('show') 
+}
+
+function pledge_submit() {
+  // validate credit card information
+
+  $('#billingCCNum').popover('destroy');
+  $('#billingCCExp').popover('destroy');
+  $('#billingCCCVC').popover('destroy');
+
+  if (!$.payment.validateCardNumber($('#billingCCNum').val())) {
+    $('#billingCCNum').popover({ content: "Enter a valid credit card number." }).popover('show');
+    return;
+  }
+
+  var exp = $('#billingCCExp').payment('cardExpiryVal');
+  if (!$.payment.validateCardExpiry(exp.month, exp.year)) {
+    $('#billingCCExp').popover({ content: "Enter a valid expiration date." }).popover('show');
+    return;
+  }
+
+  if (!$.payment.validateCardCVC($('#billingCCCVC').val())) {
+    $('#billingCCCVC').popover({ content: "Enter your card verification code, often found on the back side of the card." }).popover('show');
+    return;
+  }
+
+  var required_fields = ['billingName', 'billingAddress', 'billingCity', 'billingState', 'billingZip'];
+  var valid = true;
+  for (var i = 0; i < required_fields.length; i++) {
+    var elem = $('#' + required_fields[i]);
+    elem.popover('destroy');
+    if (!/\S/.test(elem.val())) {
+      valid = false;
+      elem.popover({ content: "Required." }).popover('show');
+    }
+  }
+  if (!valid) return;
+
+  // Valid. Submit!
+}
 </script>
