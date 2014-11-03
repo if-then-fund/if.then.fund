@@ -180,6 +180,10 @@ class Pledge(models.Model):
 	class Meta:
 		unique_together = [('trigger', 'user')]
 
+	@staticmethod
+	def current_fees():
+		return .1 # 10%
+
 class PledgeExecution(models.Model):
 	"""How a user's pledge was executed. Each pledge has a single PledgeExecution when the Trigger is executed, and immediately many Contribution objects are created."""
 

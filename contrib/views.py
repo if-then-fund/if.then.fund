@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from twostream.decorators import anonymous_view
 
-from contrib.models import Trigger
+from contrib.models import Trigger, Pledge
 
 @anonymous_view
 def trigger(request, id, slug):
@@ -15,4 +15,5 @@ def trigger(request, id, slug):
 
 	return render(request, "contrib/trigger.html", {
 		"trigger": trigger,
+		"fees_percent": Pledge.current_fees()*100.0, # e.g. 0.10 => 10 meaning 10 percent
 	})

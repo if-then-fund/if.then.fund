@@ -69,6 +69,17 @@
   #pledge-pay .buttons button {
     margin: 1em 0 0 1em;
   }
+
+#charges {
+  margin: 1em 1em;
+}
+  #charges td {
+    font-size: 14px;
+  }
+  #charges .total td {
+    border-top: 1px solid #AAA;
+    padding-top: 2px;
+  }
 </style>
 
 <h2>$peak up</h2>
@@ -90,7 +101,7 @@
 
   <div id="pledge-amount" class="input-group">
     <div class="input-group-addon">$</div>
-    <input class="form-control" type="text" value="5.00" pattern="^[0-9]+(\.([0-9][0-9])?)?$"onkeyup="update_state()" onchange="update_state()">
+    <input class="form-control" type="text" value="5.00" pattern="^[0-9]+(\.([0-9][0-9])?)?$" onkeyup="update_state()" onchange="update_state()">
   </div>
 
   <p>to be split evenly among:</p>
@@ -141,13 +152,38 @@
     <div class="modal-body">
 
     <ul class="nav nav-pills small" role="tablist" style="margin-bottom: 1em">
-      <li class="active"><a href="#email" role="tab" data-toggle="tab">Email</a></li>
+      <li class="active"><a href="#summary" role="tab" data-toggle="tab">Summary</a></li>
+      <li><a href="#email" role="tab" data-toggle="tab">Email</a></li>
       <li><a href="#contributor" role="tab" data-toggle="tab">Contributor</a></li>
       <li><a href="#payment" role="tab" data-toggle="tab">Payment</a></li>
     </ul>
 
     <div class="tab-content">
-      <div class="tab-pane active" id="email">
+      <div class="tab-pane active" id="summary">
+        <p>You are about to ......</p>
+
+        <p>if.then.fund adds a {{fees_percent|floatformat}}% fee to your payment, so expect a slightly higher credit card charge....</p>
+
+        <table id="charges">
+          <tr>
+            <td>Contributions</td>
+            <td id="payment-contrib">$ <span></span></td>
+          </tr>
+          <tr>
+            <td>Fees ({{fees_percent|floatformat}}%)</td>
+            <td id="payment-fees">$ <span></span></td>
+          </tr>
+          <tr class="total">
+            <td>Total</td>
+            <td id="payment-total">$ <span></span></td>
+          </tr>
+        </table>
+
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
+        <button type="button" class="btn btn-warning" onclick="$('a[href=&quot;#email&quot;]').tab('show')">Next &gt;</button>
+      </div>
+
+      <div class="tab-pane" id="email">
         <p>What is your e-mail address?</p>
 
         <table>
@@ -407,6 +443,14 @@ function update_state() {
 }
 
 function pledge_go() {
+  var amt = parseFloat($('#pledge-amount input').val());
+  $('#payment-contrib span').text(amt.toFixed(2));
+
+  var fees = amt * {{fees_percent}}/100;
+  $('#payment-fees span').text(fees.toFixed(2));
+
+  $('#payment-total span').text((amt+fees).toFixed(2));
+
   $('#pledge-pay').modal();
 }
 
