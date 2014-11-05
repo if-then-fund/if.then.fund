@@ -11,71 +11,53 @@
 
 {% block body %}
 
-<h1>{{trigger.title}}</h1>
+<div class="row">
+	<div class="col-md-4">
+		<h1>{{trigger.title}}</h1>
 
-{# DESCRIPTION #}
+		{{trigger.description|render_text:trigger.description_format}}
 
-{{trigger.description|render_text:trigger.description_format}}
+		{% if trigger.extra.type == "usbill" %}
+			<p class="text-muted small">More info on this {{trigger.extra.bill_info.noun}} can be found on <a href="{{trigger.extra.bill_info.link}}">GovTrack</a>.</p>
+		{% endif %}
 
-{% if trigger.extra.type == "usbill" %}
-	<p class="text-muted small">More info on this {{trigger.extra.bill_info.noun}} can be found on <a href="{{trigger.extra.bill_info.link}}">GovTrack</a>.</p>
-{% endif %}
+		{% if trigger.state|stringformat:'s' == 'TriggerState.Open' or trigger.state|stringformat:'s' == 'TriggerState.Paused' or trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
+				<h2>Pledged Contributions</h2>
 
-{# USER ACTION #}
+				<div>${{trigger.total_pledged}}</div>
+				<p>has been pledged on both sides of this issue.</p>
 
-{% if trigger.state|stringformat:'s' == 'TriggerState.Draft' %}
-	<p>This trigger is in draft status.</p>
+				<p>We can&rsquo;t reveal any more information prior to the vote.</p>
 
-{% elif trigger.state|stringformat:'s' == 'TriggerState.Open' or trigger.state|stringformat:'s' == 'TriggerState.Paused' or trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
-	<div class="row">
-		<div class="col-sm-7">
-			{% if trigger.state|stringformat:'s' == 'TriggerState.Open' %}
-				{% include "contrib/pledge-form.html" %}
-
-			{% elif trigger.state|stringformat:'s' == 'TriggerState.Paused' %}
-				<h2>Take action</h2>
-				<p>This action is paused. We may be about to convert the pledges into campaign contributions or we may be researching whether the event occurred.</p>
-
-			{% elif trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
-				<h2>Closed</h2>
-				<p>This action has been cancelled. We determined that the event will likely never occur and have vacated all of the pledges.</p>
-
-			{% endif %}
-		</div>
-
-		<div class="col-sm-5">
-			<div style="border-left: 1px solid #AAA; padding-left: 1em; color: #666; min-height: 20em">
-			<h2>Pledged Contributions</h2>
-
-			<div>${{trigger.total_pledged}}</div>
-			<p>has been pledged on both sides of this issue.</p>
-
-			<p>We can&rsquo;t reveal any more information prior to the vote.</p>
-
-			{% if trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
-				<p class="text-danger">Pledges were vacated.</p>
-			{% endif %}
-			</div>
-		</div>
+				{% if trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
+					<p class="text-danger">Pledges were vacated.</p>
+				{% endif %}
+		{% endif %}
 	</div>
 
-{# REPORT WHAT HAPPENED #}
+	<div class="col-sm-8">
+		{% if trigger.state|stringformat:'s' == 'TriggerState.Draft' %}
+			<p>This trigger is in draft status. That means it is currently being prepared. Contributions may be accepted soon.</p>
 
-{% elif trigger.state|stringformat:'s' == 'TriggerState.Executed' %}
-	<div class="row">
-		<div class="col-sm-6">
+		{% elif trigger.state|stringformat:'s' == 'TriggerState.Open' %}
+			{% include "contrib/pledge-form.html" %}
+
+		{% elif trigger.state|stringformat:'s' == 'TriggerState.Paused' %}
 			<h2>Take action</h2>
-			<p>Lorem and ipsum.</p>
-		</div>
+			<p>This action is paused. We may be about to convert the pledges into campaign contributions or we may be researching whether the event occurred.</p>
 
-		<div class="col-sm-6">
+		{% elif trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
+			<h2>Closed</h2>
+			<p>This action has been cancelled. We determined that the event will likely never occur and have vacated all of the pledges.</p>
+
+		{% elif trigger.state|stringformat:'s' == 'TriggerState.Executed' %}
 			<h2>Contributions</h2>
+			<p>Stuff happened.</p>
 
-
-		</div>
+		{% endif %}
+				
 	</div>
-{% endif %}
-		
+</div>
 
 {% endblock %}
 

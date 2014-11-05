@@ -22,7 +22,7 @@
 }
 
 #pledge-amount {
-  margin: 1em auto;
+  margin: 1em auto 1.5em auto;
   max-width: 9em;
   border: 1px solid #AAA;
 }
@@ -92,7 +92,7 @@
 
   <p id="pledge-outcomes" style="margin-left: 1em">
   {% for outcome in trigger.outcomes %}
-    <button class="btn btn-lg" onclick="pledge_choose_outcome(this)">{{outcome.label}}</button>
+    <button class="btn btn-lg" onclick="pledge_choose_outcome(this)" data-index="{{forloop.counter0}}">{{outcome.label}}</button>
   {% endfor %}
   </p>
   <p class="small text-muted">(choose one)</p>
@@ -101,8 +101,9 @@
 
   <div id="pledge-amount" class="input-group">
     <div class="input-group-addon">$</div>
-    <input class="form-control" type="text" value="5.00" pattern="^[0-9]+(\.([0-9][0-9])?)?$" onkeyup="update_state()" onchange="update_state()">
+    <input class="form-control" type="text" value="5.00" pattern="^([0-9]+(,[0-9]{3})*)?(\.[0-9]{0,2})?$" onkeyup="update_state()" onchange="update_state()">
   </div>
+  <p class="small text-muted">(between ${{alg.min_contrib}} and ${{alg.max_contrib}})</p>
 
   <p>to be split evenly among:</p>
 
@@ -130,7 +131,7 @@
     </button>
 
     <button class="btn btn-lg" onclick="pledge_filter_party(this)" data-value="I">
-      3<sup>rd</sup> Party
+      3<sup>rd</sup> Party Candidates
     </button>
   </p>
   <p class="small text-muted">(you may choose more than one)</p>
@@ -158,11 +159,21 @@
       <li><a href="#payment" role="tab" data-toggle="tab">Payment</a></li>
     </ul>
 
+    <form id="pledge-info" onsubmit="return false;">
+    
+    <input type="hidden" name="trigger" value="{{trigger.id}}"/>
+    <input type="hidden" name="algorithm" value="{{alg.id}}"/>
+    <input type="hidden" name="desired_outcome" value="?"/>
+    <input type="hidden" name="contrib_amount" value="?"/>
+    <input type="hidden" name="total_amount" value="?"/>
+    <input type="hidden" name="incumb_challgr" value="?"/>
+    <input type="hidden" name="filter_party" value=""/>
+
     <div class="tab-content">
       <div class="tab-pane active" id="summary">
-        <p>You are about to ......</p>
+        <p>You are about to schedule a campaign contribution for if and when the {{trigger.strings.action}} occurs. Your contribution may be split up to {{trigger.extra.max_split}} ways depending on the outcome of the {{trigger.strings.action}}.</p>
 
-        <p>if.then.fund adds a {{fees_percent|floatformat}}% fee to your payment, so expect a slightly higher credit card charge....</p>
+        <p>if.then.fund adds a {{alg.fees|floatformat}}% fee to your payment, so expect a slightly higher credit card charge....</p>
 
         <table id="charges">
           <tr>
@@ -170,7 +181,7 @@
             <td id="payment-contrib">$ <span></span></td>
           </tr>
           <tr>
-            <td>Fees ({{fees_percent|floatformat}}%)</td>
+            <td>Fees ({{alg.fees|floatformat}}%)</td>
             <td id="payment-fees">$ <span></span></td>
           </tr>
           <tr class="total">
@@ -188,7 +199,7 @@
 
         <table>
           <tr>
-            <td colspan="2"><input type="email" id="emailEmail" class="form-control" placeholder="yourname@yourprovider.com"></td>
+            <td colspan="2"><input type="email" name="email" id="emailEmail" class="form-control tab-first-focus" placeholder="yourname@yourprovider.com"></td>
           </tr>
         </table>
 
@@ -239,36 +250,36 @@
             <table>
               <tr>
                 <td><label for="contribNameFirst">First Name</label></td>
-                <td><input type="text" id="contribNameFirst"></td>
+                <td><input type="text" id="contribNameFirst" name="contribNameFirst" class="tab-first-focus"></td>
               </tr>
               <tr>
                 <td><label for="contribNameLast">Last Name</label></td>
-                <td><input type="text" id="contribNameLast"></td>
+                <td><input type="text" id="contribNameLast" name="contribNameLast"></td>
               </tr>
               <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Mailing Address</td></tr>
               <tr>
                 <td><label for="contribAddress">Address</label></td>
-                <td><input type="text" id="contribAddress"></td>
+                <td><input type="text" id="contribAddress" name="contribAddress"></td>
               </tr>
               <tr>
                 <td><label for="contribCity">City</label></td>
-                <td><input type="text" id="contribCity"></td>
+                <td><input type="text" id="contribCity" name="contribCity"></td>
               </tr>
               <tr>
                 <td><label for="contribState">State/ZIP</label></td>
                 <td>
-                  <input type="text" id="contribState" maxlength="2" style="width: 60px">
-                  <input type="text" id="contribZip" maxlength="10" style="width: 169px;">
+                  <input type="text" id="contribState" name="contribState" maxlength="2" style="width: 60px">
+                  <input type="text" id="contribZip" name="contribZip" maxlength="10" style="width: 169px;">
                 </td>
               </tr>
               <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Employment</td></tr>
               <tr>
                 <td><label for="contribOccupation">Occupation</label></td>
-                <td><input type="text" id="contribOccupation"></td>
+                <td><input type="text" id="contribOccupation" name="contribOccupation"></td>
               </tr>
               <tr>
                 <td><label for="contribEmployer">Employer</label></td>
-                <td><input type="text" id="contribEmployer"></td>
+                <td><input type="text" id="contribEmployer" name="contribEmployer"></td>
               </tr>
               <tr><td colspan="2" class="small text-muted">If you are self-employed, retired, etc., indicate that as your occupation and write &ldquo;self&rdquo; or &ldquo;none&rdquo; as your employer.</td></tr>
 
@@ -293,40 +304,40 @@
               <tr>
                 <td><label for="billingCCNum">Number</label></td>
                 <td>
-                  <input type="text" class="cc-num" id="billingCCNum" pattern="\d*" novalidate autocomplete="cc-number" placeholder="0000 0000 0000 0000" required>
+                  <input type="text" class="cc-num tab-first-focus" id="billingCCNum" name="billingCCNum" pattern="\d*" novalidate autocomplete="cc-number" placeholder="0000 0000 0000 0000" required>
                 </td>
               </tr>
               <tr>
                 <td><label for="billingCCExp">Expiration</label></td>
                 <td>
-                  <input type="text" class="cc-exp" id="billingCCExp" pattern="\d+/\d+" novalidate placeholder="MM/YYYY">
+                  <input type="text" class="cc-exp" id="billingCCExp" name="billingCCExp" pattern="\d+/\d+" novalidate placeholder="MM/YYYY">
                 </td>
               </tr>
               <tr>
                 <td><label for="billingCCCVC">CVC</label></td>
                 <td>
-                  <input type="text" class="cc-cvc" id="billingCCCVC" autocomplete="off">
+                  <input type="text" class="cc-cvc" id="billingCCCVC" name="billingCCCVC" autocomplete="off">
                 </td>
               </tr>
 
               <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Billing Address</td></tr>
               <tr>
                 <td><label for="billingName">Name</label></td>
-                <td><input type="text" id="billingName"></td>
+                <td><input type="text" id="billingName" name="billingName"></td>
               </tr>
               <tr>
                 <td><label for="billingAddress">Address</label></td>
-                <td><input type="text" id="billingAddress"></td>
+                <td><input type="text" id="billingAddress" name="billingAddress"></td>
               </tr>
               <tr>
                 <td><label for="billingCity">City</label></td>
-                <td><input type="text" id="billingCity"></td>
+                <td><input type="text" id="billingCity" name="billingCity"></td>
               </tr>
               <tr>
                 <td><label for="billingState">State/ZIP</label></td>
                 <td>
-                  <input type="text" id="billingState" maxlength="2" style="width: 60px">
-                  <input type="text" id="billingZip" maxlength="10" style="width: 169px;">
+                  <input type="text" id="billingState" name="billingState" maxlength="2" style="width: 60px">
+                  <input type="text" id="billingZip" name="billingZip" maxlength="10" style="width: 169px;">
                 </td>
               </tr>
 
@@ -350,6 +361,7 @@
         </div>
       </div>
     </div>
+    </form>
     </div>
   </div>
   </div>
@@ -364,6 +376,10 @@ function pledge_init() {
   $('input.cc-num').payment('formatCardNumber');
   $('input.cc-exp').payment('formatCardExpiry');
   $('input.cc-cvc').payment('formatCardCVC');
+
+  $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+    $(e.target.getAttribute('href')).find('.tab-first-focus').focus();
+  })
 
   update_state();
   pledge_go();
@@ -416,11 +432,7 @@ function update_state() {
   }, 100)
 
   // amount
-  function validate_number(val) {
-    var re = RegExp($('#pledge-amount input').attr('pattern'))
-    return re.test(val);
-  }
-  if (!validate_number($('#pledge-amount input').val())) {
+  if (get_payment_breakdown() == null) {
     $('#pledge-amount .input-group-addon').css({ color: '#666' })
     valid = false;
   } else {
@@ -442,14 +454,50 @@ function update_state() {
   }
 }
 
+function get_payment_breakdown() {
+  // Check that the number input looks numeric in its entirety. parseFloat
+  // ignores non-parsable content at the end. English localization is
+  // hard-coded in the regular expression and in the handling of commas.
+  var amt = $('#pledge-amount input').val();
+  var re = RegExp($('#pledge-amount input').attr('pattern'))
+  if (!re.test(amt)) return null;
+
+  // Strip thousands-commas, which parseFloat doesn't like.
+  amt = amt.replace(/,/, '');
+
+  // Attempt to parse. parseFloat returns NaN if the expression cannot
+  // be parsed. To be sure we'll also check that it doesn't return +/-Inf
+  // (all three conditions are handled by isFinite).
+  if (!isFinite(parseFloat(amt))) return null;
+
+  // Check bounds.
+  if (amt < {{alg.min_contrib}} || amt > {{alg.max_contrib}})
+    return null;
+
+  // Round it to a whole number of cents.
+  amt = Math.round(amt*100)/100;
+
+  // Compute the fees on top of that, rounded to a whole number of cents.
+  var fees = amt * {{alg.fees}}/100;
+
+  // Again, round to a whole number of cents.
+  fees = Math.round(fees*100)/100;
+
+  // Compute the total charge.
+  var total = amt + fees;
+
+  return { contribs: amt, fees: fees, total: total };
+}
+
 function pledge_go() {
-  var amt = parseFloat($('#pledge-amount input').val());
-  $('#payment-contrib span').text(amt.toFixed(2));
-
-  var fees = amt * {{fees_percent}}/100;
-  $('#payment-fees span').text(fees.toFixed(2));
-
-  $('#payment-total span').text((amt+fees).toFixed(2));
+  // Compute the line items of the payment. Use toFixed to add
+  // decimal padding. It has funny rounding behavior, so we've
+  // already ensured we're dealing with a number that has no
+  // more than two decimal places in get_payment_breakdown.
+  var amt = get_payment_breakdown();
+  $('#payment-contrib span').text(amt.contribs.toFixed(2));
+  $('#payment-fees span').text(amt.fees.toFixed(2));
+  $('#payment-total span').text(amt.total.toFixed(2));
 
   $('#pledge-pay').modal();
 }
@@ -539,6 +587,31 @@ function do_contributor() {
 }
 
 function pledge_submit() {
+  // info on the main page outside of the form
+
+  // desired outcome
+  $('#pledge-info input[name="desired_outcome"]').val($('#pledge-outcomes button.active').attr('data-index'))
+  
+  // amount
+  var amt = get_payment_breakdown();
+  $('#pledge-info input[name="contrib_amount"]').val(amt.contribs)
+  $('#pledge-info input[name="total_amount"]').val(amt.total)
+
+  // incumbent<->challenger
+  var incumbent_challenger = 0;
+  if ($('#pledge-targets .incumbents').hasClass('active'))
+    incumbent_challenger += 1;
+  if ($('#pledge-targets .challengers').hasClass('active'))
+    incumbent_challenger -= 1;
+  $('#pledge-info input[name="incumb_challgr"]').val(incumbent_challenger)
+
+  // party
+  var party = "";
+  $('#pledge-party button.active').each(function() {
+    party += $(this).attr("data-value");
+  })
+  $('#pledge-info input[name="filter_party"]').val(party)
+
   // validate credit card information
 
   $('#billingCCNum').popover('destroy');
@@ -573,6 +646,18 @@ function pledge_submit() {
   }
   if (!valid) return;
 
-  // Valid. Submit!
+  // Valid. Submit! Collect all of the form fields.
+  var form_params = $('#pledge-info').serializeArray();
+  var data = { };
+  for (var i = 0; i < form_params.length; i++)
+    data[form_params[i].name] = form_params[i].value;
+  ajax({
+    url: '/contrib/_submit',
+    method: "POST",
+    data: data,
+    success: function(res) {
+      alert(res)
+    }
+  })
 }
 </script>

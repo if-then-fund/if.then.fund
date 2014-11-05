@@ -42,6 +42,9 @@ class Trigger(models.Model):
 	total_pledged = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of pledges, i.e. prior to execution.")
 	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed (including pending contributions, but not vacated or aborted contributions).")
 
+	def __str__(self):
+		return "[%d %s] %s" % (self.id, self.key, self.title)
+
 	def get_absolute_url(self):
 		return "/a/%d/%s" % (self.id, self.slug)
 
@@ -101,6 +104,7 @@ class Trigger(models.Model):
 		}
 
 		t.extra = {
+			"max_split":  { 's': 100, 'h': 435 }[chamber],
 			"type": "usbill",
 			"bill_id": bill_id,
 			"chamber": chamber,
@@ -157,7 +161,8 @@ class Action(models.Model):
 class Pledge(models.Model):
 	"""A user's pledge of a contribution."""
 
-	user = models.ForeignKey(User, on_delete=models.PROTECT, help_text="The user making the pledge.")
+	user = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT, help_text="The user making the pledge. When an anonymous user makes a pledge, this is null, the user's email address is stored, and the pledge should be considered unconfirmed/provisional and will not be executed.")
+	email = models.EmailField(max_length=254, blank=True, null=True, help_text="When an anonymous user makes a pledge, their email address is stored here and we send a confirmation email.")
 	trigger = models.ForeignKey(Trigger, on_delete=models.PROTECT, help_text="The Trigger that this update is about.")
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -165,9 +170,10 @@ class Pledge(models.Model):
 	algorithm = models.IntegerField(default=0, help_text="In case we change our terms & conditions, or our explanation of how things work, an integer indicating the terms and expectations at the time the user made the pledge.")
 
 	desired_outcome = models.IntegerField(help_text="The outcome index that the user desires.")
-	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The pledge amount in dollars, not including fees.")
+	contrib_amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The pledge amount, in dollars, not including fees. Stored explicitly so that we are sure to match what the user actually entered.")
+	total_amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The pledge amount, in dollars, including fees. Stored explicitly so that we are sure to match what the user saw client-side as the total scheduled payment amount.")
 	incumb_challgr = models.FloatField(help_text="A float indicating how to split the pledge: -1 (to challenger only) <=> 0 (evenly split between incumbends and challengers) <=> +1 (to incumbents only)")
-	filter_party = models.CharField(max_length=3, blank=True, help_text="A string containing one or more of the characters 'D' 'R' and 'I' that filters contributions to only candidates whose party matches on of the included characters.")
+	filter_party = models.CharField(max_length=3, help_text="A string containing one or more of the characters 'D' 'R' and 'I' that filters contributions to only candidates whose party matches on of the included characters.")
 	filter_competitive = models.BooleanField(default=False, help_text="Whether to filter contributions to competitive races.")
 
 	cancelled = models.BooleanField(default=False, help_text="True if the user cancels the pledge prior to execution.")
@@ -181,8 +187,16 @@ class Pledge(models.Model):
 		unique_together = [('trigger', 'user')]
 
 	@staticmethod
-	def current_fees():
-		return .1 # 10%
+	def current_algorithm():
+		return {
+			"id": 1, # a sequence number so we can track changes to our fee structure, etc.
+			"fees": 10, # percent, i.e. 10 is 10%
+			"min_contrib": 1, # dollars, not including fees (b/c it is used for client-side form validation)
+			"max_contrib": 500, # dollars, not including fees (b/c it is used for client-side form validation)
+		}
+
+	def get_absolute_url(self):
+		return "/pledge/%d" % self.id
 
 class PledgeExecution(models.Model):
 	"""How a user's pledge was executed. Each pledge has a single PledgeExecution when the Trigger is executed, and immediately many Contribution objects are created."""
@@ -192,7 +206,7 @@ class PledgeExecution(models.Model):
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 
 	charged = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount the user's account was actually charged, in dollars. It may differ from the pledge amount to ensure that contributions of whole-cent amounts could be made to candidates, and it will include fees.")
-	fees = JSONField(help_text="A dictionary representing all fees on the charge.")
+	fees = models.DecimalField(max_digits=6, decimal_places=2, help_text="The fees the user was charged, in dollars.")
 	contributions_executed = models.DecimalField(max_digits=6, decimal_places=2, help_text="The total amount of executed camapaign contributions to-date.")
 	contributions_pending = models.DecimalField(max_digits=6, decimal_places=2, help_text="The current total amount of pending camapaign contributions.")
 

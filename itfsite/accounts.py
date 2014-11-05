@@ -17,7 +17,7 @@ class LoginResult(enum.Enum):
 	Incorrect = 2
 	Success = 3
 
-def validate_email(email):
+def validate_email(email, simple=False):
 	# First check that the email is of a valid form.
 
 	# Based on RFC 2822 and https://github.com/SyrusAkbary/validate_email/blob/master/validate_email.py,
@@ -34,6 +34,9 @@ def validate_email(email):
 	m = re.match(ADDR_SPEC, email)
 	if not m:
 		return ValidateEmailResult.Invalid
+
+	if simple:
+		return ValidateEmailResult.Valid
 
 	domain = m.group(1)
 	
@@ -139,17 +142,26 @@ def login_view(request):
 	# Try to log the user in. Assumes the username on the User object
 	# is also the email address.
 	from django.contrib.auth import authenticate, login
-	email = request.POST['email']
-	password = request.POST['password']
+	from django.contrib.auth.models import User
+	email = request.POST['email'].strip()
+	password = request.POST['password'].strip()
 	user = authenticate(username=email, password=password)
 	if user is None:
-		# Login failed. Why? If it's because the email address
-		# is itself invalid, clue the user to that.
-		ret = validate_email(email)
-		if ret != ValidateEmailResult.Invalid:
-			# The email address is reasonable. It must be that
-			# the email/password pair does not match.
+		# Login failed. Why? If a user with that email exists,
+		# return Incorrect.
+		if User.objects.filter(email=email).exists():
 			ret = LoginResult.Incorrect
+
+		else:
+			# If it's because the email address is itself invalid, clue the user to that.
+			# But only do a simple regex check.
+			if validate_email(email, simple=True) == ValidateEmailResult.Invalid:
+				return ValidateEmailResult.Invalid
+			else:
+				# The email address is reasonable, but not in our system. Don't
+				# reveal whether the email address is registered or not. Just
+				# say the login is incorrect.
+				ret = LoginResult.Incorrect
 	else:
 		if user.is_active:
 			# Login succeeded.
