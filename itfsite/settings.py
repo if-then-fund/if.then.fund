@@ -21,6 +21,8 @@ INSTALLED_APPS = (
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
 
+	'email_confirm_la',
+
 	'itfsite',
 	'contrib',
 
@@ -68,9 +70,17 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 # Paths
 
 STATIC_URL = '/static/'
+
+# App settings
+
+EMAIL_CONFIRM_LA_HTTP_PROTOCOL = 'https'
+EMAIL_CONFIRM_LA_DOMAIN = 'itfsite.unnamed.example'
+DEFAULT_FROM_EMAIL = 'hello@itfsite.unnamed.example'
 
 # Local Settings
 

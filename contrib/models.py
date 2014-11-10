@@ -198,6 +198,20 @@ class Pledge(models.Model):
 	def get_absolute_url(self):
 		return "/pledge/%d" % self.id
 
+	def send_email_verification(self):
+		# Tries to confirm an anonymous-user-created pledge. Might
+		# raise an IOError if the email could not be sent, which leaves
+		# the EmailConfirmation object created but with send_at null.
+		from email_confirm_la.models import EmailConfirmation
+		ec = EmailConfirmation.objects.set_email_for_object(
+		    email=self.email,
+		    content_object=self,
+		)
+		if not ec.send_at:
+			# EmailConfirmation object exists but sending failed last
+			# time, so try again.
+			ec.send(None)
+
 class PledgeExecution(models.Model):
 	"""How a user's pledge was executed. Each pledge has a single PledgeExecution when the Trigger is executed, and immediately many Contribution objects are created."""
 

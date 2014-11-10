@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
+from django.db import transaction
 
 from twostream.decorators import anonymous_view
 
@@ -22,6 +23,7 @@ def trigger(request, id, slug):
 
 @require_http_methods(['POST'])
 @json_response
+@transaction.atomic
 def submit(request):
 	p = Pledge()
 
@@ -48,12 +50,25 @@ def submit(request):
 	if p_exist is not None:
 		return { "status": "ok", "redirect": p_exist.get_absolute_url() }
 
-	# fields that have the same field name as form element name
-	for field in ('algorithm', 'desired_outcome', 'contrib_amount', 'total_amount',
-		'incumb_challgr', 'filter_party'):
+	# integer fields that have the same field name as form element name
+	for field in ('algorithm', 'desired_outcome'):
+		try:
+			setattr(p, field, int(request.POST[field]))
+		except ValueError:
+			raise Exception("%s is out of range" % field)
+
+	# float fields that have the same field name as form element name
+	for field in ('contrib_amount', 'total_amount', 'incumb_challgr'):
+		try:
+			setattr(p, field, float(request.POST[field]))
+		except ValueError:
+			raise Exception("%s is out of range" % field)
+
+	# string fields that have the same field name as the form element name
+	for field in ('filter_party',):
 		setattr(p, field, request.POST[field])
 
-	# fields that go straight into the extras dict.
+	# string fields that go straight into the extras dict.
 	p.extra = {}
 	for field in (
 		'billingName', 
@@ -66,7 +81,7 @@ def submit(request):
 
 	# Validation. Some are checked client side, so errors are internal
 	# error conditions and not validation problems to show the user.
-	if p.algorithm != Pledge.current_algorithm()["alg"]:
+	if p.algorithm != Pledge.current_algorithm()["id"]:
 		raise Exception("algorithm is out of range")
 	if not (0 <= p.desired_outcome < len(p.trigger.outcomes)):
 		raise Exception("desired_outcome is out of range")
@@ -94,7 +109,19 @@ def submit(request):
 		# Re-wrap into something @json_response will catch.
 		raise ValueError("Something went wrong: " + str(e))
 
-	# Issue an email verification if this is from an anonymous user.
+	if not request.user.is_authenticated():
+		# The pledge needs to get confirmation of the user's email address,
+		# which will lead to account creation.
+		try:
+			p.send_email_verification()
+		except IOError:
+			# If we can't synchronously send an email, just go on. We'll
+			# try again asynchronously.
+			pass
+
+		# And in order for the user to be able to view the pledge on the
+		# next page, we'll need to set a token to grant permission.
+		request.session.setdefault('anon_pledge_created', []).add( p.id )
 
 	# Tell the client to redirect to the page where the user can see the pledge.
 	return { "status": "ok", "redirect": p.get_absolute_url() }

@@ -13,4 +13,6 @@ urlpatterns = patterns('',
 	url(r'^admin/', include(admin.site.urls)),
 
 	url(r'^_twostream', include('twostream.urls')),
+
+    url(r'^ev/', include('email_confirm_la.urls')),
 )

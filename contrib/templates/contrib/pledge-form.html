@@ -382,7 +382,6 @@ function pledge_init() {
   })
 
   update_state();
-  pledge_go();
 }
 
 function toggle_buttons(group_selector, elem_clicked, multi) {
@@ -656,7 +655,7 @@ function pledge_submit() {
     method: "POST",
     data: data,
     success: function(res) {
-      alert(res)
+      window.location = res.redirect;
     }
   })
 }
