@@ -1,6 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
+from django.dispatch import receiver
+from django.contrib import messages
+from django.http import HttpResponseRedirect, HttpResponseForbidden
+
+from email_confirm_la.signals import post_email_confirm
 
 from twostream.decorators import anonymous_view
 
@@ -120,8 +125,49 @@ def submit(request):
 			pass
 
 		# And in order for the user to be able to view the pledge on the
-		# next page, we'll need to set a token to grant permission.
-		request.session.setdefault('anon_pledge_created', []).add( p.id )
+		# next page, prior to email confirmation, we'll need to set a token
+		# to grant permission. Only hold up to 20 values.
+		request.session['anon_pledge_created'] = \
+			request.session.get('anon_pledge_created', [])[-20:] \
+			+ [p.id]
 
 	# Tell the client to redirect to the page where the user can see the pledge.
 	return { "status": "ok", "redirect": p.get_absolute_url() }
+
+# A user confirms an email address on an anonymous pledge.
+@receiver(post_email_confirm)
+def post_email_confirm_callback(sender, confirmation, request=None, **kwargs):
+	pledge = confirmation.content_object
+	email = confirmation.email
+
+	# Handle case of repeated calls to this function.
+	if pledge.user is None:
+		pledge.confirm_email(email)
+		messages.add_message(request, messages.SUCCESS, 'Your contribution for %s has been confirmed.'
+			% pledge.trigger.title)
+
+	if pledge.user.has_usable_password() or (request.user.is_authenticated() and request.user != pledge.user):
+		return HttpResponseRedirect(pledge.get_absolute_url())
+	else:
+		# Log the user in and ask them to set a password on their account.
+		from itfsite.accounts import first_time_user
+		return first_time_user(request, pledge.user, pledge.get_absolute_url())
+
+def show_contrib(request, id):
+	pledge = get_object_or_404(Pledge, id=id)
+	access_mode = None
+	owner_string = None
+
+	# Access?
+	if pledge.user == request.user or pledge.id in request.session.get('anon_pledge_created', []):
+		access_mode = "owner"
+		owner_string = "Your"
+	else:
+		return HttpResponseForbidden("You have arrived at a page for a contribution that you are not able to access.")
+
+	return render(request, "contrib/contrib.html", {
+		"trigger": pledge.trigger,
+		"pledge": pledge,
+		"access_mode": access_mode,
+		"owner_string": owner_string,
+	})

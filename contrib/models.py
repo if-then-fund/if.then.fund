@@ -1,6 +1,6 @@
 import enum
 
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import User
 
 from jsonfield import JSONField
@@ -158,6 +158,13 @@ class Action(models.Model):
 	class Meta:
 		unique_together = [('execution', 'actor')]
 
+@django_enum
+class PledgeStatus(enum.Enum):
+	Open = 1
+	Executed = 2
+	Cancelled = 3 # user canceled prior to pledge execution
+	Vacated = 4 # trigger was vacated
+
 class Pledge(models.Model):
 	"""A user's pledge of a contribution."""
 
@@ -168,6 +175,7 @@ class Pledge(models.Model):
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True)
 	algorithm = models.IntegerField(default=0, help_text="In case we change our terms & conditions, or our explanation of how things work, an integer indicating the terms and expectations at the time the user made the pledge.")
+	status = EnumField(PledgeStatus, default=PledgeStatus.Open, help_text="The current status of the pledge.")
 
 	desired_outcome = models.IntegerField(help_text="The outcome index that the user desires.")
 	contrib_amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The pledge amount, in dollars, not including fees. Stored explicitly so that we are sure to match what the user actually entered.")
@@ -175,9 +183,6 @@ class Pledge(models.Model):
 	incumb_challgr = models.FloatField(help_text="A float indicating how to split the pledge: -1 (to challenger only) <=> 0 (evenly split between incumbends and challengers) <=> +1 (to incumbents only)")
 	filter_party = models.CharField(max_length=3, help_text="A string containing one or more of the characters 'D' 'R' and 'I' that filters contributions to only candidates whose party matches on of the included characters.")
 	filter_competitive = models.BooleanField(default=False, help_text="Whether to filter contributions to competitive races.")
-
-	cancelled = models.BooleanField(default=False, help_text="True if the user cancels the pledge prior to execution.")
-	vacated = models.BooleanField(default=False, help_text="True if the Trigger is vacated.")
 
 	district = models.CharField(max_length=64, blank=True, null=True, db_index=True, help_text="The congressional district of the user (at the time of the pledge), if their address is in a congressional district.")
 
@@ -195,8 +200,44 @@ class Pledge(models.Model):
 			"max_contrib": 500, # dollars, not including fees (b/c it is used for client-side form validation)
 		}
 
+	def __str__(self):
+		return self.get_email() + " => " + str(self.trigger)
+
 	def get_absolute_url(self):
-		return "/pledge/%d" % self.id
+		return "/contrib/%d" % self.id
+
+	def get_email(self):
+		if self.user:
+			return self.user.email
+		else:
+			return self.email
+
+	@property
+	def desired_outcome_label(self):
+		return self.trigger.outcomes[self.desired_outcome]["label"]
+
+	@property
+	def targets_summary(self):
+		def ucfirst(s):
+			return s[0].upper() + s[1:]
+
+		party_filter = ""
+		if len(self.filter_party) < 3:
+			party_map = { "R": "Republican", "D": "Democratic", "I": "3rd Party" }
+			party_filter = \
+				" or ".join(party_map[p] for p in self.filter_party) \
+				+ " "
+
+		actors = self.trigger.strings['actors']
+		if party_filter == "":
+			actors = ucfirst(actors)
+
+		if self.incumb_challgr == -1:
+			actors = "challengers of " + actors
+		elif self.incumb_challgr == 0:
+			actors += " and challengers"
+
+		return party_filter + actors
 
 	def send_email_verification(self):
 		# Tries to confirm an anonymous-user-created pledge. Might
@@ -204,13 +245,26 @@ class Pledge(models.Model):
 		# the EmailConfirmation object created but with send_at null.
 		from email_confirm_la.models import EmailConfirmation
 		ec = EmailConfirmation.objects.set_email_for_object(
-		    email=self.email,
-		    content_object=self,
+			email=self.email,
+			content_object=self,
 		)
 		if not ec.send_at:
 			# EmailConfirmation object exists but sending failed last
 			# time, so try again.
 			ec.send(None)
+
+	@transaction.atomic
+	def confirm_email(self, email):
+		# Get or create a new User for the email address.
+		try:
+			user = User.objects.get(email=email)
+		except User.DoesNotExist:
+			user = User.objects.create_user(email, email=email)
+
+		# Move the anoymous pledge to the user's account.
+		self.user = user
+		self.email = None
+		self.save()
 
 class PledgeExecution(models.Model):
 	"""How a user's pledge was executed. Each pledge has a single PledgeExecution when the Trigger is executed, and immediately many Contribution objects are created."""

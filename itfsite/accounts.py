@@ -1,8 +1,10 @@
-import enum, re
+import enum, re, urllib.parse
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.backends import ModelBackend
 
 from django.conf import settings
 
@@ -171,3 +173,22 @@ def login_view(request):
 			# Account is disabled.
 			ret = LoginResult.Inactive
 	return HttpResponse(str(ret), content_type="text/plain")
+
+class DirectLoginBackend(ModelBackend):
+	# Django can't log a user in without their password. Before they create
+	# a password, we use this to log them in. Registered in settings.py.
+	supports_object_permissions = False
+	supports_anonymous_user = False
+	def authenticate(self, user_object=None):
+		if not user_object.is_active:
+			return None
+		return user_object
+
+def first_time_user(request, user, next):
+	# Log in a first time user and send them to the page to
+	# set their password.
+	user = authenticate(user_object=user)
+	if user is None or not user.is_active: raise ValueError("Could not authenticate or account is diabled.")
+	login(request, user)
+	return HttpResponseRedirect("/account/welcome?" +
+			urllib.parse.urlencode({ "next": next }))

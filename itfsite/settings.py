@@ -21,12 +21,14 @@ INSTALLED_APPS = (
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
 
-	'email_confirm_la',
-
 	'itfsite',
 	'contrib',
 
 	'twostream',
+
+	# 3rd party apps. They go last so that we can override their
+	# templates.
+	'email_confirm_la',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -49,6 +51,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 	"django.contrib.messages.context_processors.messages",
 	'django.core.context_processors.request',
 	)
+
+AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'itfsite.accounts.DirectLoginBackend']
 
 # Database
 
@@ -80,6 +84,7 @@ STATIC_URL = '/static/'
 
 EMAIL_CONFIRM_LA_HTTP_PROTOCOL = 'https'
 EMAIL_CONFIRM_LA_DOMAIN = 'itfsite.unnamed.example'
+EMAIL_CONFIRM_LA_SAVE_EMAIL_TO_INSTANCE = False
 DEFAULT_FROM_EMAIL = 'hello@itfsite.unnamed.example'
 
 # Local Settings

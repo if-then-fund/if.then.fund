@@ -34,3 +34,4 @@ def json_response(f):
 				content_type="application/json")
 
 	return g
+

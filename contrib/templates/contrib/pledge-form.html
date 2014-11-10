@@ -382,6 +382,21 @@ function pledge_init() {
   })
 
   update_state();
+
+  if (window.location.hash == "#demo") {
+    $('#emailEmail').val("my@mycompany.com")
+    $('#contribNameFirst').val('John')
+    $('#contribNameLast').val('Doe')
+    $('#contribAddress').val('123 Main Street')
+    $('#contribCity').val('Plainview')
+    $('#contribState').val('TX')
+    $('#contribZip').val('00001-1234')
+    $('#contribOccupation').val('demonstrator')
+    $('#contribEmployer').val('self')
+    $('#billingCCNum').val('4111111111111111')
+    $('#billingCCExp').val('1/2020')
+    $('#billingCCCVC').val('000')
+  }
 }
 
 function toggle_buttons(group_selector, elem_clicked, multi) {

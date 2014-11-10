@@ -119,6 +119,18 @@
         </script>
 
         {% include "twostream/head.html" %}
+        <script>
+          if (django_messages.length > 0) {
+            var msg = $("<div></div>");
+            for (var i = 0; i < django_messages.length; i++) {
+              var n = $("<p/>")
+                .addClass(django_messages[i].level_tag)
+                .text(django_messages[i].message);
+              msg.append(n)
+            }
+            show_modal_error('', msg)
+          }
+        </script>
 
         {% block scripts %}
         {% endblock %}
