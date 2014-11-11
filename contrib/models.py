@@ -271,53 +271,33 @@ class PledgeExecution(models.Model):
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 
-	charged = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount the user's account was actually charged, in dollars. It may differ from the pledge amount to ensure that contributions of whole-cent amounts could be made to candidates, and it will include fees.")
+	charged = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount the user's account was actually charged, in dollars and including fees. It may differ from the pledge amount to ensure that contributions of whole-cent amounts could be made to candidates.")
 	fees = models.DecimalField(max_digits=6, decimal_places=2, help_text="The fees the user was charged, in dollars.")
-	contributions_executed = models.DecimalField(max_digits=6, decimal_places=2, help_text="The total amount of executed camapaign contributions to-date.")
-	contributions_pending = models.DecimalField(max_digits=6, decimal_places=2, help_text="The current total amount of pending camapaign contributions.")
 
-class Campaign(models.Model):
-	"""A candidate in a particular election cycle."""
+class Recipient(models.Model):
+	"""A contribution recipient, such as a candidate's campaign committee. Whereas an Actor represents a person who takes an action, a Recipient represents a FEC-recognized entity who can be the recipient of a campaign contribution. A Recipient also exists for any logically-specified challenger. An Actor may be linked with multiple Recipients but has one 'current' recipient."""
+
+	current = models.BooleanField(default=True, help_text="Whether this record is a current Recipient for an Actor.")
+
+	actor = models.ForeignKey(Actor, blank=True, null=True, help_text="The Actor associated with the Recipient. The Recipient may be the Actor's challenger.")
+	party = models.CharField(max_length=1, choices=[('R', 'Republican'), ('D', 'Democratic'), ('I', '3rd-Party')], help_text="The party of the Recipient, R/D/I.")
+	is_opponent = models.BooleanField(default=False, help_text="If True, the Recipient is a general election challenger of the Actor.")
 
 	cycle = models.IntegerField(help_text="The election cycle (year) of the campaign.")
-	actor = models.ForeignKey(Actor, blank=True, null=True, help_text="If the candidate of this campaign is an Actor, then the Actor.")
-	candidate = models.IntegerField(blank=True, null=True, db_index=True, help_text="For candidates that are not also Actors, a unique identifier for the candidate that spans Campaign objects (which are cycle-specific).")
+	name = models.CharField(max_length=255, help_text="The name of the Recipient, typically for internal/debugging use only.")
 
-	name_long = models.CharField(max_length=128, help_text="The long form of the candidates's name during this campaign, meant for a page title.")
-	name_short = models.CharField(max_length=128, help_text="The short form of the candidates's name during this campaign, usually a last name, meant for in-page second references.")
-	name_sort = models.CharField(max_length=128, help_text="The sorted list form of the candidates's name during this campaign.")
-	party = models.CharField(max_length=128, help_text="Candidate's party during this campaign.")
-
+	de_id = models.CharField(max_length=64, help_text="The Democracy Engine ID that we have assigned to this recipient.")
 	fec_id = models.CharField(max_length=64, blank=True, null=True, help_text="The FEC ID of the campaign.")
 
-	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
-
-@django_enum
-class ContributionStatus(enum.Enum):
-	Pending = 1 # contribution is pending (e.g. not processed yet, opponent not known)
-	Executed = 2 # contribution was executed
-	Vacated = 3 # contribution could not be made, we retain funds
-	AbortedActorQuit = 10 # actor is no longer running for office
-	AbortedOverLimitTarget = 11 # user is over their contribution limit to the target candidate
-	AbortedOverLimitAll = 12 # user is over their contribution limit to all candidates
-	AbortedUnopposed = 13 # we know at the time of executing the pledge that the actor has no opponent
-
 class Contribution(models.Model):
-	"""A campaign contribution (possibly pending, aborted, etc.)."""
+	"""A fully executed campaign contribution."""
 
 	pledge_execution = models.ForeignKey(PledgeExecution, on_delete=models.PROTECT, help_text="The PledgeExecution this execution information is about.")
-	action = models.ForeignKey(Action, on_delete=models.PROTECT, help_text="The Action (including Actor) this contribution was triggered for.")
-
-	status = EnumField(ContributionStatus, help_text="The status of the contribution: Pending (opponent not known), Executed, Vacated (no opponent exists)")
-	execution_time = models.DateTimeField(blank=True, null=True, db_index=True)
+	recipient = models.ForeignKey(Recipient, on_delete=models.PROTECT, help_text="The Recipient this contribution was sent to.")
 	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount of the contribution, in dollars.")
-
-	is_opponent = models.BooleanField(default=False, help_text="Is the target the actor (False) or the general election opponent of the actor (True)?")
-	recipient = models.ForeignKey(Campaign, on_delete=models.PROTECT, help_text="The Campaign this contribution was sent to.")
-
 	refunded_time = models.DateTimeField(blank=True, null=True, help_text="If the contribution was refunded to the user, the time that happened.")
 
 	extra = JSONField(blank=True, help_text="Additional information about the contribution.")
 
 	class Meta:
-		unique_together = [('pledge_execution', 'action')]
+		unique_together = [('pledge_execution', 'recipient')]

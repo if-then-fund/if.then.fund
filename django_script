@@ -6,7 +6,7 @@
 . .env/bin/activate
 
 export DJANGO_SETTINGS_MODULE=itfsite.settings
-export PYTHONPATH=.
+export PYTHONPATH=.:lib
 
 python -u -W ignore /dev/stdin $@ << EOF;
 
