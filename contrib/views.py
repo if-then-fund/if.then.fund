@@ -76,9 +76,7 @@ def submit(request):
 	# string fields that go straight into the extras dict.
 	p.extra = {}
 	for field in (
-		'billingName', 
 		'billingCCNum', 'billingCCExp', 'billingCCCVC', 
-		'billingAddress', 'billingCity', 'billingState', 'billingZip',
 		'contribNameFirst', 'contribNameLast',
 		'contribAddress', 'contribCity', 'contribState', 'contribZip',
 		'contribOccupation', 'contribEmployer'):

@@ -294,27 +294,6 @@
                 </td>
               </tr>
 
-              <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Billing Address</td></tr>
-              <tr>
-                <td><label for="billingName">Name</label></td>
-                <td><input type="text" id="billingName" name="billingName"></td>
-              </tr>
-              <tr>
-                <td><label for="billingAddress">Address</label></td>
-                <td><input type="text" id="billingAddress" name="billingAddress"></td>
-              </tr>
-              <tr>
-                <td><label for="billingCity">City</label></td>
-                <td><input type="text" id="billingCity" name="billingCity"></td>
-              </tr>
-              <tr>
-                <td><label for="billingState">State/ZIP</label></td>
-                <td>
-                  <input type="text" id="billingState" name="billingState" maxlength="2" style="width: 60px">
-                  <input type="text" id="billingZip" name="billingZip" maxlength="10" style="width: 169px;">
-                </td>
-              </tr>
-
               <tr>
                 <td></td>
                 <td class="buttons">
@@ -535,11 +514,9 @@ function do_pledge_login() {
 }
 
 function do_contributor() {
-  var fields1 = ['contribNameFirst', 'contribNameLast', 'contribOccupation', 'contribEmployer'];
-  var fields_addr = ['contribAddress', 'contribCity', 'contribState', 'contribZip'];
+  var required_fields = ['contribNameFirst', 'contribNameLast', 'contribOccupation', 'contribEmployer', 'contribAddress', 'contribCity', 'contribState', 'contribZip'];
   var valid = true;
 
-  var required_fields = fields1.concat(fields_addr);
   for (var i = 0; i < required_fields.length; i++) {
     var elem = $('#' + required_fields[i]);
     elem.popover('destroy');
@@ -550,14 +527,6 @@ function do_contributor() {
   }
 
   if (!valid) return;
-
-  // fill in the billing name based on the contributor
-  $('#billingName').val($('#contribNameFirst').val() + " " + $('#contribNameLast').val());
-
-  // copy the contributor address as the billing address
-  for (var i = 0; i < fields_addr.length; i++)
-    $('#' + fields_addr[i].replace(/^contrib/, 'billing')).val( $('#' + fields_addr[i]).val() );
-
   $('a[href="#payment"]').tab('show') 
 }
 
@@ -606,18 +575,6 @@ function pledge_submit() {
     $('#billingCCCVC').popover({ content: "Enter your card verification code, often found on the back side of the card." }).popover('show');
     return;
   }
-
-  var required_fields = ['billingName', 'billingAddress', 'billingCity', 'billingState', 'billingZip'];
-  var valid = true;
-  for (var i = 0; i < required_fields.length; i++) {
-    var elem = $('#' + required_fields[i]);
-    elem.popover('destroy');
-    if (!/\S/.test(elem.val())) {
-      valid = false;
-      elem.popover({ content: "Required." }).popover('show');
-    }
-  }
-  if (!valid) return;
 
   // Valid. Submit! Collect all of the form fields.
   var form_params = $('#pledge-info').serializeArray();
