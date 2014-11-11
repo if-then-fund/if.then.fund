@@ -1,0 +1,3 @@
+{% load i18n %}
+
+{% blocktrans %}Confirm your email address for if.then.fund{% endblocktrans %}

@@ -1,0 +1,103 @@
+{% extends "master.html" %}
+
+{% block title %}Welcome to if.then.fund{% endblock %}
+
+{% block head %}
+<style>
+</style>
+{% endblock %}
+
+{% block body %}
+<div style="margin: 0 auto; max-width: 24em;">
+	<h1 style="margin: 1em; text-align: center">Welcome</h1>
+
+	<p style="margin: 2em; text-align: center;">Thank you for confirming your email address. Now please set a password for your account:</p>
+
+	<form class="form-horizontal" role="form" method="post" onsubmit="return password_validation()">
+		{% csrf_token %}
+		<div class="form-group">
+			<label>Email address</label>
+			<div>{{request.user.email}}</div>
+		</div>
+		<div class="form-group has-feedback">
+			<label for="inputPassword">Password</label>
+			<input type="password" name="p1" class="form-control" id="inputPassword" placeholder="enter a password">
+		<span class="glyphicon form-control-feedback"></span>
+		<span class="help-block small">Password must be at least 4 characters and cannot contain spaces.</span>
+		</div>
+		<div class="form-group has-feedback">
+			<label for="inputPassword2">Password again</label>
+			<input type="password" name="p2" class="form-control" id="inputPassword2" placeholder="enter it again to confirm">
+			<span class="glyphicon form-control-feedback"></span>
+		<span class="help-block small">Enter your password a second time to confirm.</span>
+		</div>
+		<div class="form-group" style="padding-top: 4px">
+			{% if error %}<p class="text-danger">{{error}}</p>{% endif %}
+			<button type="submit" class="btn btn-primary">Submit</button>
+		</div>
+	</form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function password_validation() {
+	// reset state
+	$('#inputPassword, #inputPassword2')
+		.parent('.form-group')
+		.removeClass('has-success')
+		.removeClass('has-error');
+	$('#inputPassword, #inputPassword2')
+		.parent('.form-group')
+		.find('.glyphicon')
+		.removeClass('glyphicon-ok')
+		.removeClass('glyphicon-remove')
+
+	function warn(ctrl) {
+		var p1 = $('#inputPassword').parent('.form-group');
+		var p2 = $('#inputPassword2').parent('.form-group');
+		if (ctrl == '') {
+			p1.addClass('has-error');
+			p1.find('.glyphicon').addClass('glyphicon-remove');
+		} else {
+			p1.addClass('has-success');
+			p1.find('.glyphicon').addClass('glyphicon-ok');
+			if (ctrl == '2') {
+				p2.addClass('has-error');
+				p2.find('.glyphicon').addClass('glyphicon-remove');
+			} else {
+				p2.addClass('has-success');
+				p2.find('.glyphicon').addClass('glyphicon-ok');
+			}
+		}
+	}
+
+	var p = $('#inputPassword').val();
+	if (p == '') {
+		// nothing entered yet
+		return false;
+	}
+	if (p.length < 4 || p.length > 128 || / /.test(p)) {
+		warn('');
+		return false;
+	}
+
+	var p2 = $('#inputPassword2').val();
+	if (p != p2) {
+		warn('2');
+		return false;
+	}
+
+	warn('ok')
+
+	return true;
+}
+$(function() {
+	$('#inputPassword, #inputPassword2').keyup(function() { password_validation() });
+	$('#inputPassword, #inputPassword2').change(password_validation);
+	password_validation();
+	$('#inputPassword').focus();
+})
+</script>
+{% endblock %}
