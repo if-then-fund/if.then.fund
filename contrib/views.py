@@ -63,7 +63,7 @@ def submit(request):
 			raise Exception("%s is out of range" % field)
 
 	# float fields that have the same field name as form element name
-	for field in ('contrib_amount', 'total_amount', 'incumb_challgr'):
+	for field in ('amount', 'incumb_challgr'):
 		try:
 			setattr(p, field, float(request.POST[field]))
 		except ValueError:
@@ -90,12 +90,8 @@ def submit(request):
 		raise Exception("algorithm is out of range")
 	if not (0 <= p.desired_outcome < len(p.trigger.outcomes)):
 		raise Exception("desired_outcome is out of range")
-	if not (Pledge.current_algorithm()["min_contrib"] <= p.contrib_amount <= Pledge.current_algorithm()["max_contrib"]):
-		raise Exception("contrib_amount is out of range")
-	if abs(p.contrib_amount*(1+Pledge.current_algorithm()["fees"]/100) - p.total_amount) > 1:
-		# Checking that the total amount includes the right amount of fees, within one
-		# cent in case Javascript does rounding differently than Python.
-		raise Exception("total_amount is incorrect")
+	if not (Pledge.current_algorithm()["min_contrib"] <= p.amount <= Pledge.current_algorithm()["max_contrib"]):
+		raise Exception("amount is out of range")
 	if p.incumb_challgr not in (-1, 0, 1):
 		raise Exception("incumb_challgr is out of range")
 	if len(p.filter_party) == 0:

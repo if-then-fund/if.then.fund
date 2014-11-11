@@ -178,8 +178,7 @@ class Pledge(models.Model):
 	status = EnumField(PledgeStatus, default=PledgeStatus.Open, help_text="The current status of the pledge.")
 
 	desired_outcome = models.IntegerField(help_text="The outcome index that the user desires.")
-	contrib_amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The pledge amount, in dollars, not including fees. Stored explicitly so that we are sure to match what the user actually entered.")
-	total_amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The pledge amount, in dollars, including fees. Stored explicitly so that we are sure to match what the user saw client-side as the total scheduled payment amount.")
+	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The pledge amount in dollars (including fees). The credit card charge may be less in the event that we have to round to the nearest penny-donation.")
 	incumb_challgr = models.FloatField(help_text="A float indicating how to split the pledge: -1 (to challenger only) <=> 0 (evenly split between incumbends and challengers) <=> +1 (to incumbents only)")
 	filter_party = models.CharField(max_length=3, help_text="A string containing one or more of the characters 'D' 'R' and 'I' that filters contributions to only candidates whose party matches on of the included characters.")
 	filter_competitive = models.BooleanField(default=False, help_text="Whether to filter contributions to competitive races.")
@@ -195,9 +194,8 @@ class Pledge(models.Model):
 	def current_algorithm():
 		return {
 			"id": 1, # a sequence number so we can track changes to our fee structure, etc.
-			"fees": 10, # percent, i.e. 10 is 10%
-			"min_contrib": 1, # dollars, not including fees (b/c it is used for client-side form validation)
-			"max_contrib": 500, # dollars, not including fees (b/c it is used for client-side form validation)
+			"min_contrib": 1, # dollars
+			"max_contrib": 500, # dollars
 		}
 
 	def __str__(self):

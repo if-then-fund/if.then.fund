@@ -6,7 +6,7 @@ class TriggerAdmin(admin.ModelAdmin):
     raw_id_fields = ['owner']
 
 class PledgeAdmin(admin.ModelAdmin):
-    list_display = ['user_or_email', 'trigger', 'contrib_amount']
+    list_display = ['user_or_email', 'trigger', 'amount']
     raw_id_fields = ['user', 'trigger']
     def user_or_email(self, obj):
     	return obj.user if obj.user else obj.email
