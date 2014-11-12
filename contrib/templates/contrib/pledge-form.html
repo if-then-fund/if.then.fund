@@ -49,7 +49,7 @@
 }
 
 #pledge-pay table {
-  width: 335px;
+  width: 308px;
 }
 #pledge-pay label {
   font-weight: normal;
@@ -70,16 +70,9 @@
     margin: 1em 0 0 1em;
   }
 
-#charges {
-  margin: 1em 1em;
+.loginpw td {
+  padding-right: .4em;
 }
-  #charges td {
-    font-size: 14px;
-  }
-  #charges .total td {
-    border-top: 1px solid #AAA;
-    padding-top: 2px;
-  }
 </style>
 
 <h2>$peak up</h2>
@@ -179,7 +172,7 @@
 
         <p style="margin-top: 1em">Do you have an if.then.fund password?</p>
 
-        <table>
+        <table class='loginpw'>
           <tr>
             <td><input id="emailEmailNoPassword" type="radio" name="emailEmailHasPassword" checked></td>
             <td><label for="emailEmailNoPassword">No, this is my first time here.</label></td>
@@ -191,7 +184,7 @@
           <tr>
             <td></td>
             <td><input type="password" id="emailPassword" class="form-control" disabled>
-              <div class="small" style="margin-top: .5em">Forgot your password? TBD</div></td>
+              <div class="small" style="margin-top: .5em">Forgot your password? Choose &ldquo;No, this is my first time here.&rdquo;</div></td>
           </tr>
           <tr>
             <td colspan="2">
@@ -230,7 +223,6 @@
                 <td><label for="contribNameLast">Last Name</label></td>
                 <td><input type="text" id="contribNameLast" name="contribNameLast"></td>
               </tr>
-              <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Mailing Address</td></tr>
               <tr>
                 <td><label for="contribAddress">Address</label></td>
                 <td><input type="text" id="contribAddress" name="contribAddress"></td>
@@ -242,21 +234,24 @@
               <tr>
                 <td><label for="contribState">State/ZIP</label></td>
                 <td>
-                  <input type="text" id="contribState" name="contribState" maxlength="2" style="width: 60px">
-                  <input type="text" id="contribZip" name="contribZip" maxlength="10" style="width: 169px;">
+                  <input type="text" id="contribState" name="contribState" maxlength="2" style="width: 70px">
+                  <input type="text" id="contribZip" name="contribZip" maxlength="10" style="width: 135px;">
                 </td>
               </tr>
-              <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Employment</td></tr>
-              <tr>
+              <tr><td colspan="2">
+                <label for="contribUnemployed">
+                  <input id="contribUnemployed" type="checkbox" onchange="$('.contribUnemployedTarget').toggle(!$(this).prop('checked')); if ($(this).prop('checked')) { $('#contribOccupation').val('not employed'); $('#contribEmployer').val('none'); }">
+                  Retired or not employed?
+                </label>
+              </td></tr>
+              <tr class="contribUnemployedTarget">
                 <td><label for="contribOccupation">Occupation</label></td>
                 <td><input type="text" id="contribOccupation" name="contribOccupation"></td>
               </tr>
-              <tr>
+              <tr class="contribUnemployedTarget">
                 <td><label for="contribEmployer">Employer</label></td>
                 <td><input type="text" id="contribEmployer" name="contribEmployer"></td>
               </tr>
-              <tr><td colspan="2" class="small text-muted">If you are self-employed, retired, etc., indicate that as your occupation and write &ldquo;self&rdquo; or &ldquo;none&rdquo; as your employer.</td></tr>
-
               <tr>
                 <td></td>
                 <td class="buttons">
@@ -274,7 +269,6 @@
             <p>Enter your payment information:</p>
 
             <table>
-              <tr><td></td><td class="small" style="padding-top: 5px; text-align: center;">Credit Card</td></tr>
               <tr>
                 <td><label for="billingCCNum">Number</label></td>
                 <td>
