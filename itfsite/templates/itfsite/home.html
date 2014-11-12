@@ -8,46 +8,42 @@
 {% endblock %}
 
 {% block body %}
-<h1 style="margin-bottom: 0">Your Account</h1>
+<h1 style="margin-bottom: 10px">Your Account</h1>
 
-<div class="row">
-	<div class="col-sm-3">
-		<h2>Account Settings</h2>
-		<p>Change Email...</p>
-		<p>Change Password...</p>
-	</div>
+<p id="account-actions">
+	{{request.user.email}}
+	|
+	<a href="{% url 'password_change' %}">Change Password</a>
+</p>
 
-	<div class="col-sm-9">
-		<h2>Your Contributions</h2>
+<h2>Your Contributions</h2>
 
-		{% for pledge in pledges %}
-			{% if forloop.first %}
-				<table class="table">
-				<thead>
-					<tr>
-						<td>Action</td>
-						<td>Amount</td>
-						<td>Status</td>
-					</tr>
-				</thead>
-				<tbody>
-			{% endif %}
-
+{% for pledge in pledges %}
+	{% if forloop.first %}
+		<table class="table">
+		<thead>
 			<tr>
-				<td><a href="{{pledge.trigger.get_absolute_url}}">{{pledge.trigger.title}}</a></td>
-				<td>${% firstof pledge.execution.charged|floatformat:2 pledge.amount|floatformat:2 %}</td>
-				<td>{{pledge.get_status_display}}</td>
+				<td>Action</td>
+				<td>Amount</td>
+				<td>Status</td>
 			</tr>
+		</thead>
+		<tbody>
+	{% endif %}
 
-			{% if forloop.last %}
-				</tbody>
-				</table>
-			{% endif %}
+	<tr>
+		<td><a href="{{pledge.trigger.get_absolute_url}}">{{pledge.trigger.title}}</a></td>
+		<td>${% firstof pledge.execution.charged|floatformat:2 pledge.amount|floatformat:2 %}</td>
+		<td>{{pledge.get_status_display}}</td>
+	</tr>
 
-		{% empty %}
-			<p>You have not yet made a campaign contribution.</p>
-		{% endfor %}
-	</div>
-</div>
+	{% if forloop.last %}
+		</tbody>
+		</table>
+	{% endif %}
+
+{% empty %}
+	<p>You have not yet made a campaign contribution.</p>
+{% endfor %}
 
 {% endblock %}
