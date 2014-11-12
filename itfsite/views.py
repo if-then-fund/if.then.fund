@@ -4,11 +4,11 @@ from django.contrib.auth.decorators import login_required
 from contrib.models import Pledge, PledgeExecution
 
 def homepage(request):
-	# Renders a page that has no special processing.
-	# simplepage is validated by urls.py.
+	# The site homepage.
 
-	from contrib.models import Trigger
-	triggers = Trigger.objects.order_by('-created')[0:10]
+	# Get all of the open triggers that a user might participate in.
+	from contrib.models import Trigger, TriggerState
+	triggers = Trigger.objects.filter(state=TriggerState.Open).order_by('-total_pledged')
 
 	return render(request, "itfsite/homepage.html", {
 		"triggers": triggers

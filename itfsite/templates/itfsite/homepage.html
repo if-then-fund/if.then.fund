@@ -1,26 +1,58 @@
 {% extends "master.html" %}
 
-{% block title %}About{% endblock %}
+{% block title %}Home{% endblock %}
+
+{% block override_navbar_brand %}
+	{# hide the brand from the nav bar because it's bigger in the jumbotron #}
+{% endblock %}
 
 {% block head %}
 <style>
+#tron {
+	background-color: black;
+	color: white;
+	padding: 1.5em;
+}
+	#tron h1 {
+		margin: 0;
+	}
+	#tron #deck {
+		padding: 1em 0 0 0;
+		font-size: 25px;
+		line-height: 160%;
+	}
+	#tron a {
+		color: #FFA;
+	}
 
+.triggers span {
+	margin-left: 1em;
+	font-style: italic;
+}
 </style>
 {% endblock %}
 
 {% block body %}
-<h1>if.then.fund</h1>
-
-<div class="row">
+<div class="row" id="tron">
 	<div class="col-sm-6">
-		<p>if.then.fund is a project to do stuff.</p>
+		<h1>if.then.fund</h1>
+
+		<div id="deck">
+			Join the donors<br>
+			shaping Congress<br>
+			in small-$ amounts<br>
+			based on outcomes.
+		</div>
 	</div>
 
-	<div class="col-sm-6 team">
+	<div class="col-sm-6 triggers">
+		<p>Make a contribution based on the outcome of these votes in Congress:</p>
 		{% for t in triggers %}
-			<p><a href="{{t.get_absolute_url}}">{{t.title}}</a></p>
+			<p>
+				<a href="{{t.get_absolute_url}}">{{t.title}}</a>
+				<br><span>${{t.total_pledged|floatformat}} pledged so far</span>
+			</p>
 		{% endfor %}
 	</div>
 </div>
-
 {% endblock %}
