@@ -1,0 +1,20 @@
+{% extends "master.html" %}
+{% load bootstrap %}
+
+{% block title %}Login{% endblock %}
+
+{% block body %}
+
+<form role="form" method="post" action="{% url 'django.contrib.auth.views.login' %}"
+	style="max-width: 30em; margin-top: 2em">
+	<input type="hidden" name="next" value="{{ next }}" />
+
+    <legend>Log In</legend>
+    {% csrf_token %}
+    {{ form|bootstrap }}
+    <div class="form-group">
+      <input type="submit" class="btn btn-primary" value="Log In" />
+    </div>
+</form>
+
+{% endblock %}

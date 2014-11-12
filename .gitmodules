@@ -1,0 +1,3 @@
+[submodule "ext/django-bootstrap-form"]
+	path = ext/django-bootstrap-form
+	url = https://github.com/JoshData/django-bootstrap-form

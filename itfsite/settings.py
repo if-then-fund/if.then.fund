@@ -29,6 +29,7 @@ INSTALLED_APPS = (
 	# 3rd party apps. They go last so that we can override their
 	# templates.
 	'email_confirm_la',
+	'bootstrapform',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -86,6 +87,7 @@ if environment["https"]:
 # Paths
 
 STATIC_URL = '/static/'
+LOGIN_REDIRECT_URL = '/home'
 
 # App settings
 

@@ -81,8 +81,8 @@ class EmailPasswordLoginBackend(ModelBackend):
 				return user
 		except User.DoesNotExist:
 			# Says Django sources: Run the default password hasher once to reduce the timing
-            # difference between an existing and a non-existing user (#20760).
-			User.set_password(password)
+            # difference between an existing and a non-existing user. Whatever.
+			pass
 		return None
 
 class DirectLoginBackend(ModelBackend):

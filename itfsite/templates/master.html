@@ -53,6 +53,11 @@
           <a class="navbar-brand" href="/">⬔ if.then.fund</a>
         </div>
         <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li class="if-anonymous hidden log-inout-link"><a href="/accounts/login">Log In</a></li>
+            <li class="if-logged-in hidden"><a href="/home">My Account</a></li>
+            <li class="if-logged-in hidden log-inout-link"><a href="/accounts/logout">Log Out</a></li>
+          </ul>
         </div><!--/.navbar-collapse -->
       </div>
     </div>
@@ -120,6 +125,7 @@
 
         {% include "twostream/head.html" %}
         <script>
+          // Django Messages
           if (django_messages.length > 0) {
             var msg = $("<div></div>");
             for (var i = 0; i < django_messages.length; i++) {
@@ -130,6 +136,18 @@
             }
             show_modal_error('', msg)
           }
+
+          // User Login Buttons
+          if (!the_user)
+            $('.if-anonymous').removeClass('hidden')
+          else
+            $('.if-logged-in').removeClass('hidden')
+          {% if request.path != '/' and request.path != '/accounts/login' %}
+          {# on the home and login page, dont redirect back to those pages after a login but instead go to the users account page #}
+          $('.log-inout-link a').each(function() {
+              $(this).attr('href', $(this).attr('href') + '?next=' + encodeURIComponent('{{request.path|escapejs}}'));
+            });
+          {% endif %}
         </script>
 
         {% block scripts %}
