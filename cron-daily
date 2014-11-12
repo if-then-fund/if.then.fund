@@ -1,0 +1,2 @@
+./manage.py clearsessions
+./manage.py clear_expired_email_confirmations
