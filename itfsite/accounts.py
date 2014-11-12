@@ -226,17 +226,24 @@ def validate_email(email, simple=False):
 def validate_email_view(request):
 	return HttpResponse(str(validate_email(request.POST['email'])), content_type="text/plain")
 
-@require_http_methods(["POST"])
-def login_view(request):
-	# Try to log the user in.
+def try_login(request):
+	# Do the authentication part of logging the user in, and returns the
+	# User object on success or a LoginResult or ValidateEmailResult on
+	# failure.
 	email = request.POST['email'].strip()
 	password = request.POST['password'].strip()
 	user = authenticate(email=email, password=password)
-	if user is None:
+	if user is not None:
+		if not user.is_active:
+			# Account is disabled.
+			return LoginResult.Inactive
+		else:
+			return user
+	else:
 		# Login failed. Why? If a user with that email exists,
 		# return Incorrect.
 		if User.objects.filter(email=email).exists():
-			ret = LoginResult.Incorrect
+			return LoginResult.Incorrect
 
 		else:
 			# If it's because the email address is itself invalid, clue the user to that.
@@ -247,16 +254,7 @@ def login_view(request):
 				# The email address is reasonable, but not in our system. Don't
 				# reveal whether the email address is registered or not. Just
 				# say the login is incorrect.
-				ret = LoginResult.Incorrect
-	else:
-		if user.is_active:
-			# Login succeeded.
-			login(request, user)
-			ret = LoginResult.Success
-		else:
-			# Account is disabled.
-			ret = LoginResult.Inactive
-	return HttpResponse(str(ret), content_type="text/plain")
+				return LoginResult.Incorrect
 
 def first_time_confirmed_user(request, user, next):
 	# The user has just confirmed their email address. Log them in.

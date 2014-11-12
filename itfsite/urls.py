@@ -9,7 +9,6 @@ urlpatterns = patterns('',
 	url(r'^', include('contrib.urls')),
 
 	url(r'_ajax/validate_email$', 'itfsite.accounts.validate_email_view'),
-	url(r'_ajax/login$', 'itfsite.accounts.login_view'),
 
 	url(r'^admin/', include(admin.site.urls)),
 

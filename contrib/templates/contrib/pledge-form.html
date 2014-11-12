@@ -174,16 +174,16 @@
 
         <table class='loginpw'>
           <tr>
-            <td><input id="emailEmailNoPassword" type="radio" name="emailEmailHasPassword" checked></td>
+            <td><input id="emailEmailNoPassword" type="radio" name="hasPassword" value="0" checked></td>
             <td><label for="emailEmailNoPassword">No, this is my first time here.</label></td>
           </tr>
           <tr>
-            <td><input id="emailEmailYesPassword" type="radio" name="emailEmailHasPassword"></td>
+            <td><input id="emailEmailYesPassword" type="radio" name="hasPassword" value="1"></td>
             <td><label for="emailEmailYesPassword">Yes, I have a password:</label></td>
           </tr>
           <tr>
             <td></td>
-            <td><input type="password" id="emailPassword" class="form-control" disabled>
+            <td><input type="password" id="emailPassword" name="password" class="form-control" disabled>
               <div class="small" style="margin-top: .5em">Forgot your password? Choose &ldquo;No, this is my first time here.&rdquo;</div></td>
           </tr>
           <tr>
@@ -455,30 +455,30 @@ function do_pledge_login() {
   $('#login-error').fadeOut();
 
   if ($('#emailEmailYesPassword').prop('checked')) {
-    // User wants to log in.
+    // User wants to log in. An AJAX login will reset the CSRF token, so
+    // we'll avoid actually logging the user in now.
     ajax({
-      url: "/_ajax/login",
+      url: "/contrib/_defaults",
       method: "POST",
       data: {
         email: $('#emailEmail').val(),
         password: $('#emailPassword').val(),
       },
       success: function(response) {
-        if (response == "ValidateEmailResult.Invalid") {
+        if (response.status == "ValidateEmailResult.Invalid") {
           $('#emailEmail').popover({ content: "That is not a valid email address." }).popover('show');
           return;
         }
-        if (response == "LoginResult.Inactive") {
-          $('#emailEmail').popover({ content: "Your account has been disabled." }).popover('show');
-          return;
-        }
-        if (response == "LoginResult.Incorrect") {
+        if (response.status == "LoginResult.Incorrect" || response.status == "LoginResult.Inactive") {
           $('#login-error').text("Your email address or password does not match an account here.");
           $('#login-error').slideDown();
           return;
         }
 
-        // Login succeeded.
+        // TODO Set contributor info from past records.
+
+        // Move to the next tab.
+        $('a[href="#contributor"]').tab('show') 
       }
     })
 

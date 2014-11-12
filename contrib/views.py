@@ -28,6 +28,23 @@ def trigger(request, id, slug):
 
 @require_http_methods(['POST'])
 @json_response
+def get_user_defaults(request):
+	# Get the user's past contributor information to pre-populate fields.
+	# We avoid doing an actual login here because login() changes the
+	# CSRF token, and a mid-page token change will cause future AJAX
+	# requests to fail.
+
+	# authenticate
+	from itfsite.accounts import User, try_login
+	user = try_login(request)
+	if not isinstance(user, User):
+		return { "status": str(user) }
+
+	# TODO: get recent data
+	return { }
+
+@require_http_methods(['POST'])
+@json_response
 @transaction.atomic
 def submit(request):
 	p = Pledge()
@@ -35,14 +52,28 @@ def submit(request):
 	# trigger
 	p.trigger = Trigger.objects.get(id=request.POST['trigger'])
 
-	# user
+	# Set user from logged in state.
 	if request.user.is_authenticated():
 		# This is an authentiated user.
 		p.user = request.user
 		exists_filters = { 'user': p.user }
-	else:
-		# Anonymous user is submitting a pledge with an email address.
-		# Will do email verification below.
+
+	# Anonymous user is submitting a pledge with an email address & password.
+	elif request.POST.get("hasPassword") == "1":
+		from itfsite.accounts import User, try_login
+		user = try_login(request)
+		if isinstance(user, User):
+			# Login succeeded.
+			p.user = user
+			exists_filters = { 'user': p.user }
+		else:
+			# Login failed. We did client-side validation so this should
+			# not occur. Treat as if the user didn't provide a password.
+			pass
+
+	# Anonymous user and/or authentication failed.
+	# Will do email verification below.
+	if not p.user:
 		p.email = request.POST.get('email').strip()
 		from itfsite.accounts import validate_email, ValidateEmailResult
 		if validate_email(p.email, simple=True) != ValidateEmailResult.Valid:
@@ -108,7 +139,7 @@ def submit(request):
 		# Re-wrap into something @json_response will catch.
 		raise ValueError("Something went wrong: " + str(e))
 
-	if request.user.is_authenticated():
+	if p.user:
 		# Update state contingent on the pledge being confirmed.
 		p.is_confirmed()
 	else:
@@ -127,6 +158,13 @@ def submit(request):
 		request.session['anon_pledge_created'] = \
 			request.session.get('anon_pledge_created', [])[-20:] \
 			+ [p.id]
+
+	# If the user had good authentication but wasn't logged in yet, log them
+	# in now. This messes up the CSRF token but the client should redirect to
+	# a new page anyway.
+	if p.user and p.user != request.user:
+		from django.contrib.auth import login
+		login(request, p.user)
 
 	# Tell the client to redirect to the page where the user can see the pledge.
 	return { "status": "ok", "redirect": p.get_absolute_url() }
