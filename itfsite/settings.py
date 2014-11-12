@@ -77,13 +77,19 @@ USE_TZ = True
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 AUTH_USER_MODEL = 'itfsite.User'
 
+if environment["https"]:
+	SESSION_COOKIE_HTTPONLY = True
+	SESSION_COOKIE_SECURE = True
+	CSRF_COOKIE_HTTPONLY = True
+	CSRF_COOKIE_SECURE = True
+
 # Paths
 
 STATIC_URL = '/static/'
 
 # App settings
 
-EMAIL_CONFIRM_LA_HTTP_PROTOCOL = 'https'
+EMAIL_CONFIRM_LA_HTTP_PROTOCOL = 'https' if environment["https"] else 'http'
 EMAIL_CONFIRM_LA_DOMAIN = 'itfsite.unnamed.example'
 EMAIL_CONFIRM_LA_SAVE_EMAIL_TO_INSTANCE = False
 DEFAULT_FROM_EMAIL = 'hello@itfsite.unnamed.example'
