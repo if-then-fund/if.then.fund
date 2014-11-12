@@ -32,15 +32,22 @@ def trigger_user_view(request, id, slug):
 	ret = { }
 	if request.user.is_authenticated():
 		ret["pledge_defaults"] = get_recent_pledge_defaults(request.user)
+
+	p = None
+	if request.user.is_authenticated():
 		p = Pledge.objects.filter(trigger=trigger, user=request.user).first()
-		if p:
-			# The user already made a pledge on this.
-			import django.template
-			template = django.template.loader.get_template("contrib/contrib.html")
-			ret["pledge_made"] = template.render(django.template.Context({
-				"trigger": trigger,
-				"pledge": p,
-			}))
+	elif request.session.get('anon_pledge_created'):
+		p = Pledge.objects.filter(trigger=trigger,
+			id__in=request.session.get('anon_pledge_created')).first()
+
+	if p:
+		# The user already made a pledge on this.
+		import django.template
+		template = django.template.loader.get_template("contrib/contrib.html")
+		ret["pledge_made"] = template.render(django.template.Context({
+			"trigger": trigger,
+			"pledge": p,
+		}))
 
 	return ret
 

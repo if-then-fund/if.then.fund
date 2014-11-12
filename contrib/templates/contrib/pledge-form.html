@@ -326,11 +326,17 @@
     
 <script>
 function pledge_init() {
-  if (the_user) {
-    if (the_page && the_page.pledge_made) {
-      $('#make-pledge').html(the_page.pledge_made)
-    }
+  // If the user has already made a pledge on this trigger,
+  // show alternate content. Note that the user may not be
+  // logged in because we may have placed the pledge id into
+  // the user's session. Replace the form and return since
+  // everything else is about form validation.
+  if (the_page && the_page.pledge_made) {
+    $('#make-pledge').html(the_page.pledge_made);
+    return;
+  }
 
+  if (the_user) {
     // If the user is logged in, remove the first tab of the pledge
     // modal that asks them to log in.
     $('#email').remove()
@@ -363,6 +369,7 @@ function pledge_init() {
       setPledgeDefaults(the_page.pledge_defaults)
     }
   }
+
 
   $('#emailEmailYesPassword, #emailEmailNoPassword').change(function() {
     $('#emailPassword').prop('disabled', !$('#emailEmailYesPassword').prop('checked'));
