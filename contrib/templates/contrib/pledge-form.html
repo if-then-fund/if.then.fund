@@ -324,6 +324,40 @@
     
 <script>
 function pledge_init() {
+  if (the_user) {
+    // If the user is logged in, remove the first tab of the pledge
+    // modal that asks them to log in.
+    $('#email').remove()
+    $('#contributor').addClass('active')
+    $('#pledge-pay .nav a[href="#email"]').parent().remove();
+    $('#pledge-pay .nav a[href="#contributor"]').parent().addClass('active');
+
+    // Set some defaults based on the user's last pledge.
+    if (the_page && the_page.pledge_defaults) {
+      if (the_page.pledge_defaults['amount'])
+        $('#pledge-amount input').val(the_page.pledge_defaults['amount'].toFixed(2));
+
+      if (the_page.pledge_defaults.incumb_challgr == -1)
+        $('#pledge-targets .challengers').addClass('active btn-success');
+      else if (the_page.pledge_defaults.incumb_challgr == 1)
+        $('#pledge-targets .incumbents').addClass('active btn-success');
+      else if (the_page.pledge_defaults.incumb_challgr == 0)
+        $('#pledge-targets .incumbents, #pledge-targets .challengers').addClass('active btn-success');
+
+      if (the_page.pledge_defaults.filter_party) {
+        for (var i = 0; i < the_page.pledge_defaults.filter_party.length; i++) {
+          var p = the_page.pledge_defaults.filter_party.charAt(i);
+          $('#pledge-party button[data-value="' + p + '"]').addClass('active btn-success');
+        }
+      }
+
+      if (the_page.pledge_defaults.filter_competitive)
+          $('#pledge-competitive-races').addClass('active btn-success');
+
+      setPledgeDefaults(the_page.pledge_defaults)
+    }
+  }
+
   $('#emailEmailYesPassword, #emailEmailNoPassword').change(function() {
     $('#emailPassword').prop('disabled', !$('#emailEmailYesPassword').prop('checked'));
   });
@@ -351,6 +385,15 @@ function pledge_init() {
     $('#billingCCNum').val('4111111111111111')
     $('#billingCCExp').val('1/2020')
     $('#billingCCCVC').val('000')
+  }
+}
+
+function setPledgeDefaults(pledge_defaults) {
+  var fields = ['contribNameFirst', 'contribNameLast', 'contribAddress', 'contribCity', 'contribState', 'contribZip', 'contribOccupation', 'contribEmployer'];
+  for (var i = 0; i < fields.length; i++) {
+    var v = pledge_defaults[fields[i]];
+    if (v)
+      $('#' + fields[i]).val(v)
   }
 }
 
@@ -482,7 +525,8 @@ function do_pledge_login() {
           return;
         }
 
-        // TODO Set contributor info from past records.
+        // Set contributor info from past records.
+        setPledgeDefaults(response);
 
         // Move to the next tab.
         $('a[href="#contributor"]').tab('show') 

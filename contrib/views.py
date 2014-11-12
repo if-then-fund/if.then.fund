@@ -7,7 +7,7 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden
 
 from email_confirm_la.signals import post_email_confirm
 
-from twostream.decorators import anonymous_view
+from twostream.decorators import anonymous_view, user_view_for
 
 from contrib.models import Trigger, Pledge
 from contrib.utils import json_response
@@ -26,6 +26,14 @@ def trigger(request, id, slug):
 		"alg": Pledge.current_algorithm(),
 	})
 
+@user_view_for(trigger)
+def trigger_user_view(request, id, slug):
+	trigger = get_object_or_404(Trigger, id=id)
+	ret = { }
+	if request.user.is_authenticated():
+		ret["pledge_defaults"] = get_recent_pledge_defaults(request.user)
+	return ret
+
 @require_http_methods(['POST'])
 @json_response
 def get_user_defaults(request):
@@ -40,8 +48,20 @@ def get_user_defaults(request):
 	if not isinstance(user, User):
 		return { "status": str(user) }
 
-	# TODO: get recent data
-	return { }
+	# get recent data
+	return get_recent_pledge_defaults(user)
+
+def get_recent_pledge_defaults(user):
+	ret = { }
+	pledge = Pledge.objects.filter(user=user).order_by('-created').first()
+	if pledge:
+		for field in ('amount', 'incumb_challgr', 'filter_party', 'filter_competitive',
+			'contribNameFirst', 'contribNameLast', 'contribAddress', 'contribCity', 'contribState', 'contribZip',
+			'contribOccupation', 'contribEmployer'):
+			ret[field] = getattr(pledge, field, pledge.extra.get(field))
+			if type(ret[field]).__name__ == "Decimal":
+				ret[field] = float(ret[field])
+	return ret
 
 @require_http_methods(['POST'])
 @json_response
