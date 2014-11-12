@@ -1,12 +1,91 @@
 import enum, re, urllib.parse
 
+from django.db import models
+from django.utils import timezone
+
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
+
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.decorators import login_required
 
 from django.conf import settings
+
+# Custom user model and login backends
+
+class UserManager(models.Manager):
+	# The only purpose of this class is to support the createsuperuser management command.
+	def create_superuser(self, email, password, **extra_fields):
+		user = User(email=email)
+		user.set_password(password)
+		user.save()
+		return user
+
+class User(AbstractBaseUser):
+	"""Our user model, where the primary identifier is an email address."""
+	# https://github.com/django/django/blob/master/django/contrib/auth/models.py#L395
+	email = models.EmailField(unique=True)
+	is_staff = models.BooleanField(default=False, help_text='Whether the user can log into this admin.')
+	is_active = models.BooleanField(default=True, help_text='Unselect this instead of deleting accounts.')
+	date_joined = models.DateTimeField(default=timezone.now)
+
+	USERNAME_FIELD = 'email'
+
+	class Meta:
+		verbose_name = 'user'
+		verbose_name_plural = 'users'
+
+	objects = UserManager()
+
+	@staticmethod
+	def get_or_create(email):
+		# Get or create a new User for the email address. The User table
+		# is not locked, so handle concurrency optimistically. The rest is
+		# based on Django's default create_user.
+		try:
+			# Does the user exist?
+			return User.objects.get(email=email)
+		except User.DoesNotExist:
+			try:
+				# Try to create it.
+				user = User(email=email)
+				user.set_unusable_password()
+				user.save()
+				return user
+			except IntegrityError:
+				# Creation failed (unique key violation on username),
+				# so try to get it again. If this fails, something
+				# weird happened --- just raise an exception then.
+				return User.objects.get(email=email)
+
+class EmailPasswordLoginBackend(ModelBackend):
+	# Registered in settings.py.
+	supports_object_permissions = False
+	supports_anonymous_user = False
+	def authenticate(self, email=None, password=None):
+		try:
+			user = User.objects.get(email=email)
+			if user.check_password(password):
+				return user
+		except User.DoesNotExist:
+			# Says Django sources: Run the default password hasher once to reduce the timing
+            # difference between an existing and a non-existing user (#20760).
+			User.set_password(password)
+		return None
+
+class DirectLoginBackend(ModelBackend):
+	# Django can't log a user in without their password. Before they create
+	# a password, we use this to log them in. Registered in settings.py.
+	supports_object_permissions = False
+	supports_anonymous_user = False
+	def authenticate(self, user_object=None):
+		return user_object
+
+# Validation
 
 class ValidateEmailResult(enum.Enum):
 	Invalid = 1
@@ -141,13 +220,10 @@ def validate_email_view(request):
 
 @require_http_methods(["POST"])
 def login_view(request):
-	# Try to log the user in. Assumes the username on the User object
-	# is also the email address.
-	from django.contrib.auth import authenticate, login
-	from django.contrib.auth.models import User
+	# Try to log the user in.
 	email = request.POST['email'].strip()
 	password = request.POST['password'].strip()
-	user = authenticate(username=email, password=password)
+	user = authenticate(email=email, password=password)
 	if user is None:
 		# Login failed. Why? If a user with that email exists,
 		# return Incorrect.
@@ -174,21 +250,48 @@ def login_view(request):
 			ret = LoginResult.Inactive
 	return HttpResponse(str(ret), content_type="text/plain")
 
-class DirectLoginBackend(ModelBackend):
-	# Django can't log a user in without their password. Before they create
-	# a password, we use this to log them in. Registered in settings.py.
-	supports_object_permissions = False
-	supports_anonymous_user = False
-	def authenticate(self, user_object=None):
-		if not user_object.is_active:
-			return None
-		return user_object
+def first_time_confirmed_user(request, user, next):
+	# The user has just confirmed their email address. Log them in.
+	# If they don't have a password set on their account, welcome them
+	# and ask for a password. Otherwise, send them on their way to the
+	# next page.
 
-def first_time_user(request, user, next):
-	# Log in a first time user and send them to the page to
-	# set their password.
+	# Log in.
 	user = authenticate(user_object=user)
-	if user is None or not user.is_active: raise ValueError("Could not authenticate or account is diabled.")
+	if user is None: raise ValueError("Could not authenticate.")
+	if not user.is_active: raise ValueError("Account is disabled.")
 	login(request, user)
-	return HttpResponseRedirect("/account/welcome?" +
+
+	if not user.has_usable_password():
+		return HttpResponseRedirect("/accounts/welcome?" +
 			urllib.parse.urlencode({ "next": next }))
+	else:
+		return HttpResponseRedirect(next)
+
+@login_required
+def welcome(request):
+	# A welcome page for after an email confirmation to get the user to set a password.
+	error = None
+	if request.method == "POST":
+		p1 = request.POST.get('p1', '')
+		p2 = request.POST.get('p2', '')
+		if len(p1) < 4 or p1 != p2:
+			error = "Validation failed."
+		else:
+			u = request.user
+			try:
+				u.set_password(p1)
+				u.save()
+
+				# because of SessionAuthenticationMiddleware, the user gets logged
+				# out immediately --- log them back in
+				u = authenticate(user_object=u)
+				login(request, u)
+
+				return HttpResponseRedirect(request.GET.get('next', '/'))
+			except:
+				error = "Something went wrong, sorry."
+
+	return render(request, "itfsite/welcome.html", {
+		"error": error
+	})

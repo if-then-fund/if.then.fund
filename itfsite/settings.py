@@ -52,7 +52,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 	'django.core.context_processors.request',
 	)
 
-AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'itfsite.accounts.DirectLoginBackend']
+AUTHENTICATION_BACKENDS = ['itfsite.accounts.DirectLoginBackend', 'itfsite.accounts.EmailPasswordLoginBackend']
 
 # Database
 
@@ -75,6 +75,7 @@ USE_L10N = True
 USE_TZ = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+AUTH_USER_MODEL = 'itfsite.User'
 
 # Paths
 

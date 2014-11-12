@@ -1,7 +1,7 @@
 import enum
 
-from django.db import models, transaction
-from django.contrib.auth.models import User
+from django.db import models, transaction, IntegrityError
+from itfsite.models import User
 
 from jsonfield import JSONField
 from enum3field import EnumField, django_enum
@@ -25,7 +25,7 @@ class Trigger(models.Model):
 	key = models.CharField(max_length=64, blank=True, null=True, db_index=True, unique=True, help_text="An opaque look-up key to quickly locate this object.")
 
 	title = models.CharField(max_length=200, help_text="The title for the trigger.")
-	owner = models.ForeignKey(User, on_delete=models.PROTECT, help_text="The user which created the trigger and can update it.")
+	owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT, help_text="The user which created the trigger and can update it.")
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True, db_index=True)
@@ -40,7 +40,6 @@ class Trigger(models.Model):
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
 	total_pledged = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of pledges, i.e. prior to execution.")
-	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed (including pending contributions, but not vacated or aborted contributions).")
 
 	def __str__(self):
 		return "[%d %s] %s" % (self.id, self.key, self.title)
@@ -83,9 +82,7 @@ class Trigger(models.Model):
 		t = Trigger()
 		t.key = "usbill:" + bill_id + ":" + chamber
 		t.title = chamber_name + " Vote on " + bill['title']
-
-		from django.contrib.auth.models import User
-		t.owner = User.objects.get(username='admin')
+		t.owner = None
 
 		from django.template.defaultfilters import slugify
 		t.slug = slugify(t.title)
@@ -138,6 +135,8 @@ class TriggerExecution(models.Model):
 
 	description = models.TextField(help_text="Once a trigger is executed, additional text added to explain how funds were distributed.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
+
+	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed.")
 
 class Actor(models.Model):
 	"""A public figure, e.g. elected official with an active election campaign, who might take an action."""
@@ -252,17 +251,26 @@ class Pledge(models.Model):
 			ec.send(None)
 
 	@transaction.atomic
-	def confirm_email(self, email):
-		# Get or create a new User for the email address.
-		try:
-			user = User.objects.get(email=email)
-		except User.DoesNotExist:
-			user = User.objects.create_user(email, email=email)
+	def confirm_email(self, user):
+		# Can't confirm twice, but this might be called twice. In order
+		# to prevent a race condition, use select_for_update which locks
+		# the row until the transaction ends.
+		pledge = Pledge.objects.select_for_update().filter(id=self.id).first()
+		if pledge.user: return False
 
-		# Move the anoymous pledge to the user's account.
-		self.user = user
-		self.email = None
-		self.save()
+		# Move the anonymous pledge to the user's account.
+		pledge.user = user
+		pledge.email = None
+		pledge.save()
+
+		# Update state now that pledge is confirmed.
+		pledge.is_confirmed()
+		return True
+
+	def is_confirmed(self):
+		# Update the trigger's pledge total atomically.
+		Trigger.objects.filter(id=self.trigger.id)\
+			.update(total_pledged=models.F('total_pledged') + self.amount)
 
 class PledgeExecution(models.Model):
 	"""How a user's pledge was executed. Each pledge has a single PledgeExecution when the Trigger is executed, and immediately many Contribution objects are created."""

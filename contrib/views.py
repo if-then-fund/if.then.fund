@@ -108,7 +108,10 @@ def submit(request):
 		# Re-wrap into something @json_response will catch.
 		raise ValueError("Something went wrong: " + str(e))
 
-	if not request.user.is_authenticated():
+	if request.user.is_authenticated():
+		# Update state contingent on the pledge being confirmed.
+		p.is_confirmed()
+	else:
 		# The pledge needs to get confirmation of the user's email address,
 		# which will lead to account creation.
 		try:
@@ -131,21 +134,28 @@ def submit(request):
 # A user confirms an email address on an anonymous pledge.
 @receiver(post_email_confirm)
 def post_email_confirm_callback(sender, confirmation, request=None, **kwargs):
+	# The user making the request confirms that he owns an email address
+	# tied to a pledge.
+
 	pledge = confirmation.content_object
 	email = confirmation.email
 
-	# Handle case of repeated calls to this function.
-	if pledge.user is None:
-		pledge.confirm_email(email)
+	# Get or create the user account.
+
+	from itfsite.accounts import User
+	user = User.get_or_create(email)
+
+	# Confirm the pledge. This signal may be called more than once, and
+	# confirm_email is okay with that. It returns True just on the first
+	# time (when the pledge is actually confirmed).
+	if pledge.confirm_email(user):
 		messages.add_message(request, messages.SUCCESS, 'Your contribution for %s has been confirmed.'
 			% pledge.trigger.title)
 
-	if pledge.user.has_usable_password() or (request.user.is_authenticated() and request.user != pledge.user):
-		return HttpResponseRedirect(pledge.get_absolute_url())
-	else:
-		# Log the user in and ask them to set a password on their account.
-		from itfsite.accounts import first_time_user
-		return first_time_user(request, pledge.user, pledge.get_absolute_url())
+	# The user may be new, so take them to a welcome page.
+	# pledge.user may not be set because confirm_email uses a clone for locking.
+	from itfsite.accounts import first_time_confirmed_user
+	return first_time_confirmed_user(request, user, pledge.get_absolute_url())
 
 def show_contrib(request, id):
 	pledge = get_object_or_404(Pledge, id=id)
