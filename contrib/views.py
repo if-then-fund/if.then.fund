@@ -87,7 +87,7 @@ def submit(request):
 		return { "status": "ok", "redirect": p_exist.get_absolute_url() }
 
 	# integer fields that have the same field name as form element name
-	for field in ('algorithm', 'desired_outcome'):
+	for field in ('algorithm', 'desired_outcome', 'filter_competitive'):
 		try:
 			setattr(p, field, int(request.POST[field]))
 		except ValueError:

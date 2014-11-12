@@ -234,6 +234,9 @@ class Pledge(models.Model):
 		elif self.incumb_challgr == 0:
 			actors += " and challengers"
 
+		if self.filter_competitive:
+			actors += " in competitive races"
+
 		return party_filter + actors
 
 	def send_email_verification(self):

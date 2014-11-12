@@ -129,6 +129,12 @@
   </p>
   <p class="small text-muted">(you may choose more than one)</p>
 
+  <p id="pledge-other-filters">
+    <button id="pledge-competitive-races" class="btn" onclick="toggle_buttons(null, this)" data-value="I">
+      Just Competitive Races
+    </button>
+  </p>
+
   <p>
     <button id="make-pledge-go" class="btn btn-lg disabled" onclick="pledge_go()">
       Next &gt;
@@ -159,6 +165,7 @@
     <input type="hidden" name="amount" value="?"/>
     <input type="hidden" name="incumb_challgr" value="?"/>
     <input type="hidden" name="filter_party" value=""/>
+    <input type="hidden" name="filter_competitive" value=""/>
 
     <div class="tab-content">
       <div class="tab-pane active" id="email">
@@ -350,7 +357,7 @@ function pledge_init() {
 function toggle_buttons(group_selector, elem_clicked, multi) {
   var active_class = 'active btn-success';
   var state = !$(elem_clicked).hasClass(active_class);
-  if (!multi) $(group_selector).removeClass(active_class);
+  if (group_selector && !multi) $(group_selector).removeClass(active_class);
   $(elem_clicked).toggleClass(active_class, state);
   $(elem_clicked).blur();
   update_state();
@@ -547,6 +554,9 @@ function pledge_submit() {
     party += $(this).attr("data-value");
   })
   $('#pledge-info input[name="filter_party"]').val(party)
+
+  // competitive
+  $('#pledge-info input[name="filter_competitive"]').val($('#pledge-competitive-races').hasClass('active') ? 1 : 0)
 
   // validate credit card information
 
