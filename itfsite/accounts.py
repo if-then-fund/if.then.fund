@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.decorators import login_required
 
@@ -21,11 +21,13 @@ class UserManager(models.Manager):
 	# The only purpose of this class is to support the createsuperuser management command.
 	def create_superuser(self, email, password, **extra_fields):
 		user = User(email=email)
+		user.is_staff = True
+		user.is_superuser = True
 		user.set_password(password)
 		user.save()
 		return user
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
 	"""Our user model, where the primary identifier is an email address."""
 	# https://github.com/django/django/blob/master/django/contrib/auth/models.py#L395
 	email = models.EmailField(unique=True)
@@ -33,12 +35,14 @@ class User(AbstractBaseUser):
 	is_active = models.BooleanField(default=True, help_text='Unselect this instead of deleting accounts.')
 	date_joined = models.DateTimeField(default=timezone.now)
 
+	# custom user model requirements
 	USERNAME_FIELD = 'email'
-
+	REQUIRED_FIELDS = ['is_staff', 'is_active', 'date_joined']
+	def get_full_name(self): return self.email
+	def get_short_name(self): return self.email
 	class Meta:
 		verbose_name = 'user'
 		verbose_name_plural = 'users'
-
 	objects = UserManager()
 
 	@staticmethod
@@ -66,7 +70,11 @@ class EmailPasswordLoginBackend(ModelBackend):
 	# Registered in settings.py.
 	supports_object_permissions = False
 	supports_anonymous_user = False
-	def authenticate(self, email=None, password=None):
+	def authenticate(self, email=None, password=None, username=None):
+		# The Django default login form (e.g. used by the admin) passes
+		# the email in the 'username' field.
+		if username: email = username
+
 		try:
 			user = User.objects.get(email=email)
 			if user.check_password(password):
