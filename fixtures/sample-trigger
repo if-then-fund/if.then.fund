@@ -1,0 +1,14 @@
+#!django_script
+from django.contrib.auth.models import User
+from contrib.models import *
+
+Trigger.objects.all().delete()
+t = Trigger.new_from_bill("hr135-113", 's')
+
+t.state = TriggerState.Open
+t.save()
+
+Trigger.objects.filter(id=t.id).update(id=1)
+t.id = 1
+
+print(t.get_absolute_url())
