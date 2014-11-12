@@ -1,21 +1,6 @@
-{% extends "master.html" %}
 {% load itfsite_utils %}
 
-{% block title %}{{owner_string}} contribution for {{trigger.title}}{% endblock %}
-
-{% block head %}
-<style>
-
-</style>
-{% endblock %}
-
-{% block body %}
-
-{% if access_mode == "owner" and not pledge.user %}
-<div class="alert alert-danger" style="margin-top: 1em"><p>We sent an email to {{pledge.email}}. You must click the link in the email to confirm this contribution.</p></div>
-{% endif %}
-
-<h1>{{owner_string}} Contribution</h1>
+<p>You have made/scheduled a campaign contribution for this {{trigger.strings.action}}:</p>
 
 <table class="table">
 	<tr><td>Amount:</td> <td>${{pledge.amount|floatformat:2}}</td></tr>
@@ -30,11 +15,9 @@
 	<tr><td>Status:</td> <td>The event that this contribution was pledged for is not expected to occur. The pledge is cancelled.</td></tr>
 	{% endif %}
 
-	<tr><td>For:</td> <td><a href="{{trigger.get_absolute_url}}">{{pledge.desired_outcome_label}}</a></td></tr>
-	<tr><td>To:</td> <td>{{pledge.targets_summary}}</td></tr>
+	<tr><td>For:</td> <td>{{pledge.targets_summary}}</td></tr>
 	<tr><td>Pledged:</td> <td>{{pledge.created|date}}</td></tr>
 	</td></tr>
 
 </table>
 
-{% endblock %}

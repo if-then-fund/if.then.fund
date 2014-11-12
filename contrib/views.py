@@ -32,6 +32,16 @@ def trigger_user_view(request, id, slug):
 	ret = { }
 	if request.user.is_authenticated():
 		ret["pledge_defaults"] = get_recent_pledge_defaults(request.user)
+		p = Pledge.objects.filter(trigger=trigger, user=request.user).first()
+		if p:
+			# The user already made a pledge on this.
+			import django.template
+			template = django.template.loader.get_template("contrib/contrib.html")
+			ret["pledge_made"] = template.render(django.template.Context({
+				"trigger": trigger,
+				"pledge": p,
+			}))
+
 	return ret
 
 @require_http_methods(['POST'])
@@ -104,7 +114,9 @@ def submit(request):
 	# synchronization problem. Just redirect to that pledge.
 	p_exist = Pledge.objects.filter(trigger=p.trigger, **exists_filters).first()
 	if p_exist is not None:
-		return { "status": "ok", "redirect": p_exist.get_absolute_url() }
+		return { "status": "ok" }
+
+	# Field values & validation.
 
 	# integer fields that have the same field name as form element name
 	for field in ('algorithm', 'desired_outcome', 'filter_competitive'):
@@ -186,8 +198,8 @@ def submit(request):
 		from django.contrib.auth import login
 		login(request, p.user)
 
-	# Tell the client to redirect to the page where the user can see the pledge.
-	return { "status": "ok", "redirect": p.get_absolute_url() }
+	# Client will reload the page.
+	return { "status": "ok" }
 
 # A user confirms an email address on an anonymous pledge.
 @receiver(post_email_confirm)
@@ -213,23 +225,4 @@ def post_email_confirm_callback(sender, confirmation, request=None, **kwargs):
 	# The user may be new, so take them to a welcome page.
 	# pledge.user may not be set because confirm_email uses a clone for locking.
 	from itfsite.accounts import first_time_confirmed_user
-	return first_time_confirmed_user(request, user, pledge.get_absolute_url())
-
-def show_contrib(request, id):
-	pledge = get_object_or_404(Pledge, id=id)
-	access_mode = None
-	owner_string = None
-
-	# Access?
-	if pledge.user == request.user or pledge.id in request.session.get('anon_pledge_created', []):
-		access_mode = "owner"
-		owner_string = "Your"
-	else:
-		return HttpResponseForbidden("You have arrived at a page for a contribution that you are not able to access.")
-
-	return render(request, "contrib/contrib.html", {
-		"trigger": pledge.trigger,
-		"pledge": pledge,
-		"access_mode": access_mode,
-		"owner_string": owner_string,
-	})
+	return first_time_confirmed_user(request, user, pledge.trigger.get_absolute_url())

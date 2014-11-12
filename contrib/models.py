@@ -200,9 +200,6 @@ class Pledge(models.Model):
 	def __str__(self):
 		return self.get_email() + " => " + str(self.trigger)
 
-	def get_absolute_url(self):
-		return "/contrib/%d" % self.id
-
 	def get_email(self):
 		if self.user:
 			return self.user.email

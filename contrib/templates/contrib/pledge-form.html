@@ -325,6 +325,10 @@
 <script>
 function pledge_init() {
   if (the_user) {
+    if (the_page && the_page.pledge_made) {
+      $('#make-pledge').html(the_page.pledge_made)
+    }
+
     // If the user is logged in, remove the first tab of the pledge
     // modal that asks them to log in.
     $('#email').remove()
@@ -634,7 +638,8 @@ function pledge_submit() {
     method: "POST",
     data: data,
     success: function(res) {
-      window.location = res.redirect;
+      setTimeout("$('#ajax_loading_indicator').fadeIn()", 100);
+      window.location.reload()
     }
   })
 }
