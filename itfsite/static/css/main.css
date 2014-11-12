@@ -5,6 +5,8 @@
 
 body {
 	font-family: 'Noto Serif', serif;
+	font-size: 15px;
+	line-height: 140%;
 }
 
 footer {
@@ -31,3 +33,13 @@ h3 {
 small, .small {
 	line-height: 125%;
 }
+
+a {
+	color: #272;
+	border-bottom: 1px solid #0A0; /* accessibility */
+}
+	a:hover {
+		text-decoration: none;
+		color: #0A0;
+		border-bottom: 1px solid #0B0; /* accessibility */
+	}
