@@ -4,6 +4,13 @@
 
 {% block head %}
 <style>
+@media only screen and (min-width: 768px) {
+	.team > div {
+		border-left: 1px solid #BBB;
+		padding-left: 1.25em;
+		padding-top: 1px;
+	}
+}
 
 .team h3 {
 	margin: 1.5em 0 1em 0;
@@ -15,7 +22,7 @@
 
 .team img {
 	float: left;
-	margin: 0 1.25em 0 0;
+	margin: 0 1.25em 1em 0;
 	width: 130px;
 	height: 175px;
 	border: none; /*1px solid #AAA;*/
@@ -24,32 +31,62 @@
 .team p {
 	color: black;
 }
+
+dl dd {
+	margin-bottom: .5em;
+}
 </style>
 {% endblock %}
 
 {% block body %}
-<h1>About</h1>
+<h1 style="margin-bottom: 0">About</h1>
 
 <div class="row">
 	<div class="col-sm-6">
-		<p>if.then.fund is about empowering people to shape the U.S. Congress and to create the institution they want it to be.</p>
-
-		<p>Using the voting behavior of incumbents, you can make an informed and targetted contribution to members of Congress or their challengers. Decide who stays and who goes &mdash; don&rsquo;t leave it up to the rich and powerful.</p>
+		<p style="margin-top: 2em">We are empowering people to shape the U.S. Congress through targetted, small-dollar donations to candidates. Until we reach the future where money plays no role in politics, let&rsquo;s at least give small-dollar donors a fighting chance.</p>
 
 		<h2>How it works</h2>
-		<p>...</p>
+
+		<p>When there is an upcoming vote in Congress you have an opinion about, come to if.then.fund to pledge a donation to members of Congress who vote your way <b>or</b> to their opponents in the next election if they vote against you.</p>
+
+		<p>After the vote, we&rsquo;ll split your contribution as many ways as needed &mdash; as low as 1¢ per recipient &mdash; and we&rsquo;ll tell those members of Congress <i>why</i> you made your contribution.</p>
 
 		<h2>Why it works</h2>
-		<p>...</p>
+
+		<dl>
+			<dt>Measures real outcomes</dt>
+			<dd>Campaign contributions made here on if.then.fund are based on what legislators do, not what they say they will do.</dd>
+
+			<dt>Shapes the next Congress</dt>
+			<dd>Keep &rsquo;em in or throw &rsquo;em out. Donations can be made to incumbents who support your position or to their general election challenger if they vote the other way.</dd>
+
+			<dt>Aggregates small-dollar donations</dt>
+			<dd>When aggregated together, many small-dollar donations (even down to 1¢) can add up to something candidates will pay more attention to.</dd>
+
+			<dt>Reaches beyond a letter</dt>
+			<dd>Members of Congress may only be accountable to their constituents, but committee chairs and party leaders make policy for us all. if.then.fund lets you shape the whole Congress.</dd>
+		</dl>
+
+		<h2>Some questions you may have</h2>
+
+		<dl>
+			<dt>What about superpacs?</dt>
+			<dd>...</dd>
+
+			<dt>Is this bribery?</dt>
+			<dd>No. Bribery laws require that the giver intends to influence an official act. Because we do not reveal any information <i>before</i> the vote that could influence its outcome, there is no influence of that act.</dd>
+		</dl>
+
 	</div>
 
 	<div class="col-sm-6 team">
+	<div>
 		<h2>Team</h2>
 
 		<h3>Jonathan Zucker<span>, co-founder</span></h3>
 		<img class='team-photo' src='/static/team/zucker.jpeg'>
 		<p>Jonathan Zucker is a political technology entrepreneur. He is the founder &amp; CEO of <a href="http://www.democracyengine.com">Democracy Engine</a>, which helps organizations channel funds to candidates and causes to effect real change. Prior to Democracy Engine, he was executive director of ActBlue.</p>
-		<p>He is also an advisor and counsel to <a href="http://CrowdPAC.com">CrowdPAC</a> and co-founder and COO of <a href="http://ruck.us">Ruck.us</a>. He holds a JD from Georgetown University. (<a href="http://www.democracyengine.com/zucker">extended bio</a>)</p>
+		<p>He is also an advisor and counsel to <a href="http://CrowdPAC.com">CrowdPAC</a> and co-founder and COO of <a href="http://ruck.us">Ruck.us</a>. He holds a J.D. from Georgetown University. (<a href="http://www.democracyengine.com/zucker">extended bio</a>)</p>
 		<div class="clearfix"> </div>
 
 		<h3>Joshua Tauberer<span>, co-founder</span></h3>
@@ -57,6 +94,7 @@
 		<p>Joshua Tauberer is a civic hacker and entrepreneur. His <a href="https://www.govtrack.us">GovTrack.us</a> project, which launched in 2004, helps millions of individuals track and understand the activities of the U.S. Congress, and it was the first website to create open data for Congress.</p>
 		<p>He is also the author of <a href="https://opengovdata.io">Open Government Data: The Book</a>, an organizer of <a href="http://dc.opendataday.org/">Open Data Day DC</a>, and holds a Ph.D. from the University of Pennsylvania. (<a href="http://razor.occams.info">homepage</a>)</p>
 		<div class="clearfix"> </div>
+	</div>
 	</div>
 </div>
 

@@ -27,6 +27,8 @@ def user_home(request):
 	for pe in PledgeExecution.objects.filter(pledge__in=set(pledges)):
 		pledge.execution = pledge_map[pe.pledge_id]
 
+	# Get the user's total amount of open pledges, i.e. their total possible
+	# future credit card charges / campaign contributions.
 	total_pledged = pledges.filter(status=PledgeStatus.Open)
 	if len(total_pledged) == 0:
 		total_pledged = 0.0

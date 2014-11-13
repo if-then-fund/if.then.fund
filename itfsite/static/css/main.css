@@ -41,5 +41,9 @@ a {
 	a:hover {
 		text-decoration: none;
 		color: #0A0;
-		border-bottom: 1px solid #0B0; /* accessibility */
+		border-color: #0B0;
+	}
+
+	a.navbar-brand { 
+		border: none;
 	}
