@@ -192,7 +192,8 @@ class Pledge(models.Model):
 	filter_party = models.CharField(max_length=3, help_text="A string containing one or more of the characters 'D' 'R' and 'I' that filters contributions to only candidates whose party matches on of the included characters.")
 	filter_competitive = models.BooleanField(default=False, help_text="Whether to filter contributions to competitive races.")
 
-	district = models.CharField(max_length=64, blank=True, null=True, db_index=True, help_text="The congressional district of the user (at the time of the pledge), if their address is in a congressional district.")
+	cclastfour = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The last four digits of the user's credit card number, stored for fast look-up in case we need to find a pledge from a credit card number.")
+	district = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The congressional district of the user (at the time of the pledge), in the form of XX00.")
 
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
@@ -332,6 +333,16 @@ class Pledge(models.Model):
 		pledge.status = PledgeStatus.Open
 		pledge.save()
 
+	@staticmethod
+	def find_from_billing(cc_number, cc_exp_month, cc_exp_year, cc_cvc):
+		# Returns an interator that yields matchinig Pledge instances.
+		# Must be in parallel to how the view function creates the pledge.
+		cc_key = ','.join([cc_number, cc_exp_month, cc_exp_year, cc_cvc])
+		cc_key = cc_key.replace(' ', '')
+		from django.contrib.auth.hashers import check_password
+		for p in Pledge.objects.filter(cclastfour=cc_number[-4:]):
+			if check_password(cc_key, p.extra['billingInfoHashed']):
+				yield p
 
 class PledgeExecution(models.Model):
 	"""How a user's pledge was executed. Each pledge has a single PledgeExecution when the Trigger is executed, and immediately many Contribution objects are created."""

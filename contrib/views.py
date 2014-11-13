@@ -146,12 +146,24 @@ def submit(request):
 	# string fields that go straight into the extras dict.
 	p.extra = {}
 	for field in (
-		'billingCCNum', 'billingCCExp', 'billingCCCVC', 
 		'contribNameFirst', 'contribNameLast',
 		'contribAddress', 'contribCity', 'contribState', 'contribZip',
 		'contribOccupation', 'contribEmployer'):
-		p.extra[field] = request.POST[field]
+		p.extra[field] = request.POST[field].strip()
 
+	# Store the last four digits of the credit card number so we can
+	# quickly locate a Pledge by CC number (approximately).
+	p.cclastfour = request.POST['billingCCNum'][-4:]
+
+	# Store a hashed version of the credit card information so we can
+	# do a verification if the user wants to look up a Pledge by CC
+	# info. Use Django's built-in password hashing functionality to
+	# handle this.
+	from django.contrib.auth.hashers import make_password
+	cc_key = ','.join(request.POST[field].strip() for field in ('billingCCNum', 'billingCCExpMonth', 'billingCCExpYear', 'billingCCCVC'))
+	cc_key = cc_key.replace(' ', '')
+	p.extra['billingInfoHashed'] = make_password(cc_key)
+			
 	# Validation. Some are checked client side, so errors are internal
 	# error conditions and not validation problems to show the user.
 	if p.algorithm != Pledge.current_algorithm()["id"]:
