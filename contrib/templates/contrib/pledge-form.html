@@ -167,6 +167,8 @@
     <input type="hidden" name="incumb_challgr" value="?"/>
     <input type="hidden" name="filter_party" value=""/>
     <input type="hidden" name="filter_competitive" value=""/>
+    <input type="hidden" name="billingCCExpMonth" value="?"/>
+    <input type="hidden" name="billingCCExpYear" value="?"/>
 
     <div class="tab-content">
       <div class="tab-pane active" id="email">
@@ -288,7 +290,7 @@
               <tr>
                 <td><label for="billingCCExp">Expiration</label></td>
                 <td>
-                  <input type="text" class="cc-exp" id="billingCCExp" name="billingCCExp" pattern="\d+/\d+" novalidate placeholder="MM/YYYY">
+                  <input type="text" class="cc-exp" id="billingCCExp" pattern="\d+/\d+" novalidate placeholder="MM/YYYY">
                 </td>
               </tr>
               <tr>
@@ -632,6 +634,8 @@ function pledge_submit() {
     $('#billingCCExp').popover({ content: "Enter a valid expiration date." }).popover('show');
     return;
   }
+  $('#pledge-info input[name="billingCCExpMonth"]').val(exp.month);
+  $('#pledge-info input[name="billingCCExpYear"]').val(exp.year);
 
   if (!$.payment.validateCardCVC($('#billingCCCVC').val())) {
     $('#billingCCCVC').popover({ content: "Enter your card verification code, often found on the back side of the card." }).popover('show');
