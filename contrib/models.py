@@ -164,6 +164,16 @@ class PledgeStatus(enum.Enum):
 	Cancelled = 3 # user canceled prior to pledge execution
 	Vacated = 4 # trigger was vacated
 
+class PledgeManager(models.Manager):
+	class CustomQuerySet(models.QuerySet):
+		def delete(self):
+			# Can't do a mass delete because it would not update Trigger.total_pledged.
+			# Instead call delete() on each instance, which handles the constraint.
+			for obj in self:
+				obj.delete()
+	def get_query_set(self):
+		return PledgeManager.CustomQuerySet(self.model, using=self._db)
+
 class Pledge(models.Model):
 	"""A user's pledge of a contribution."""
 
@@ -187,7 +197,19 @@ class Pledge(models.Model):
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
 	class Meta:
-		unique_together = [('trigger', 'user')]
+		unique_together = [('trigger', 'user'), ('trigger', 'email')]
+
+	objects = PledgeManager()
+
+	@transaction.atomic
+	def delete(self):
+		# Update the trigger's pledge total atomically *if* the pledge is
+		# 'confirmed' (has a user) and not in the Cancelled state.
+		self.make_cancelled()
+
+		# Remove record. Will raise an exception and abort the transaction if
+		# the pledge has been executed and a PledgeExecution object refers to this.
+		super(Pledge, self).delete()	
 
 	@staticmethod
 	def current_algorithm():
@@ -264,13 +286,52 @@ class Pledge(models.Model):
 		pledge.save()
 
 		# Update state now that pledge is confirmed.
-		pledge.is_confirmed()
+		pledge.on_confirmed()
 		return True
 
-	def is_confirmed(self):
-		# Update the trigger's pledge total atomically.
-		Trigger.objects.filter(id=self.trigger.id)\
-			.update(total_pledged=models.F('total_pledged') + self.amount)
+	def on_confirmed(self):
+		# Update the trigger's pledge total atomically. Called during
+		# pledge creation (when the pledge is new) or when a user confirms
+		# their email address (during which the pledge instance is locked
+		# to prevent a race condition).
+		if self.status != PledgeStatus.Cancelled:
+			Trigger.objects.filter(id=self.trigger.id)\
+				.update(total_pledged=models.F('total_pledged') + self.amount)
+
+	@transaction.atomic
+	def make_cancelled(self):
+		# Makes a pledge cancelled. First lock the pledge object so that
+		# it doesn't get confirmed in the middle of getting cancelled.
+		pledge = Pledge.objects.select_for_update().filter(id=self.id).first()
+		if pledge.status not in (PledgeStatus.Open, PledgeStatus.Cancelled):
+			raise Exception("Cannot cancel a pledge that is executed or vacated.")
+
+		# Decrement the Trigger's total_pledged if this pledge is both
+		# 'confirmed' (has a user) and not already in the Cancelled state.
+		if pledge.user and pledge.status != PledgeStatus.Cancelled:
+			Trigger.objects.filter(id=self.trigger.id)\
+				.update(total_pledged=models.F('total_pledged') - self.amount)
+
+		pledge.status = PledgeStatus.Cancelled
+		pledge.save()
+
+	@transaction.atomic
+	def make_uncancelled(self):
+		# Makes a pledge cancelled. First lock the pledge object so that
+		# it doesn't get confirmed in the middle of getting cancelled.
+		pledge = Pledge.objects.select_for_update().filter(id=self.id).first()
+		if pledge.status not in (PledgeStatus.Open, PledgeStatus.Cancelled):
+			raise Exception("Cannot uncancel a pledge that is executed or vacated.")
+
+		# Increment the Trigger's total_pledged if this pledge is both
+		# 'confirmed' (has a user) and not already in the Open state.
+		if pledge.user and pledge.status != PledgeStatus.Open:
+			Trigger.objects.filter(id=self.trigger.id)\
+				.update(total_pledged=models.F('total_pledged') + self.amount)
+
+		pledge.status = PledgeStatus.Open
+		pledge.save()
+
 
 class PledgeExecution(models.Model):
 	"""How a user's pledge was executed. Each pledge has a single PledgeExecution when the Trigger is executed, and immediately many Contribution objects are created."""

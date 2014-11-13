@@ -1,7 +1,8 @@
+from django.db.models import Sum
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
-from contrib.models import Pledge, PledgeExecution
+from contrib.models import Pledge, PledgeExecution, PledgeStatus
 
 def homepage(request):
 	# The site homepage.
@@ -26,6 +27,13 @@ def user_home(request):
 	for pe in PledgeExecution.objects.filter(pledge__in=set(pledges)):
 		pledge.execution = pledge_map[pe.pledge_id]
 
+	total_pledged = pledges.filter(status=PledgeStatus.Open)
+	if len(total_pledged) == 0:
+		total_pledged = 0.0
+	else:
+		total_pledged = total_pledged.aggregate(total_pledged=Sum('amount'))['total_pledged']
+
 	return render(request, "itfsite/home.html", {
-		'pledges': pledges
+		'pledges': pledges,
+		'total_pledged': total_pledged,
 		})

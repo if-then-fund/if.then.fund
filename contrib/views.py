@@ -9,7 +9,7 @@ from email_confirm_la.signals import post_email_confirm
 
 from twostream.decorators import anonymous_view, user_view_for
 
-from contrib.models import Trigger, Pledge
+from contrib.models import Trigger, Pledge, PledgeStatus
 from contrib.utils import json_response
 
 @anonymous_view
@@ -180,7 +180,7 @@ def submit(request):
 
 	if p.user:
 		# Update state contingent on the pledge being confirmed.
-		p.is_confirmed()
+		p.on_confirmed()
 	else:
 		# The pledge needs to get confirmation of the user's email address,
 		# which will lead to account creation.
@@ -233,3 +233,15 @@ def post_email_confirm_callback(sender, confirmation, request=None, **kwargs):
 	# pledge.user may not be set because confirm_email uses a clone for locking.
 	from itfsite.accounts import first_time_confirmed_user
 	return first_time_confirmed_user(request, user, pledge.trigger.get_absolute_url())
+
+@json_response
+def cancel_pledge(request):
+	# Get the pledge. Check authorization.
+	p = Pledge.objects.get(id=request.POST['pledge'])
+	if not (p.user == request.user or p.id in request.session.get('anon_pledge_created', [])):
+		raise Exception()
+	if request.POST['desire'] == "cancel":
+		p.make_cancelled()
+	else:
+		p.make_uncancelled()
+	return { "status": "ok" }

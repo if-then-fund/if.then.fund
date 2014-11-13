@@ -9,7 +9,7 @@
 	<tr><td>Status:</td> <td>The {{trigger.strings.action}} has not yet occurred. The contribution will only be made once it occurs.</td></tr>
 	{% endif %}
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Cancelled' %}
-	<tr><td>Status:</td> <td>Cancelled</td></tr>
+	<tr><td>Status:</td> <td>Cancelled (<a href="#" onclick="return cancel_pledge('open')">Turn it back on?</a>)</td></tr>
 	{% endif %}
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Vacated' %}
 	<tr><td>Status:</td> <td>The event that this contribution was pledged for is not expected to occur. The pledge is cancelled.</td></tr>
@@ -17,7 +17,44 @@
 
 	<tr><td>For:</td> <td>{{pledge.targets_summary}}</td></tr>
 	<tr><td>Pledged:</td> <td>{{pledge.created|date}}</td></tr>
-	</td></tr>
+
+	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
+	<tr><td colspan=2><a href="#" onclick="return cancel_pledge('cancel')">Cancel?</a></td></tr>
+	{% endif %}
 
 </table>
+
+<script>
+function cancel_pledge(desire) {
+	var titles = {
+		cancel: "Cancel contribution?",
+		open: "Turn it back on"
+	};
+	var text = {
+		cancel: "Are you sure you want to cancel this contribution?",
+		open: "Are you sure you want to turn this contribution back on?"
+	};
+	var button = {
+		cancel: "Cancel Contribution",
+		open: "Turn Back On"
+	};
+
+	show_modal_confirm(
+		titles[desire],
+		text[desire],
+		button[desire],
+		function() {
+			ajax({
+			    url: '/contrib/_cancel',
+			    method: "POST",
+			    data: { pledge: {{pledge.id}}, desire: desire },
+			    success: function(res) {
+			      setTimeout("$('#ajax_loading_indicator').fadeIn()", 100);
+			      window.location.reload()
+			    }
+			})
+		});
+	return false;
+}
+</script>
 
