@@ -146,7 +146,7 @@ class Actor(models.Model):
 	name_long = models.CharField(max_length=128, help_text="The long form of the person's current name, meant for a page title.")
 	name_short = models.CharField(max_length=128, help_text="The short form of the person's current name, usually a last name, meant for in-page second references.")
 	name_sort = models.CharField(max_length=128, help_text="The sorted list form of the person's current name.")
-	party = models.CharField(max_length=1, choices=[('R', 'Republican'), ('D', 'Democratic'), ('I', '3rd-Party')], help_text="The current party of the Actor, R/D/I.")
+	party = models.CharField(max_length=1, choices=[('R', 'Republican'), ('D', 'Democratic'), ('I', 'Independent')], help_text="The current party of the Actor, R/D/I. For Members of Congress, this is based on how the Member caucuses to avoid Independent as much as possible.")
 	
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
@@ -160,7 +160,7 @@ class Actor(models.Model):
 		recipients = [ (False, self.party) ]
 
 		# Create keys for potential challengers in other parties.
-		for party in 'DRI':
+		for party in 'DR':
 			if party == self.party: continue # don't create challenger of same party
 			recipients.append( (True, party) )
 
@@ -200,7 +200,7 @@ class Action(models.Model):
 	name_long = models.CharField(max_length=128, help_text="The long form of the person's name at the time of the action, meant for a page title.")
 	name_short = models.CharField(max_length=128, help_text="The short form of the person's name at the time of the action, usually a last name, meant for in-page second references.")
 	name_sort = models.CharField(max_length=128, help_text="The sorted list form of the person's name at the time of the action.")
-	party = models.CharField(max_length=1, choices=[('R', 'Republican'), ('D', 'Democratic'), ('I', '3rd-Party')], help_text="The party of the Actor, R/D/I, at the time of the action.")
+	party = models.CharField(max_length=1, choices=[('R', 'Republican'), ('D', 'Democratic'), ('I', 'Independent')], help_text="The party of the Actor, R/D/I, at the time of the action.")
 
 	class Meta:
 		unique_together = [('execution', 'actor')]
@@ -237,7 +237,7 @@ class Pledge(models.Model):
 	desired_outcome = models.IntegerField(help_text="The outcome index that the user desires.")
 	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The pledge amount in dollars (including fees). The credit card charge may be less in the event that we have to round to the nearest penny-donation.")
 	incumb_challgr = models.FloatField(help_text="A float indicating how to split the pledge: -1 (to challenger only) <=> 0 (evenly split between incumbends and challengers) <=> +1 (to incumbents only)")
-	filter_party = models.CharField(max_length=3, help_text="A string containing one or more of the characters 'D' 'R' and 'I' that filters contributions to only candidates whose party matches on of the included characters.")
+	filter_party = models.CharField(max_length=3, help_text="A string containing one or more of the characters 'D' and 'R' that filters contributions to only candidates whose party matches on of the included characters.")
 	filter_competitive = models.BooleanField(default=False, help_text="Whether to filter contributions to competitive races.")
 
 	cclastfour = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The last four digits of the user's credit card number, stored for fast look-up in case we need to find a pledge from a credit card number.")
@@ -288,7 +288,7 @@ class Pledge(models.Model):
 
 		party_filter = ""
 		if len(self.filter_party) < 3:
-			party_map = { "R": "Republican", "D": "Democratic", "I": "3rd Party" }
+			party_map = { "R": "Republican", "D": "Democratic" }
 			party_filter = \
 				" or ".join(party_map[p] for p in self.filter_party) \
 				+ " "
@@ -403,12 +403,11 @@ class PledgeExecution(models.Model):
 	fees = models.DecimalField(max_digits=6, decimal_places=2, help_text="The fees the user was charged, in dollars.")
 
 class Recipient(models.Model):
-	"""A contribution recipient, such as a candidate's campaign committee. Immutable. Whereas an Actor represents a person who takes an action, a Recipient represents a FEC-recognized entity who can be the recipient of a campaign contribution. A Recipient also exists for any logically-specified challenger. If an Actor changes party, a new Recipient instance is created."""
+	"""A contribution recipient, such as a candidate's campaign committee. Immutable. Whereas an Actor represents a person who takes an action, a Recipient represents a FEC-recognized entity who can be the recipient of a campaign contribution. A Recipient also exists for any logically-specified challenger."""
 
 	cycle = models.IntegerField(help_text="The election cycle (year) that the Recipient is used for.")
 	actor = models.ForeignKey(Actor, blank=True, null=True, help_text="The Actor associated with the Recipient. The Recipient may be the Actor's challenger.")
-	is_opponent = models.BooleanField(default=False, help_text="If True, the Recipient is a general election challenger of the Actor.")
-	party = models.CharField(max_length=1, choices=[('R', 'Republican'), ('D', 'Democratic'), ('I', '3rd-Party')], help_text="The party of the Recipient, R/D/I.")
+	challenger = models.CharField(max_length=1, blank=True, null=True, choices=[(None, 'Incumbent'), ('R', 'Republican'), ('D', 'Democratic')], help_text="The party of the challenger (R/D), or null if this Recipient is for the incumbent.")
 
 	name = models.CharField(max_length=255, help_text="The name of the Recipient, typically for internal/debugging use only.")
 
@@ -416,7 +415,7 @@ class Recipient(models.Model):
 	fec_id = models.CharField(max_length=64, blank=True, null=True, help_text="The FEC ID of the campaign.")
 
 	class Meta:
-		unique_together = [('cycle', 'actor', 'is_opponent', 'party')]
+		unique_together = [('cycle', 'actor', 'challenger')]
 
 	def save(self):
 		super(Recipient, self).save()
