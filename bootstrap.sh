@@ -33,6 +33,7 @@ source .env/bin/activate
 # Install dependencies.
 pip install --upgrade \
 	"django>=1.7.1" \
+	"requests" \
 	"markdown2" \
 	"jsonfield" \
 	"enum3field"

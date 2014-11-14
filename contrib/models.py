@@ -141,11 +141,54 @@ class TriggerExecution(models.Model):
 class Actor(models.Model):
 	"""A public figure, e.g. elected official with an active election campaign, who might take an action."""
 
-	key = models.CharField(max_length=64, db_index=True, unique=True, help_text="An opaque look-up key to quickly locate this object.")
+	govtrack_id = models.IntegerField(unique=True, help_text="GovTrack's ID for this person.")
+
 	name_long = models.CharField(max_length=128, help_text="The long form of the person's current name, meant for a page title.")
 	name_short = models.CharField(max_length=128, help_text="The short form of the person's current name, usually a last name, meant for in-page second references.")
 	name_sort = models.CharField(max_length=128, help_text="The sorted list form of the person's current name.")
+	party = models.CharField(max_length=1, choices=[('R', 'Republican'), ('D', 'Democratic'), ('I', '3rd-Party')], help_text="The current party of the Actor, R/D/I.")
+	
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
+
+	def save(self):
+		super(Actor, self).save()
+
+	def create_recipient_instances(self, cycle):
+		# Ensure a recipient exists for this Actor and any potential challengers of a different party.
+
+		# Create a (is_opponent, party) key for the Actor itself.
+		recipients = [ (False, self.party) ]
+
+		# Create keys for potential challengers in other parties.
+		for party in 'DRI':
+			if party == self.party: continue # don't create challenger of same party
+			recipients.append( (True, party) )
+
+		# Create Recipient instances.
+		for is_opponent, party in recipients:
+			# Get or create.
+			recipient, is_new = Recipient.objects.get_or_create(
+				cycle=cycle,
+				actor=self,
+				is_opponent=is_opponent,
+				party=party,
+				)
+
+			# Update name.
+			if not is_opponent:
+				recipient.name = self.name_long
+			else:
+				recipient.name = "General Election (%s) Challenger to %s" % (party, self.name_long)
+
+			# Update record but *also* trigger an update of the Democracy Engine recipient record.
+			recipient.save()
+
+		# There can only be one 'current' instance for the Actor itself. If the Actor
+		# changes parties we could end up with more than one instance.
+		Recipient.objects\
+			.filter(current=True, actor=self, is_opponent=False)\
+			.exclude(party=self.party)\
+			.update(current=False)
 
 class Action(models.Model):
 	"""The outcome of an actor taking an act described by a trigger."""
@@ -153,6 +196,11 @@ class Action(models.Model):
 	execution = models.ForeignKey(TriggerExecution, on_delete=models.PROTECT, help_text="The TriggerExecution that created this object.")
 	actor = models.ForeignKey(Actor, on_delete=models.PROTECT, help_text="The Actor who took this action.")
 	outcome = models.IntegerField(help_text="The outcome index that was taken.")
+
+	name_long = models.CharField(max_length=128, help_text="The long form of the person's name at the time of the action, meant for a page title.")
+	name_short = models.CharField(max_length=128, help_text="The short form of the person's name at the time of the action, usually a last name, meant for in-page second references.")
+	name_sort = models.CharField(max_length=128, help_text="The sorted list form of the person's name at the time of the action.")
+	party = models.CharField(max_length=1, choices=[('R', 'Republican'), ('D', 'Democratic'), ('I', '3rd-Party')], help_text="The party of the Actor, R/D/I, at the time of the action.")
 
 	class Meta:
 		unique_together = [('execution', 'actor')]
@@ -355,24 +403,36 @@ class PledgeExecution(models.Model):
 	fees = models.DecimalField(max_digits=6, decimal_places=2, help_text="The fees the user was charged, in dollars.")
 
 class Recipient(models.Model):
-	"""A contribution recipient, such as a candidate's campaign committee. Whereas an Actor represents a person who takes an action, a Recipient represents a FEC-recognized entity who can be the recipient of a campaign contribution. A Recipient also exists for any logically-specified challenger. An Actor may be linked with multiple Recipients but has one 'current' recipient."""
+	"""A contribution recipient, such as a candidate's campaign committee. Immutable. Whereas an Actor represents a person who takes an action, a Recipient represents a FEC-recognized entity who can be the recipient of a campaign contribution. A Recipient also exists for any logically-specified challenger. If an Actor changes party, a new Recipient instance is created."""
 
-	current = models.BooleanField(default=True, help_text="Whether this record is a current Recipient for an Actor.")
-
+	cycle = models.IntegerField(help_text="The election cycle (year) that the Recipient is used for.")
 	actor = models.ForeignKey(Actor, blank=True, null=True, help_text="The Actor associated with the Recipient. The Recipient may be the Actor's challenger.")
-	party = models.CharField(max_length=1, choices=[('R', 'Republican'), ('D', 'Democratic'), ('I', '3rd-Party')], help_text="The party of the Recipient, R/D/I.")
 	is_opponent = models.BooleanField(default=False, help_text="If True, the Recipient is a general election challenger of the Actor.")
+	party = models.CharField(max_length=1, choices=[('R', 'Republican'), ('D', 'Democratic'), ('I', '3rd-Party')], help_text="The party of the Recipient, R/D/I.")
 
-	cycle = models.IntegerField(help_text="The election cycle (year) of the campaign.")
 	name = models.CharField(max_length=255, help_text="The name of the Recipient, typically for internal/debugging use only.")
 
 	de_id = models.CharField(max_length=64, help_text="The Democracy Engine ID that we have assigned to this recipient.")
 	fec_id = models.CharField(max_length=64, blank=True, null=True, help_text="The FEC ID of the campaign.")
 
+	class Meta:
+		unique_together = [('cycle', 'actor', 'is_opponent', 'party')]
+
+	def save(self):
+		super(Recipient, self).save()
+		self.create_de_record()
+
+	@transaction.atomic
+	def create_de_record(self):
+		# Creates/updates a Democracy Engine recipient.
+		pass
+
+
 class Contribution(models.Model):
 	"""A fully executed campaign contribution."""
 
 	pledge_execution = models.ForeignKey(PledgeExecution, on_delete=models.PROTECT, help_text="The PledgeExecution this execution information is about.")
+	action = models.ForeignKey(Action, on_delete=models.PROTECT, help_text="The Action this contribution was made in reaction to.")
 	recipient = models.ForeignKey(Recipient, on_delete=models.PROTECT, help_text="The Recipient this contribution was sent to.")
 	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount of the contribution, in dollars.")
 	refunded_time = models.DateTimeField(blank=True, null=True, help_text="If the contribution was refunded to the user, the time that happened.")
@@ -380,4 +440,4 @@ class Contribution(models.Model):
 	extra = JSONField(blank=True, help_text="Additional information about the contribution.")
 
 	class Meta:
-		unique_together = [('pledge_execution', 'recipient')]
+		unique_together = [('pledge_execution', 'action'), ('pledge_execution', 'recipient')]

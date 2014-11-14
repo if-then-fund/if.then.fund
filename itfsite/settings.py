@@ -99,3 +99,4 @@ DEFAULT_FROM_EMAIL = 'hello@itfsite.unnamed.example'
 # Local Settings
 
 NO_SMTP_CHECK = environment["no_smtp_check"]
+DE_API = environment['democracyengine']
