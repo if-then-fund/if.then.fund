@@ -355,12 +355,10 @@ function pledge_init() {
       else if (the_page.pledge_defaults.incumb_challgr == 0)
         $('#pledge-targets .incumbents, #pledge-targets .challengers').addClass('active btn-success');
 
-      if (the_page.pledge_defaults.filter_party) {
-        for (var i = 0; i < the_page.pledge_defaults.filter_party.length; i++) {
-          var p = the_page.pledge_defaults.filter_party.charAt(i);
-          $('#pledge-party button[data-value="' + p + '"]').addClass('active btn-success');
-        }
-      }
+      if (the_page.pledge_defaults.filter_party == 'ActorParty.Republican' || the_page.pledge_defaults.filter_party == null)
+        $('#pledge-party button[data-value="R"]').addClass('active btn-success');
+      if (the_page.pledge_defaults.filter_party == 'ActorParty.Democratic' || the_page.pledge_defaults.filter_party == null)
+        $('#pledge-party button[data-value="D"]').addClass('active btn-success');
 
       if (the_page.pledge_defaults.filter_competitive)
           $('#pledge-competitive-races').addClass('active btn-success');

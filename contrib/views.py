@@ -9,7 +9,7 @@ from email_confirm_la.signals import post_email_confirm
 
 from twostream.decorators import anonymous_view, user_view_for
 
-from contrib.models import Trigger, Pledge, PledgeStatus
+from contrib.models import Trigger, Pledge, PledgeStatus, ActorParty
 from contrib.utils import json_response
 
 @anonymous_view
@@ -78,6 +78,8 @@ def get_recent_pledge_defaults(user):
 			ret[field] = getattr(pledge, field, pledge.extra.get(field))
 			if type(ret[field]).__name__ == "Decimal":
 				ret[field] = float(ret[field])
+			elif isinstance(ret[field], ActorParty):
+				ret[field] = str(ret[field])
 	return ret
 
 @require_http_methods(['POST'])
@@ -139,10 +141,6 @@ def submit(request):
 		except ValueError:
 			raise Exception("%s is out of range" % field)
 
-	# string fields that have the same field name as the form element name
-	for field in ('filter_party',):
-		setattr(p, field, request.POST[field])
-
 	# string fields that go straight into the extras dict.
 	p.extra = {}
 	for field in (
@@ -150,6 +148,14 @@ def submit(request):
 		'contribAddress', 'contribCity', 'contribState', 'contribZip',
 		'contribOccupation', 'contribEmployer'):
 		p.extra[field] = request.POST[field].strip()
+
+	# string fields that have the same field name as the form element name
+	if request.POST['filter_party'] in ('DR', 'RD'):
+		p.filter_party = None # no filter
+	elif request.POST['filter_party'] == 'D':
+		p.filter_party = ActorParty.Democratic
+	elif request.POST['filter_party'] == 'R':
+		p.filter_party = ActorParty.Republican
 
 	# Store the last four digits of the credit card number so we can
 	# quickly locate a Pledge by CC number (approximately).
@@ -174,11 +180,8 @@ def submit(request):
 		raise Exception("amount is out of range")
 	if p.incumb_challgr not in (-1, 0, 1):
 		raise Exception("incumb_challgr is out of range")
-	if len(p.filter_party) == 0:
+	if p.filter_party == ActorParty.Independent:
 		raise Exception("filter_party is out of range")
-	for c in p.filter_party:
-		if c not in ('D', 'R', 'I'):
-			raise Exception("filter_party is out of range")
 
 	# Well, we'd submit this to Democracy Engine here, which would tell
 	# us whether many of these fields are OK.

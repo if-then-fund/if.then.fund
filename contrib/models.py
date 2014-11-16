@@ -6,6 +6,14 @@ from itfsite.models import User
 from jsonfield import JSONField
 from enum3field import EnumField, django_enum
 
+#####################################################################
+#
+# Triggers
+#
+# A future event that triggers pledged contributions.
+#
+#####################################################################
+
 @django_enum
 class TriggerState(enum.Enum):
 	Draft = 0
@@ -138,6 +146,20 @@ class TriggerExecution(models.Model):
 
 	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed.")
 
+#####################################################################
+#
+# Actors
+#
+# Elected officials and their official acts.
+#
+#####################################################################
+
+@django_enum
+class ActorParty(enum.Enum):
+	Democratic = 1
+	Republican = 2
+	Independent = 3
+
 class Actor(models.Model):
 	"""A public figure, e.g. elected official with an active election campaign, who might take an action."""
 
@@ -146,7 +168,7 @@ class Actor(models.Model):
 	name_long = models.CharField(max_length=128, help_text="The long form of the person's current name, meant for a page title.")
 	name_short = models.CharField(max_length=128, help_text="The short form of the person's current name, usually a last name, meant for in-page second references.")
 	name_sort = models.CharField(max_length=128, help_text="The sorted list form of the person's current name.")
-	party = models.CharField(max_length=1, choices=[('R', 'Republican'), ('D', 'Democratic'), ('I', 'Independent')], help_text="The current party of the Actor, R/D/I. For Members of Congress, this is based on how the Member caucuses to avoid Independent as much as possible.")
+	party = EnumField(ActorParty, help_text="The current party of the Actor. For Members of Congress, this is based on how the Member caucuses to avoid Independent as much as possible.")
 	
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
@@ -200,10 +222,18 @@ class Action(models.Model):
 	name_long = models.CharField(max_length=128, help_text="The long form of the person's name at the time of the action, meant for a page title.")
 	name_short = models.CharField(max_length=128, help_text="The short form of the person's name at the time of the action, usually a last name, meant for in-page second references.")
 	name_sort = models.CharField(max_length=128, help_text="The sorted list form of the person's name at the time of the action.")
-	party = models.CharField(max_length=1, choices=[('R', 'Republican'), ('D', 'Democratic'), ('I', 'Independent')], help_text="The party of the Actor, R/D/I, at the time of the action.")
+	party = EnumField(ActorParty, help_text="The party of the Actor at the time of the action.")
 
 	class Meta:
 		unique_together = [('execution', 'actor')]
+
+#####################################################################
+#
+# Pledges
+#
+# A pledged campaign contribution by a user.
+#
+#####################################################################
 
 @django_enum
 class PledgeStatus(enum.Enum):
@@ -237,7 +267,7 @@ class Pledge(models.Model):
 	desired_outcome = models.IntegerField(help_text="The outcome index that the user desires.")
 	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The pledge amount in dollars (including fees). The credit card charge may be less in the event that we have to round to the nearest penny-donation.")
 	incumb_challgr = models.FloatField(help_text="A float indicating how to split the pledge: -1 (to challenger only) <=> 0 (evenly split between incumbends and challengers) <=> +1 (to incumbents only)")
-	filter_party = models.CharField(max_length=3, help_text="A string containing one or more of the characters 'D' and 'R' that filters contributions to only candidates whose party matches on of the included characters.")
+	filter_party = EnumField(ActorParty, blank=True, null=True, help_text="Contributions only go to candidates whose party matches this party. Independent is not an allowed value here.")
 	filter_competitive = models.BooleanField(default=False, help_text="Whether to filter contributions to competitive races.")
 
 	cclastfour = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The last four digits of the user's credit card number, stored for fast look-up in case we need to find a pledge from a credit card number.")
@@ -287,11 +317,8 @@ class Pledge(models.Model):
 			return s[0].upper() + s[1:]
 
 		party_filter = ""
-		if len(self.filter_party) < 3:
-			party_map = { "R": "Republican", "D": "Democratic" }
-			party_filter = \
-				" or ".join(party_map[p] for p in self.filter_party) \
-				+ " "
+		if self.filter_party is not None:
+			party_filter = self.filter_party.name + " "
 
 		actors = self.trigger.strings['actors']
 		if party_filter == "":
