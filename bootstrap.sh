@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Get remote libraries.
+
+git submodule update --init
+
+mkdir -p itfsite/static/js/ext
+wget -qO itfsite/static/js/ext/jquery.payment.js https://raw.githubusercontent.com/stripe/jquery.payment/3dbada6a8c7fbb0d13ac121d0581a738d9576f53/lib/jquery.payment.js
+
 # Install package dependencies.
 
 function apt_install {
@@ -31,19 +38,15 @@ fi
 source .env/bin/activate
 
 # Install dependencies.
-pip install --upgrade \
+pip install -q --upgrade \
 	"django>=1.7.1" \
 	"requests" \
 	"markdown2" \
 	"jsonfield" \
 	"enum3field"
 
-# Get remote libraries.
-wget -qO itfsite/static/js/ext/jquery.payment.js https://raw.githubusercontent.com/stripe/jquery.payment/3dbada6a8c7fbb0d13ac121d0581a738d9576f53/lib/jquery.payment.js
-
-if [ ! -d twostream ]; then
-	git clone https://github.com/govtrack/twostream
-fi
+pip install -q --upgrade -r \
+	ext/django-email-confirm-la/requirements.txt
 
 # Create database / migrate database.
 ./manage.py makemigrations itfsite contrib
