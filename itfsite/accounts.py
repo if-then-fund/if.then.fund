@@ -37,7 +37,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 	# custom user model requirements
 	USERNAME_FIELD = 'email'
-	REQUIRED_FIELDS = ['is_staff', 'is_active', 'date_joined']
+	REQUIRED_FIELDS = []
 	def get_full_name(self): return self.email
 	def get_short_name(self): return self.email
 	class Meta:
