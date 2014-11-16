@@ -1,5 +1,11 @@
 {% load itfsite_utils %}
 
+{% if not pledge.user %}
+<div class="alert alert-warning">
+	We sent an email to {{pledge.email}}. You must click the link in the email to confirm your email address before this contribution can be scheduled.
+</div>
+{% endif %}
+
 <p>You have made/scheduled a campaign contribution for this {{trigger.strings.action}}:</p>
 
 <table class="table">
