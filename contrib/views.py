@@ -30,8 +30,9 @@ def trigger(request, id, slug):
 def trigger_user_view(request, id, slug):
 	trigger = get_object_or_404(Trigger, id=id)
 	ret = { }
-	if request.user.is_authenticated():
-		ret["pledge_defaults"] = get_recent_pledge_defaults(request.user)
+
+	# Most recent pledge info so we can fill in defaults on the user's next pledge.
+	ret["pledge_defaults"] = get_recent_pledge_defaults(request.user, request)
 
 	p = None
 	if request.user.is_authenticated():
@@ -66,20 +67,32 @@ def get_user_defaults(request):
 		return { "status": str(user) }
 
 	# get recent data
-	return get_recent_pledge_defaults(user)
+	return get_recent_pledge_defaults(user, request)
 
-def get_recent_pledge_defaults(user):
+def get_recent_pledge_defaults(user, request):
 	ret = { }
-	pledge = Pledge.objects.filter(user=user).order_by('-created').first()
-	if pledge:
-		for field in ('amount', 'incumb_challgr', 'filter_party', 'filter_competitive',
-			'contribNameFirst', 'contribNameLast', 'contribAddress', 'contribCity', 'contribState', 'contribZip',
-			'contribOccupation', 'contribEmployer'):
-			ret[field] = getattr(pledge, field, pledge.extra.get(field))
-			if type(ret[field]).__name__ == "Decimal":
-				ret[field] = float(ret[field])
-			elif isinstance(ret[field], ActorParty):
-				ret[field] = str(ret[field])
+
+	if request.user.is_authenticated():
+		pledge = Pledge.objects.filter(user=user).order_by('-created').first()
+		if not pledge: return ret
+	elif request.session.get('anon_pledge_created'):
+		most_recent = request.session.get('anon_pledge_created')[-1]
+		try:
+			pledge = Pledge.objects.get(id=most_recent)
+		except Pledge.DoesNotExist:
+			return ret
+	else:
+		return ret
+
+	for field in ('email', 'amount', 'incumb_challgr', 'filter_party', 'filter_competitive',
+		'contribNameFirst', 'contribNameLast', 'contribAddress', 'contribCity', 'contribState', 'contribZip',
+		'contribOccupation', 'contribEmployer'):
+		ret[field] = getattr(pledge, field, pledge.extra.get(field))
+		if type(ret[field]).__name__ == "Decimal":
+			ret[field] = float(ret[field])
+		elif isinstance(ret[field], ActorParty):
+			ret[field] = str(ret[field])
+
 	return ret
 
 @require_http_methods(['POST'])

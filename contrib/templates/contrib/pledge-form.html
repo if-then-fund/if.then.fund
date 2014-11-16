@@ -342,29 +342,32 @@ function pledge_init() {
     $('#contributor').addClass('active')
     $('#pledge-pay .nav a[href="#email"]').parent().remove();
     $('#pledge-pay .nav a[href="#contributor"]').parent().addClass('active');
+  }
 
-    // Set some defaults based on the user's last pledge.
-    if (the_page && the_page.pledge_defaults) {
-      if (the_page.pledge_defaults['amount'])
-        $('#pledge-amount input').val(the_page.pledge_defaults['amount'].toFixed(2));
+  // Set some defaults based on the user's last pledge.
+  if (the_page && the_page.pledge_defaults) {
+    if (the_page.pledge_defaults['amount'])
+      $('#pledge-amount input').val(the_page.pledge_defaults['amount'].toFixed(2));
 
-      if (the_page.pledge_defaults.incumb_challgr == -1)
-        $('#pledge-targets .challengers').addClass('active btn-success');
-      else if (the_page.pledge_defaults.incumb_challgr == 1)
-        $('#pledge-targets .incumbents').addClass('active btn-success');
-      else if (the_page.pledge_defaults.incumb_challgr == 0)
-        $('#pledge-targets .incumbents, #pledge-targets .challengers').addClass('active btn-success');
+    if (the_page.pledge_defaults.incumb_challgr == -1)
+      $('#pledge-targets .challengers').addClass('active btn-success');
+    else if (the_page.pledge_defaults.incumb_challgr == 1)
+      $('#pledge-targets .incumbents').addClass('active btn-success');
+    else if (the_page.pledge_defaults.incumb_challgr == 0)
+      $('#pledge-targets .incumbents, #pledge-targets .challengers').addClass('active btn-success');
 
-      if (the_page.pledge_defaults.filter_party == 'ActorParty.Republican' || the_page.pledge_defaults.filter_party == null)
-        $('#pledge-party button[data-value="R"]').addClass('active btn-success');
-      if (the_page.pledge_defaults.filter_party == 'ActorParty.Democratic' || the_page.pledge_defaults.filter_party == null)
-        $('#pledge-party button[data-value="D"]').addClass('active btn-success');
+    if (the_page.pledge_defaults.filter_party == 'ActorParty.Republican' || the_page.pledge_defaults.filter_party == null)
+      $('#pledge-party button[data-value="R"]').addClass('active btn-success');
+    if (the_page.pledge_defaults.filter_party == 'ActorParty.Democratic' || the_page.pledge_defaults.filter_party == null)
+      $('#pledge-party button[data-value="D"]').addClass('active btn-success');
 
-      if (the_page.pledge_defaults.filter_competitive)
-          $('#pledge-competitive-races').addClass('active btn-success');
+    if (the_page.pledge_defaults.filter_competitive)
+        $('#pledge-competitive-races').addClass('active btn-success');
 
-      setPledgeDefaults(the_page.pledge_defaults)
-    }
+    if (the_page.pledge_defaults.email)
+        $('#emailEmail').val(the_page.pledge_defaults.email);
+
+    setPledgeDefaults(the_page.pledge_defaults)
   }
 
 
