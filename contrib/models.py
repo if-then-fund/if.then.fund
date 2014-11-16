@@ -219,7 +219,7 @@ class PledgeManager(models.Manager):
 			# Instead call delete() on each instance, which handles the constraint.
 			for obj in self:
 				obj.delete()
-	def get_query_set(self):
+	def get_queryset(self):
 		return PledgeManager.CustomQuerySet(self.model, using=self._db)
 
 class Pledge(models.Model):
