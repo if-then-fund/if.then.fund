@@ -161,7 +161,7 @@ class ActorParty(enum.Enum):
 	Independent = 3
 
 class Actor(models.Model):
-	"""A public figure, e.g. elected official with an active election campaign, who might take an action."""
+	"""A public figure, e.g. elected official with an election campaign, who might take an action."""
 
 	govtrack_id = models.IntegerField(unique=True, help_text="GovTrack's ID for this person.")
 
@@ -169,48 +169,12 @@ class Actor(models.Model):
 	name_short = models.CharField(max_length=128, help_text="The short form of the person's current name, usually a last name, meant for in-page second references.")
 	name_sort = models.CharField(max_length=128, help_text="The sorted list form of the person's current name.")
 	party = EnumField(ActorParty, help_text="The current party of the Actor. For Members of Congress, this is based on how the Member caucuses to avoid Independent as much as possible.")
+	title = models.CharField(max_length=200, help_text="Descriptive text for the office held by this actor.")
 	
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
-	def save(self):
-		super(Actor, self).save()
-
-	def create_recipient_instances(self, cycle):
-		# Ensure a recipient exists for this Actor and any potential challengers of a different party.
-
-		# Create a (is_opponent, party) key for the Actor itself.
-		recipients = [ (False, self.party) ]
-
-		# Create keys for potential challengers in other parties.
-		for party in 'DR':
-			if party == self.party: continue # don't create challenger of same party
-			recipients.append( (True, party) )
-
-		# Create Recipient instances.
-		for is_opponent, party in recipients:
-			# Get or create.
-			recipient, is_new = Recipient.objects.get_or_create(
-				cycle=cycle,
-				actor=self,
-				is_opponent=is_opponent,
-				party=party,
-				)
-
-			# Update name.
-			if not is_opponent:
-				recipient.name = self.name_long
-			else:
-				recipient.name = "General Election (%s) Challenger to %s" % (party, self.name_long)
-
-			# Update record but *also* trigger an update of the Democracy Engine recipient record.
-			recipient.save()
-
-		# There can only be one 'current' instance for the Actor itself. If the Actor
-		# changes parties we could end up with more than one instance.
-		Recipient.objects\
-			.filter(current=True, actor=self, is_opponent=False)\
-			.exclude(party=self.party)\
-			.update(current=False)
+	def __str__(self):
+		return self.name_sort
 
 class Action(models.Model):
 	"""The outcome of an actor taking an act described by a trigger."""
@@ -223,6 +187,8 @@ class Action(models.Model):
 	name_short = models.CharField(max_length=128, help_text="The short form of the person's name at the time of the action, usually a last name, meant for in-page second references.")
 	name_sort = models.CharField(max_length=128, help_text="The sorted list form of the person's name at the time of the action.")
 	party = EnumField(ActorParty, help_text="The party of the Actor at the time of the action.")
+	title = models.CharField(max_length=200, help_text="Descriptive text for the office held by this actor at the time of the action.")
+	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
 	class Meta:
 		unique_together = [('execution', 'actor')]
@@ -429,12 +395,19 @@ class PledgeExecution(models.Model):
 	charged = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount the user's account was actually charged, in dollars and including fees. It may differ from the pledge amount to ensure that contributions of whole-cent amounts could be made to candidates.")
 	fees = models.DecimalField(max_digits=6, decimal_places=2, help_text="The fees the user was charged, in dollars.")
 
-class Recipient(models.Model):
-	"""A contribution recipient, such as a candidate's campaign committee. Immutable. Whereas an Actor represents a person who takes an action, a Recipient represents a FEC-recognized entity who can be the recipient of a campaign contribution. A Recipient also exists for any logically-specified challenger."""
+#####################################################################
+#
+# Recipients and Contributions
+#
+# Actual campaign contributions made.
+#
+#####################################################################
 
-	cycle = models.IntegerField(help_text="The election cycle (year) that the Recipient is used for.")
+class Recipient(models.Model):
+	"""A contribution recipient, either an Actor or any logically-specified challenger to an Actor, with the current Democracy Engine recipient ID."""
+
 	actor = models.ForeignKey(Actor, blank=True, null=True, help_text="The Actor associated with the Recipient. The Recipient may be the Actor's challenger.")
-	challenger = models.CharField(max_length=1, blank=True, null=True, choices=[(None, 'Incumbent'), ('R', 'Republican'), ('D', 'Democratic')], help_text="The party of the challenger (R/D), or null if this Recipient is for the incumbent.")
+	challenger = EnumField(ActorParty, blank=True, null=True, help_text="The party of the challenger (R or D, only), or null if this Recipient is for the incumbent.")
 
 	name = models.CharField(max_length=255, help_text="The name of the Recipient, typically for internal/debugging use only.")
 
@@ -442,11 +415,40 @@ class Recipient(models.Model):
 	fec_id = models.CharField(max_length=64, blank=True, null=True, help_text="The FEC ID of the campaign.")
 
 	class Meta:
-		unique_together = [('cycle', 'actor', 'challenger')]
+		unique_together = [('actor', 'challenger')]
 
-	def save(self):
-		super(Recipient, self).save()
-		self.create_de_record()
+	def __str__(self):
+		return "[%s%s] %s" % (self.actor.name_short, ':' + self.challenger.name if self.challenger else "", self.name)
+
+	@staticmethod
+	def create_for(actor):
+		# Ensure a recipient exists for the Actor and any potential challengers of a different party.
+
+		# The None party is the Actor (incumbent). Party values represent challengers.
+		for party in (None, ActorParty.Democratic, ActorParty.Republican):
+			# Don't create a challenger of the same party as the Actor (incumbent).
+			if party == actor.party:
+				continue
+
+			# Get or create.
+			recipient, is_new = Recipient.objects.get_or_create(
+				actor=actor,
+				challenger=party,
+				)
+
+			# Update name.
+			old_name = recipient.name
+			if not party:
+				recipient.name = actor.name_long
+			else:
+				recipient.name = "General Election %s Challenger to %s" % (party.name, actor.name_long)
+
+			# Update record.
+			if  old_name != recipient.name:
+				if not is_new:
+					print(recipient, '\t', old_name, '=>', recipient.name)
+				recipient.save(update_fields=['name'])
+
 
 	@transaction.atomic
 	def create_de_record(self):
@@ -462,6 +464,8 @@ class Contribution(models.Model):
 	recipient = models.ForeignKey(Recipient, on_delete=models.PROTECT, help_text="The Recipient this contribution was sent to.")
 	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount of the contribution, in dollars.")
 	refunded_time = models.DateTimeField(blank=True, null=True, help_text="If the contribution was refunded to the user, the time that happened.")
+
+	de_id = models.CharField(max_length=64, help_text="The Democracy Engine ID that the contribution was assigned to.")
 
 	extra = JSONField(blank=True, help_text="Additional information about the contribution.")
 
