@@ -21,12 +21,38 @@ def trigger(request, id, slug):
 	if trigger.slug != slug:
 		return redirect(trigger.get_absolute_url())
 
-	te = TriggerExecution.objects.filter(trigger=trigger).first()
+	outcomes = None
+	actions = None
+
+	te = trigger.execution
+	if te:
+		# Sort the outcomes by amount of contributions.
+		outcomes = trigger.outcomes
+		for i in range(len(outcomes)):
+			outcomes[i]['index'] = i
+			outcomes[i]['contribs'] = te.extra['contribs_by_outcome'][i]
+		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
+
+		# Actions/Actors
+		actions = list(te.actions.all().select_related('actor'))
+		actions.sort(key = lambda a : (-(a.total_contributions_for - a.total_contributions_against), a.actor.name_sort))
+
+		# Incumbent/challengers.
+		by_incumb_chlngr = [["Incumbents", 0, "text-success"], ["Opponents", 0, "text-danger"], ["Fees", 0, "text-muted small"]]
+		for a in actions:
+			by_incumb_chlngr[0][1] += a.total_contributions_for
+			by_incumb_chlngr[1][1] += a.total_contributions_against
+			by_incumb_chlngr[2][1] -= a.total_contributions_for + a.total_contributions_against
+		by_incumb_chlngr[2][1] += te.total_contributions
+
 
 	return render(request, "contrib/trigger.html", {
 		"trigger": trigger,
 		"execution": te,
+		"outcomes": outcomes,
 		"alg": Pledge.current_algorithm(),
+		"actions": actions,
+		"by_incumb_chlngr": by_incumb_chlngr,
 	})
 
 @user_view_for(trigger)

@@ -58,6 +58,60 @@
 			
 			{{execution.description|render_text:execution.description_format}}
 
+			<h3>Totals</h3>
+
+			<div class="row">
+				<div class="col-sm-6 col-md-4">
+					<table class="table" style="width: auto">
+					{% for outcome in outcomes %}
+						<tr>
+							<th>{{outcome.label}}</th>
+							<td>${{outcome.contribs|floatformat:2}}</td>
+						</tr>
+					{% endfor %}
+					<tr style="color: #333; background-color: #F5F5F5">
+						<th>Total</th>
+						<td style="font-weight: bold">${{execution.total_contributions|floatformat:2}}</td>
+					</tr>
+					</table>
+				</div>
+				<div class="col-sm-6 col-md-4">
+					<table class="table" style="width: auto">
+					{% for row in by_incumb_chlngr %}
+						<tr class="{{row.2}}">
+							<th>{{row.0}}</th>
+							<td>${{row.1|floatformat:2}}</td>
+						</tr>
+					{% endfor %}
+					<tr style="color: #333; background-color: #F5F5F5">
+						<th>Total</th>
+						<td style="font-weight: bold">${{execution.total_contributions|floatformat:2}}</td>
+					</tr>
+					</table>
+				</div>
+			</div>
+
+			<h3>Contributions to {{trigger.strings.actors|capfirst}}</h3>
+
+			<table class="table" style="width: auto">
+			<thead>
+				<tr>
+					<th>Candidate</th>
+					<th>Contributions<br>To Candidate</th>
+					<th>Contributions<br>To Opponent</th>
+				</tr>
+			</thead>
+			<tbody>
+			{% for action in actions %}
+				<tr>
+					<td>{{action.actor.name_long}}</td>
+					<td class="{% if action.total_contributions_for %}text-success{% else %}text-muted{% endif %}">${{action.total_contributions_for|floatformat:2}}</td>
+					<td class="{% if action.total_contributions_against %}text-danger{% else %}text-muted{% endif %}">${{action.total_contributions_against|floatformat:2}}</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+			</table>
+
 		{% endif %}
 				
 	</div>

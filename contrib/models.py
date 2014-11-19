@@ -99,7 +99,7 @@ class TriggerStatusUpdate(models.Model):
 class TriggerExecution(models.Model):
 	"""How a Trigger was executed."""
 
-	trigger = models.OneToOneField(Trigger, on_delete=models.PROTECT, help_text="The Trigger this execution information is about.")
+	trigger = models.OneToOneField(Trigger, related_name='execution', on_delete=models.PROTECT, help_text="The Trigger this execution information is about.")
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True, db_index=True)
@@ -115,6 +115,37 @@ class TriggerExecution(models.Model):
 
 	def __str__(self):
 		return "%s [exec %s]" % (self.trigger, self.created.strftime("%x"))
+
+	def init_extra(self):
+		if self.extra in (None, ""):
+			self.extra = { }
+
+	def cache_outcome_totals(self):
+		self.init_extra()
+
+		# Cache by outcome. Reset.
+		self.extra["contribs_by_outcome"] = [ 0 for i in range(len(self.trigger.outcomes)) ]
+
+		# Query.
+		# Convert Decimal to float otherwise it gets converted to string in JSONification.
+		for r in PledgeExecution.objects\
+			.filter(pledge__trigger=self.trigger)\
+			.values('pledge__desired_outcome')\
+			.annotate(total=models.Sum('charged')):
+			self.extra["contribs_by_outcome"][r['pledge__desired_outcome']] = float(r['total'])
+
+		# Cache by congressional district.
+		self.extra["contribs_by_district"] = { }
+		for r in PledgeExecution.objects\
+			.filter(pledge__trigger=self.trigger)\
+			.values('pledge__desired_outcome', 'pledge__district')\
+			.annotate(total=models.Sum('charged')):
+			self.extra["contribs_by_district"].setdefault(r['pledge__district'], {})[r["pledge__desired_outcome"]] = float(r['total'])
+
+		# Cache by congressional district.
+
+		self.save()
+
 
 #####################################################################
 #
@@ -154,7 +185,7 @@ class Actor(models.Model):
 class Action(models.Model):
 	"""The outcome of an actor taking an act described by a trigger."""
 
-	execution = models.ForeignKey(TriggerExecution, on_delete=models.CASCADE, help_text="The TriggerExecution that created this object.")
+	execution = models.ForeignKey(TriggerExecution, related_name="actions", on_delete=models.CASCADE, help_text="The TriggerExecution that created this object.")
 	actor = models.ForeignKey(Actor, on_delete=models.PROTECT, help_text="The Actor who took this action.")
 	outcome = models.IntegerField(blank=True, null=True, help_text="The outcome index that was taken. May be null if the Actor should have participated but didn't (we want to record to avoid counterintuitive missing data).")
 
