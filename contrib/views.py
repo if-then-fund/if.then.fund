@@ -206,18 +206,19 @@ def submit(request):
 		# Re-wrap into something @json_response will catch.
 		raise ValueError("Something went wrong: " + str(e))
 
-	if p.user:
-		# Update state contingent on the pledge being confirmed.
-		p.on_confirmed()
-	else:
+	# Increment the trigger's total_pledged field (atomically).
+	from django.db import models
+	Trigger.objects.filter(id=p.trigger.id)\
+		.update(total_pledged=models.F('total_pledged') + p.amount)
+
+	if not p.user:
 		# The pledge needs to get confirmation of the user's email address,
 		# which will lead to account creation.
-		try:
-			p.send_email_verification()
-		except IOError:
-			# If we can't synchronously send an email, just go on. We'll
-			# try again asynchronously.
-			pass
+		from email_confirm_la.models import EmailConfirmation
+		ec = EmailConfirmation.objects.set_email_for_object(
+			email=p.email,
+			content_object=p,
+		)
 
 		# And in order for the user to be able to view the pledge on the
 		# next page, prior to email confirmation, we'll need to set a token
@@ -268,8 +269,5 @@ def cancel_pledge(request):
 	p = Pledge.objects.get(id=request.POST['pledge'])
 	if not (p.user == request.user or p.id in request.session.get('anon_pledge_created', [])):
 		raise Exception()
-	if request.POST['desire'] == "cancel":
-		p.make_cancelled()
-	else:
-		p.make_uncancelled()
+	p.delete()
 	return { "status": "ok" }

@@ -205,7 +205,7 @@ class Action(models.Model):
 class PledgeStatus(enum.Enum):
 	Open = 1
 	Executed = 2
-	Cancelled = 3 # user canceled prior to pledge execution
+	Unconfirmed = 3 # pledge was not confirmed before Trigger execution, is no longer valid
 	Vacated = 4 # trigger was vacated
 
 class PledgeManager(models.Manager):
@@ -223,7 +223,11 @@ class Pledge(models.Model):
 
 	user = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT, help_text="The user making the pledge. When an anonymous user makes a pledge, this is null, the user's email address is stored, and the pledge should be considered unconfirmed/provisional and will not be executed.")
 	email = models.EmailField(max_length=254, blank=True, null=True, help_text="When an anonymous user makes a pledge, their email address is stored here and we send a confirmation email.")
-	trigger = models.ForeignKey(Trigger, on_delete=models.PROTECT, help_text="The Trigger that this update is about.")
+	trigger = models.ForeignKey(Trigger, on_delete=models.PROTECT, help_text="The Trigger that this Pledge is for.")
+
+	# When a Pledge is cancelled, the object is deleted. The three fields above
+	# are archived, plus the fields listed in this list:
+	cancel_archive_fields = ('created', 'updated', 'algorithm', 'desired_outcome', 'amount', 'cclastfour')
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True)
@@ -248,9 +252,15 @@ class Pledge(models.Model):
 
 	@transaction.atomic
 	def delete(self):
-		# Update the trigger's pledge total atomically *if* the pledge is
-		# 'confirmed' (has a user) and not in the Cancelled state.
-		self.make_cancelled()
+		if self.status != PledgeStatus.Open:
+			raise ValueError("Cannot cancel a Pledge with status %s." % self.status)
+
+		# Decrement the Trigger's total_pledged.
+		Trigger.objects.filter(id=self.trigger.id)\
+			.update(total_pledged=models.F('total_pledged') - self.amount)
+
+		# Archive as a cancelled pledge.
+		cp = CancelledPledge.from_pledge(self)
 
 		# Remove record. Will raise an exception and abort the transaction if
 		# the pledge has been executed and a PledgeExecution object refers to this.
@@ -300,20 +310,6 @@ class Pledge(models.Model):
 
 		return party_filter + actors
 
-	def send_email_verification(self):
-		# Tries to confirm an anonymous-user-created pledge. Might
-		# raise an IOError if the email could not be sent, which leaves
-		# the EmailConfirmation object created but with send_at null.
-		from email_confirm_la.models import EmailConfirmation
-		ec = EmailConfirmation.objects.set_email_for_object(
-			email=self.email,
-			content_object=self,
-		)
-		if not ec.send_at:
-			# EmailConfirmation object exists but sending failed last
-			# time, so try again.
-			ec.send(None)
-
 	@transaction.atomic
 	def confirm_email(self, user):
 		# Can't confirm twice, but this might be called twice. In order
@@ -327,52 +323,7 @@ class Pledge(models.Model):
 		pledge.email = None
 		pledge.save()
 
-		# Update state now that pledge is confirmed.
-		pledge.on_confirmed()
 		return True
-
-	def on_confirmed(self):
-		# Update the trigger's pledge total atomically. Called during
-		# pledge creation (when the pledge is new) or when a user confirms
-		# their email address (during which the pledge instance is locked
-		# to prevent a race condition).
-		if self.status != PledgeStatus.Cancelled:
-			Trigger.objects.filter(id=self.trigger.id)\
-				.update(total_pledged=models.F('total_pledged') + self.amount)
-
-	@transaction.atomic
-	def make_cancelled(self):
-		# Makes a pledge cancelled. First lock the pledge object so that
-		# it doesn't get confirmed in the middle of getting cancelled.
-		pledge = Pledge.objects.select_for_update().filter(id=self.id).first()
-		if pledge.status not in (PledgeStatus.Open, PledgeStatus.Cancelled):
-			raise Exception("Cannot cancel a pledge that is executed or vacated.")
-
-		# Decrement the Trigger's total_pledged if this pledge is both
-		# 'confirmed' (has a user) and not already in the Cancelled state.
-		if pledge.user and pledge.status != PledgeStatus.Cancelled:
-			Trigger.objects.filter(id=self.trigger.id)\
-				.update(total_pledged=models.F('total_pledged') - self.amount)
-
-		pledge.status = PledgeStatus.Cancelled
-		pledge.save()
-
-	@transaction.atomic
-	def make_uncancelled(self):
-		# Makes a pledge cancelled. First lock the pledge object so that
-		# it doesn't get confirmed in the middle of getting cancelled.
-		pledge = Pledge.objects.select_for_update().filter(id=self.id).first()
-		if pledge.status not in (PledgeStatus.Open, PledgeStatus.Cancelled):
-			raise Exception("Cannot uncancel a pledge that is executed or vacated.")
-
-		# Increment the Trigger's total_pledged if this pledge is both
-		# 'confirmed' (has a user) and not already in the Open state.
-		if pledge.user and pledge.status != PledgeStatus.Open:
-			Trigger.objects.filter(id=self.trigger.id)\
-				.update(total_pledged=models.F('total_pledged') + self.amount)
-
-		pledge.status = PledgeStatus.Open
-		pledge.save()
 
 	@staticmethod
 	def find_from_billing(cc_number, cc_exp_month, cc_exp_year, cc_cvc):
@@ -384,6 +335,26 @@ class Pledge(models.Model):
 		for p in Pledge.objects.filter(cclastfour=cc_number[-4:]):
 			if check_password(cc_key, p.extra['billingInfoHashed']):
 				yield p
+
+class CancelledPledge(models.Model):
+	"""Records when a user cancels a Pledge."""
+
+	created = models.DateTimeField(auto_now_add=True, db_index=True)
+
+	trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE, help_text="The Trigger that the pledge was for.")
+	user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, help_text="The user who made the pledge, if not anonymous.")
+	email = models.EmailField(max_length=254, blank=True, null=True, help_text="The email address of an unconfirmed pledge.")
+
+	pledge = JSONField(blank=True, help_text="The original Pledge information.")
+
+	@staticmethod
+	def from_pledge(pledge):
+		cp = CancelledPledge()
+		cp.trigger = pledge.trigger
+		cp.user = pledge.user
+		cp.email = pledge.email
+		cp.pledge = { k: getattr(pledge, k) for k in Pledge.cancel_archive_fields }
+		cp.save()
 
 class PledgeExecution(models.Model):
 	"""How a user's pledge was executed. Each pledge has a single PledgeExecution when the Trigger is executed, and immediately many Contribution objects are created."""
