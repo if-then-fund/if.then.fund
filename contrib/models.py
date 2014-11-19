@@ -130,6 +130,11 @@ class ActorParty(enum.Enum):
 	Republican = 2
 	Independent = 3
 
+	def opposite(self):
+		if self == ActorParty.Democratic: return ActorParty.Republican
+		if self == ActorParty.Republican: return ActorParty.Democratic
+		raise ValueError("%s does not have an opposite party." % str(self))
+
 class Actor(models.Model):
 	"""A public figure, e.g. elected official with an election campaign, who might take an action."""
 
@@ -160,14 +165,22 @@ class Action(models.Model):
 	title = models.CharField(max_length=200, help_text="Descriptive text for the office held by this actor at the time of the action.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
+	total_contributions_for = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed with the actor as the recipient.")
+	total_contributions_against = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed with an opponent of the actor as the recipient.")
+
 	class Meta:
 		unique_together = [('execution', 'actor')]
 
 	def __str__(self):
 		return "%s is %s | %s" % (
 			self.actor,
-			self.execution.trigger.outcomes[self.outcome]['label'] if self.outcome is not None else "N/A",
+			self.outcome_label(),
 			self.execution)
+
+	def outcome_label(self):
+		if self.outcome is not None:
+			return self.execution.trigger.outcomes[self.outcome]['label']
+		return "N/A"
 
 	@staticmethod
 	def create(execution, actor, outcome_index):
@@ -203,15 +216,17 @@ class PledgeStatus(enum.Enum):
 	Unconfirmed = 3 # pledge was not confirmed before Trigger execution, is no longer valid
 	Vacated = 4 # trigger was vacated
 
-class PledgeManager(models.Manager):
+class NoMassDeleteManager(models.Manager):
 	class CustomQuerySet(models.QuerySet):
 		def delete(self):
-			# Can't do a mass delete because it would not update Trigger.total_pledged.
+			# Can't do a mass delete because it would not update Trigger.total_pledged,
+			# in the case of the Pledge model.
+			#
 			# Instead call delete() on each instance, which handles the constraint.
 			for obj in self:
 				obj.delete()
 	def get_queryset(self):
-		return PledgeManager.CustomQuerySet(self.model, using=self._db)
+		return NoMassDeleteManager.CustomQuerySet(self.model, using=self._db)
 
 class Pledge(models.Model):
 	"""A user's pledge of a contribution."""
@@ -243,7 +258,7 @@ class Pledge(models.Model):
 	class Meta:
 		unique_together = [('trigger', 'user'), ('trigger', 'email')]
 
-	objects = PledgeManager()
+	objects = NoMassDeleteManager()
 
 	@transaction.atomic
 	def delete(self):
@@ -267,6 +282,7 @@ class Pledge(models.Model):
 			"id": 1, # a sequence number so we can track changes to our fee structure, etc.
 			"min_contrib": 1, # dollars
 			"max_contrib": 500, # dollars
+			"fees": .1, # .1 means 10%
 		}
 
 	def __str__(self):
@@ -303,7 +319,11 @@ class Pledge(models.Model):
 		if self.filter_competitive:
 			actors += " in competitive races"
 
-		return party_filter + actors
+		action = "who %s %s" % (
+			self.trigger.strings['action'],
+			self.desired_outcome_label)
+
+		return party_filter + actors + " " + action
 
 	@transaction.atomic
 	def confirm_email(self, user):
@@ -330,6 +350,133 @@ class Pledge(models.Model):
 		for p in Pledge.objects.filter(cclastfour=cc_number[-4:]):
 			if check_password(cc_key, p.extra['billingInfoHashed']):
 				yield p
+
+	@transaction.atomic
+	def execute(self):
+		# Lock the Pledge and the Trigger to prevent race conditions.
+		pledge = Pledge.objects.select_for_update().filter(id=self.id).first()
+		trigger = Trigger.objects.select_for_update().filter(id=pledge.trigger.id).first()
+
+		# Validate state.
+		if pledge.status != PledgeStatus.Open:
+			raise ValueError("Pledge cannot be executed in status %s." % pledge.status)
+		if trigger.state != TriggerState.Executed:
+			raise ValueError("Pledge cannot be executed when trigger is in status %s." % trigger.state)
+		if pledge.algorithm != Pledge.current_algorithm()['id']:
+			raise ValueError("Pledge has an invalid algorithm.")
+
+		# Cannot properly execute an unconfirmed pledge.
+		if pledge.user is None:
+			pledge.status = PledgeStatus.Unconfirmed
+			pledge.save()
+			return
+
+		# Compute the amount to charge the user. We can only make whole-penny
+		# contributions, so the exact amount of the charge may be less than
+		# what the user pledged.
+
+		# Start by counting up the number of recipients.
+		te = TriggerExecution.objects.get(trigger=trigger)
+		recipients = set()
+		for action in Action.objects.filter(execution=te).select_related('actor'):
+			# Get a recipient object.
+			if action.outcome == pledge.desired_outcome:
+				# The incumbent did what the user wanted, so the incumbent is the recipient.
+				# Party filtering is based on the party of the incumbent at the time of the action.
+				r = Recipient.get_for_incumbent(action.actor)
+				party = action.party
+			elif action.party == ActorParty.Independent:
+				# Cannot give to the opponent of an Independent per FEC rules.
+				continue
+			else:
+				# The incumbent did something other than what the user wanted, so the
+				# challenger of the opposite party is the recipient. Party filtering is
+				# based on that opposite party.
+				r = Recipient.get_for_challenger(action)
+				party = r.challenger
+
+			# Filter.
+
+			if pledge.incumb_challgr == -1 and r.challenger is None:
+				# filter: challengers only; reject: the incumbent
+				continue
+
+			if pledge.incumb_challgr ==  1 and r.challenger is not None:
+				# filter: incumbents only; reject: challengers
+				continue
+
+			if pledge.filter_party is not None and party != pledge.filter_party:
+				# filter: party; reject: different party
+				continue
+
+			# TODO: Competitive races? Assuming all are competitive now so
+			# nothing to filter.
+
+			# If we got here, then r is an acceptable recipient.
+			recipients.add( (r, action) )
+
+		# What's the total amount of contributions after fess?
+		fees_rate = Pledge.current_algorithm()['fees']
+		max_contrib = float(pledge.amount) / (1 + fees_rate)
+
+		# If we divide that evenly among the recipients, what is the ideal contribution?
+		recip_contrib = max_contrib / len(recipients)
+
+		# But we can only make whole-penny contributions, so round down to the nearest
+		# cent (rounding up could cause the total charge to exeed the user's pledge amount,
+		# which would be bad).
+		import math
+		recip_contrib = math.floor(recip_contrib * 100) / 100
+		if recip_contrib < .01:
+			# The pledge amount was so small that we can't divide it.
+			# This should never happen because our minimum pledge is
+			# more than one cent for each potential recipient for a
+			# Trigger.
+			raise ValueError("Pledge amount is too small to distribute.")
+
+		# Now multiply out to create the total before fees.
+		contrib_total = len(recipients) * recip_contrib
+
+		# Compute the total with fees. In order to allow us to round
+		# the fees to the nearest cent (possibly rounding up), we'll
+		# go straight to computing the total charge and rounding that
+		# to the nearest penny. We'll just check there that the total
+		# doesn't exeed the pledge amount.
+		total_charge = round(contrib_total * (1 + fees_rate), 2)
+		if total_charge > pledge.amount:
+			total_charge = pledge.amount
+
+		# Fees are the difference between the total and the contributions.
+		fees = total_charge - contrib_total
+
+		# Create PledgeExecution object.
+		pe = PledgeExecution()
+		pe.pledge = pledge
+		pe.charged = total_charge
+		pe.fees = fees
+		pe.save()
+
+		# Create Contribution objects.
+		for recipient, action in recipients:
+			c = Contribution()
+			c.pledge_execution = pe
+			c.action = action
+			c.recipient = recipient
+			c.amount = recip_contrib
+			c.de_id = recipient.de_id
+			c.save()
+
+			# Increment the Action's total_contributions.
+			c.inc_action_contrib_total()
+
+		# Increment the TriggerExecution's total_contributions.
+		TriggerExecution.objects.filter(id=te.id)\
+			.update(total_contributions=models.F('total_contributions') + total_charge)
+
+		# Mark pledge as executed.
+		pledge.status = PledgeStatus.Executed
+		pledge.save()
+
 
 class CancelledPledge(models.Model):
 	"""Records when a user cancels a Pledge."""
@@ -360,6 +507,18 @@ class PledgeExecution(models.Model):
 
 	charged = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount the user's account was actually charged, in dollars and including fees. It may differ from the pledge amount to ensure that contributions of whole-cent amounts could be made to candidates.")
 	fees = models.DecimalField(max_digits=6, decimal_places=2, help_text="The fees the user was charged, in dollars.")
+	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
+
+	objects = NoMassDeleteManager()
+
+	def __str__(self):
+		return str(self.pledge)
+
+	def delete(self):
+		# Decrement the TriggerExecution's total_contributions.
+		TriggerExecution.objects.filter(id=te.id)\
+			.update(total_contributions=models.F('total_contributions') - self.charged)
+		super(PledgeExecution, self).delete()	
 
 #####################################################################
 #
@@ -385,6 +544,17 @@ class Recipient(models.Model):
 
 	def __str__(self):
 		return "[%s%s] %s" % (self.actor.name_short, ':' + self.challenger.name if self.challenger else "", self.name)
+
+	@staticmethod
+	def get_for_incumbent(actor):
+		return Recipient.objects.get(actor=actor, challenger=None)
+
+	@staticmethod
+	def get_for_challenger(action):
+		# This one takes an Action instance as its argument because it needs to know
+		# the party of the Actor at a given time. Gets the challenger of the opposite
+		# party.
+		return Recipient.objects.get(actor=action.actor, challenger=action.party.opposite())
 
 	@staticmethod
 	def create_for(actor):
@@ -425,7 +595,7 @@ class Recipient(models.Model):
 class Contribution(models.Model):
 	"""A fully executed campaign contribution."""
 
-	pledge_execution = models.ForeignKey(PledgeExecution, on_delete=models.PROTECT, help_text="The PledgeExecution this execution information is about.")
+	pledge_execution = models.ForeignKey(PledgeExecution, on_delete=models.CASCADE, help_text="The PledgeExecution this execution information is about.")
 	action = models.ForeignKey(Action, on_delete=models.PROTECT, help_text="The Action this contribution was made in reaction to.")
 	recipient = models.ForeignKey(Recipient, on_delete=models.PROTECT, help_text="The Recipient this contribution was sent to.")
 	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount of the contribution, in dollars.")
@@ -435,5 +605,27 @@ class Contribution(models.Model):
 
 	extra = JSONField(blank=True, help_text="Additional information about the contribution.")
 
+	objects = NoMassDeleteManager()
+
 	class Meta:
 		unique_together = [('pledge_execution', 'action'), ('pledge_execution', 'recipient')]
+
+	def __str__(self):
+		return "$%0.2f to %s for %s" % (self.amount, self.recipient, self.pledge_execution)
+
+	@transaction.atomic
+	def delete(self):
+		# Decrement the Action's total_pledged fields.
+		self.inc_action_contrib_total(factor=-1)
+
+		# Remove record.
+		super(Contribution, self).delete()	
+
+	def inc_action_contrib_total(self, factor=1):
+		if self.recipient.challenger is None:
+			field = 'for'
+		else:
+			field = 'against'
+		Action.objects.filter(id=self.action.id)\
+			.update(**{'total_contributions_%s' % field:
+				models.F('total_contributions_%s' % field) + self.amount*factor})

@@ -1,15 +1,29 @@
 {% load itfsite_utils %}
 
+<h2>Your Contribution</h2>
+
 {% if not pledge.user %}
 <div class="alert alert-warning">
 	We sent an email to {{pledge.email}}. You must click the link in the email to confirm your email address before this contribution can be scheduled.
 </div>
 {% endif %}
 
-<p>You have made/scheduled a campaign contribution for this {{trigger.strings.action}}:</p>
+<p>You {% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}made{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}have scheduled{% else %}scheduled{% endif %} a campaign contribution for this {{trigger.strings.action}}:</p>
 
 <table class="table">
-	<tr><td>Amount:</td> <td>${{pledge.amount|floatformat:2}}</td></tr>
+	<tr>
+		<td>Amount:</td>
+		<td>
+			{% if not execution %}
+				${{pledge.amount|floatformat:2}}
+			{% else %}
+				${{execution.charged|floatformat:2}}
+				{% if execution.charged < pledge.amount %}
+					<div class="small">Your credit card was charged less than your pledge of ${{pledge.amount|floatformat:2}}. We can only make whole-penny contributions to the recipients of your contribution, so we had to round down.</div>
+				{% endif %}
+			{% endif %}
+		</td>
+	</tr>
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
 	<tr><td>Status:</td> <td>The {{trigger.strings.action}} has not yet occurred. The contribution will only be made once it occurs.</td></tr>
@@ -18,7 +32,31 @@
 	<tr><td>Status:</td> <td>The event that this contribution was pledged for is not expected to occur. The pledge is cancelled.</td></tr>
 	{% endif %}
 
-	<tr><td>For:</td> <td>{{pledge.targets_summary}}</td></tr>
+	<tr>
+		<td>For:</td>
+		<td>
+			{{pledge.targets_summary}}
+
+			{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}
+				(<a href="#" onclick="$('#my_recipients').fadeToggle(); return false;">show {{contribs|length}} recipient{{contribs|length|pluralize}}</a>)
+
+				<div id="my_recipients" style="display: none;">
+					<table class="table small" style="margin: .5em 0 10px 0">
+					<thead>
+						<tr><th style="padding-left: 0">Amount</th> <th>Recipient</th></tr>
+					</thead>
+					<tbody>
+					{% for contrib in contribs %}
+						<tr><td style="padding-left: 0">${{contrib.amount|floatformat:2}}</td> <td>{{contrib.recipient.name}}</td></tr>
+					{% endfor %}
+					</tbody>
+					</table>
+					<p class="small">Plus fees.</p>
+				</div>
+			{% endif %}		
+		</td>
+	</tr>
+
 	<tr><td>Pledged:</td> <td>{{pledge.created|date}}</td></tr>
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}

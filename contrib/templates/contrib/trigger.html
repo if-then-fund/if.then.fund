@@ -51,6 +51,9 @@
 			<p>This action has been cancelled. We determined that the event will likely never occur and have vacated all of the pledges.</p>
 
 		{% elif trigger.state|stringformat:'s' == 'TriggerState.Executed' %}
+			<div id="my-pledge">
+			</div>
+			
 			<h2>Contributions</h2>
 			
 			{{execution.description|render_text:execution.description_format}}
@@ -68,6 +71,11 @@
 	$(function() {
 		{% if trigger.state|stringformat:'s' == 'TriggerState.Open' %}
 			pledge_init();
+		{% endif %}
+		{% if trigger.state|stringformat:'s' == 'TriggerState.Executed' %}
+		  if (the_page && the_page.pledge_made) {
+		    $('#my-pledge').html(the_page.pledge_made);
+		  }
 		{% endif %}
 	})
 </script>

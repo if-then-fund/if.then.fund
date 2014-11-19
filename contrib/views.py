@@ -9,7 +9,7 @@ from email_confirm_la.signals import post_email_confirm
 
 from twostream.decorators import anonymous_view, user_view_for
 
-from contrib.models import Trigger, TriggerExecution, Pledge, PledgeStatus, ActorParty
+from contrib.models import Trigger, TriggerExecution, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty
 from contrib.utils import json_response
 
 @anonymous_view
@@ -48,9 +48,13 @@ def trigger_user_view(request, id, slug):
 		# The user already made a pledge on this.
 		import django.template
 		template = django.template.loader.get_template("contrib/contrib.html")
+		pe = PledgeExecution.objects.filter(pledge=p).first()
+		contribs = sorted(Contribution.objects.filter(pledge_execution=pe).select_related("action"), key=lambda c : c.action.name_sort)
 		ret["pledge_made"] = template.render(django.template.Context({
 			"trigger": trigger,
 			"pledge": p,
+			"execution": pe,
+			"contribs": contribs,
 		}))
 
 	return ret
