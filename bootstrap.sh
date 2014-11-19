@@ -25,7 +25,7 @@ function apt_install {
 	fi
 }
 
-apt_install python3-dnspython
+apt_install python3-dnspython python3-yaml
 
 # Create the Python virtual environment for pip package installation.
 # We ues --system-site-packages to take advantage of Ubuntu security
@@ -39,6 +39,7 @@ source .env/bin/activate
 
 # Install dependencies.
 pip install -q --upgrade \
+	"rtyaml" \
 	"django>=1.7.1" \
 	"requests" \
 	"markdown2" \
