@@ -100,3 +100,4 @@ DEFAULT_FROM_EMAIL = 'hello@itfsite.unnamed.example'
 
 NO_SMTP_CHECK = environment["no_smtp_check"]
 DE_API = environment['democracyengine']
+CURRENT_ELECTION_CYCLE = 2014

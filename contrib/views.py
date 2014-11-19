@@ -9,7 +9,7 @@ from email_confirm_la.signals import post_email_confirm
 
 from twostream.decorators import anonymous_view, user_view_for
 
-from contrib.models import Trigger, Pledge, PledgeStatus, ActorParty
+from contrib.models import Trigger, TriggerExecution, Pledge, PledgeStatus, ActorParty
 from contrib.utils import json_response
 
 @anonymous_view
@@ -21,8 +21,11 @@ def trigger(request, id, slug):
 	if trigger.slug != slug:
 		return redirect(trigger.get_absolute_url())
 
+	te = TriggerExecution.objects.filter(trigger=trigger).first()
+
 	return render(request, "contrib/trigger.html", {
 		"trigger": trigger,
+		"execution": te,
 		"alg": Pledge.current_algorithm(),
 	})
 

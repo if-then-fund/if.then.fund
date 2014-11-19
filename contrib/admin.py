@@ -5,6 +5,10 @@ class TriggerAdmin(admin.ModelAdmin):
     list_display = ['created', 'state', 'slug', 'title']
     raw_id_fields = ['owner']
 
+class TriggerExecutionAdmin(admin.ModelAdmin):
+    list_display = ['created', 'trigger']
+    raw_id_fields = ['trigger']
+
 class ActorAdmin(admin.ModelAdmin):
     list_display = ['name_long', 'party', 'govtrack_id']
 
@@ -28,7 +32,7 @@ class RecipientAdmin(admin.ModelAdmin):
 
 admin.site.register(Trigger, TriggerAdmin)
 admin.site.register(TriggerStatusUpdate)
-admin.site.register(TriggerExecution)
+admin.site.register(TriggerExecution, TriggerExecutionAdmin)
 admin.site.register(Actor, ActorAdmin)
 admin.site.register(Action)
 admin.site.register(Pledge, PledgeAdmin)

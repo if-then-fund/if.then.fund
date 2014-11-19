@@ -25,7 +25,7 @@ function apt_install {
 	fi
 }
 
-apt_install python3-dnspython python3-yaml
+apt_install python3-dnspython python3-yaml python3-lxml python3-dateutil
 
 # Create the Python virtual environment for pip package installation.
 # We ues --system-site-packages to take advantage of Ubuntu security

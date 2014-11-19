@@ -52,7 +52,8 @@
 
 		{% elif trigger.state|stringformat:'s' == 'TriggerState.Executed' %}
 			<h2>Contributions</h2>
-			<p>Stuff happened.</p>
+			
+			{{execution.description|render_text:execution.description_format}}
 
 		{% endif %}
 				

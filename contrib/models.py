@@ -1,6 +1,8 @@
 import enum
 
 from django.db import models, transaction, IntegrityError
+from django.conf import settings
+
 from itfsite.models import User
 
 from jsonfield import JSONField
@@ -50,10 +52,40 @@ class Trigger(models.Model):
 	total_pledged = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of pledges, i.e. prior to execution.")
 
 	def __str__(self):
-		return "[%d %s] %s" % (self.id, self.key, self.title)
+		return "%s [%d]" % (self.key, self.id)
 
 	def get_absolute_url(self):
 		return "/a/%d/%s" % (self.id, self.slug)
+
+	# Execute.
+	@transaction.atomic
+	def execute(self, actor_outcomes, description, description_format, extra):
+		# Executes the trigger.
+
+		# Lock the trigger to prevent race conditions and make sure the Trigger
+		# is either Open or Paused.
+		trigger = Trigger.objects.select_for_update().filter(id=self.id).first()
+		if trigger.state not in (TriggerState.Open, TriggerState.Paused):
+			raise ValueError("Trigger is in state %s." % str(trigger.state))
+
+		# Create TriggerExecution object.
+		te = TriggerExecution()
+		te.trigger = trigger
+		te.cycle = settings.CURRENT_ELECTION_CYCLE
+		te.description = description
+		te.description_format = description_format
+		te.extra = extra
+		te.save()
+
+		# Create Action objects which represent what each Actor did.
+		# actor_outcomes is a dict mapping Actors to outcome indexes
+		# or None if the Actor didn't properly participate.
+		for actor, outcome_index in actor_outcomes.items():
+			ac = Action.create(te, actor, outcome_index)
+
+		# Mark as executed.
+		trigger.state = TriggerState.Executed
+		trigger.save()
 
 class TriggerStatusUpdate(models.Model):
 	"""A status update about the Trigger providing further information to users looking at the Trigger that was not known when the Trigger was created."""
@@ -78,6 +110,11 @@ class TriggerExecution(models.Model):
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
 	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed.")
+
+	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
+
+	def __str__(self):
+		return "%s [exec %s]" % (self.trigger, self.created.strftime("%x"))
 
 #####################################################################
 #
@@ -112,9 +149,9 @@ class Actor(models.Model):
 class Action(models.Model):
 	"""The outcome of an actor taking an act described by a trigger."""
 
-	execution = models.ForeignKey(TriggerExecution, on_delete=models.PROTECT, help_text="The TriggerExecution that created this object.")
+	execution = models.ForeignKey(TriggerExecution, on_delete=models.CASCADE, help_text="The TriggerExecution that created this object.")
 	actor = models.ForeignKey(Actor, on_delete=models.PROTECT, help_text="The Actor who took this action.")
-	outcome = models.IntegerField(help_text="The outcome index that was taken.")
+	outcome = models.IntegerField(blank=True, null=True, help_text="The outcome index that was taken. May be null if the Actor should have participated but didn't (we want to record to avoid counterintuitive missing data).")
 
 	name_long = models.CharField(max_length=128, help_text="The long form of the person's name at the time of the action, meant for a page title.")
 	name_short = models.CharField(max_length=128, help_text="The short form of the person's name at the time of the action, usually a last name, meant for in-page second references.")
@@ -125,6 +162,31 @@ class Action(models.Model):
 
 	class Meta:
 		unique_together = [('execution', 'actor')]
+
+	def __str__(self):
+		return "%s is %s | %s" % (
+			self.actor,
+			self.execution.trigger.outcomes[self.outcome]['label'] if self.outcome is not None else "N/A",
+			self.execution)
+
+	@staticmethod
+	def create(execution, actor, outcome_index):
+		# Create the Action instance.
+		a = Action()
+		a.execution = execution
+		a.actor = actor
+		a.outcome = outcome_index
+
+		# Copy fields that may change on the Actor but that we want to know what they were
+		# at the time this Action ocurred.
+		for f in ('name_long', 'name_short', 'name_sort', 'party', 'title', 'extra'):
+			setattr(a, f, getattr(actor, f))
+
+		# Save.
+		a.save()
+		return a
+
+
 
 #####################################################################
 #

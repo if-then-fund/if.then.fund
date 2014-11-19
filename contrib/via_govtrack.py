@@ -1,4 +1,4 @@
-from contrib.models import Trigger, TextFormat
+from contrib.models import Trigger, TextFormat, Actor
 
 def create_trigger_from_bill(bill_id, chamber):
 	# split/validate the bill ID
@@ -62,3 +62,53 @@ def create_trigger_from_bill(bill_id, chamber):
 	# save and return
 	t.save()
 	return t
+
+def execute_trigger_from_vote(trigger, govtrack_url):
+	import requests, lxml.etree
+
+	# Map vote keys '+' and '-' to outcome indexes.
+	outcome_index = { }
+	for i, outcome in enumerate(trigger.outcomes):
+		outcome_index[outcome['vote_key']] = i
+
+	# Get vote metadata from GovTrack's API, via the undocumented
+	# '.json' extension added to vote pages.
+	vote = requests.get(govtrack_url+'.json').json()
+
+	# Then get how Members of Congress voted via the XML, which conveniently
+	# includes everything without limit/offset. The congress project vote
+	# JSON doesn't use GovTrack IDs, so it's more convenient to use GovTrack
+	# data.
+	r = requests.get(govtrack_url+'/export/xml').content
+	dom = lxml.etree.fromstring(r)
+	actor_outcomes = { }
+	for voter in dom.findall('voter'):
+		# Get the Actor.
+		actor = Actor.objects.get(govtrack_id=voter.get('id'))
+
+		# Map vote keys '+' and '-' to outcome indexes.
+		# Treat not voting (0 and P) as a null outcome, meaning the Actor didn't
+		# take action for our purposes but should be recorded as not participating.
+		outcome = outcome_index.get(voter.get('vote'))
+
+		actor_outcomes[actor] = outcome
+
+	# Make a textual description of what happened.
+	import dateutil.parser
+	description = """The {chamber} voted on this on {date}. For more details, see the [vote record on GovTrack.us]({link}).
+	""".format(
+		chamber=vote['chamber_label'],
+		date=dateutil.parser.parse(vote['created']).strftime("%b. %d, %Y").replace(" 0", ""),
+		link=vote['link'],
+	)
+
+	# Execute.
+	trigger.execute(
+		actor_outcomes,
+		description,
+		TextFormat.Markdown,
+		{
+			"govtrack_url": govtrack_url,
+			"govtrack_vote": vote,
+		})
+
