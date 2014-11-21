@@ -36,6 +36,9 @@ def json_response(f):
 
 	return g
 
+class HumanReadableValidationError(Exception):
+	pass
+
 class DemocracyEngineAPI(object):
 	de_meta_info = None
 
@@ -76,6 +79,13 @@ class DemocracyEngineAPI(object):
 		if http_method:
 			urlopen = getattr(requests, http_method)
 
+		# Log requests. Definitely don't do this in production since we'll
+		# have sensitive data here!
+		if True and settings.DEBUG and payload:
+			print(urlopen.__name__.upper(), url)
+			print(json.dumps(json.loads(payload), indent=True))
+			print()
+
 		# issue request
 		r = urlopen(
 			url,
@@ -90,6 +100,16 @@ class DemocracyEngineAPI(object):
 		try:
 			r.raise_for_status()
 		except:
+			try:
+				exc = r.json()
+				if len(exc) > 0 and exc[0][0] == "base":
+					# Not sure what 'base' means, but we get things like
+					# "Card number is not a valid credit card number".
+					raise HumanReadableValidationError(exc[0][1])
+			except HumanReadableValidationError:
+				raise # pass through/up
+			except:
+				pass # fall through to next
 			raise IOError("DemocrayEngine API failed: %d %s" % (r.status_code, url))
 
 		# all responses are JSON
@@ -128,6 +148,13 @@ class DemocracyEngineAPI(object):
 						}
 					}
 				})
+
+	def create_transaction(self, info):
+		return self(
+			method="donation_process",
+			post_data=
+				{ "donation": info },
+			)
 
 # Replace with a singleton instance.
 DemocracyEngineAPI = DemocracyEngineAPI()

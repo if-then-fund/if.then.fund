@@ -10,7 +10,9 @@ from email_confirm_la.signals import post_email_confirm
 from twostream.decorators import anonymous_view, user_view_for
 
 from contrib.models import Trigger, TriggerExecution, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty
-from contrib.utils import json_response
+from contrib.utils import json_response, DemocracyEngineAPI, HumanReadableValidationError
+
+import rtyaml
 
 @anonymous_view
 def trigger(request, id, slug):
@@ -25,7 +27,8 @@ def trigger(request, id, slug):
 	actions = None
 
 	te = trigger.execution
-	if te:
+	by_incumb_chlngr = []
+	if te and 'contribs_by_outcome' in te.extra:
 		# Sort the outcomes by amount of contributions.
 		outcomes = trigger.outcomes
 		for i in range(len(outcomes)):
@@ -130,8 +133,17 @@ def get_recent_pledge_defaults(user, request):
 
 @require_http_methods(['POST'])
 @json_response
-@transaction.atomic
 def submit(request):
+	# In order to return something in an error condition, we
+	# have to wrap the transaction *inside* a try/except and
+	# form the response based on the exception.
+	try:
+		return create_pledge(request)
+	except HumanReadableValidationError as e:
+		return { "status": "error", "message": str(e) }
+
+@transaction.atomic
+def create_pledge(request):
 	p = Pledge()
 
 	# trigger
@@ -195,7 +207,7 @@ def submit(request):
 		'contribOccupation', 'contribEmployer'):
 		p.extra[field] = request.POST[field].strip()
 
-	# string fields that have the same field name as the form element name
+	# normalize the filter_party field
 	if request.POST['filter_party'] in ('DR', 'RD'):
 		p.filter_party = None # no filter
 	elif request.POST['filter_party'] == 'D':
@@ -206,14 +218,16 @@ def submit(request):
 	# Store the last four digits of the credit card number so we can
 	# quickly locate a Pledge by CC number (approximately).
 	p.cclastfour = request.POST['billingCCNum'][-4:]
+	ccnum = request.POST['billingCCNum'].replace(" ", "").strip() # Stripe's javascript inserts spaces
+	ccexpmonth = int(request.POST['billingCCExpMonth'])
+	ccexpyear = int(request.POST['billingCCExpYear'])
 
 	# Store a hashed version of the credit card information so we can
 	# do a verification if the user wants to look up a Pledge by CC
 	# info. Use Django's built-in password hashing functionality to
 	# handle this.
 	from django.contrib.auth.hashers import make_password
-	cc_key = ','.join(request.POST[field].strip() for field in ('billingCCNum', 'billingCCExpMonth', 'billingCCExpYear'))
-	cc_key = cc_key.replace(' ', '')
+	cc_key = ','.join((ccnum, str(ccexpmonth), str(ccexpyear)))
 	p.extra['billingInfoHashed'] = make_password(cc_key)
 			
 	# Validation. Some are checked client side, so errors are internal
@@ -229,15 +243,55 @@ def submit(request):
 	if p.filter_party == ActorParty.Independent:
 		raise Exception("filter_party is out of range")
 
-	# Well, we'd submit this to Democracy Engine here, which would tell
-	# us whether many of these fields are OK.
-
-	# But until then, the best we can do is save.
+	# Save so we get a pledge ID so we can store that in the transaction test.
 	try:
 		p.save()
 	except Exception as e:
 		# Re-wrap into something @json_response will catch.
 		raise ValueError("Something went wrong: " + str(e))
+
+	# Perform an authorization test on the credit card.
+	#   a) This tests that the billing info is valid.
+	#   b) We get a token that we can use on future transactions so that we
+	#      do not need to collect the credit card info again.
+	#
+	# DemocracyEngineAPI.create_transaction may raise all sorts of exceptions,
+	# which will cause the database transaction to roll back. A HumanReadableValidationError
+	# will be shown to the user. Other exceptions will just generate generic 
+	# unhandled error messages.
+	#
+	# Note that any exception after this point is okay because the authorization
+	# will expire on its own anyway.
+	de_txn_req = p.create_de_txn_basic_dict()
+	de_txn_req.update({
+		"authtest_request":  True,
+		"token_request": True,
+
+		"cc_number": ccnum,
+		"cc_verification_value": request.POST['billingCCCVC'].strip(),
+		"cc_month": ccexpmonth,
+		"cc_year": ccexpyear,
+		"cc_first_name": p.extra['contribNameFirst'], # reuse in case it's right, if not no problem
+		"cc_last_name": p.extra['contribNameLast'],
+		"cc_zip": p.extra['contribZip'],
+
+		"line_items": [],
+
+		"source_code": "itfsite pledge auth", 
+		"ref_code": "", 
+		"aux_data": rtyaml.dump({ # DE will gives this back to us encoded as YAML, but the dict encoding is ruby-ish so to be sure we can parse it, we'll encode it first
+			"trigger": p.trigger.id,
+			"pledge": p.id,
+			"httprequest": { k: request.META.get(k) for k in ('REMOTE_ADDR', 'REQUEST_URI') },
+			})
+		})
+	de_txn = DemocracyEngineAPI.create_transaction(de_txn_req)
+
+	# Store the transaction authorization, which contains the credit card token,
+	# into the pledge.
+	p.extra["authorization"] = de_txn
+	p.extra["de_cc_token"] = de_txn['token']
+	p.save()
 
 	# Increment the trigger's total_pledged field (atomically).
 	from django.db import models

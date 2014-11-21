@@ -4,9 +4,12 @@ from django.db import models, transaction, IntegrityError
 from django.conf import settings
 
 from itfsite.models import User
+from contrib.utils import DemocracyEngineAPI
 
 from jsonfield import JSONField
 from enum3field import EnumField, django_enum
+
+import rtyaml
 
 #####################################################################
 #
@@ -56,6 +59,11 @@ class Trigger(models.Model):
 
 	def get_absolute_url(self):
 		return "/a/%d/%s" % (self.id, self.slug)
+
+	def get_short_url(self):
+		# Used in the ref_code of Democracy Engine transactions, which is provided
+		# to campaigns.
+		return "https://www.unnamedsite.com/a/%d" % self.id
 
 	# Execute.
 	@transaction.atomic
@@ -382,6 +390,25 @@ class Pledge(models.Model):
 			if check_password(cc_key, p.extra['billingInfoHashed']):
 				yield p
 
+	def create_de_txn_basic_dict(self):
+		# Creates basic info for a Democracy Engine API call for creating
+		# a transaction (both authtest and auth+capture calls).
+		return {
+			"donor_first_name": self.extra['contribNameFirst'],
+			"donor_last_name": self.extra['contribNameLast'],
+			"donor_address1": self.extra['contribAddress'],
+			"donor_city": self.extra['contribCity'],
+			"donor_state": self.extra['contribState'],
+			"donor_zip": self.extra['contribZip'],
+			"donor_email": self.get_email(),
+
+			"compliance_employer": self.extra['contribEmployer'],
+			"compliance_occupation": self.extra['contribOccupation'],
+
+			"email_opt_in": False,
+			"is_corporate_contribution": False,
+		}
+
 	@transaction.atomic
 	def execute(self):
 		# Lock the Pledge and the Trigger to prevent race conditions.
@@ -480,33 +507,77 @@ class Pledge(models.Model):
 		# Fees are the difference between the total and the contributions.
 		fees = total_charge - contrib_total
 
-		# Create PledgeExecution object.
-		pe = PledgeExecution()
-		pe.pledge = pledge
-		pe.charged = total_charge
-		pe.fees = fees
-		pe.save()
+		#### TESTING ####
+		# doesn't like total amount below $1
+		recip_contrib *= 100
+		#### TESTING ####
 
-		# Create Contribution objects.
+		# Create the line items.
+		line_items = []
+		line_items.append({
+			"recipient_id": settings.DE_API['fees-recipient-id'],
+			"amount": "$%0.2f" % fees,
+			})
 		for recipient, action in recipients:
-			c = Contribution()
-			c.pledge_execution = pe
-			c.action = action
-			c.recipient = recipient
-			c.amount = recip_contrib
-			c.de_id = recipient.de_id
-			c.save()
+			line_items.append({
+				"recipient_id": settings.DE_API['testing-recipient-id'], # recipient.de_id
+				"amount": "$%0.2f" % recip_contrib,
+				})
+			#### TESTING ####
+			# doesn't like repeat recipients
+			break
+			#### TESTING ####
 
-			# Increment the Action's total_contributions.
-			c.inc_action_contrib_total()
+		# Execute the authorization & capture.
+		de_txn_req = pledge.create_de_txn_basic_dict()
+		de_txn_req.update({
+			"token": pledge.extra['de_cc_token'],
+			"line_items": line_items,
+			"source_code": "itfsite", 
+			"ref_code": pledge.trigger.get_short_url(), 
+			"aux_data": rtyaml.dump({ # DE will gives this back to us encoded as YAML, but the dict encoding is ruby-ish so to be sure we can parse it, we'll encode it first
+				"trigger": pledge.trigger.id,
+				"pledge": pledge.id,
+				})
+			})
+		de_txn = DemocracyEngineAPI.create_transaction(de_txn_req)
 
-		# Increment the TriggerExecution's total_contributions.
-		TriggerExecution.objects.filter(id=te.id)\
-			.update(total_contributions=models.F('total_contributions') + total_charge)
+		# From here on, if there is a problem then we need to void the transaction.
+		try:
+			# Create PledgeExecution object.
+			pe = PledgeExecution()
+			pe.pledge = pledge
+			pe.charged = total_charge
+			pe.fees = fees
+			pe.extra = {
+				"transaction": de_txn
+			}
+			pe.save()
 
-		# Mark pledge as executed.
-		pledge.status = PledgeStatus.Executed
-		pledge.save()
+			# Create Contribution objects.
+			for recipient, action in recipients:
+				c = Contribution()
+				c.pledge_execution = pe
+				c.action = action
+				c.recipient = recipient
+				c.amount = recip_contrib
+				c.de_id = recipient.de_id
+				c.save()
+
+				# Increment the Action's total_contributions.
+				c.inc_action_contrib_total()
+
+			# Increment the TriggerExecution's total_contributions.
+			TriggerExecution.objects.filter(id=te.id)\
+				.update(total_contributions=models.F('total_contributions') + total_charge)
+
+			# Mark pledge as executed.
+			pledge.status = PledgeStatus.Executed
+			pledge.save()
+
+		except:
+			# TODO
+			raise
 
 
 class CancelledPledge(models.Model):
@@ -545,9 +616,10 @@ class PledgeExecution(models.Model):
 	def __str__(self):
 		return str(self.pledge)
 
+	@transaction.atomic
 	def delete(self):
 		# Decrement the TriggerExecution's total_contributions.
-		TriggerExecution.objects.filter(id=te.id)\
+		TriggerExecution.objects.filter(id=self.pledge.trigger.execution.id)\
 			.update(total_contributions=models.F('total_contributions') - self.charged)
 		super(PledgeExecution, self).delete()	
 

@@ -1,0 +1,3 @@
+#!/bin/sh
+./manage.py execute_trigger 1 https://www.govtrack.us/congress/votes/113-2014/h525
+
