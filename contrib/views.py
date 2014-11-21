@@ -212,7 +212,7 @@ def submit(request):
 	# info. Use Django's built-in password hashing functionality to
 	# handle this.
 	from django.contrib.auth.hashers import make_password
-	cc_key = ','.join(request.POST[field].strip() for field in ('billingCCNum', 'billingCCExpMonth', 'billingCCExpYear', 'billingCCCVC'))
+	cc_key = ','.join(request.POST[field].strip() for field in ('billingCCNum', 'billingCCExpMonth', 'billingCCExpYear'))
 	cc_key = cc_key.replace(' ', '')
 	p.extra['billingInfoHashed'] = make_password(cc_key)
 			

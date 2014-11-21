@@ -372,10 +372,10 @@ class Pledge(models.Model):
 		return True
 
 	@staticmethod
-	def find_from_billing(cc_number, cc_exp_month, cc_exp_year, cc_cvc):
+	def find_from_billing(cc_number, cc_exp_month, cc_exp_year):
 		# Returns an interator that yields matchinig Pledge instances.
 		# Must be in parallel to how the view function creates the pledge.
-		cc_key = ','.join([cc_number, cc_exp_month, cc_exp_year, cc_cvc])
+		cc_key = ','.join([cc_number, cc_exp_month, cc_exp_year])
 		cc_key = cc_key.replace(' ', '')
 		from django.contrib.auth.hashers import check_password
 		for p in Pledge.objects.filter(cclastfour=cc_number[-4:]):
