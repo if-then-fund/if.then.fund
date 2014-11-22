@@ -26,7 +26,11 @@
 	</tr>
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
-	<tr><td>Status:</td> <td>The {{trigger.strings.action}} has not yet occurred. The contribution will only be made once it occurs.</td></tr>
+		{% if pledge.trigger.state|stringformat:'s' == 'TriggerState.Open' %}
+			<tr><td>Status:</td> <td>The {{trigger.strings.action}} has not yet occurred. The contribution will only be made once it occurs.</td></tr>
+		{% else %}
+			<tr><td>Status:</td> <td>Your contribution has not yet been made. You are still able to cancel the contribution.</td></tr>
+		{% endif %}
 	{% endif %}
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Vacated' %}
 	<tr><td>Status:</td> <td>The event that this contribution was pledged for is not expected to occur. The pledge is cancelled.</td></tr>
