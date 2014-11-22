@@ -47,11 +47,24 @@
 	</div>
 
 	<div class="col-sm-6 triggers">
-		<p>Make a contribution based on the outcome of these votes in Congress:</p>
-		{% for t in triggers %}
+		{% for t in open_triggers %}
+			{% if forloop.first %}
+				<p>Make a contribution based on the outcome of these votes in Congress:</p>
+			{% endif %}
 			<p>
 				<a href="{{t.get_absolute_url}}">{{t.title}}</a>
 				<br><span>${{t.total_pledged|floatformat}} pledged so far</span>
+			</p>
+		{% endfor %}
+
+		{% for t in recent_executed_triggers %}
+			{% if forloop.first %}
+				<p>Recent votes in Congress that contributions were made about:</p>
+			{% endif %}
+
+			<p>
+				<a href="{{t.get_absolute_url}}">{{t.title}}</a>
+				<br><span>${{t.execution.total_contributions|floatformat}} contributions made</span>
 			</p>
 		{% endfor %}
 	</div>

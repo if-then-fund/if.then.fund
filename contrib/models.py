@@ -50,7 +50,7 @@ class Trigger(models.Model):
 	strings = JSONField(default={}, help_text="Display strings.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
-	total_pledged = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of pledges, i.e. prior to execution.")
+	total_pledged = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of pledges, i.e. prior to execution.")
 
 	def __str__(self):
 		return "%s [%d]" % (self.key, self.id)
@@ -115,7 +115,7 @@ class TriggerExecution(models.Model):
 	description = models.TextField(help_text="Once a trigger is executed, additional text added to explain how funds were distributed.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
-	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed, including fees.")
+	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of campaign contributions executed, including fees.")
 
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 

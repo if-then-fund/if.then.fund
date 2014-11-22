@@ -9,10 +9,12 @@ def homepage(request):
 
 	# Get all of the open triggers that a user might participate in.
 	from contrib.models import Trigger, TriggerState
-	triggers = Trigger.objects.filter(state=TriggerState.Open).order_by('-total_pledged')
+	open_triggers = Trigger.objects.filter(state=TriggerState.Open).order_by('-total_pledged')
+	recent_executed_triggers = Trigger.objects.filter(state=TriggerState.Executed).select_related("execution").order_by('-execution__created')
 
 	return render(request, "itfsite/homepage.html", {
-		"triggers": triggers
+		"open_triggers": open_triggers,
+		"recent_executed_triggers": recent_executed_triggers,
 	})
 
 def simplepage(request, pagename):
