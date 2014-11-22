@@ -1,15 +1,13 @@
-import enum
+import enum, decimal
 
 from django.db import models, transaction, IntegrityError
 from django.conf import settings
 
 from itfsite.models import User
-from contrib.utils import DemocracyEngineAPI
+from contrib.bizlogic import get_pledge_recipients, compute_charge, create_pledge_transaction
 
 from jsonfield import JSONField
 from enum3field import EnumField, django_enum
-
-import rtyaml
 
 #####################################################################
 #
@@ -117,7 +115,7 @@ class TriggerExecution(models.Model):
 	description = models.TextField(help_text="Once a trigger is executed, additional text added to explain how funds were distributed.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
-	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed.")
+	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed, including fees.")
 
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
@@ -190,6 +188,20 @@ class Actor(models.Model):
 	def __str__(self):
 		return self.name_sort
 
+	def get_recipient(self, incumbent=None, challenger_party=None):
+		if incumbent and challenger_party:
+			raise ValueError("incumbent and challenger_party cannot both be set.")
+		elif incumbent:
+			# When incumbent=True, return the Recipient for this Actor itself.
+			return Recipient.objects.get(actor=self, challenger=None)
+		elif challenger_party:
+			# When challenger_party is set to a party, gets the challenger of
+			# the given party.
+			return Recipient.objects.get(actor=self, challenger=challenger_party)
+		else:
+			raise ValueError("Either incumbent or challenger_party must be set.")
+
+
 class Action(models.Model):
 	"""The outcome of an actor taking an act described by a trigger."""
 
@@ -204,8 +216,8 @@ class Action(models.Model):
 	title = models.CharField(max_length=200, help_text="Descriptive text for the office held by this actor at the time of the action.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
-	total_contributions_for = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed with the actor as the recipient.")
-	total_contributions_against = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed with an opponent of the actor as the recipient.")
+	total_contributions_for = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed with the actor as the recipient, excluding fees because the fees are not on the line items.")
+	total_contributions_against = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed with an opponent of the actor as the recipient, excluding fees because the fees are not on the line items.")
 
 	class Meta:
 		unique_together = [('execution', 'actor')]
@@ -239,7 +251,6 @@ class Action(models.Model):
 		return a
 
 
-
 #####################################################################
 #
 # Pledges
@@ -252,8 +263,8 @@ class Action(models.Model):
 class PledgeStatus(enum.Enum):
 	Open = 1
 	Executed = 2
-	Unconfirmed = 3 # pledge was not confirmed before Trigger execution, is no longer valid
-	Vacated = 4 # trigger was vacated
+	Unconfirmed = 3 # pledge was not confirmed before Trigger execution, is no longer valid / was not executed
+	Vacated = 10 # trigger was vacated, pledge is considered vacated
 
 class NoMassDeleteManager(models.Manager):
 	class CustomQuerySet(models.QuerySet):
@@ -321,7 +332,7 @@ class Pledge(models.Model):
 			"id": 1, # a sequence number so we can track changes to our fee structure, etc.
 			"min_contrib": 1, # dollars
 			"max_contrib": 500, # dollars
-			"fees": .1, # .1 means 10%
+			"fees": decimal.Decimal("0.1"), # .1 means 10%, convert from string so it is exact
 		}
 
 	def __str__(self):
@@ -390,25 +401,6 @@ class Pledge(models.Model):
 			if check_password(cc_key, p.extra['billingInfoHashed']):
 				yield p
 
-	def create_de_txn_basic_dict(self):
-		# Creates basic info for a Democracy Engine API call for creating
-		# a transaction (both authtest and auth+capture calls).
-		return {
-			"donor_first_name": self.extra['contribNameFirst'],
-			"donor_last_name": self.extra['contribNameLast'],
-			"donor_address1": self.extra['contribAddress'],
-			"donor_city": self.extra['contribCity'],
-			"donor_state": self.extra['contribState'],
-			"donor_zip": self.extra['contribZip'],
-			"donor_email": self.get_email(),
-
-			"compliance_employer": self.extra['contribEmployer'],
-			"compliance_occupation": self.extra['contribOccupation'],
-
-			"email_opt_in": False,
-			"is_corporate_contribution": False,
-		}
-
 	@transaction.atomic
 	def execute(self):
 		# Lock the Pledge and the Trigger to prevent race conditions.
@@ -429,118 +421,25 @@ class Pledge(models.Model):
 			pledge.save()
 			return
 
-		# Compute the amount to charge the user. We can only make whole-penny
-		# contributions, so the exact amount of the charge may be less than
-		# what the user pledged.
+		# Get the actual recipients of the pledge, as a list of tuples of
+		# (Recipient, Action).
+		recipients = get_pledge_recipients(trigger, pledge)
 
-		# Start by counting up the number of recipients.
-		te = TriggerExecution.objects.get(trigger=trigger)
-		recipients = set()
-		for action in Action.objects.filter(execution=te).select_related('actor'):
-			# Get a recipient object.
-			if action.outcome == pledge.desired_outcome:
-				# The incumbent did what the user wanted, so the incumbent is the recipient.
-				# Party filtering is based on the party of the incumbent at the time of the action.
-				r = Recipient.get_for_incumbent(action.actor)
-				party = action.party
-			elif action.party == ActorParty.Independent:
-				# Cannot give to the opponent of an Independent per FEC rules.
-				continue
-			else:
-				# The incumbent did something other than what the user wanted, so the
-				# challenger of the opposite party is the recipient. Party filtering is
-				# based on that opposite party.
-				r = Recipient.get_for_challenger(action)
-				party = r.challenger
+		if len(recipients) == 0:
+			# If there are no matching recipients, we don't make a credit card chage.
+			recip_contribs = []
+			fees = 0
+			total_charge = 0
+			de_txn = None
+		else:
+			# Compute the amount to charge the user. We can only make whole-penny
+			# contributions, so the exact amount of the charge may be less than
+			# what the user pledged. recip_contribs is the line item amounts for
+			# each recipient as a tuple of (recipient, action, amount).
+			recip_contribs, fees, total_charge = compute_charge(pledge, recipients)
 
-			# Filter.
-
-			if pledge.incumb_challgr == -1 and r.challenger is None:
-				# filter: challengers only; reject: the incumbent
-				continue
-
-			if pledge.incumb_challgr ==  1 and r.challenger is not None:
-				# filter: incumbents only; reject: challengers
-				continue
-
-			if pledge.filter_party is not None and party != pledge.filter_party:
-				# filter: party; reject: different party
-				continue
-
-			# TODO: Competitive races? Assuming all are competitive now so
-			# nothing to filter.
-
-			# If we got here, then r is an acceptable recipient.
-			recipients.add( (r, action) )
-
-		# What's the total amount of contributions after fess?
-		fees_rate = Pledge.current_algorithm()['fees']
-		max_contrib = float(pledge.amount) / (1 + fees_rate)
-
-		# If we divide that evenly among the recipients, what is the ideal contribution?
-		recip_contrib = max_contrib / len(recipients)
-
-		# But we can only make whole-penny contributions, so round down to the nearest
-		# cent (rounding up could cause the total charge to exeed the user's pledge amount,
-		# which would be bad).
-		import math
-		recip_contrib = math.floor(recip_contrib * 100) / 100
-		if recip_contrib < .01:
-			# The pledge amount was so small that we can't divide it.
-			# This should never happen because our minimum pledge is
-			# more than one cent for each potential recipient for a
-			# Trigger.
-			raise ValueError("Pledge amount is too small to distribute.")
-
-		# Now multiply out to create the total before fees.
-		contrib_total = len(recipients) * recip_contrib
-
-		# Compute the total with fees. In order to allow us to round
-		# the fees to the nearest cent (possibly rounding up), we'll
-		# go straight to computing the total charge and rounding that
-		# to the nearest penny. We'll just check there that the total
-		# doesn't exeed the pledge amount.
-		total_charge = round(contrib_total * (1 + fees_rate), 2)
-		if total_charge > pledge.amount:
-			total_charge = pledge.amount
-
-		# Fees are the difference between the total and the contributions.
-		fees = total_charge - contrib_total
-
-		#### TESTING ####
-		# doesn't like total amount below $1
-		recip_contrib *= 100
-		#### TESTING ####
-
-		# Create the line items.
-		line_items = []
-		line_items.append({
-			"recipient_id": settings.DE_API['fees-recipient-id'],
-			"amount": "$%0.2f" % fees,
-			})
-		for recipient, action in recipients:
-			line_items.append({
-				"recipient_id": settings.DE_API['testing-recipient-id'], # recipient.de_id
-				"amount": "$%0.2f" % recip_contrib,
-				})
-			#### TESTING ####
-			# doesn't like repeat recipients
-			break
-			#### TESTING ####
-
-		# Execute the authorization & capture.
-		de_txn_req = pledge.create_de_txn_basic_dict()
-		de_txn_req.update({
-			"token": pledge.extra['de_cc_token'],
-			"line_items": line_items,
-			"source_code": "itfsite", 
-			"ref_code": pledge.trigger.get_short_url(), 
-			"aux_data": rtyaml.dump({ # DE will gives this back to us encoded as YAML, but the dict encoding is ruby-ish so to be sure we can parse it, we'll encode it first
-				"trigger": pledge.trigger.id,
-				"pledge": pledge.id,
-				})
-			})
-		de_txn = DemocracyEngineAPI.create_transaction(de_txn_req)
+			# Make the transaction (an authorization).
+			de_txn = create_pledge_transaction(pledge, recip_contribs, fees)
 
 		# From here on, if there is a problem then we need to void the transaction.
 		try:
@@ -555,19 +454,20 @@ class Pledge(models.Model):
 			pe.save()
 
 			# Create Contribution objects.
-			for recipient, action in recipients:
+			for recipient, action, amount in recip_contribs:
 				c = Contribution()
 				c.pledge_execution = pe
 				c.action = action
 				c.recipient = recipient
-				c.amount = recip_contrib
+				c.amount = amount
 				c.de_id = recipient.de_id
 				c.save()
 
 				# Increment the Action's total_contributions.
 				c.inc_action_contrib_total()
 
-			# Increment the TriggerExecution's total_contributions.
+			# Increment the TriggerExecution's total_contributions. Note that it
+			# includes fees.
 			TriggerExecution.objects.filter(id=te.id)\
 				.update(total_contributions=models.F('total_contributions') + total_charge)
 
@@ -649,17 +549,6 @@ class Recipient(models.Model):
 		return "[%s%s] %s" % (self.actor.name_short, ':' + self.challenger.name if self.challenger else "", self.name)
 
 	@staticmethod
-	def get_for_incumbent(actor):
-		return Recipient.objects.get(actor=actor, challenger=None)
-
-	@staticmethod
-	def get_for_challenger(action):
-		# This one takes an Action instance as its argument because it needs to know
-		# the party of the Actor at a given time. Gets the challenger of the opposite
-		# party.
-		return Recipient.objects.get(actor=action.actor, challenger=action.party.opposite())
-
-	@staticmethod
 	def create_for(actor):
 		# Ensure a recipient exists for the Actor and any potential challengers of a different party.
 
@@ -719,12 +608,15 @@ class Contribution(models.Model):
 	@transaction.atomic
 	def delete(self):
 		# Decrement the Action's total_pledged fields.
+		# TODO: The TriggerExecution's total_contributions will go out of sync.
 		self.inc_action_contrib_total(factor=-1)
 
 		# Remove record.
 		super(Contribution, self).delete()	
 
 	def inc_action_contrib_total(self, factor=1):
+		# Increment the totals on the Action instance. This excludes fees because
+		# this is based on transaction line items.
 		if self.recipient.challenger is None:
 			field = 'for'
 		else:

@@ -11,6 +11,7 @@ from twostream.decorators import anonymous_view, user_view_for
 
 from contrib.models import Trigger, TriggerExecution, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty
 from contrib.utils import json_response, DemocracyEngineAPI, HumanReadableValidationError
+from contrib.bizlogic import run_authorization_test
 
 import rtyaml
 
@@ -221,6 +222,7 @@ def create_pledge(request):
 	ccnum = request.POST['billingCCNum'].replace(" ", "").strip() # Stripe's javascript inserts spaces
 	ccexpmonth = int(request.POST['billingCCExpMonth'])
 	ccexpyear = int(request.POST['billingCCExpYear'])
+	cccvc = request.POST['billingCCCVC'].strip()
 
 	# Store a hashed version of the credit card information so we can
 	# do a verification if the user wants to look up a Pledge by CC
@@ -254,38 +256,14 @@ def create_pledge(request):
 	#   a) This tests that the billing info is valid.
 	#   b) We get a token that we can use on future transactions so that we
 	#      do not need to collect the credit card info again.
-	#
-	# DemocracyEngineAPI.create_transaction may raise all sorts of exceptions,
-	# which will cause the database transaction to roll back. A HumanReadableValidationError
-	# will be shown to the user. Other exceptions will just generate generic 
-	# unhandled error messages.
-	#
+	# This may raise all sorts of exceptions, which will cause the database
+	# transaction to roll back. A HumanReadableValidationError will be caught
+	# in the calling function and shown to the user. Other exceptions will
+	# just generate generic unhandled error messages.
+	de_txn = run_authorization_test(p, ccnum, ccexpmonth, ccexpyear, cccvc, request)
+
 	# Note that any exception after this point is okay because the authorization
 	# will expire on its own anyway.
-	de_txn_req = p.create_de_txn_basic_dict()
-	de_txn_req.update({
-		"authtest_request":  True,
-		"token_request": True,
-
-		"cc_number": ccnum,
-		"cc_verification_value": request.POST['billingCCCVC'].strip(),
-		"cc_month": ccexpmonth,
-		"cc_year": ccexpyear,
-		"cc_first_name": p.extra['contribNameFirst'], # reuse in case it's right, if not no problem
-		"cc_last_name": p.extra['contribNameLast'],
-		"cc_zip": p.extra['contribZip'],
-
-		"line_items": [],
-
-		"source_code": "itfsite pledge auth", 
-		"ref_code": "", 
-		"aux_data": rtyaml.dump({ # DE will gives this back to us encoded as YAML, but the dict encoding is ruby-ish so to be sure we can parse it, we'll encode it first
-			"trigger": p.trigger.id,
-			"pledge": p.id,
-			"httprequest": { k: request.META.get(k) for k in ('REMOTE_ADDR', 'REQUEST_URI') },
-			})
-		})
-	de_txn = DemocracyEngineAPI.create_transaction(de_txn_req)
 
 	# Store the transaction authorization, which contains the credit card token,
 	# into the pledge.
