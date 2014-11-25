@@ -26,7 +26,7 @@
 	</tr>
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
-		{% if pledge.trigger.state|stringformat:'s' == 'TriggerState.Open' %}
+		{% if pledge.trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
 			<tr><td>Status:</td> <td>The {{trigger.strings.action}} has not yet occurred. The contribution will only be made once it occurs.</td></tr>
 		{% else %}
 			<tr><td>Status:</td> <td>Your contribution has not yet been made. You are still able to cancel the contribution.</td></tr>

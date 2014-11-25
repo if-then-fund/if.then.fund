@@ -11,6 +11,17 @@ from enum3field import EnumField, django_enum
 
 #####################################################################
 #
+# Utility enumerations
+#
+#####################################################################
+
+@django_enum
+class TextFormat(enum.Enum):
+	HTML = 0
+	Markdown = 1
+
+#####################################################################
+#
 # Triggers
 #
 # A future event that triggers pledged contributions.
@@ -18,17 +29,12 @@ from enum3field import EnumField, django_enum
 #####################################################################
 
 @django_enum
-class TriggerState(enum.Enum):
+class TriggerStatus(enum.Enum):
 	Draft = 0
 	Open = 1
 	Paused = 2
 	Executed = 3
 	Vacated = 4
-
-@django_enum
-class TextFormat(enum.Enum):
-	HTML = 0
-	Markdown = 1
 
 class Trigger(models.Model):
 	"""A future event that triggers a camapaign contribution, such as a roll call vote in Congress."""
@@ -44,7 +50,7 @@ class Trigger(models.Model):
 	slug = models.SlugField(max_length=200, help_text="The URL slug for this trigger.")
 	description = models.TextField(help_text="Description text in Markdown.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
-	state = EnumField(TriggerState, default=TriggerState.Draft, help_text="The current status of the trigger: Open (accepting pledges), Paused (not accepting pledges), Executed (funds distributed), Vacated (existing pledges invalidated).")
+	status = EnumField(TriggerStatus, default=TriggerStatus.Draft, help_text="The current status of the trigger: Open (accepting pledges), Paused (not accepting pledges), Executed (funds distributed), Vacated (existing pledges invalidated).")
 	outcomes = JSONField(default=[], help_text="An array (order matters!) of information for each possible outcome of the trigger, e.g. ['Voted Yes', 'Voted No'].")
 
 	strings = JSONField(default={}, help_text="Display strings.")
@@ -71,8 +77,8 @@ class Trigger(models.Model):
 		# Lock the trigger to prevent race conditions and make sure the Trigger
 		# is either Open or Paused.
 		trigger = Trigger.objects.select_for_update().filter(id=self.id).first()
-		if trigger.state not in (TriggerState.Open, TriggerState.Paused):
-			raise ValueError("Trigger is in state %s." % str(trigger.state))
+		if trigger.status not in (TriggerStatus.Open, TriggerStatus.Paused):
+			raise ValueError("Trigger is in state %s." % str(trigger.status))
 
 		# Create TriggerExecution object.
 		te = TriggerExecution()
@@ -90,7 +96,7 @@ class Trigger(models.Model):
 			ac = Action.create(te, actor, outcome_index)
 
 		# Mark as executed.
-		trigger.state = TriggerState.Executed
+		trigger.status = TriggerStatus.Executed
 		trigger.save()
 
 class TriggerStatusUpdate(models.Model):
@@ -411,8 +417,8 @@ class Pledge(models.Model):
 		# Validate state.
 		if pledge.status != PledgeStatus.Open:
 			raise ValueError("Pledge cannot be executed in status %s." % pledge.status)
-		if trigger.state != TriggerState.Executed:
-			raise ValueError("Pledge cannot be executed when trigger is in status %s." % trigger.state)
+		if trigger.status != TriggerStatus.Executed:
+			raise ValueError("Pledge cannot be executed when trigger is in status %s." % trigger.status)
 		if pledge.algorithm != Pledge.current_algorithm()['id']:
 			raise ValueError("Pledge has an invalid algorithm.")
 

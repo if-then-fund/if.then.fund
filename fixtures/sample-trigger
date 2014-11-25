@@ -6,7 +6,7 @@ from contrib.via_govtrack import create_trigger_from_bill
 Trigger.objects.all().delete()
 t = create_trigger_from_bill("hr135-113", 's')
 
-t.state = TriggerState.Open
+t.status = TriggerStatus.Open
 t.save()
 
 Trigger.objects.filter(id=t.id).update(id=1)

@@ -21,7 +21,7 @@
 			<p class="text-muted small">More info on this {{trigger.extra.bill_info.noun}} can be found on <a href="{{trigger.extra.bill_info.link}}">GovTrack</a>.</p>
 		{% endif %}
 
-		{% if trigger.state|stringformat:'s' == 'TriggerState.Open' or trigger.state|stringformat:'s' == 'TriggerState.Paused' or trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
+		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' or trigger.status|stringformat:'s' == 'TriggerStatus.Paused' or trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
 				<h2>Pledged Contributions</h2>
 
 				<div>${{trigger.total_pledged}}</div>
@@ -29,28 +29,28 @@
 
 				<p>We can&rsquo;t reveal any more information prior to the vote.</p>
 
-				{% if trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
+				{% if trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
 					<p class="text-danger">Pledges were vacated.</p>
 				{% endif %}
 		{% endif %}
 	</div>
 
 	<div class="col-sm-8">
-		{% if trigger.state|stringformat:'s' == 'TriggerState.Draft' %}
+		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Draft' %}
 			<p>This trigger is in draft status. That means it is currently being prepared. Contributions may be accepted soon.</p>
 
-		{% elif trigger.state|stringformat:'s' == 'TriggerState.Open' %}
+		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
 			{% include "contrib/pledge-form.html" %}
 
-		{% elif trigger.state|stringformat:'s' == 'TriggerState.Paused' %}
+		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Paused' %}
 			<h2>Take action</h2>
 			<p>This action is paused. We may be about to convert the pledges into campaign contributions or we may be researching whether the event occurred.</p>
 
-		{% elif trigger.state|stringformat:'s' == 'TriggerState.Vacated' %}
+		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
 			<h2>Closed</h2>
 			<p>This action has been cancelled. We determined that the event will likely never occur and have vacated all of the pledges.</p>
 
-		{% elif trigger.state|stringformat:'s' == 'TriggerState.Executed' %}
+		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
 			<div id="my-pledge">
 			</div>
 			
@@ -123,10 +123,10 @@
 <script src="/static/js/ext/jquery.payment.js"> </script>
 <script>
 	$(function() {
-		{% if trigger.state|stringformat:'s' == 'TriggerState.Open' %}
+		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
 			pledge_init();
 		{% endif %}
-		{% if trigger.state|stringformat:'s' == 'TriggerState.Executed' %}
+		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
 		  if (the_page && the_page.pledge_made) {
 		    $('#my-pledge').html(the_page.pledge_made);
 		  }

@@ -2,7 +2,7 @@ from django.contrib import admin
 from contrib.models import *
 
 class TriggerAdmin(admin.ModelAdmin):
-    list_display = ['id', 'created', 'state', 'slug', 'title']
+    list_display = ['id', 'created', 'status', 'slug', 'title']
     raw_id_fields = ['owner']
 
 class TriggerStatusUpdateAdmin(admin.ModelAdmin):
