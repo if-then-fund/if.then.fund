@@ -24,11 +24,9 @@ def simplepage(request, pagename):
 
 @login_required
 def user_home(request):
+	# Get the user's pledges.
 	pledges = Pledge.objects.filter(user=request.user).order_by('-created').prefetch_related()
-	pledge_map = dict((p.id, p) for p in pledges)
-	for pe in PledgeExecution.objects.filter(pledge__in=set(pledges)):
-		pledge.execution = pledge_map[pe.pledge_id]
-
+	
 	# Get the user's total amount of open pledges, i.e. their total possible
 	# future credit card charges / campaign contributions.
 	total_pledged = pledges.filter(status=PledgeStatus.Open)

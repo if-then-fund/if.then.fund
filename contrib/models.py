@@ -4,7 +4,7 @@ from django.db import models, transaction, IntegrityError
 from django.conf import settings
 
 from itfsite.models import User
-from contrib.bizlogic import get_pledge_recipients, compute_charge, create_pledge_transaction
+from contrib.bizlogic import get_pledge_recipients, compute_charge, create_pledge_donation, void_pledge_transaction
 
 from jsonfield import JSONField
 from enum3field import EnumField, django_enum
@@ -115,7 +115,7 @@ class TriggerExecution(models.Model):
 	description = models.TextField(help_text="Once a trigger is executed, additional text added to explain how funds were distributed.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
-	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of campaign contributions executed, including fees.")
+	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of campaign contributions executed, excluding fees.")
 
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
@@ -216,8 +216,8 @@ class Action(models.Model):
 	title = models.CharField(max_length=200, help_text="Descriptive text for the office held by this actor at the time of the action.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
-	total_contributions_for = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed with the actor as the recipient, excluding fees because the fees are not on the line items.")
-	total_contributions_against = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed with an opponent of the actor as the recipient, excluding fees because the fees are not on the line items.")
+	total_contributions_for = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed with the actor as the recipient (excluding fees).")
+	total_contributions_against = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed with an opponent of the actor as the recipient (excluding fees).")
 
 	class Meta:
 		unique_together = [('execution', 'actor')]
@@ -332,7 +332,8 @@ class Pledge(models.Model):
 			"id": 1, # a sequence number so we can track changes to our fee structure, etc.
 			"min_contrib": 1, # dollars
 			"max_contrib": 500, # dollars
-			"fees": decimal.Decimal("0.1"), # .1 means 10%, convert from string so it is exact
+			"fees_fixed": decimal.Decimal("0.20"), # 20 cents, convert from string so it is exact
+			"fees_percent": decimal.Decimal("0.09"), # 0.09 means 9%, convert from string so it is exact
 		}
 
 	def __str__(self):
@@ -430,7 +431,7 @@ class Pledge(models.Model):
 			recip_contribs = []
 			fees = 0
 			total_charge = 0
-			de_txn = None
+			de_don = None
 		else:
 			# Compute the amount to charge the user. We can only make whole-penny
 			# contributions, so the exact amount of the charge may be less than
@@ -438,10 +439,14 @@ class Pledge(models.Model):
 			# each recipient as a tuple of (recipient, action, amount).
 			recip_contribs, fees, total_charge = compute_charge(pledge, recipients)
 
-			# Make the transaction (an authorization).
-			de_txn = create_pledge_transaction(pledge, recip_contribs, fees)
+			# Make the donation (an authorization).
+			# It seems like the transaction records created by the donation are not
+			# necessarily immediately available, so we can't fetch the full transaction
+			# information immediately.
+			de_don = create_pledge_donation(pledge, recip_contribs, fees)
 
-		# From here on, if there is a problem then we need to void the transaction.
+		# From here on, if there is a problem then we need to void the transaction
+		# before we lose track if it.
 		try:
 			# Create PledgeExecution object.
 			pe = PledgeExecution()
@@ -449,7 +454,7 @@ class Pledge(models.Model):
 			pe.charged = total_charge
 			pe.fees = fees
 			pe.extra = {
-				"transaction": de_txn
+				"donation": de_don, # donation record, which refers to transactions
 			}
 			pe.save()
 
@@ -463,20 +468,23 @@ class Pledge(models.Model):
 				c.de_id = recipient.de_id
 				c.save()
 
-				# Increment the Action's total_contributions.
+				# Increment the TriggerExecution and Action's total_contributions.
 				c.inc_action_contrib_total()
-
-			# Increment the TriggerExecution's total_contributions. Note that it
-			# includes fees.
-			TriggerExecution.objects.filter(id=te.id)\
-				.update(total_contributions=models.F('total_contributions') + total_charge)
 
 			# Mark pledge as executed.
 			pledge.status = PledgeStatus.Executed
 			pledge.save()
 
 		except:
-			# TODO
+			import sys, rtyaml
+			print("Problem during the following transaction:", file=sys.stderr)
+			print("", file=sys.stderr)
+			try:
+				print(rtyaml.dump(de_don))
+			except:
+				print(de_don)
+			print("", file=sys.stderr)
+			print("The database transaction was rolled back so the PledgeExecution instance is gone. Transaction information isn't immediately available, so someone will need to void the transaction manually.", file=sys.stderr)
 			raise
 
 
@@ -503,7 +511,7 @@ class CancelledPledge(models.Model):
 class PledgeExecution(models.Model):
 	"""How a user's pledge was executed. Each pledge has a single PledgeExecution when the Trigger is executed, and immediately many Contribution objects are created."""
 
-	pledge = models.OneToOneField(Pledge, on_delete=models.PROTECT, help_text="The Pledge this execution information is about.")
+	pledge = models.OneToOneField(Pledge, related_name="execution", on_delete=models.PROTECT, help_text="The Pledge this execution information is about.")
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 
@@ -518,10 +526,24 @@ class PledgeExecution(models.Model):
 
 	@transaction.atomic
 	def delete(self):
-		# Decrement the TriggerExecution's total_contributions.
-		TriggerExecution.objects.filter(id=self.pledge.trigger.execution.id)\
-			.update(total_contributions=models.F('total_contributions') - self.charged)
+		# Delete the contributions explicitly so that .delete() gets called (by our manager).
+		self.contributions.all().delete()
+
+		# Return the Pledge to the open state so we can try to execute again.
+		self.pledge.status = PledgeStatus.Open
+		self.pledge.save()
+
+		# Delete record.
 		super(PledgeExecution, self).delete()	
+
+		# Void or refund the transaction. There should be only one, but
+		# just in case get a list of all mentioned transactions for the
+		# donation. Do this last so that if the void succeeds no other
+		# error can follow.
+		txns = set(item['transaction_guid'] for item in self.extra['donation']['line_items'])
+		for txn in txns:
+			# Raises an exception on failure.
+			void_pledge_transaction(txn)
 
 #####################################################################
 #
@@ -587,7 +609,7 @@ class Recipient(models.Model):
 class Contribution(models.Model):
 	"""A fully executed campaign contribution."""
 
-	pledge_execution = models.ForeignKey(PledgeExecution, on_delete=models.CASCADE, help_text="The PledgeExecution this execution information is about.")
+	pledge_execution = models.ForeignKey(PledgeExecution, related_name="contributions", on_delete=models.PROTECT, help_text="The PledgeExecution this execution information is about.")
 	action = models.ForeignKey(Action, on_delete=models.PROTECT, help_text="The Action this contribution was made in reaction to.")
 	recipient = models.ForeignKey(Recipient, on_delete=models.PROTECT, help_text="The Recipient this contribution was sent to.")
 	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount of the contribution, in dollars.")
@@ -607,8 +629,7 @@ class Contribution(models.Model):
 
 	@transaction.atomic
 	def delete(self):
-		# Decrement the Action's total_pledged fields.
-		# TODO: The TriggerExecution's total_contributions will go out of sync.
+		# Decrement the TriggerExecution and Action's total_pledged fields.
 		self.inc_action_contrib_total(factor=-1)
 
 		# Remove record.
@@ -624,3 +645,8 @@ class Contribution(models.Model):
 		Action.objects.filter(id=self.action.id)\
 			.update(**{'total_contributions_%s' % field:
 				models.F('total_contributions_%s' % field) + self.amount*factor})
+
+		# Increment the TriggerExecution's total_contributions. Likewise, it
+		# excludes fees.
+		TriggerExecution.objects.filter(id=self.action.execution_id)\
+			.update(total_contributions=models.F('total_contributions') + self.amount*factor)

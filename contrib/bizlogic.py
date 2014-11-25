@@ -3,7 +3,7 @@ import rtyaml
 
 from django.conf import settings
 
-def create_de_txn_basic_dict(pledge):
+def create_de_donation_basic_dict(pledge):
 	# Creates basic info for a Democracy Engine API call for creating
 	# a transaction (both authtest and auth+capture calls).
 	return {
@@ -20,6 +20,13 @@ def create_de_txn_basic_dict(pledge):
 
 		"email_opt_in": False,
 		"is_corporate_contribution": False,
+
+		# use contributor info as billing info in the hopes that it might
+		# reduce DE's merchant fees, and maybe we'll get back CC verification
+		# info that might help us with data quality checks in the future?
+		"cc_first_name": pledge.extra['contribNameFirst'],
+		"cc_last_name": pledge.extra['contribNameLast'],
+		"cc_zip": pledge.extra['contribZip'],
 	}
 
 def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, request):
@@ -28,13 +35,11 @@ def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, request)
 	# can be used later to make a real charge without other billing
 	# details.
 
-	from contrib.utils import DemocracyEngineAPI
-
 	# Basic contributor details.
-	de_txn_req = create_de_txn_basic_dict(pledge)
+	de_don_req = create_de_donation_basic_dict(pledge)
 
 	# Add billing details.
-	de_txn_req.update({
+	de_don_req.update({
 		"authtest_request":  True,
 		"token_request": True,
 
@@ -43,13 +48,6 @@ def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, request)
 		"cc_month": ccexpmonth,
 		"cc_year": ccexpyear,
 		"cc_verification_value": cccvc,
-
-		# use contributor info as billing info in the hopes that it might
-		# reduce DE's merchant fees, and maybe we'll get back CC verification
-		# info that might help us with data quality checks in the future?
-		"cc_first_name": pledge.extra['contribNameFirst'],
-		"cc_last_name": pledge.extra['contribNameLast'],
-		"cc_zip": pledge.extra['contribZip'],
 
 		# no line items are necessary for an authorization test
 		"line_items": [],
@@ -68,7 +66,7 @@ def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, request)
 		})
 
 	# Perform the authorization test and return the transaction record.
-	return DemocracyEngineAPI.create_transaction(de_txn_req)
+	return DemocracyEngineAPI.create_donation(de_don_req)
 
 def get_pledge_recipients(trigger, pledge):
 	# For pledge execution, figure out how to split the contribution
@@ -142,8 +140,9 @@ def compute_charge(pledge, recipients):
 	# What's the total amount of contributions after fess? The inputs
 	# here are all decimal.Decimal instances, so we are doing exact
 	# decimal math up to the default precision.
-	fees_rate = Pledge.current_algorithm()['fees']
-	max_contrib = pledge.amount / (1 + fees_rate)
+	fees_fixed = Pledge.current_algorithm()['fees_fixed']
+	fees_percent = Pledge.current_algorithm()['fees_percent']
+	max_contrib = (pledge.amount - fees_fixed) / (1 + fees_percent)
 
 	# If we divide that evenly among the recipients, what is the ideal contribution?
 	# Round it down to the nearest cent because we can only make whole-cent contributions
@@ -167,7 +166,7 @@ def compute_charge(pledge, recipients):
 	# and hoping the total is under the original pledge amount (the
 	# maximum), compute the total, round, clip at the ceiling, and then
 	# work backwards to the fees.
-	total_charge = contrib_total * (1 + fees_rate)
+	total_charge = contrib_total * (1 + fees_percent) + fees_fixed
 
 	# Round to the nearest cent, then ensure we haven't exeeded maximum.
 	total_charge = total_charge.quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_HALF_EVEN)
@@ -180,11 +179,9 @@ def compute_charge(pledge, recipients):
 	# Return!
 	return (recip_contribs, fees, total_charge)
 
-def create_pledge_transaction(pledge, recip_contribs, fees):
+def create_pledge_donation(pledge, recip_contribs, fees):
 	# Pledge execution --- make a credit card charge and return
 	# the DE transaction record.
-
-	from contrib.utils import DemocracyEngineAPI
 
 	line_items = []
 
@@ -201,9 +198,9 @@ def create_pledge_transaction(pledge, recip_contribs, fees):
 			"amount": "$%0.2f" % amount,
 			})
 
-	# Execute the authorization & capture.
-	de_txn_req = create_de_txn_basic_dict(pledge)
-	de_txn_req.update({
+	# Prepare the donation record for authorization & capture.
+	de_don_req = create_de_donation_basic_dict(pledge)
+	de_don_req.update({
 		# billing info
 		"token": pledge.extra['de_cc_token'],
 
@@ -220,4 +217,161 @@ def create_pledge_transaction(pledge, recip_contribs, fees):
 			"pledge": pledge.id,
 			})
 		})
-	return DemocracyEngineAPI.create_transaction(de_txn_req)
+	
+	# Create the 'donation', which creates a transaction and performs cc authorization.
+	return DemocracyEngineAPI.create_donation(de_don_req)
+
+def void_pledge_transaction(de_txn_guid):
+	# This raises a 404 exception if the transaction info is not
+	# yet available.
+	txn = DemocracyEngineAPI.get_transaction(de_txn_guid)
+
+	if txn['status'] == "voided":
+		# We are good
+		return
+
+	# Attempt void.
+	try:
+		DemocracyEngineAPI.void_transaction(de_txn_guid)
+	except:
+		import sys, json
+		print(json.dumps(txn, indent=2), file=sys.stderr)
+		raise
+
+class HumanReadableValidationError(Exception):
+	pass
+
+class DemocracyEngineAPI(object):
+	de_meta_info = None
+
+	def __call__(self, method, post_data=None, argument=None, live_request=False, http_method=None):
+		import json
+		import requests
+		from requests.auth import HTTPDigestAuth
+
+		# Cache meta info. If method is None, don't infinite recurse.
+		if (self.de_meta_info == None) and (method is not None):
+			self.de_meta_info = self(None, None, live_request=live_request)
+
+		if method is None:
+			# This is an internal call to get the meta subscriber info.
+			url = settings.DE_API['api_baseurl'] + ('/subscribers/%s.json' % settings.DE_API['account_number'])
+		elif method == "META":
+			# This is a real call to get the meta info, which is always cached.
+			return self.de_meta_info
+		else:
+			# Get the correct URL from the meta info, and do argument substitution
+			# if necessary.
+			url = self.de_meta_info[method + "_uri"]
+			if argument:
+				import urllib.parse
+				url = url.replace(":"+argument[0], urllib.parse.quote(argument[1]))
+
+		# GET or POST?
+		if post_data == None:
+			payload = None
+			headers = None
+			urlopen = requests.get
+		else:
+			payload = json.dumps(post_data)
+			headers = {'content-type': 'application/json'}
+			urlopen = requests.post
+
+		# Override HTTP method.
+		if http_method:
+			urlopen = getattr(requests, http_method)
+
+		# Log requests. Definitely don't do this in production since we'll
+		# have sensitive data here!
+		if False and settings.DEBUG:
+			print(urlopen.__name__.upper(), url)
+			if payload:
+				print(json.dumps(json.loads(payload), indent=True))
+			print()
+
+		# issue request
+		r = urlopen(
+			url,
+			auth=HTTPDigestAuth(settings.DE_API['username'], settings.DE_API['password']),
+			data=payload,
+			headers=headers,
+			timeout=30 if not live_request else 20,
+			verify=True, # check SSL cert (is default, actually)
+			)
+
+		# raises exception on anything but 200 OK
+		try:
+			r.raise_for_status()
+		except:
+			try:
+				exc = r.json()
+				if len(exc) > 0 and exc[0][0] == "base":
+					# Not sure what 'base' means, but we get things like
+					# "Card number is not a valid credit card number".
+					raise HumanReadableValidationError(exc[0][1])
+			except HumanReadableValidationError:
+				raise # pass through/up
+			except:
+				pass # fall through to next
+			raise IOError("DemocrayEngine API failed: %d %s" % (r.status_code, url))
+
+		# The PUT requests have no response. A 200 response is success.
+		if http_method == "put":
+			return None
+
+		# all other responses are JSON
+		return r.json()
+
+	def recipients(self, live_request=False):
+		return self(method="recipients", live_request=live_request)
+
+	def get_recipient(self, id, live_request=False, http_method=None):
+		return self(method="recipient", argument=('recipient_id', id), http_method=http_method, live_request=live_request)
+
+	def create_recipient(self, info):
+		return self(
+			method="recipients",
+			post_data=
+				{ "recipient":
+					{
+						"remote_recipient_id": info["id"],
+						"name": info["committee_name"],
+						"registered_id": info["committee_id"],
+						"recipient_type": "federal_candidate",
+						#"contact": { "first_name", "last_name", "phone", "address1", "city", "state", "zip" },
+						"user": {
+							"first_name": "Generic",
+							"last_name": "User",
+							"login": "c%d" % info["id"],
+							"initial_password": info["user_password"],
+							"email": "de.user@civicresponsibilityllc.com"
+						},
+						"recipient_tags": {
+							"party": info["party"], # e.g. "Democrat"
+							"state": info["state"], # USPS
+							"office": info["office"], # senator, representative
+							"district": info["district"], # integer
+							"cycle": info["cycle"] # year, integer
+						}
+					}
+				})
+
+	def transactions(self, live_request=False):
+		return self(method="transactions", live_request=live_request)
+
+	def get_transaction(self, id, live_request=False):
+		return self(method="transaction", argument=('transaction_id', id), live_request=live_request)
+
+	def void_transaction(self, id, live_request=False):
+		return self(method="transaction_void", argument=('transaction_id', id), http_method="put", live_request=live_request)
+
+	def create_donation(self, info):
+		return self(
+			method="donation_process",
+			post_data=
+				{ "donation": info },
+			)
+
+# Replace with a singleton instance.
+DemocracyEngineAPI = DemocracyEngineAPI()
+

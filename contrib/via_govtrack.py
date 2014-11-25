@@ -83,8 +83,18 @@ def execute_trigger_from_vote(trigger, govtrack_url):
 	dom = lxml.etree.fromstring(r)
 	actor_outcomes = { }
 	for voter in dom.findall('voter'):
+		# Validate.
+		if not voter.get('id'):
+			 # VP tiebreaker
+			if voter.get('VP'):
+				continue
+			raise Exception("Missing data in GovTrack XML.")
+
 		# Get the Actor.
-		actor = Actor.objects.get(govtrack_id=voter.get('id'))
+		try:
+			actor = Actor.objects.get(govtrack_id=voter.get('id'))
+		except Actor.DoesNotExist:
+			raise Exception("No Actor instance exists here for Member of Congress with GovTrack ID %d." % int(voter.get('id')))
 
 		# Map vote keys '+' and '-' to outcome indexes.
 		# Treat not voting (0 and P) as a null outcome, meaning the Actor didn't

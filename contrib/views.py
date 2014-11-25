@@ -10,8 +10,8 @@ from email_confirm_la.signals import post_email_confirm
 from twostream.decorators import anonymous_view, user_view_for
 
 from contrib.models import Trigger, TriggerExecution, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty
-from contrib.utils import json_response, DemocracyEngineAPI, HumanReadableValidationError
-from contrib.bizlogic import run_authorization_test
+from contrib.utils import json_response
+from contrib.bizlogic import run_authorization_test, HumanReadableValidationError
 
 import rtyaml
 
@@ -27,7 +27,10 @@ def trigger(request, id, slug):
 	outcomes = None
 	actions = None
 
-	te = trigger.execution
+	try:
+		te = trigger.execution
+	except TriggerExecution.DoesNotExist:
+		te = None
 	by_incumb_chlngr = []
 	if te and 'contribs_by_outcome' in te.extra:
 		# Sort the outcomes by amount of contributions.
@@ -37,17 +40,16 @@ def trigger(request, id, slug):
 			outcomes[i]['contribs'] = te.extra['contribs_by_outcome'][i]
 		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
 
+	if te:
 		# Actions/Actors
 		actions = list(te.actions.all().select_related('actor'))
 		actions.sort(key = lambda a : (-(a.total_contributions_for - a.total_contributions_against), a.actor.name_sort))
 
 		# Incumbent/challengers.
-		by_incumb_chlngr = [["Incumbents", 0, "text-success"], ["Opponents", 0, "text-danger"], ["Fees", 0, "text-muted small"]]
+		by_incumb_chlngr = [["Incumbents", 0, "text-success"], ["Opponents", 0, "text-danger"]]
 		for a in actions:
 			by_incumb_chlngr[0][1] += a.total_contributions_for
 			by_incumb_chlngr[1][1] += a.total_contributions_against
-			by_incumb_chlngr[2][1] -= a.total_contributions_for + a.total_contributions_against
-		by_incumb_chlngr[2][1] += te.total_contributions
 
 
 	return render(request, "contrib/trigger.html", {

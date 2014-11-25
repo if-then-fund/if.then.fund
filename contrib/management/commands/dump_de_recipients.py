@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 import rtyaml
 
-from contrib.utils import DemocracyEngineAPI
+from contrib.bizlogic import DemocracyEngineAPI
 
 class Command(BaseCommand):
 	args = ''
