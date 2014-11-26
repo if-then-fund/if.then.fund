@@ -71,7 +71,7 @@ class Trigger(models.Model):
 
 	# Execute.
 	@transaction.atomic
-	def execute(self, actor_outcomes, description, description_format, extra):
+	def execute(self, action_time, actor_outcomes, description, description_format, extra):
 		# Executes the trigger.
 
 		# Lock the trigger to prevent race conditions and make sure the Trigger
@@ -84,6 +84,7 @@ class Trigger(models.Model):
 		te = TriggerExecution()
 		te.trigger = trigger
 		te.cycle = settings.CURRENT_ELECTION_CYCLE
+		te.action_time = action_time
 		te.description = description
 		te.description_format = description_format
 		te.extra = extra
@@ -115,6 +116,7 @@ class TriggerExecution(models.Model):
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True, db_index=True)
+	action_time = models.DateTimeField(help_text="The date & time the action actually ocurred in the real world.")
 
 	cycle = models.IntegerField(help_text="The election cycle (year) that the trigger was executed in.")
 
@@ -212,6 +214,7 @@ class Action(models.Model):
 	"""The outcome of an actor taking an act described by a trigger."""
 
 	execution = models.ForeignKey(TriggerExecution, related_name="actions", on_delete=models.CASCADE, help_text="The TriggerExecution that created this object.")
+	action_time = models.DateTimeField(db_index=True, help_text="The date & time the action actually ocurred in the real world.")
 	actor = models.ForeignKey(Actor, on_delete=models.PROTECT, help_text="The Actor who took this action.")
 	outcome = models.IntegerField(blank=True, null=True, help_text="The outcome index that was taken. May be null if the Actor should have participated but didn't (we want to record to avoid counterintuitive missing data).")
 
@@ -246,6 +249,7 @@ class Action(models.Model):
 		a.execution = execution
 		a.actor = actor
 		a.outcome = outcome_index
+		a.action_time = execution.action_time
 
 		# Copy fields that may change on the Actor but that we want to know what they were
 		# at the time this Action ocurred.

@@ -75,6 +75,14 @@ def execute_trigger_from_vote(trigger, govtrack_url):
 	# '.json' extension added to vote pages.
 	vote = requests.get(govtrack_url+'.json').json()
 
+	# Parse the date, which is in US Eastern time. Must make it
+	# timezone-aware to store in our database.
+	from django.utils.timezone import make_aware
+	import dateutil.parser, dateutil.tz
+	when = dateutil.parser.parse(vote['created'])
+	z = dateutil.tz.tzfile('/usr/share/zoneinfo/EST5EDT')
+	when = make_aware(when, z)
+
 	# Then get how Members of Congress voted via the XML, which conveniently
 	# includes everything without limit/offset. The congress project vote
 	# JSON doesn't use GovTrack IDs, so it's more convenient to use GovTrack
@@ -104,16 +112,16 @@ def execute_trigger_from_vote(trigger, govtrack_url):
 		actor_outcomes[actor] = outcome
 
 	# Make a textual description of what happened.
-	import dateutil.parser
 	description = """The {chamber} voted on this on {date}. For more details, see the [vote record on GovTrack.us]({link}).
 	""".format(
 		chamber=vote['chamber_label'],
-		date=dateutil.parser.parse(vote['created']).strftime("%b. %d, %Y").replace(" 0", ""),
+		date=when.strftime("%b. %d, %Y").replace(" 0", ""),
 		link=vote['link'],
 	)
 
 	# Execute.
 	trigger.execute(
+		when,
 		actor_outcomes,
 		description,
 		TextFormat.Markdown,
