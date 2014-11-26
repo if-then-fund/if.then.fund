@@ -9,10 +9,11 @@ from email_confirm_la.signals import post_email_confirm
 
 from twostream.decorators import anonymous_view, user_view_for
 
-from contrib.models import Trigger, TriggerExecution, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty
+from contrib.models import Trigger, TriggerExecution, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty, ContributionAggregate
 from contrib.utils import json_response
 from contrib.bizlogic import run_authorization_test, HumanReadableValidationError
 
+import copy
 import rtyaml
 
 @anonymous_view
@@ -31,16 +32,18 @@ def trigger(request, id, slug):
 		te = trigger.execution
 	except TriggerExecution.DoesNotExist:
 		te = None
-	by_incumb_chlngr = []
-	if te and 'contribs_by_outcome' in te.extra:
-		# Sort the outcomes by amount of contributions.
-		outcomes = trigger.outcomes
-		for i in range(len(outcomes)):
-			outcomes[i]['index'] = i
-			outcomes[i]['contribs'] = te.extra['contribs_by_outcome'][i]
-		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
+		by_incumb_chlngr = []
 
 	if te:
+		# Get the contribution aggregates by outcome and sort by total amount of contributions.
+		outcomes = copy.deepcopy(trigger.outcomes)
+		for i in range(len(outcomes)):
+			outcomes[i]['index'] = i
+			outcomes[i]['contribs'] = 0
+		for rec in ContributionAggregate.objects.filter(trigger_execution=te).values('outcome', 'total'):
+			outcomes[rec['outcome']]['contribs'] = rec['total']
+		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
+
 		# Actions/Actors
 		actions = list(te.actions.all().select_related('actor'))
 		actions.sort(key = lambda a : (-(a.total_contributions_for - a.total_contributions_against), a.actor.name_sort))
@@ -273,10 +276,11 @@ def create_pledge(request):
 	p.extra["de_cc_token"] = de_txn['token']
 	p.save()
 
-	# Increment the trigger's total_pledged field (atomically).
+	# Increment the trigger's pledge_count and total_pledged fields (atomically).
 	from django.db import models
-	Trigger.objects.filter(id=p.trigger.id)\
-		.update(total_pledged=models.F('total_pledged') + p.amount)
+	p.trigger.pledge_count = models.F('pledge_count') + 1
+	p.trigger.total_pledged = models.F('total_pledged') + p.amount
+	p.trigger.save(update_fields=['pledge_count', 'total_pledged'])
 
 	if not p.user:
 		# The pledge needs to get confirmation of the user's email address,

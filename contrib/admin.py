@@ -4,13 +4,14 @@ from contrib.models import *
 class TriggerAdmin(admin.ModelAdmin):
     list_display = ['id', 'created', 'status', 'slug', 'title']
     raw_id_fields = ['owner']
+    readonly_fields = ['pledge_count', 'total_pledged']
 
 class TriggerStatusUpdateAdmin(admin.ModelAdmin):
     readonly_fields = ['trigger']
 
 class TriggerExecutionAdmin(admin.ModelAdmin):
     list_display = ['id', 'created', 'trigger', 'total_contributions']
-    readonly_fields = ['trigger', 'total_contributions']
+    readonly_fields = ['trigger', 'pledge_count', 'total_contributions']
 
 class ActorAdmin(admin.ModelAdmin):
     list_display = ['name_long', 'party', 'govtrack_id']

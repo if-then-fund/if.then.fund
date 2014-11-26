@@ -50,6 +50,14 @@
 			<h2>Closed</h2>
 			<p>This action has been cancelled. We determined that the event will likely never occur and have vacated all of the pledges.</p>
 
+		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' and trigger.pledge_count > trigger.execution.pledge_count %}
+			<div id="my-pledge">
+			</div>
+			
+			<h2>Contributions</h2>
+
+			<p>The {{trigger.strings.action}} ocurred, and we are now in the process of making campaign contributions. Check back soon for further details.</p>
+
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
 			<div id="my-pledge">
 			</div>

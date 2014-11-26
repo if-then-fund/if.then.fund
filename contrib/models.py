@@ -56,6 +56,7 @@ class Trigger(models.Model):
 	strings = JSONField(default={}, help_text="Display strings.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
+	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges made.")
 	total_pledged = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of pledges, i.e. prior to execution.")
 
 	def __str__(self):
@@ -123,43 +124,13 @@ class TriggerExecution(models.Model):
 	description = models.TextField(help_text="Once a trigger is executed, additional text added to explain how funds were distributed.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
+	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges executed.")
 	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of campaign contributions executed, excluding fees.")
 
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
 	def __str__(self):
 		return "%s [exec %s]" % (self.trigger, self.created.strftime("%x"))
-
-	def init_extra(self):
-		if self.extra in (None, ""):
-			self.extra = { }
-
-	def cache_outcome_totals(self):
-		self.init_extra()
-
-		# Cache by outcome. Reset.
-		self.extra["contribs_by_outcome"] = [ 0 for i in range(len(self.trigger.outcomes)) ]
-
-		# Query.
-		# Convert Decimal to float otherwise it gets converted to string in JSONification.
-		for r in PledgeExecution.objects\
-			.filter(pledge__trigger=self.trigger)\
-			.values('pledge__desired_outcome')\
-			.annotate(total=models.Sum('charged')):
-			self.extra["contribs_by_outcome"][r['pledge__desired_outcome']] = float(r['total'])
-
-		# Cache by congressional district.
-		self.extra["contribs_by_district"] = { }
-		for r in PledgeExecution.objects\
-			.filter(pledge__trigger=self.trigger)\
-			.values('pledge__desired_outcome', 'pledge__district')\
-			.annotate(total=models.Sum('charged')):
-			self.extra["contribs_by_district"].setdefault(r['pledge__district'], {})[r["pledge__desired_outcome"]] = float(r['total'])
-
-		# Cache by congressional district.
-
-		self.save()
-
 
 #####################################################################
 #
@@ -325,9 +296,10 @@ class Pledge(models.Model):
 		if self.status != PledgeStatus.Open:
 			raise ValueError("Cannot cancel a Pledge with status %s." % self.status)
 
-		# Decrement the Trigger's total_pledged.
-		Trigger.objects.filter(id=self.trigger.id)\
-			.update(total_pledged=models.F('total_pledged') - self.amount)
+		# Decrement the Trigger's pledge_count and total_pledged.
+		self.trigger.pledge_count = models.F('pledge_count') - 1
+		self.trigger.total_pledged = models.F('total_pledged') - self.amount
+		self.trigger.save(update_fields=['pledge_count', 'total_pledged'])
 
 		# Archive as a cancelled pledge.
 		cp = CancelledPledge.from_pledge(self)
@@ -485,6 +457,11 @@ class Pledge(models.Model):
 			pledge.status = PledgeStatus.Executed
 			pledge.save()
 
+			# Increment TriggerExecution's pledge_count so that we know how many pledges
+			# have been or have not yet been executed.
+			trigger.execution.pledge_count = models.F('pledge_count') + 1
+			trigger.execution.save(update_fields=['pledge_count'])
+
 		except:
 			import sys, rtyaml
 			print("Problem during the following transaction:", file=sys.stderr)
@@ -542,6 +519,10 @@ class PledgeExecution(models.Model):
 		# Return the Pledge to the open state so we can try to execute again.
 		self.pledge.status = PledgeStatus.Open
 		self.pledge.save()
+
+		# Decrement the TriggerExecution's pledge_count.
+		self.pledge.trigger.execution.pledge_count = models.F('pledge_count') - 1
+		self.pledge.trigger.execution.save(update_fields=['pledge_count'])
 
 		# Delete record.
 		super(PledgeExecution, self).delete()	
@@ -649,14 +630,36 @@ class Contribution(models.Model):
 		# Increment the totals on the Action instance. This excludes fees because
 		# this is based on transaction line items.
 		if self.recipient.challenger is None:
-			field = 'for'
+			# Contribution was to the Actor.
+			field = 'total_contributions_for'
 		else:
-			field = 'against'
-		Action.objects.filter(id=self.action.id)\
-			.update(**{'total_contributions_%s' % field:
-				models.F('total_contributions_%s' % field) + self.amount*factor})
+			# Contribution was to the Actor's opponent.
+			field = 'total_contributions_against'
+		setattr(self.action, field, models.F(field) + self.amount*factor)
+		self.action.save(update_fields=[field])
 
 		# Increment the TriggerExecution's total_contributions. Likewise, it
 		# excludes fees.
-		TriggerExecution.objects.filter(id=self.action.execution_id)\
-			.update(total_contributions=models.F('total_contributions') + self.amount*factor)
+		self.action.execution.total_contributions = models.F('total_contributions') + self.amount*factor
+		self.action.execution.save(update_fields=['total_contributions'])
+
+		# Increment the cached ContributionAggregate for the desired outcome.
+		agg, is_new = ContributionAggregate.objects.get_or_create(
+			trigger_execution=self.action.execution,
+			outcome=self.pledge_execution.pledge.desired_outcome)
+		agg.total = models.F('total') + self.amount*factor
+		agg.save(update_fields=['total'])
+
+
+class ContributionAggregate(models.Model):
+	"""Aggregate totals for various slices of contributions."""
+
+	trigger_execution = models.OneToOneField(TriggerExecution, related_name='contribution_aggregates', on_delete=models.CASCADE, help_text="The TriggerExecution that these cached statistics are about.")
+	updated = models.DateTimeField(auto_now=True, db_index=True)
+
+	outcome = models.IntegerField(blank=True, null=True, help_text="The outcome index that was taken. Null if the slice encompasses all outcomes.")
+
+	total = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of campaign contributions executed, excluding fees.")
+
+	class Meta:
+		unique_together = ('trigger_execution', 'outcome')
