@@ -30,6 +30,7 @@ INSTALLED_APPS = (
 	# templates.
 	'email_confirm_la',
 	'bootstrapform',
+	'htmlemailer',
 )
 
 MIDDLEWARE_CLASSES = (
