@@ -512,7 +512,7 @@ class PledgeExecution(models.Model):
 		return str(self.pledge)
 
 	@transaction.atomic
-	def delete(self):
+	def delete(self, allow_credit=False):
 		# Delete the contributions explicitly so that .delete() gets called (by our manager).
 		self.contributions.all().delete()
 
@@ -534,7 +534,14 @@ class PledgeExecution(models.Model):
 		txns = set(item['transaction_guid'] for item in self.extra['donation']['line_items'])
 		for txn in txns:
 			# Raises an exception on failure.
-			void_pledge_transaction(txn)
+			void_pledge_transaction(txn, allow_credit=allow_credit)
+
+	def show_txn(self):
+		import rtyaml
+		from contrib.bizlogic import DemocracyEngineAPI
+		txns = set(item['transaction_guid'] for item in self.extra['donation']['line_items'])
+		for txn in txns:
+			print(rtyaml.dump(DemocracyEngineAPI.get_transaction(txn)))
 
 #####################################################################
 #

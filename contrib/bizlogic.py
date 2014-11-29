@@ -221,18 +221,26 @@ def create_pledge_donation(pledge, recip_contribs, fees):
 	# Create the 'donation', which creates a transaction and performs cc authorization.
 	return DemocracyEngineAPI.create_donation(de_don_req)
 
-def void_pledge_transaction(de_txn_guid):
+def void_pledge_transaction(txn_guid, allow_credit=False):
 	# This raises a 404 exception if the transaction info is not
 	# yet available.
-	txn = DemocracyEngineAPI.get_transaction(de_txn_guid)
+	txn = DemocracyEngineAPI.get_transaction(txn_guid)
 
 	if txn['status'] == "voided":
 		# We are good
 		return
 
+	if txn['status'] not in ("authorized", "captured"):
+		raise ValueError("Not sure what to do with a transaction with status %s." % txn['status'])
+
 	# Attempt void.
 	try:
-		DemocracyEngineAPI.void_transaction(de_txn_guid)
+		if txn['status'] == "authorized":
+			DemocracyEngineAPI.void_transaction(txn_guid)
+		elif txn['status'] == "captured":
+			if not allow_credit:
+				raise ValueError("Transaction is already captured.")
+			DemocracyEngineAPI.credit_transaction(txn_guid)
 	except:
 		import sys, json
 		print(json.dumps(txn, indent=2), file=sys.stderr)
@@ -362,8 +370,11 @@ class DemocracyEngineAPI(object):
 	def get_transaction(self, id, live_request=False):
 		return self(method="transaction", argument=('transaction_id', id), live_request=live_request)
 
-	def void_transaction(self, id, live_request=False):
-		return self(method="transaction_void", argument=('transaction_id', id), http_method="put", live_request=live_request)
+	def void_transaction(self, id):
+		return self(method="transaction_void", argument=('transaction_id', id), http_method="put")
+
+	def credit_transaction(self, id):
+		return self(method="transaction_credit", argument=('transaction_id', id), http_method="put")
 
 	def create_donation(self, info):
 		return self(
