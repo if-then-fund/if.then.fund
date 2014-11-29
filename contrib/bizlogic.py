@@ -313,14 +313,21 @@ class DemocracyEngineAPI(object):
 		except:
 			try:
 				exc = r.json()
-				if len(exc) > 0 and exc[0][0] == "base":
+				if isinstance(exc, list) and len(exc) > 0 and exc[0][0] == "base":
 					# Not sure what 'base' means, but we get things like
 					# "Card number is not a valid credit card number".
 					raise HumanReadableValidationError(exc[0][1])
+				if isinstance(exc, dict) and isinstance(exc.get('base'), list):
+					# Not sure what 'base' means, but we get things like
+					# "Card number is not a valid credit card number".
+					raise HumanReadableValidationError(exc.get('base')[0])
 			except HumanReadableValidationError:
 				raise # pass through/up
 			except:
 				pass # fall through to next
+
+			import sys
+			print(r.content, file=sys.stderr)
 			raise IOError("DemocrayEngine API failed: %d %s" % (r.status_code, url))
 
 		# The PUT requests have no response. A 200 response is success.
