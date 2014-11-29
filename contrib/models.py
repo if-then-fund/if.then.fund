@@ -101,6 +101,26 @@ class Trigger(models.Model):
 		trigger.status = TriggerStatus.Executed
 		trigger.save()
 
+	# Vacate, meaning we do not expect the action to ever occur.
+	@transaction.atomic
+	def vacate(self):
+		trigger = Trigger.objects.select_for_update().filter(id=self.id).first()
+		if trigger.status not in (TriggerStatus.Open, TriggerStatus.Paused):
+			raise ValueError("Trigger is in state %s." % str(trigger.status))
+
+		# Mark as vacated.
+		trigger.status = TriggerStatus.Vacated
+		trigger.save()
+
+		# Mark all pledges as vacated.
+		pledges = trigger.pledges.select_for_update()
+		for p in pledges:
+			if p.status != PledgeStatus.Open:
+				raise ValueError("Pledge %s is in state %s." % (repr(p), str(p.status)))
+			p.status = PledgeStatus.Vacated
+			p.save()
+
+
 class TriggerStatusUpdate(models.Model):
 	"""A status update about the Trigger providing further information to users looking at the Trigger that was not known when the Trigger was created."""
 
@@ -264,7 +284,7 @@ class Pledge(models.Model):
 
 	user = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT, help_text="The user making the pledge. When an anonymous user makes a pledge, this is null, the user's email address is stored, and the pledge should be considered unconfirmed/provisional and will not be executed.")
 	email = models.EmailField(max_length=254, blank=True, null=True, help_text="When an anonymous user makes a pledge, their email address is stored here and we send a confirmation email.")
-	trigger = models.ForeignKey(Trigger, on_delete=models.PROTECT, help_text="The Trigger that this Pledge is for.")
+	trigger = models.ForeignKey(Trigger, related_name="pledges", on_delete=models.PROTECT, help_text="The Trigger that this Pledge is for.")
 
 	# When a Pledge is cancelled, the object is deleted. The three fields above
 	# are archived, plus the fields listed in this list:
