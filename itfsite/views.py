@@ -20,6 +20,7 @@ def homepage(request):
 def simplepage(request, pagename):
 	# Renders a page that has no special processing.
 	# simplepage is validated by urls.py.
+	pagename = pagename.replace('/', '-')
 	return render(request, "itfsite/%s.html" % pagename)
 
 @login_required
