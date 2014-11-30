@@ -2,7 +2,7 @@ from django.contrib import admin
 from contrib.models import *
 
 class TriggerAdmin(admin.ModelAdmin):
-    list_display = ['id', 'created', 'status', 'slug', 'title']
+    list_display = ['id', 'created', 'status', 'slug', 'title', 'pledge_count', 'total_pledged']
     raw_id_fields = ['owner']
     readonly_fields = ['pledge_count', 'total_pledged']
 
@@ -10,8 +10,11 @@ class TriggerStatusUpdateAdmin(admin.ModelAdmin):
     readonly_fields = ['trigger']
 
 class TriggerExecutionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'created', 'trigger', 'total_contributions']
-    readonly_fields = ['trigger', 'pledge_count', 'total_contributions']
+    list_display = ['id', 'created', 'trigger', 'pledge_count_', 'total_contributions']
+    readonly_fields = ['trigger', 'pledge_count', 'pledge_count_with_contribs', 'total_contributions']
+    def pledge_count_(self, obj):
+        return "%d/%d" % (obj.pledge_count, obj.pledge_count_with_contribs)
+    pledge_count_.short_description = "pledges (exct'd/contrib'd)"
 
 class ActorAdmin(admin.ModelAdmin):
     list_display = ['name_long', 'party', 'govtrack_id']
@@ -30,7 +33,7 @@ class ActionAdmin(admin.ModelAdmin):
     outcome_.short_description = "Outcome"
 
 class PledgeAdmin(admin.ModelAdmin):
-    list_display = ['id', 'trigger', 'user_or_email', 'amount', 'created']
+    list_display = ['id', 'status', 'trigger', 'user_or_email', 'amount', 'created']
     readonly_fields = ['user', 'trigger', 'amount', 'algorithm'] # amount is read-only because a total is cached in the Trigger
     def user_or_email(self, obj):
     	return obj.user if obj.user else obj.email

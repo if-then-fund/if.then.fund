@@ -68,12 +68,14 @@
 
 			<h3>Totals</h3>
 
+			<p>On this {{trigger.strings.action}}, {{execution.pledge_count_with_contribs}} contributor{{execution.pledge_count_with_contribs|pluralize}} made {{num_contribs}} contributions to {{num_recips}} candidates totalling ${{execution.total_contributions|floatformat:2}}.</p>
+
 			<div class="row">
 				<div class="col-sm-6 col-md-4">
 					<table class="table" style="width: auto">
 					{% for outcome in outcomes %}
 						<tr>
-							<th>{{outcome.label}}</th>
+							<th>{{outcome.label}}:</th>
 							<td>${{outcome.contribs|floatformat:2}}</td>
 						</tr>
 					{% endfor %}
@@ -87,7 +89,7 @@
 					<table class="table" style="width: auto">
 					{% for row in by_incumb_chlngr %}
 						<tr class="{{row.2}}">
-							<th>{{row.0}}</th>
+							<th>{{row.0}}:</th>
 							<td>${{row.1|floatformat:2}}</td>
 						</tr>
 					{% endfor %}
@@ -95,6 +97,18 @@
 						<th>Total</th>
 						<td style="font-weight: bold">${{execution.total_contributions|floatformat:2}}</td>
 					</tr>
+					</table>
+				</div>
+				<div class="col-sm-6 col-md-4">
+					<table class="table" style="width: auto">
+						<tr>
+							<th>Average User Spend:</th>
+							<td>${{avg_pledge|floatformat:2}}</td>
+						</tr>
+						<tr>
+							<th>Average Contribution:</th>
+							<td>${{avg_contrib|floatformat:2}}</td>
+						</tr>
 					</table>
 				</div>
 			</div>

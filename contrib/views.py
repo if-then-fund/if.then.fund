@@ -27,6 +27,8 @@ def trigger(request, id, slug):
 
 	outcomes = None
 	actions = None
+	avg_pledge = None
+	avg_contrib = None
 
 	try:
 		te = trigger.execution
@@ -47,12 +49,21 @@ def trigger(request, id, slug):
 		# Actions/Actors
 		actions = list(te.actions.all().select_related('actor'))
 		actions.sort(key = lambda a : (-(a.total_contributions_for - a.total_contributions_against), a.actor.name_sort))
+		num_recips = 0
+		for a in actions:
+			if a.total_contributions_for > 0: num_recips += 1
+			if a.total_contributions_against > 0: num_recips += 1
 
 		# Incumbent/challengers.
 		by_incumb_chlngr = [["Incumbents", 0, "text-success"], ["Opponents", 0, "text-danger"]]
 		for a in actions:
 			by_incumb_chlngr[0][1] += a.total_contributions_for
 			by_incumb_chlngr[1][1] += a.total_contributions_against
+
+		# Compute other summary stats.
+		num_contribs = te.num_contributions
+		avg_pledge = te.total_contributions / te.pledge_count_with_contribs
+		avg_contrib = te.total_contributions / num_contribs
 
 
 	return render(request, "contrib/trigger.html", {
@@ -62,6 +73,10 @@ def trigger(request, id, slug):
 		"alg": Pledge.current_algorithm(),
 		"actions": actions,
 		"by_incumb_chlngr": by_incumb_chlngr,
+		"avg_pledge": avg_pledge,
+		"num_contribs": num_contribs,
+		"num_recips": num_recips,
+		"avg_contrib": avg_contrib,
 	})
 
 @user_view_for(trigger)

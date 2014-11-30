@@ -179,10 +179,17 @@ def compute_charge(pledge, recipients):
 	# Return!
 	return (recip_contribs, fees, total_charge)
 
-def create_pledge_donation(pledge, recip_contribs, fees):
+def create_pledge_donation(pledge, recipients):
 	# Pledge execution --- make a credit card charge and return
-	# the DE transaction record.
+	# the DE donation record and other details.
 
+	# Compute the amount to charge the user. We can only make whole-penny
+	# contributions, so the exact amount of the charge may be less than
+	# what the user pledged. recip_contribs is the line item amounts for
+	# each recipient as a tuple of (recipient, action, amount).
+	recip_contribs, fees, total_charge = compute_charge(pledge, recipients)
+
+	# Prepare line items for the API.
 	line_items = []
 
 	# Create the line item for fees.
@@ -219,15 +226,18 @@ def create_pledge_donation(pledge, recip_contribs, fees):
 		})
 	
 	# Create the 'donation', which creates a transaction and performs cc authorization.
-	return DemocracyEngineAPI.create_donation(de_don_req)
+	don = DemocracyEngineAPI.create_donation(de_don_req)
+
+	# Return.
+	return (recip_contribs, fees, total_charge, don)
 
 def void_pledge_transaction(txn_guid, allow_credit=False):
 	# This raises a 404 exception if the transaction info is not
 	# yet available.
 	txn = DemocracyEngineAPI.get_transaction(txn_guid)
 
-	if txn['status'] == "voided":
-		# We are good
+	if txn['status'] in ("voided", "credited"):
+		# We are good.
 		return
 
 	if txn['status'] not in ("authorized", "captured"):
@@ -235,16 +245,19 @@ def void_pledge_transaction(txn_guid, allow_credit=False):
 
 	# Attempt void.
 	try:
-		if txn['status'] == "authorized":
-			DemocracyEngineAPI.void_transaction(txn_guid)
-		elif txn['status'] == "captured":
+		DemocracyEngineAPI.void_transaction(txn_guid)
+	except HumanReadableValidationError as e:
+		# Void failed. Try credit.
+		try:
 			if not allow_credit:
-				raise ValueError("Transaction is already captured.")
+				raise
+			print(e) # Can we detect when we shouldn't attempt a credit.
 			DemocracyEngineAPI.credit_transaction(txn_guid)
-	except:
-		import sys, json
-		print(json.dumps(txn, indent=2), file=sys.stderr)
-		raise
+		except:
+			import sys, json
+			print(json.dumps(txn, indent=2), file=sys.stderr)
+			print("Tried first:", e, file=sys.stderr)
+			raise
 
 class HumanReadableValidationError(Exception):
 	pass

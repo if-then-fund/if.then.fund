@@ -4,7 +4,7 @@ from django.db import models, transaction, IntegrityError
 from django.conf import settings
 
 from itfsite.models import User
-from contrib.bizlogic import get_pledge_recipients, compute_charge, create_pledge_donation, void_pledge_transaction
+from contrib.bizlogic import get_pledge_recipients, compute_charge, create_pledge_donation, void_pledge_transaction, HumanReadableValidationError
 
 from jsonfield import JSONField
 from enum3field import EnumField, django_enum
@@ -144,7 +144,9 @@ class TriggerExecution(models.Model):
 	description = models.TextField(help_text="Once a trigger is executed, additional text added to explain how funds were distributed.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
-	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges executed.")
+	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges executed. This counts pledges from unconfirmed email addresses that do not result in contributions. Used to check when a Trigger is done executing.")
+	pledge_count_with_contribs = models.IntegerField(default=0, help_text="A cached count of the number of pledges executed with actual contributions made.")
+	num_contributions = models.IntegerField(default=0, db_index=True, help_text="A cached total number of campaign contributions executed.")
 	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of campaign contributions executed, excluding fees.")
 
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
@@ -264,7 +266,6 @@ class Action(models.Model):
 class PledgeStatus(enum.Enum):
 	Open = 1
 	Executed = 2
-	Unconfirmed = 3 # pledge was not confirmed before Trigger execution, is no longer valid / was not executed
 	Vacated = 10 # trigger was vacated, pledge is considered vacated
 
 class NoMassDeleteManager(models.Manager):
@@ -409,6 +410,7 @@ class Pledge(models.Model):
 		# Lock the Pledge and the Trigger to prevent race conditions.
 		pledge = Pledge.objects.select_for_update().filter(id=self.id).first()
 		trigger = Trigger.objects.select_for_update().filter(id=pledge.trigger.id).first()
+		trigger_execution = trigger.execution
 
 		# Validate state.
 		if pledge.status != PledgeStatus.Open:
@@ -418,45 +420,65 @@ class Pledge(models.Model):
 		if pledge.algorithm != Pledge.current_algorithm()['id']:
 			raise ValueError("Pledge has an invalid algorithm.")
 
-		# Cannot properly execute an unconfirmed pledge.
+		# Default values.
+		problem = PledgeExecutionProblem.NoProblem
+		exception = None
+		recip_contribs = []
+		fees = 0
+		total_charge = 0
+		de_don = None
+
+
 		if pledge.user is None:
-			pledge.status = PledgeStatus.Unconfirmed
-			pledge.save()
-			return
+			# We do not make contributions for pledges from unconfirmed email
+			# addresses, since we can't let them know that we're about to
+			# execute the pledge. But we execute it so that our data model
+			# is consistent: All Pledges associated with an executed Trigger
+			# are executed.
+			problem = PledgeExecutionProblem.EmailUnconfirmed
 
-		# Get the actual recipients of the pledge, as a list of tuples of
-		# (Recipient, Action).
-		recipients = get_pledge_recipients(trigger, pledge)
-
-		if len(recipients) == 0:
-			# If there are no matching recipients, we don't make a credit card chage.
-			recip_contribs = []
-			fees = 0
-			total_charge = 0
-			de_don = None
 		else:
-			# Compute the amount to charge the user. We can only make whole-penny
-			# contributions, so the exact amount of the charge may be less than
-			# what the user pledged. recip_contribs is the line item amounts for
-			# each recipient as a tuple of (recipient, action, amount).
-			recip_contribs, fees, total_charge = compute_charge(pledge, recipients)
+			# Get the actual recipients of the pledge, as a list of tuples of
+			# (Recipient, Action). The pledge filters may result in there being
+			# no actual recipients.
+			recipients = get_pledge_recipients(trigger, pledge)
 
-			# Make the donation (an authorization).
-			# It seems like the transaction records created by the donation are not
-			# necessarily immediately available, so we can't fetch the full transaction
-			# information immediately.
-			de_don = create_pledge_donation(pledge, recip_contribs, fees)
+			if len(recipients) == 0:
+				# If there are no matching recipients, we don't make a credit card chage.
+				problem = PledgeExecutionProblem.FiltersExcludedAll
 
-		# From here on, if there is a problem then we need to void the transaction
-		# before we lose track if it.
+			else:
+				# Make the donation (an authorization).
+				#
+				# (The transaction records created by the donation are not immediately
+				# available, so we know success but can't get further details.)
+				try:
+					recip_contribs, fees, total_charge, de_don = \
+						create_pledge_donation(pledge, recipients)
+
+				# Catch typical exceptions and log them in the PledgeExecutionObject.
+				except HumanReadableValidationError as e:
+					problem = PledgeExecutionProblem.TransactionFailed
+					exception = e
+
+		# From here on, if there is a problem then we need to print DE API donation
+		# information before we lose track of it, since nothing will be written to
+		# the database on an error.
 		try:
+			# Sanity check.
+			if len(recip_contribs) == 0 and problem == PledgeExecutionProblem.NoProblem:
+				raise ValueError("Pledge executing with no recipients but no problem.")
+
 			# Create PledgeExecution object.
 			pe = PledgeExecution()
 			pe.pledge = pledge
+			pe.trigger_execution = trigger_execution
+			pe.problem = problem
 			pe.charged = total_charge
 			pe.fees = fees
 			pe.extra = {
 				"donation": de_don, # donation record, which refers to transactions
+				"exception": repr(exception), # 
 			}
 			pe.save()
 
@@ -479,8 +501,10 @@ class Pledge(models.Model):
 
 			# Increment TriggerExecution's pledge_count so that we know how many pledges
 			# have been or have not yet been executed.
-			trigger.execution.pledge_count = models.F('pledge_count') + 1
-			trigger.execution.save(update_fields=['pledge_count'])
+			trigger_execution.pledge_count = models.F('pledge_count') + 1
+			if len(recip_contribs) > 0:
+				trigger_execution.pledge_count_with_contribs = models.F('pledge_count_with_contribs') + 1
+			trigger_execution.save(update_fields=['pledge_count', 'pledge_count_with_contribs'])
 
 		except:
 			import sys, rtyaml
@@ -515,13 +539,22 @@ class CancelledPledge(models.Model):
 		cp.pledge = { k: getattr(pledge, k) for k in Pledge.cancel_archive_fields }
 		cp.save()
 
+@django_enum
+class PledgeExecutionProblem(enum.Enum):
+	NoProblem = 0
+	EmailUnconfirmed = 1 # email address on the pledge was not confirmed
+	FiltersExcludedAll = 2 # no recipient matched filters
+	TransactionFailed = 3 # problems making the donation in the DE api
+
 class PledgeExecution(models.Model):
 	"""How a user's pledge was executed. Each pledge has a single PledgeExecution when the Trigger is executed, and immediately many Contribution objects are created."""
 
 	pledge = models.OneToOneField(Pledge, related_name="execution", on_delete=models.PROTECT, help_text="The Pledge this execution information is about.")
+	trigger_execution = models.ForeignKey(TriggerExecution, related_name="pledges", on_delete=models.PROTECT, help_text="The TriggerExecution this execution information is about.")
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 
+	problem = EnumField(PledgeExecutionProblem, default=PledgeExecutionProblem.NoProblem, help_text="A problem code associated with a failure to make any contributions for the pledge.")
 	charged = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount the user's account was actually charged, in dollars and including fees. It may differ from the pledge amount to ensure that contributions of whole-cent amounts could be made to candidates.")
 	fees = models.DecimalField(max_digits=6, decimal_places=2, help_text="The fees the user was charged, in dollars.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
@@ -541,8 +574,11 @@ class PledgeExecution(models.Model):
 		self.pledge.save()
 
 		# Decrement the TriggerExecution's pledge_count.
-		self.pledge.trigger.execution.pledge_count = models.F('pledge_count') - 1
-		self.pledge.trigger.execution.save(update_fields=['pledge_count'])
+		te = self.pledge.trigger.execution
+		te.pledge_count = models.F('pledge_count') - 1
+		if self.problem == PledgeExecutionProblem.NoProblem:
+			te.pledge_count_with_contribs = models.F('pledge_count_with_contribs') - 1
+		te.save(update_fields=['pledge_count', 'pledge_count_with_contribs'])
 
 		# Delete record.
 		super(PledgeExecution, self).delete()	
@@ -550,11 +586,14 @@ class PledgeExecution(models.Model):
 		# Void or refund the transaction. There should be only one, but
 		# just in case get a list of all mentioned transactions for the
 		# donation. Do this last so that if the void succeeds no other
-		# error can follow.
-		txns = set(item['transaction_guid'] for item in self.extra['donation']['line_items'])
-		for txn in txns:
-			# Raises an exception on failure.
-			void_pledge_transaction(txn, allow_credit=allow_credit)
+		# error can follow. The execution may not have resulted in a
+		# transaction, so of course only do this if there was a donation
+		# record.
+		if self.extra['donation']:
+			txns = set(item['transaction_guid'] for item in self.extra['donation']['line_items'])
+			for txn in txns:
+				# Raises an exception on failure.
+				void_pledge_transaction(txn, allow_credit=allow_credit)
 
 	def show_txn(self):
 		import rtyaml
@@ -629,7 +668,7 @@ class Contribution(models.Model):
 
 	pledge_execution = models.ForeignKey(PledgeExecution, related_name="contributions", on_delete=models.PROTECT, help_text="The PledgeExecution this execution information is about.")
 	action = models.ForeignKey(Action, on_delete=models.PROTECT, help_text="The Action this contribution was made in reaction to.")
-	recipient = models.ForeignKey(Recipient, on_delete=models.PROTECT, help_text="The Recipient this contribution was sent to.")
+	recipient = models.ForeignKey(Recipient, related_name="contributions", on_delete=models.PROTECT, help_text="The Recipient this contribution was sent to.")
 	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount of the contribution, in dollars.")
 	refunded_time = models.DateTimeField(blank=True, null=True, help_text="If the contribution was refunded to the user, the time that happened.")
 
@@ -668,7 +707,8 @@ class Contribution(models.Model):
 		# Increment the TriggerExecution's total_contributions. Likewise, it
 		# excludes fees.
 		self.action.execution.total_contributions = models.F('total_contributions') + self.amount*factor
-		self.action.execution.save(update_fields=['total_contributions'])
+		self.action.execution.num_contributions = models.F('num_contributions') + 1*factor
+		self.action.execution.save(update_fields=['total_contributions', 'num_contributions'])
 
 		# Increment the cached ContributionAggregate for the desired outcome.
 		agg, is_new = ContributionAggregate.objects.get_or_create(
