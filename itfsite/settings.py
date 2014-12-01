@@ -95,7 +95,8 @@ LOGIN_REDIRECT_URL = '/home'
 EMAIL_CONFIRM_LA_HTTP_PROTOCOL = 'https' if environment["https"] else 'http'
 EMAIL_CONFIRM_LA_DOMAIN = 'itfsite.unnamed.example'
 EMAIL_CONFIRM_LA_SAVE_EMAIL_TO_INSTANCE = False
-DEFAULT_FROM_EMAIL = 'hello@itfsite.unnamed.example'
+DEFAULT_FROM_EMAIL = 'if.then.fund <hello@itfsite.unnamed.example>'
+SITE_ROOT_URL = "https://unnamedsite"
 
 # Local Settings
 

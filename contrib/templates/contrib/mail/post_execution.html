@@ -1,0 +1,13 @@
+{% extends "email_template.html" %}
+
+{% block body %}
+<p>{{pledge.extra.contribNameFirst}},</p>
+
+<p>Your campaign contributions totalling ${{pledge.execution.charged|floatformat:2}} were made to {{pledge.targets_summary}}.</p>
+
+<p>To see who your contributions were made to, please head over to <a href="{{pledge.trigger.get_short_url}}">your contribution</a> for further details.</p>
+
+<p>Thanks!</p>
+
+<p>if.then.fund</p>
+{% endblock %}

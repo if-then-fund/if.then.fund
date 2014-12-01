@@ -1,13 +1,4 @@
-{% extends "htmlemailer/boilerplate.html" %}
-
-{% block head %}
-<style>
-	#backgroundTable {
-		background-color: blue;
-		color: white;
-	}
-</style>
-{% endblock %}
+{% extends "email_template.html" %}
 
 {% block body %}
 <p>{{pledge.extra.contribNameFirst}},</p>

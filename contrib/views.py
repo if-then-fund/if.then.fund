@@ -4,6 +4,7 @@ from django.db import transaction
 from django.dispatch import receiver
 from django.contrib import messages
 from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.conf import settings
 
 from email_confirm_la.signals import post_email_confirm
 
@@ -305,7 +306,7 @@ def create_pledge(request):
 			from htmlemailer import send_mail
 			send_mail(
 				"contrib/mail/confirm_email",
-				"if.then.fund <no.reply@unnamedsite.com>",
+				settings.DEFAULT_FROM_EMAIL,
 				[context['email']],
 				{
 					"confirmation_url": context['confirmation_url'],

@@ -2,12 +2,14 @@ import enum, decimal
 
 from django.db import models, transaction, IntegrityError
 from django.conf import settings
+from django.utils import timezone
 
 from itfsite.models import User
-from contrib.bizlogic import get_pledge_recipients, compute_charge, create_pledge_donation, void_pledge_transaction, HumanReadableValidationError
+from contrib.bizlogic import get_pledge_recipients, create_pledge_donation, void_pledge_transaction, HumanReadableValidationError
 
 from jsonfield import JSONField
 from enum3field import EnumField, django_enum
+from datetime import timedelta
 
 #####################################################################
 #
@@ -67,8 +69,8 @@ class Trigger(models.Model):
 
 	def get_short_url(self):
 		# Used in the ref_code of Democracy Engine transactions, which is provided
-		# to campaigns.
-		return "https://www.unnamedsite.com/a/%d" % self.id
+		# to campaigns, as well as in emails to users with links back to the site.
+		return settings.SITE_ROOT_URL + ("/a/%d" % self.id)
 
 	# Execute.
 	@transaction.atomic
@@ -305,6 +307,9 @@ class Pledge(models.Model):
 	cclastfour = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The last four digits of the user's credit card number, stored for fast look-up in case we need to find a pledge from a credit card number.")
 	district = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The congressional district of the user (at the time of the pledge), in the form of XX00.")
 
+	pre_execution_email_sent_at = models.DateTimeField(blank=True, null=True, help_text="The date and time when the user was sent an email letting them know that their pledge is about to be executed.")
+	post_execution_email_sent_at = models.DateTimeField(blank=True, null=True, help_text="The date and time when the user was sent an email letting them know that their pledge was executed.")
+
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
 	class Meta:
@@ -337,6 +342,7 @@ class Pledge(models.Model):
 			"max_contrib": 500, # dollars
 			"fees_fixed": decimal.Decimal("0.20"), # 20 cents, convert from string so it is exact
 			"fees_percent": decimal.Decimal("0.09"), # 0.09 means 9%, convert from string so it is exact
+			"pre_execution_warn_time": (timedelta(days=1), "this time tomorrow"),
 		}
 
 	def __str__(self):
@@ -448,6 +454,13 @@ class Pledge(models.Model):
 				problem = PledgeExecutionProblem.FiltersExcludedAll
 
 			else:
+				# Additional checks that don't apply to failed executions for reasons above.
+				if pledge.pre_execution_email_sent_at is None:
+					raise ValueError("User %s has not yet been sent the pre-execution email." % pledge.user)
+				elif (timezone.now() - pledge.pre_execution_email_sent_at) < Pledge.current_algorithm()['pre_execution_warn_time'][0] \
+						and not settings.DEBUG:
+					raise ValueError("User %s has not yet been given enough time to cancel the pledge." % pledge.user)
+
 				# Make the donation (an authorization).
 				#
 				# (The transaction records created by the donation are not immediately

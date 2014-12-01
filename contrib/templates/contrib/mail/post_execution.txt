@@ -1,0 +1,13 @@
+{% autoescape off %}
+{{pledge.extra.contribNameFirst}},
+
+Your campaign contributions totalling ${{pledge.execution.charged|floatformat:2}} were made to {{pledge.targets_summary}}.
+
+To see who your contributions were made to, please head over to the following address:
+
+{{pledge.trigger.get_short_url}}
+
+Thanks!
+
+if.then.fund
+{% endautoescape %}

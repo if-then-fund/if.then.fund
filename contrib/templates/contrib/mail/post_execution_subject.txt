@@ -1,0 +1,3 @@
+{% autoescape off %}
+Your contributions were made for {{pledge.target.title}}
+{% endautoescape %}
