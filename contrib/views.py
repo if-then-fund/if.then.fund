@@ -30,14 +30,16 @@ def trigger(request, id, slug):
 	actions = None
 	avg_pledge = None
 	avg_contrib = None
+	num_contribs = None
+	num_recips = None
+	by_incumb_chlngr = []
 
 	try:
 		te = trigger.execution
 	except TriggerExecution.DoesNotExist:
 		te = None
-		by_incumb_chlngr = []
 
-	if te:
+	if te and te.pledge_count_with_contribs > 0:
 		# Get the contribution aggregates by outcome and sort by total amount of contributions.
 		outcomes = copy.deepcopy(trigger.outcomes)
 		for i in range(len(outcomes)):
