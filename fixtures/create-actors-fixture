@@ -1,0 +1,2 @@
+#!/bin/bash
+./manage.py dumpdata --indent=2 contrib.actor contrib.recipient > fixtures/actors.json
