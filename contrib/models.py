@@ -359,6 +359,12 @@ class Pledge(models.Model):
 		return self.trigger.outcomes[self.desired_outcome]["label"]
 
 	@property
+	def antidesired_outcome_label(self):
+		if len(self.trigger.outcomes) != 2:
+			raise ValueError("Trigger has more than two options.")
+		return self.trigger.outcomes[1 - self.desired_outcome]["label"]
+
+	@property
 	def targets_summary(self):
 		def ucfirst(s):
 			return s[0].upper() + s[1:]
@@ -371,19 +377,26 @@ class Pledge(models.Model):
 		if party_filter == "":
 			actors = ucfirst(actors)
 
+		desired_outcome_label = self.desired_outcome_label
+
 		if self.incumb_challgr == -1:
 			actors = "challengers of " + actors
-		elif self.incumb_challgr == 0:
-			actors += " and challengers"
+			desired_outcome_label = self.antidesired_outcome_label
 
 		if self.filter_competitive:
 			actors += " in competitive races"
 
 		action = "who %s %s" % (
 			self.trigger.strings['action'],
-			self.desired_outcome_label)
+			desired_outcome_label)
 
-		return party_filter + actors + " " + action
+		descr = party_filter + actors + " " + action
+
+		if self.incumb_challgr == 0:
+			descr += " or their next general election opponent for those that vote the other way"
+
+		return descr
+
 
 	@transaction.atomic
 	def confirm_email(self, user):

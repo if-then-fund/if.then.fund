@@ -49,6 +49,9 @@ pip install -q --upgrade \
 pip install -q --upgrade -r \
 	ext/django-email-confirm-la/requirements.txt
 
+# Required by django-html-emailer. Need to get Python 3 fork.
+pip install git+https://github.com/dcramer/pynliner@python3
+
 # Create database / migrate database.
 ./manage.py makemigrations itfsite contrib
 ./manage.py migrate
@@ -57,3 +60,7 @@ pip install -q --upgrade -r \
 # user doesn't already exist.
 ./manage.py createsuperuser --email=admin@unnamedsite.com --noinput 2&> /dev/null
 # gain access with: ./manage.py changepassword admin
+
+# Load fixtures. Only for testing...
+./manage.py loaddata fixtures/actors.json
+

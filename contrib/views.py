@@ -49,16 +49,19 @@ def trigger(request, id, slug):
 			outcomes[rec['outcome']]['contribs'] = rec['total']
 		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
 
-		# Actions/Actors
+		# Actions/Actors. Sort with actors that received no contributions either for or against at
+		# the end of the list, since they're sort of no-data rows. After that, sort by the sum of
+		# the contributions plus the negative of the contributions to their challengers. For ties,
+		# sort alphabetically on name.
 		actions = list(te.actions.all().select_related('actor'))
-		actions.sort(key = lambda a : (-(a.total_contributions_for - a.total_contributions_against), a.actor.name_sort))
+		actions.sort(key = lambda a : ((a.total_contributions_for + a.total_contributions_against) == 0, -(a.total_contributions_for - a.total_contributions_against), a.actor.name_sort))
 		num_recips = 0
 		for a in actions:
 			if a.total_contributions_for > 0: num_recips += 1
 			if a.total_contributions_against > 0: num_recips += 1
 
 		# Incumbent/challengers.
-		by_incumb_chlngr = [["Incumbents", 0, "text-success"], ["Opponents", 0, "text-danger"]]
+		by_incumb_chlngr = [["Incumbent", 0, "text-success"], ["Opponent", 0, "text-danger"]]
 		for a in actions:
 			by_incumb_chlngr[0][1] += a.total_contributions_for
 			by_incumb_chlngr[1][1] += a.total_contributions_against
@@ -74,6 +77,7 @@ def trigger(request, id, slug):
 		"execution": te,
 		"outcomes": outcomes,
 		"alg": Pledge.current_algorithm(),
+		
 		"actions": actions,
 		"by_incumb_chlngr": by_incumb_chlngr,
 		"avg_pledge": avg_pledge,

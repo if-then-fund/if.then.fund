@@ -1,5 +1,6 @@
 /* Global styles */
 
+@import url(http://fonts.googleapis.com/css?family=Fredoka+One);
 @import url(http://fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic);
 @import url(http://fonts.googleapis.com/css?family=Roboto+Slab:400,300,700);
 
@@ -44,6 +45,38 @@ a {
 		border-color: #0B0;
 	}
 
-	a.navbar-brand { 
+.modal p {
+	line-height: 133%;
+}
+
+/* MASTER ELEMENTS */
+
+.navbar {
+	background-color: #EEE;
+}
+
+	a.navbar-brand {
+		font-family: 'Fredoka One', cursive;
+	}
+
+	.navbar a {
 		border: none;
+	}
+		.navbar .nav a:hover {
+			text-decoration: underline;
+		}
+
+@media screen and (min-width: 768px) {
+	#body-content {
+		border-left: 1px solid #EEE;
+		border-right: 1px solid #EEE;
+	}
+}
+
+.overline {
+	margin-bottom: .33em;
+	font-family: 'Roboto Slab', serif;
+}
+	.overline+h1 {
+		margin-top: 0;
 	}

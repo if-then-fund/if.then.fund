@@ -3,13 +3,13 @@ from django.contrib.auth.models import User
 from contrib.models import *
 from contrib.via_govtrack import create_trigger_from_bill
 
-Trigger.objects.all().delete()
-t = create_trigger_from_bill("hr135-113", 's')
+#Trigger.objects.all().delete()
+t = create_trigger_from_bill("hr135-113", 'h')
 
 t.status = TriggerStatus.Open
 t.save()
 
-Trigger.objects.filter(id=t.id).update(id=1)
-t.id = 1
+#Trigger.objects.filter(id=t.id).update(id=1)
+#t.id = 1
 
 print(t.get_absolute_url())

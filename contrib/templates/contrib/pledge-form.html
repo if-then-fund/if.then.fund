@@ -1,6 +1,6 @@
 <style>
-#make-pledge {
-  margin-top: 1em;
+#make-pledge h2 {
+  text-align: center;
 }
 #make-pledge p {
   margin: 1.5em 0;
@@ -9,22 +9,26 @@
 #pledge-outcomes {
   margin: 1em 0;
 }
-
-#make-pledge button {
-  border: 1px solid #BBB;
-}
-  #make-pledge button.active {
-    border-color: #3e8f3e;
+  #pledge-outcomes button {
+    margin-left: 1em;
+    font-weight: bold;
+  }
+  #pledge-outcomes button:first-child {
+    margin-left: 0;
+  }
+  #pledge-outcomes button small {
+    display: block;
+    margin-top: 5px;
+    color: #FFD;
+    font-family: sans-serif;
+    font-weight: normal;
   }
 
-#make-pledge p.text-muted {
-  margin-top: -1.2em;
-}
 
 #pledge-amount {
-  margin: 1em auto 1.5em auto;
-  max-width: 9em;
+  max-width: 10em;
   border: 1px solid #AAA;
+  margin: 1em 0;
 }
   #pledge-amount .input-group-addon, #pledge-amount input {
     border: none;
@@ -42,11 +46,6 @@
     font-style: italic;
   }
 
-
-#filter-party label {
-  font-weight: normal;
-  margin-right: 1em;
-}
 
 #pledge-pay table {
   width: 308px;
@@ -76,67 +75,19 @@
 }
 </style>
 
-<h2>$peak up</h2>
-
-<p>Use this site to schedule a campaign contribution to {{trigger.strings.actors}} who {{trigger.strings.action}} the way you want.</p>
-
-
 <div id="make-pledge">
-  <p>How do you want {{trigger.strings.actors}} to {{trigger.strings.action}}?</p>
+  <h2>How would you {{trigger.strings.action}}?</h2>
 
   <p id="pledge-outcomes" style="margin-left: 1em">
   {% for outcome in trigger.outcomes %}
-    <button class="btn btn-lg" onclick="pledge_choose_outcome(this)" data-index="{{forloop.counter0}}">{{outcome.label}}</button>
+    <button class="btn btn-lg btn-success" onclick="pledge_go(this)" data-index="{{forloop.counter0}}">
+      <span>{{outcome.label}}</span>
+      {% if outcome.tip %}<small>{{outcome.tip}}</small>{% endif %}
+    </button>
   {% endfor %}
   </p>
-  <p class="small text-muted">(choose one)</p>
 
-  <p>After the {{trigger.strings.action}}, you will make a campaign contribution of</p>
-
-  <div id="pledge-amount" class="input-group">
-    <div class="input-group-addon">$</div>
-    <input class="form-control" type="text" value="5.00" pattern="^([0-9]+(,[0-9]{3})*)?(\.[0-9]{0,2})?$" onkeyup="update_state()" onchange="update_state()">
-  </div>
-  <p class="small text-muted">(between ${{alg.min_contrib}} and ${{alg.max_contrib}})</p>
-
-  <p>to be split evenly among:</p>
-
-  <p id="pledge-targets" style="margin-left: 1em">
-    <button class="btn btn-lg incumbents" onclick="pledge_choose_target(this)">
-      {{trigger.strings.actors|capfirst}} who {{trigger.strings.action}} <span class="fill-in"> </span>
-      <div>(keep &rsquo;em in)</div>
-    </button>
-    <button class="btn btn-lg challengers" onclick="pledge_choose_target(this)">
-      Opponents of {{trigger.strings.actors}} who {{trigger.strings.action}} <span class="fill-in"> </span>
-      <div>(throw &rsquo;em out)</div>
-    </button>
-  </p>
-  <p class="small text-muted">(you may choose both)</p>
-
-  <p style="margin-top: 0">Only give to:</p>
-
-  <p id="pledge-party">
-    <button class="btn btn-lg" onclick="pledge_filter_party(this)" data-value="R">
-      Republicans
-    </button>
-
-    <button class="btn btn-lg" onclick="pledge_filter_party(this)" data-value="D">
-      Democrats
-    </button>
-  </p>
-  <p class="small text-muted">(you may choose more than one)</p>
-
-  <p id="pledge-other-filters">
-    <button id="pledge-competitive-races" class="btn" onclick="toggle_buttons(null, this)" data-value="I">
-      Just Competitive Races
-    </button>
-  </p>
-
-  <p>
-    <button id="make-pledge-go" class="btn btn-lg disabled" onclick="pledge_go()">
-      Next &gt;
-    </button>
-  </p>
+  <p>We&rsquo;ll schedule campaign contributions to {{trigger.strings.actors}} who {{trigger.strings.action}} the way you want them to &mdash; or to their opponents if they don&rsquo;t.</p>
 </div>
 
 <div id="pledge-pay" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="pledge-payModalTitle" aria-hidden="true">
@@ -144,12 +95,13 @@
   <div class="modal-content">
     <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-    <h4 class="modal-title" id="pledge-payModalTitle">Finish your pledged contribution</h4>
+    <h4 class="modal-title" id="pledge-payModalTitle">Make a campaign contribution</h4>
     </div>
     <div class="modal-body">
 
     <ul class="nav nav-pills small" role="tablist" style="margin-bottom: 1em">
-      <li class="active"><a href="#email" role="tab" data-toggle="tab">Email</a></li>
+      <li class="active"><a href="#start" role="tab" data-toggle="tab">Amount &amp; Filters</a></li>
+      <li               ><a href="#email" role="tab" data-toggle="tab">Email</a></li>
       <li               ><a href="#contributor" role="tab" data-toggle="tab">Contributor</a></li>
       <li               ><a href="#payment" role="tab" data-toggle="tab">Payment</a></li>
     </ul>
@@ -167,6 +119,87 @@
     <input type="hidden" name="billingCCExpYear" value="?"/>
 
     <div class="tab-content">
+      <div class="tab-pane active" id="start">
+        <div class="row">
+          <div class="col-sm-6">
+            <p style="margin-top: 1.5em">How much of a campaign contribution in total do you want to make?</p>
+
+            <div id="pledge-amount" class="input-group">
+              <div class="input-group-addon">$</div>
+              <input class="form-control" type="text" value="5.00" pattern="^([0-9]+(,[0-9]{3})*)?(\.[0-9]{0,2})?$" onkeyup="update_start_next_state()" onchange="update_start_next_state()">
+            </div>
+
+            <p id="filter-summary">
+              <span>...</span>
+              <a href="#" onclick="$(this).remove(); $('#advanced-filters').slideDown(); return false;">Edit</a>
+            </p>
+          </div>
+
+          <div class="col-sm-6">
+            <div id="advanced-filters" style="display: none">
+              <h3>Advanced Filters</h3>
+
+              <p>Want to just keep &rsquo;em in or just throw &rsquo;em out? Give to:</p>
+
+              <div style="margin-left: 1em">
+                <div class="control-group">
+                  <label for="filterIncumbents">
+                    <input id="filterIncumbents" type="checkbox" onchange="update_start_next_state()" checked>
+                    {{trigger.strings.actors|capfirst}} who {{trigger.strings.action}} <span class="fill-in"> </span>
+                    <div>(keep &rsquo;em in)</div>
+                  </label>
+                </div>
+
+                <div class="control-group">
+                  <label for="filterChallengers">
+                    <input id="filterChallengers" type="checkbox" onchange="update_start_next_state()" checked>
+                    Opponents of {{trigger.strings.actors}} who {{trigger.strings.action}} <span class="fill-in"> </span>
+                    <div>(throw &rsquo;em out)</div>
+                  </label>
+                </div>
+              </div>
+
+              <p class="text-danger" style="display: none">You must choose at least one.</p>
+
+              <p>Only make contributions to:</p>
+
+              <div id="pledge-party" style="margin-left: 1em">
+                <div class="control-group">
+                  <label for="filterPartyR" data-value="R">
+                    <input id="filterPartyR" type="checkbox" onchange="update_start_next_state()" checked>
+                    Republicans
+                  </label>
+                </div>
+
+                <div class="control-group">
+                  <label for="filterPartyD" data-value="D">
+                    <input id="filterPartyD" type="checkbox" onchange="update_start_next_state()" checked>
+                    Democrats
+                  </label>
+                </div>
+
+                <p class="text-danger" style="display: none">You must choose at least one.</p>
+              </div>
+
+              <p>Other options:</p>
+
+              <div id="pledge-other-filters" style="margin-left: 1em">
+                <label for="pledge-competitive-races">
+                  <input id="pledge-competitive-races" type="checkbox" onchange="update_start_next_state()">
+                  Just give to candidates in competitive races
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin: 1em 0">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
+          <button type="button" class="btn btn-warning" onclick="do_pledge_start_next()">Next &gt;</button
+          >
+        </div>
+      </div>
+
       <div class="tab-pane active" id="email">
         <p>What is your e-mail address?</p>
 
@@ -340,9 +373,7 @@ function pledge_init() {
     // If the user is logged in, remove the first tab of the pledge
     // modal that asks them to log in.
     $('#email').remove()
-    $('#contributor').addClass('active')
     $('#pledge-pay .nav a[href="#email"]').parent().remove();
-    $('#pledge-pay .nav a[href="#contributor"]').parent().addClass('active');
   }
 
   // Set some defaults based on the user's last pledge.
@@ -350,20 +381,20 @@ function pledge_init() {
     if (the_page.pledge_defaults['amount'])
       $('#pledge-amount input').val(the_page.pledge_defaults['amount'].toFixed(2));
 
-    if (the_page.pledge_defaults.incumb_challgr == -1)
-      $('#pledge-targets .challengers').addClass('active btn-success');
-    else if (the_page.pledge_defaults.incumb_challgr == 1)
-      $('#pledge-targets .incumbents').addClass('active btn-success');
-    else if (the_page.pledge_defaults.incumb_challgr == 0)
-      $('#pledge-targets .incumbents, #pledge-targets .challengers').addClass('active btn-success');
+    if (the_page.pledge_defaults.incumb_challgr) {
+      $('#filterIncumbents, #filterChallengers').prop('checked', false);
+      if (the_page.pledge_defaults.incumb_challgr == -1)
+        $('#filterChallengers').prop('checked', true);
+      else if (the_page.pledge_defaults.incumb_challgr == 1)
+        $('#filterIncumbents').prop('checked', true);
+      else if (the_page.pledge_defaults.incumb_challgr == 0)
+        $('#filterIncumbents, #filterChallengers').prop('checked', true);
+    }
 
-    if (the_page.pledge_defaults.filter_party == 'ActorParty.Republican' || the_page.pledge_defaults.filter_party == null)
-      $('#pledge-party button[data-value="R"]').addClass('active btn-success');
-    if (the_page.pledge_defaults.filter_party == 'ActorParty.Democratic' || the_page.pledge_defaults.filter_party == null)
-      $('#pledge-party button[data-value="D"]').addClass('active btn-success');
+    $('#filterPartyR').prop('checked', the_page.pledge_defaults.filter_party == 'ActorParty.Republican' || the_page.pledge_defaults.filter_party == null);
+    $('#filterPartyD').prop('checked', the_page.pledge_defaults.filter_party == 'ActorParty.Democratic' || the_page.pledge_defaults.filter_party == null);
 
-    if (the_page.pledge_defaults.filter_competitive)
-        $('#pledge-competitive-races').addClass('active btn-success');
+    $('#pledge-competitive-races').prop('checked', the_page.pledge_defaults.filter_competitive);
 
     if (the_page.pledge_defaults.email)
         $('#emailEmail').val(the_page.pledge_defaults.email);
@@ -383,8 +414,6 @@ function pledge_init() {
   $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
     $(e.target.getAttribute('href')).find('.tab-first-focus').focus();
   })
-
-  update_state();
 
   if (window.location.hash == "#demo") {
     $('#emailEmail').val("my@mycompany.com")
@@ -408,75 +437,6 @@ function setPledgeDefaults(pledge_defaults) {
     var v = pledge_defaults[fields[i]];
     if (v)
       $('#' + fields[i]).val(v)
-  }
-}
-
-function toggle_buttons(group_selector, elem_clicked, multi) {
-  var active_class = 'active btn-success';
-  var state = !$(elem_clicked).hasClass(active_class);
-  if (group_selector && !multi) $(group_selector).removeClass(active_class);
-  $(elem_clicked).toggleClass(active_class, state);
-  $(elem_clicked).blur();
-  update_state();
-}
-
-function pledge_choose_outcome(elem) {
-  toggle_buttons('#pledge-outcomes button', elem);
-}
-function pledge_choose_target(elem) {
-  toggle_buttons('#pledge-targets button', elem, true);
-}
-function pledge_filter_party(elem) {
-  toggle_buttons('#pledge-party button', elem, true);
-}
-
-function update_state() {
-  var valid = true;
-
-  // outcome
-  var active_outcome = $('#pledge-outcomes button.active');
-  var alternate_outcome = $('#pledge-outcomes button:not(.active)');
-  if (active_outcome.length == 0) {
-    $('#pledge-targets .incumbents span.fill-in').text('how you want')
-    $('#pledge-targets .challengers span.fill-in').text('against how you want')
-    valid = false;
-  } else {
-    $('#pledge-targets .incumbents span.fill-in').text(active_outcome.text())
-    $('#pledge-targets .challengers span.fill-in').text(alternate_outcome.text())
-  }
-
-  // make the target buttons the same height, seems to require
-  // a delay before getting the text content set above on the
-  // initial page load
-  setTimeout(function() {
-    $('#pledge-targets .btn').css({ height: 'auto' })
-    var max_height = 0;
-    $('#pledge-targets .btn').each(function() {
-      max_height = Math.max(max_height, $(this).outerHeight());
-    })
-    $('#pledge-targets .btn').css({ height: max_height })
-  }, 100)
-
-  // amount
-  if (get_contribution_amount() == null) {
-    $('#pledge-amount .input-group-addon').css({ color: '#666' })
-    valid = false;
-  } else {
-    $('#pledge-amount .input-group-addon').css({ color: 'green' })
-  }
-
-  // targets
-  if ($('#pledge-targets .btn.active').length == 0)
-    valid = false;
-
-  // filters
-  if ($('#pledge-party .btn.active').length == 0)
-    valid = false;
-
-  if (!valid) {
-    $('#make-pledge-go').removeClass('btn-warning').addClass('disabled');
-  } else {
-    $('#make-pledge-go').addClass('btn-warning').removeClass('disabled');
   }
 }
 
@@ -507,11 +467,118 @@ function get_contribution_amount() {
   return amt;
 }
 
-function pledge_go() {
-  var amt = get_contribution_amount();
-  if (!amt) return;
-  $('#payment-total').text(amt.toFixed(2));
+function getIncumbentChallengerValue() {
+  if ($('#filterIncumbents').prop('checked') && $('#filterChallengers').prop('checked'))
+    return 0;
+  if ($('#filterIncumbents').prop('checked'))
+    return 1;
+  if ($('#filterChallengers').prop('checked'))
+    return -1;
+  return null;
+}
+
+function getPartyFilterValue() {
+  var party = "";
+  $('#pledge-party input:checked').each(function(node) {
+    party += $(this).parent().attr("data-value");
+  })
+  return party;
+}
+  
+function pledge_go(outcome_elem) {
+  // Fill in the user's choice in the checkbox fields for the filters for
+  // who to give to.
+
+  function fill_in(outcome_elem, filter_elem) {
+    var desired_outcome = $(outcome_elem).find('span').text();
+    if ($(outcome_elem).find('small').text())
+      desired_outcome += " (" + $(outcome_elem).find('small').text() + ")";
+    $(filter_elem).parent().find('.fill-in').text(desired_outcome);
+  }
+
+  // Fill in the incumbents via the user's choice.
+  fill_in(outcome_elem, '#filterIncumbents');
+
+  // Fill in the challengers via the button that the user didn't choose.
+  // If there is more than one option in the future, this will need to be revised.
+  $('#pledge-outcomes button').each(function() {
+    if (this == outcome_elem) return;
+    fill_in(this, '#filterChallengers');
+  })
+
+  // Set form field for submission.
+  $('#pledge-info input[name="desired_outcome"]').val($(outcome_elem).attr('data-index'))
+
+  // Validation and show modal.
+  update_start_next_state(true);
   $('#pledge-pay').modal();
+}
+
+function update_start_next_state(no_popover) {
+  var valid = true;
+
+  if (get_contribution_amount() == null) {
+    $('#pledge-amount .input-group-addon').css({ color: '#666' })
+    if (!no_popover)
+      $('#pledge-amount').popover({ content: "Must be between ${{alg.min_contrib}} and ${{alg.max_contrib|floatformat}}." }).popover('show');
+    valid = false;
+  } else {
+    $('#pledge-amount .input-group-addon').css({ color: 'green' })
+    $('#pledge-amount').popover('destroy');
+  }
+
+  if (getIncumbentChallengerValue() == null) {
+    if (!no_popover)
+      $('#filterIncumbents').parents('.control-group').parent().find('.text-danger').slideDown();
+    valid = false;
+  } else {
+      $('#filterIncumbents').parents('.control-group').parent().find('.text-danger').slideUp();
+  }
+
+  if (getPartyFilterValue() == "") {
+    if (!no_popover)
+      $('#filterPartyR').parents('.control-group').parent().find('.text-danger').slideDown();
+    valid = false;
+  } else {
+      $('#filterPartyR').parents('.control-group').parent().find('.text-danger').slideUp();
+  }
+
+  $('#start .btn.btn-warning').toggleClass('disabled', !valid);
+
+  if (valid) {
+    // Human-readable explanation of the current filter choices.
+
+    var party = "";
+    if (getPartyFilterValue() == "D") party = "Democratic ";
+    if (getPartyFilterValue() == "R") party = "Republican ";
+
+    var compet = "";
+    if ($('#pledge-competitive-races').prop('checked')) compet = " in competitive races";
+
+    var who;
+    var ic = getIncumbentChallengerValue();
+    if (ic == 1)
+      who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text();
+    else if (ic == -1)
+      who = party + " challengers" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+    else if (party == "")
+      who = "all {{trigger.strings.actors|escapejs}}" + compet + ". They will get a donation if they {{trigger.strings.action|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". If they {{trigger.strings.action|escapejs}} the other way the donation will go to their next general election opponent"
+    else
+      who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and " + party + " challengers" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+
+    $('#filter-summary span').text("We will split your contribution evenly across " + who + ".");
+  }
+
+  return valid;
+}
+
+function do_pledge_start_next() {
+  if (!update_start_next_state(true)) return;
+  if (!the_user)
+    $('a[href="#email"]').tab('show') 
+  else
+    // user is logged in, email tab is not shown
+    $('a[href="#contributor"]').tab('show') 
 }
 
 function do_pledge_login() {
@@ -590,31 +657,11 @@ function do_contributor() {
 }
 
 function pledge_submit() {
-  // info on the main page outside of the form
-
-  // desired outcome
-  $('#pledge-info input[name="desired_outcome"]').val($('#pledge-outcomes button.active').attr('data-index'))
-  
-  // amount
+  // fill in some form fields
   $('#pledge-info input[name="amount"]').val(get_contribution_amount())
-
-  // incumbent<->challenger
-  var incumbent_challenger = 0;
-  if ($('#pledge-targets .incumbents').hasClass('active'))
-    incumbent_challenger += 1;
-  if ($('#pledge-targets .challengers').hasClass('active'))
-    incumbent_challenger -= 1;
-  $('#pledge-info input[name="incumb_challgr"]').val(incumbent_challenger)
-
-  // party
-  var party = "";
-  $('#pledge-party button.active').each(function() {
-    party += $(this).attr("data-value");
-  })
-  $('#pledge-info input[name="filter_party"]').val(party)
-
-  // competitive
-  $('#pledge-info input[name="filter_competitive"]').val($('#pledge-competitive-races').hasClass('active') ? 1 : 0)
+  $('#pledge-info input[name="incumb_challgr"]').val(getIncumbentChallengerValue())
+  $('#pledge-info input[name="filter_party"]').val(getPartyFilterValue())
+  $('#pledge-info input[name="filter_competitive"]').val($('#pledge-competitive-races').prop('checked') ? 1 : 0)
 
   // validate credit card information
 

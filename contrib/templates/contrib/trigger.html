@@ -5,37 +5,48 @@
 
 {% block head %}
 <style>
+@media screen and (min-width: 768px) {
+	#trigger-metadata {
+		padding-top: 86px;
+		background-color: #F7F7F7;
+	}
+}
 
+.meta-stat {
+  margin: 0 0 2em 0;
+  font-family: 'Roboto Slab', serif;
+  font-weight: bold;
+}
+  .meta-stat .num {
+  	margin-bottom: 8px;
+    font-size: 36px;
+  	color: #444;
+  }
+  .meta-stat .lbl {
+	color: #555;
+  }
 </style>
 {% endblock %}
 
 {% block body %}
 
 <div class="row">
-	<div class="col-md-4">
+	<div class="col-sm-8">
+		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}
+			<div class="overline">Take Action</div>
+		{% else %}
+			<div class="overline">What Happened</div>
+		{% endif %}
+
 		<h1>{{trigger.title}}</h1>
 
 		{{trigger.description|render_text:trigger.description_format}}
 
-		{% if trigger.extra.type == "usbill" %}
+		{% if trigger.extra.type == "usbill" and trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}
 			<p class="text-muted small">More info on this {{trigger.extra.bill_info.noun}} can be found on <a href="{{trigger.extra.bill_info.link}}">GovTrack</a>.</p>
 		{% endif %}
 
-		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' or trigger.status|stringformat:'s' == 'TriggerStatus.Paused' or trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
-				<h2>Pledged Contributions</h2>
 
-				<div>${{trigger.total_pledged}}</div>
-				<p>has been pledged on both sides of this issue.</p>
-
-				<p>We can&rsquo;t reveal any more information prior to the vote.</p>
-
-				{% if trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
-					<p class="text-danger">Pledges were vacated.</p>
-				{% endif %}
-		{% endif %}
-	</div>
-
-	<div class="col-sm-8">
 		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Draft' %}
 			<p>This trigger is in draft status. That means it is currently being prepared. Contributions may be accepted soon.</p>
 
@@ -51,28 +62,23 @@
 			<p>This action has been cancelled. We determined that the event will likely never occur and have vacated all of the pledges.</p>
 
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' and trigger.pledge_count > trigger.execution.pledge_count %}
+			<p class="text-danger" style="margin-top: 1.5em">The {{trigger.strings.action}} ocurred, and we are now in the process of making campaign contributions. Check back soon for further details.</p>
+
 			<div id="my-pledge">
 			</div>
 			
-			<h2>Contributions</h2>
-
-			<p>The {{trigger.strings.action}} ocurred, and we are now in the process of making campaign contributions. Check back soon for further details.</p>
-
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
-			<div id="my-pledge">
-			</div>
-			
-			<h2>Contributions</h2>
-			
 			{{execution.description|render_text:execution.description_format}}
 
-			<h3>Totals</h3>
+			<p>{{execution.pledge_count_with_contribs}} donor{{execution.pledge_count_with_contribs|pluralize}} made {{num_contribs}} contribution{{num_contribs|pluralize}} to {{num_recips}} candidate{{num_recips|pluralize}} totalling ${{execution.total_contributions|floatformat:2}}.</p>
 
-			<p>On this {{trigger.strings.action}}, {{execution.pledge_count_with_contribs}} contributor{{execution.pledge_count_with_contribs|pluralize}} made {{num_contribs}} contributions to {{num_recips}} candidates totalling ${{execution.total_contributions|floatformat:2}}.</p>
+			<h2>Totals</h2>
+
 
 			<div class="row">
-				<div class="col-sm-6 col-md-4">
+				<div class="col-sm-6">
 					<table class="table" style="width: auto">
+					<thead><tr><th colspan="2">By Desired Outcome</th></tr></thead>
 					{% for outcome in outcomes %}
 						<tr>
 							<th>{{outcome.label}}:</th>
@@ -85,8 +91,9 @@
 					</tr>
 					</table>
 				</div>
-				<div class="col-sm-6 col-md-4">
+				<div class="col-sm-6">
 					<table class="table" style="width: auto">
+					<thead><tr><th colspan="2">By Recipient Type</th></tr></thead>
 					{% for row in by_incumb_chlngr %}
 						<tr class="{{row.2}}">
 							<th>{{row.0}}:</th>
@@ -99,43 +106,93 @@
 					</tr>
 					</table>
 				</div>
-				<div class="col-sm-6 col-md-4">
-					<table class="table" style="width: auto">
-						<tr>
-							<th>Average User Spend:</th>
-							<td>${{avg_pledge|floatformat:2}}</td>
-						</tr>
-						<tr>
-							<th>Average Contribution:</th>
-							<td>${{avg_contrib|floatformat:2}}</td>
-						</tr>
-					</table>
-				</div>
 			</div>
 
-			<h3>Contributions to {{trigger.strings.actors|capfirst}}</h3>
+			<p><a href="#" onclick="$(this).parent().remove(); $('#contribs-by-recipient').fadeIn(); return false;">Show Details</a></p>
 
-			<table class="table" style="width: auto">
-			<thead>
-				<tr>
-					<th>Candidate</th>
-					<th>Contributions<br>To Candidate</th>
-					<th>Contributions<br>To Opponent</th>
-				</tr>
-			</thead>
-			<tbody>
-			{% for action in actions %}
-				<tr>
-					<td>{{action.actor.name_long}}</td>
-					<td class="{% if action.total_contributions_for %}text-success{% else %}text-muted{% endif %}">${{action.total_contributions_for|floatformat:2}}</td>
-					<td class="{% if action.total_contributions_against %}text-danger{% else %}text-muted{% endif %}">${{action.total_contributions_against|floatformat:2}}</td>
-				</tr>
-			{% endfor %}
-			</tbody>
-			</table>
+			<div id="contribs-by-recipient" style="display: none">
+				<h2>Contributions to {{trigger.strings.actors|capfirst}}</h2>
+
+				<table class="table" style="width: auto">
+				<thead>
+					<tr>
+						<th>Candidate</th>
+						<th>Contributions<br>To Candidate</th>
+						<th>Contributions<br>To Opponent</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for action in actions %}
+					<tr>
+						<td>{{action.actor.name_long}}</td>
+						<td class="{% if action.total_contributions_for %}text-success{% else %}text-muted{% endif %}">${{action.total_contributions_for|floatformat:2}}</td>
+						<td class="{% if action.total_contributions_against %}text-danger{% else %}text-muted{% endif %}">${{action.total_contributions_against|floatformat:2}}</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+				</table>
+			</div>
 
 		{% endif %}
-				
+	</div>
+
+	<div id="trigger-metadata" class="col-sm-4">
+		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' or trigger.execution.pledge_count < trigger.pledge_count %}
+			<div class="meta-stat">
+				<div class="num">${{trigger.total_pledged|floatformat:2}}</div>
+				<div class="lbl">committed</div>
+			</div>
+
+			<div class="meta-stat">
+				<div class="num">{{trigger.pledge_count}}</div>
+				<div class="lbl">donor{{trigger.pledge_count|pluralize}} {% if trigger.pledge_count == 0 %}&mdash; be the first!{% endif %}</div>
+			</div>
+
+			<p>Contributions will only be made once the {{trigger.strings.action}} occurs.</p>
+
+			{% if trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
+				<p class="text-danger">Pledges were vacated.</p>
+			{% endif %}
+
+			<p>This action was posted on {{trigger.created|date}}.</p>
+
+		{% else %}
+			<div id="my-pledge">
+			</div>
+
+			<h2>Summary</h2>
+
+			<div class="meta-stat">
+				<div class="num">${{execution.total_contributions|floatformat:2}}</div>
+				<div class="lbl">total contributions</div>
+			</div>
+
+			<div class="meta-stat">
+				<div class="num">{{execution.pledge_count_with_contribs}}</div>
+				<div class="lbl">donor{{execution.pledge_count_with_contribs|pluralize}}</div>
+			</div>
+
+			<div class="meta-stat">
+				<div class="num">${{avg_pledge|floatformat:2}}</div>
+				<div class="lbl">average contributions per donor</div>
+			</div>
+
+			<div class="meta-stat">
+				<div class="num">{{num_contribs}}</div>
+				<div class="lbl">contributon{{num_contribs|pluralize}}</div>
+			</div>
+
+			<div class="meta-stat">
+				<div class="num">${{avg_contrib|floatformat:2}}</div>
+				<div class="lbl">average contribution</div>
+			</div>
+
+			<div class="meta-stat">
+				<div class="num">{{num_recips}}</div>
+				<div class="lbl">recipient{{num_recips|pluralize}}</div>
+			</div>
+
+		{% endif %}
 	</div>
 </div>
 
