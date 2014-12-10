@@ -6,7 +6,7 @@
 
 body {
 	font-family: 'Noto Serif', serif;
-	font-size: 15px;
+	font-size: 16px;
 	line-height: 140%;
 }
 
@@ -55,7 +55,7 @@ a {
 	background-color: #EEE;
 }
 
-	a.navbar-brand {
+	a.navbar-brand, #homepage h1 {
 		font-family: 'Fredoka One', cursive;
 	}
 
@@ -79,4 +79,36 @@ a {
 }
 	.overline+h1 {
 		margin-top: 0;
+	}
+
+#footer-social a {
+	border: none;
+}
+
+/* PAGE ELEMENTS */
+
+@media screen and (min-width: 992px) {
+	.col-md-left-border {
+		padding-top: 1px;
+		margin-top: -1px; 
+
+		padding-left: 1em;
+		padding-bottom: 1em;
+
+		border-left: 1px solid #DDD;
+	}
+
+}
+
+h3.invert {
+	margin: 1em 0 1em -2px;
+	color: white;
+}
+	h3.invert span {
+		background-color: #582;
+		padding: 5px 10px;
+	}
+	h3.invert span:after {
+		content: "●●";
+		padding-left: .66em;
 	}

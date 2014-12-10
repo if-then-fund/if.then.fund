@@ -70,7 +70,7 @@
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
 			{{execution.description|render_text:execution.description_format}}
 
-			<p>{{execution.pledge_count_with_contribs}} donor{{execution.pledge_count_with_contribs|pluralize}} made {{num_contribs}} contribution{{num_contribs|pluralize}} to {{num_recips}} candidate{{num_recips|pluralize}} totalling ${{execution.total_contributions|floatformat:2}}.</p>
+			<p>{{execution.pledge_count_with_contribs}} donor{{execution.pledge_count_with_contribs|pluralize}} made contributions totalling {{execution.total_contributions|currency}}.</p>
 
 			<h2>Totals</h2>
 
@@ -82,12 +82,12 @@
 					{% for outcome in outcomes %}
 						<tr>
 							<th>{{outcome.label}}:</th>
-							<td>${{outcome.contribs|floatformat:2}}</td>
+							<td>{{outcome.contribs|currency}}</td>
 						</tr>
 					{% endfor %}
 					<tr style="color: #333; background-color: #F5F5F5">
 						<th>Total</th>
-						<td style="font-weight: bold">${{execution.total_contributions|floatformat:2}}</td>
+						<td style="font-weight: bold">{{execution.total_contributions|currency}}</td>
 					</tr>
 					</table>
 				</div>
@@ -97,12 +97,12 @@
 					{% for row in by_incumb_chlngr %}
 						<tr class="{{row.2}}">
 							<th>{{row.0}}:</th>
-							<td>${{row.1|floatformat:2}}</td>
+							<td>{{row.1|currency}}</td>
 						</tr>
 					{% endfor %}
 					<tr style="color: #333; background-color: #F5F5F5">
 						<th>Total</th>
-						<td style="font-weight: bold">${{execution.total_contributions|floatformat:2}}</td>
+						<td style="font-weight: bold">{{execution.total_contributions|currency}}</td>
 					</tr>
 					</table>
 				</div>
@@ -139,7 +139,7 @@
 	<div id="trigger-metadata" class="col-sm-4">
 		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' or trigger.execution.pledge_count < trigger.pledge_count %}
 			<div class="meta-stat">
-				<div class="num">${{trigger.total_pledged|floatformat:2}}</div>
+				<div class="num">{{trigger.total_pledged|currency}}</div>
 				<div class="lbl">committed</div>
 			</div>
 
@@ -163,7 +163,7 @@
 			<h2>Summary</h2>
 
 			<div class="meta-stat">
-				<div class="num">${{execution.total_contributions|floatformat:2}}</div>
+				<div class="num">{{execution.total_contributions|currency}}</div>
 				<div class="lbl">total contributions</div>
 			</div>
 
@@ -173,7 +173,7 @@
 			</div>
 
 			<div class="meta-stat">
-				<div class="num">${{avg_pledge|floatformat:2}}</div>
+				<div class="num">{{avg_pledge|currency}}</div>
 				<div class="lbl">average contributions per donor</div>
 			</div>
 
@@ -183,7 +183,7 @@
 			</div>
 
 			<div class="meta-stat">
-				<div class="num">${{avg_contrib|floatformat:2}}</div>
+				<div class="num">{{avg_contrib|currency}}</div>
 				<div class="lbl">average contribution</div>
 			</div>
 

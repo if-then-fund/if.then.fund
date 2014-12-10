@@ -1,4 +1,5 @@
 {% extends "master.html" %}
+{% load itfsite_utils %}
 
 {% block title %}Home{% endblock %}
 
@@ -8,65 +9,105 @@
 
 {% block head %}
 <style>
-#tron {
-	background-color: black;
-	color: white;
-	padding: 1.5em;
+.navbar {
+	background-color: white;
+	margin-bottom: 0;
 }
-	#tron h1 {
+
+#homepage {
+	padding: 0 1.5em 1.5em 1.5em;
+}
+	h1 {
 		margin: 0;
+		font-size: 65px;
+		color: #444;
 	}
-	#tron #deck {
+	#deck {
 		padding: 1em 0 0 0;
 		font-size: 25px;
 		line-height: 160%;
-	}
-	#tron a {
-		color: #FFA;
-		border: none;
+		color: black;
+		font-family: 'Roboto Slab', serif;
 	}
 
-.triggers span {
-	margin-left: 1em;
-	font-style: italic;
+	#homepage img {
+		margin: 2em auto;
+	}
+
+h3 {
+	font-weight: bold;
 }
+
+.trigger-list {
+	list-style: none;
+	padding: 0;
+}
+	.trigger-list li a {
+		font-family: 'Roboto Slab', serif;
+		color: #A53;
+		font-weight: bold;
+		border: none;
+	}
+		.trigger-list li a:hover {
+			text-decoration: underline;
+		}
+	.trigger-list li span {
+		font-style: italic;
+	}
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="row" id="tron">
-	<div class="col-sm-6">
-		<h1>if.then.fund</h1>
+<div id="homepage">
+	<h1>if.then.fund</h1>
 
-		<div id="deck">
-			Join the donors<br>
-			shaping Congress<br>
-			in small-$ amounts<br>
-			based on outcomes.
+	<div id="deck">
+		Reshaping Congress by empowering <strong>small dollar donors</strong> to make contributions based on <strong>what politicians do</strong> — not what they promise.
+	</div>
+
+	<img src="/static/img/homepage-diagram.svg" class="img-responsive" title="How It Works">
+
+	<hr>
+
+	<div class="row" id="tron">
+		{% if open_triggers|length > 0 %}
+		<div class="col-md-7">
+			<h3 class="invert"><span>Upcoming votes</span></h3>
+			<ul class="trigger-list">
+				{% for t in open_triggers %}
+					<li>
+						<div><a href="{{t.get_absolute_url}}">{{t.title}}</a></div>
+						<div>
+							<span>{{t.total_pledged|currency}} committed so far</span>
+							&mdash; <a href="{{t.get_absolute_url}}">Take Action</a>
+						</div>
+					</li>
+				{% endfor %}
+			</ul>
 		</div>
+		{% endif %}
+
+		{% if recent_executed_triggers|length > 0 %}
+		<div class="col-md-{% if open_triggers|length > 0 %}5{% else %}12{% endif %}">
+			<div class="{% if open_triggers|length > 0 %}col-md-left-border{% endif %}">
+				<h3 class="invert"><span>Recently</span></h3>
+				<ul class="trigger-list">
+					{% for t in recent_executed_triggers %}
+						<li>
+							<a href="{{t.get_absolute_url}}">{{t.title}}</a>
+							<br><span>{{t.execution.total_contributions|currency}} total contributions</span>
+						</li>
+					{% endfor %}
+				</ul>
+			</div>
+		</div>
+		{% endif %}
 	</div>
 
-	<div class="col-sm-6 triggers">
-		{% for t in open_triggers %}
-			{% if forloop.first %}
-				<p>Make a contribution based on the outcome of these votes in Congress:</p>
-			{% endif %}
-			<p>
-				<a href="{{t.get_absolute_url}}">{{t.title}}</a>
-				<br><span>${{t.total_pledged|floatformat}} committed so far</span>
-			</p>
-		{% endfor %}
+	<hr>
 
-		{% for t in recent_executed_triggers %}
-			{% if forloop.first %}
-				<p>Recent votes in Congress that contributions were made about:</p>
-			{% endif %}
+	<h2>Why we&rsquo;re doing this</h2>
 
-			<p>
-				<a href="{{t.get_absolute_url}}">{{t.title}}</a>
-				<br><span>${{t.execution.total_contributions|floatformat}} contributions made</span>
-			</p>
-		{% endfor %}
-	</div>
-</div>
+	<p>By targeting real outcomes, shaping the next Congress, aggregating donations, and reaching all members of Congress, we hope to raise the tide of small-donor supporters and shift the balance of power away from concentrated wealth. Read <a href="/about">more about the site</a> for more details.</p>
+
 {% endblock %}

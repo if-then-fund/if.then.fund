@@ -69,15 +69,20 @@
     <footer>
       <div class="row">
         <hr>
-        <div class="col-xs-12">
+        <div class="col-sm-10">
           <p>
               <a href="/">Home</a>
             | <a href="{% url 'simplepage' 'about' %}">About</a>
             | <a href="{% url 'simplepage' 'legal' %}">Legal</a>
           </p>
-          <p>&copy; {% now 'Y' %} Civic Responsibility LLC</p>
+        </div>
+        <div class="col-sm-2">
+          <p id="footer-social">
+              <a href="https://twitter.com/IfThenFund">@IfThenFund</a>
+          </p>
         </div>
       </div>
+      <p>&copy; {% now 'Y' %} Civic Responsibility LLC</p>
     </footer>
   </div> <!-- /container -->
 
