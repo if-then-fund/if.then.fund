@@ -1,10 +1,15 @@
 {% autoescape off %}
 {{pledge.extra.contribNameFirst}},
 
-Your campaign contributions totalling ${{pledge.execution.charged|floatformat:2}} were made to {{pledge.targets_summary}}.
+{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}Your campaign contributions totalling ${{pledge.execution.charged|floatformat:2}} were made to {{pledge.targets_summary}}.
 
 To see who your contributions were made to, please head over to the following address:
+{% else %}Your campaign contributions to {{pledge.targets_summary}} could not be made.
 
+{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.FiltersExcludedAll' %}No {% if pledge.incumb_challgr == 1 %}{{pledge.trigger.strings.actors}}{% else %}recipients{% endif %} matched your criteria.{% endif %}{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.TransactionFailed' %}There was a problem charging your credit card.{% endif %}
+
+For more information, please head over to the following address:
+{% endif %}
 {{pledge.trigger.get_short_url}}
 
 Thanks!
