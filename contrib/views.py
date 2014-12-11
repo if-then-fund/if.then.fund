@@ -45,7 +45,7 @@ def trigger(request, id, slug):
 		for i in range(len(outcomes)):
 			outcomes[i]['index'] = i
 			outcomes[i]['contribs'] = 0
-		for rec in ContributionAggregate.objects.filter(trigger_execution=te).values('outcome', 'total'):
+		for rec in ContributionAggregate.objects.filter(trigger_execution=te, district=None).exclude(outcome=None).values('outcome', 'total'):
 			outcomes[rec['outcome']]['contribs'] = rec['total']
 		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
 

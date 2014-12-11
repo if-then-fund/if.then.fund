@@ -130,3 +130,50 @@ def execute_trigger_from_vote(trigger, govtrack_url):
 			"govtrack_vote": vote,
 		})
 
+def geocode(address):
+	# Geocodes an address, returning a tuple of (DISTRICT, { metadata }).
+	# DISTRICT is in the form of XX00, or UNKN for a geocoder failure.
+	# Metadata is other arbitrary info so we have more details about
+	# the API calls we're making for later.
+
+	# Use the CDYNE Postal Address Verification API.
+
+	import requests, urllib.parse, lxml.etree, json
+	from django.conf import settings
+
+		# http version: "http://pav3.cdyne.com/PavService.svc/VerifyAddressAdvanced"
+	r = requests.post("https://pav3.cdyne.com/PavService.svc/rest_s/VerifyAddressAdvanced",
+		data=json.dumps({
+			"PrimaryAddressLine": address[0],
+			"CityName": address[1],
+			"State": address[2],
+			"ZipCode": address[3],
+			"LicenseKey": settings.CDYNE_API_KEY,
+			"ReturnCensusInfo": True,
+			"ReturnGeoLocation": True,
+			"ReturnLegislativeInfo": True,
+		}),
+		headers={ "Content-Type": "application/json", "Accept": "application/json" }
+		)
+
+	# Raise an exception for non-200 OK responses.
+	r.raise_for_status()
+
+	# Parse XML.
+	r = r.json()
+	retcode = int(r["ReturnCode"])
+	if retcode in (1, 2):
+		raise Exception("CDYNE returned error code %d. See http://wiki.cdyne.com/index.php/PAV_VerifyAddressAdvanced_Output." % retcode)
+
+	if retcode in (10,):
+		# Input Address is Not Found.
+		return (None, r)
+
+	# Add a timestamp to the response in case we need to know later.
+	from django.utils.timezone import now
+	r['timestamp'] = now().isoformat()
+
+	# Return the Congressional district and the whole CDYNE response
+	# in case we want to re-parse it later.
+	return (r['StateAbbreviation'] + r['LegislativeInfo']['CongressionalDistrictNumber'], r)
+

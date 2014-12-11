@@ -102,4 +102,5 @@ SITE_ROOT_URL = "https://unnamedsite"
 
 NO_SMTP_CHECK = environment["no_smtp_check"]
 DE_API = environment['democracyengine']
+CDYNE_API_KEY = environment['cdyne_key']
 CURRENT_ELECTION_CYCLE = 2014

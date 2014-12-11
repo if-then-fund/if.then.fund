@@ -305,7 +305,6 @@ class Pledge(models.Model):
 	filter_competitive = models.BooleanField(default=False, help_text="Whether to filter contributions to competitive races.")
 
 	cclastfour = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The last four digits of the user's credit card number, stored for fast look-up in case we need to find a pledge from a credit card number.")
-	district = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The congressional district of the user (at the time of the pledge), in the form of XX00.")
 
 	pre_execution_email_sent_at = models.DateTimeField(blank=True, null=True, help_text="The date and time when the user was sent an email letting them know that their pledge is about to be executed.")
 	post_execution_email_sent_at = models.DateTimeField(blank=True, null=True, help_text="The date and time when the user was sent an email letting them know that their pledge was executed.")
@@ -585,6 +584,8 @@ class PledgeExecution(models.Model):
 	fees = models.DecimalField(max_digits=6, decimal_places=2, help_text="The fees the user was charged, in dollars.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
+	district = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The congressional district of the user (at the time of the pledge), in the form of XX00.")
+
 	objects = NoMassDeleteManager()
 
 	def __str__(self):
@@ -627,6 +628,23 @@ class PledgeExecution(models.Model):
 		txns = set(item['transaction_guid'] for item in self.extra['donation']['line_items'])
 		for txn in txns:
 			print(rtyaml.dump(DemocracyEngineAPI.get_transaction(txn)))
+
+	@transaction.atomic
+	def update_district(self, district, other):
+		# lock so we don't overwrite
+		self = PledgeExecution.objects.filter(id=self.id).select_for_update().get()
+
+		# temporarily decrement all of the contributions from the aggregates
+		for c in self.contributions.all():
+			c.inc_action_contrib_total(factor=-1)
+
+		self.district = district
+		self.extra['geocode'] = other
+		self.save(update_fields=['district', 'extra'])
+
+		# re-increment now that the district is set
+		for c in self.contributions.all():
+			c.inc_action_contrib_total(factor=1)
 
 #####################################################################
 #
@@ -737,22 +755,29 @@ class Contribution(models.Model):
 		self.action.execution.save(update_fields=['total_contributions', 'num_contributions'])
 
 		# Increment the cached ContributionAggregate for the desired outcome.
-		agg, is_new = ContributionAggregate.objects.get_or_create(
-			trigger_execution=self.action.execution,
-			outcome=self.pledge_execution.pledge.desired_outcome)
-		agg.total = models.F('total') + self.amount*factor
-		agg.save(update_fields=['total'])
-
+		# Note that Pledge.district is None before we've done the look-up,
+		# and we'll just omit those from the aggregates.
+		slices = []
+		for outcome in (None, self.pledge_execution.pledge.desired_outcome):
+			for district in set([None, self.pledge_execution.district]):
+				slices.append({ "outcome": outcome, "district": district })
+		for slce in slices:
+			agg, is_new = ContributionAggregate.objects.get_or_create(
+				trigger_execution=self.action.execution,
+				**slce)
+			agg.total = models.F('total') + self.amount*factor
+			agg.save(update_fields=['total'])
 
 class ContributionAggregate(models.Model):
 	"""Aggregate totals for various slices of contributions."""
 
-	trigger_execution = models.OneToOneField(TriggerExecution, related_name='contribution_aggregates', on_delete=models.CASCADE, help_text="The TriggerExecution that these cached statistics are about.")
+	trigger_execution = models.ForeignKey(TriggerExecution, related_name='contribution_aggregates', on_delete=models.CASCADE, help_text="The TriggerExecution that these cached statistics are about.")
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
 	outcome = models.IntegerField(blank=True, null=True, help_text="The outcome index that was taken. Null if the slice encompasses all outcomes.")
+	district = models.CharField(max_length=4, blank=True, null=True, help_text="The congressional district of the user (at the time of the pledge), in the form of XX00. Null if the slice encompasses all district.")
 
 	total = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of campaign contributions executed, excluding fees.")
 
 	class Meta:
-		unique_together = ('trigger_execution', 'outcome')
+		unique_together = ('trigger_execution', 'outcome', 'district')

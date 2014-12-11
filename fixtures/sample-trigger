@@ -1,7 +1,7 @@
 #!django_script
 from django.contrib.auth.models import User
 from contrib.models import *
-from contrib.via_govtrack import create_trigger_from_bill
+from contrib.legislative import create_trigger_from_bill
 
 #Trigger.objects.all().delete()
 t = create_trigger_from_bill("hr135-113", 'h')

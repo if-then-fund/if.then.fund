@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
 from contrib.models import Trigger
-from contrib.via_govtrack import execute_trigger_from_vote
+from contrib.legislative import execute_trigger_from_vote
 
 class Command(BaseCommand):
 	args = 'trigger_id vote_url'
