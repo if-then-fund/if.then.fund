@@ -14,7 +14,6 @@ from contrib.models import Trigger, TriggerExecution, Pledge, PledgeStatus, Pled
 from contrib.utils import json_response
 from contrib.bizlogic import run_authorization_test, HumanReadableValidationError
 
-import copy
 import rtyaml
 
 @anonymous_view
@@ -41,13 +40,7 @@ def trigger(request, id, slug):
 
 	if te and te.pledge_count_with_contribs > 0:
 		# Get the contribution aggregates by outcome and sort by total amount of contributions.
-		outcomes = copy.deepcopy(trigger.outcomes)
-		for i in range(len(outcomes)):
-			outcomes[i]['index'] = i
-			outcomes[i]['contribs'] = 0
-		for rec in ContributionAggregate.objects.filter(trigger_execution=te, district=None).exclude(outcome=None).values('outcome', 'total'):
-			outcomes[rec['outcome']]['contribs'] = rec['total']
-		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
+		outcomes = te.get_outcomes()
 
 		# Actions/Actors. Sort with actors that received no contributions either for or against at
 		# the end of the list, since they're sort of no-data rows. After that, sort by the sum of

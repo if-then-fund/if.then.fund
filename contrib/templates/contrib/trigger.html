@@ -117,6 +117,7 @@
 				<thead>
 					<tr>
 						<th>Candidate</th>
+						<th>{{trigger.strings.action|capfirst}}</th>
 						<th>Contributions<br>To Candidate</th>
 						<th>Contributions<br>To Opponent</th>
 					</tr>
@@ -124,7 +125,10 @@
 				<tbody>
 				{% for action in actions %}
 					<tr>
-						<td>{{action.actor.name_long}}</td>
+						<td>{{action.name_long}}</td>
+						<td {% if not action.has_outcome %}style="font-style: italic"{% endif %}>
+							{{action.outcome_label}}
+						</td>
 						<td class="{% if action.total_contributions_for %}text-success{% else %}text-muted{% endif %}">${{action.total_contributions_for|floatformat:2}}</td>
 						<td class="{% if action.total_contributions_against %}text-danger{% else %}text-muted{% endif %}">${{action.total_contributions_against|floatformat:2}}</td>
 					</tr>

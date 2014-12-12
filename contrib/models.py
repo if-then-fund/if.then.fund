@@ -1,4 +1,4 @@
-import enum, decimal
+import enum, decimal, copy
 
 from django.db import models, transaction, IntegrityError
 from django.conf import settings
@@ -95,9 +95,11 @@ class Trigger(models.Model):
 
 		# Create Action objects which represent what each Actor did.
 		# actor_outcomes is a dict mapping Actors to outcome indexes
-		# or None if the Actor didn't properly participate.
-		for actor, outcome_index in actor_outcomes.items():
-			ac = Action.create(te, actor, outcome_index)
+		# or None if the Actor didn't properly participate or a string
+		# meaning the Actor didn't participate and the string gives
+		# the reason_for_no_outcome value.
+		for actor, outcome in actor_outcomes.items():
+			ac = Action.create(te, actor, outcome)
 
 		# Mark as executed.
 		trigger.status = TriggerStatus.Executed
@@ -155,6 +157,20 @@ class TriggerExecution(models.Model):
 
 	def __str__(self):
 		return "%s [exec %s]" % (self.trigger, self.created.strftime("%x"))
+
+	def get_outcomes(self):
+		# Get the contribution aggregates by outcome
+		# and sort by total amount of contributions.
+		outcomes = copy.deepcopy(self.trigger.outcomes)
+		for i in range(len(outcomes)):
+			outcomes[i]['index'] = i
+			outcomes[i]['contribs'] = 0
+		for rec in ContributionAggregate.objects.filter(trigger_execution=self, district=None)\
+				.exclude(outcome=None)\
+				.values('outcome', 'total'):
+			outcomes[rec['outcome']]['contribs'] = rec['total']
+		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
+		return outcomes
 
 #####################################################################
 #
@@ -223,6 +239,8 @@ class Action(models.Model):
 	total_contributions_for = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed with the actor as the recipient (excluding fees).")
 	total_contributions_against = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total amount of campaign contributions executed with an opponent of the actor as the recipient (excluding fees).")
 
+	reason_for_no_outcome = models.CharField(blank=True, null=True, max_length=200, help_text="If outcome is null, why. E.g. 'Did not vote.'.")
+
 	class Meta:
 		unique_together = [('execution', 'actor')]
 
@@ -232,19 +250,37 @@ class Action(models.Model):
 			self.outcome_label(),
 			self.execution)
 
+	def has_outcome(self):
+		return self.outcome is not None
+
 	def outcome_label(self):
 		if self.outcome is not None:
 			return self.execution.trigger.outcomes[self.outcome]['label']
+		if self.reason_for_no_outcome:
+			return self.reason_for_no_outcome
 		return "N/A"
 
 	@staticmethod
-	def create(execution, actor, outcome_index):
+	def create(execution, actor, outcome):
+		# outcome can be an integer giving the Trigger's outcome index
+		# that the Actor did . . .
+		if isinstance(outcome, int):
+			outcome_index = outcome
+			reason_for_no_outcome = None
+
+		# Or it can be None or a string giving an explanation for why
+		# the Action has no outcome.
+		else:
+			outcome_index = None
+			reason_for_no_outcome = outcome
+
 		# Create the Action instance.
 		a = Action()
 		a.execution = execution
 		a.actor = actor
 		a.outcome = outcome_index
 		a.action_time = execution.action_time
+		a.reason_for_no_outcome = reason_for_no_outcome
 
 		# Copy fields that may change on the Actor but that we want to know what they were
 		# at the time this Action ocurred.

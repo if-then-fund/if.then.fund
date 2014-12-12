@@ -109,6 +109,14 @@ def execute_trigger_from_vote(trigger, govtrack_url):
 		# take action for our purposes but should be recorded as not participating.
 		outcome = outcome_index.get(voter.get('vote'))
 
+		if outcome is None:
+			if voter.get('vote') == "0":
+				outcome = "Did not vote."
+			elif voter.get('vote') == "P":
+				outcome = "Voted 'present'."
+			else:
+				raise ValueError("Invalid vote option key: " + str(voter.get('vote')))
+
 		actor_outcomes[actor] = outcome
 
 	# Make a textual description of what happened.
