@@ -1,4 +1,4 @@
-unnamed-site
+if.then.fund
 ============
 
-The as-yet-unnamed website by Civic Responsibility, LLC.
+The website https://if.then.fund by Civic Responsibility, LLC.
