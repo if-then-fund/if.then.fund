@@ -3,7 +3,7 @@ from django.views.decorators.http import require_http_methods
 from django.db import transaction
 from django.dispatch import receiver
 from django.contrib import messages
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.conf import settings
 
 from email_confirm_la.signals import post_email_confirm
@@ -38,7 +38,7 @@ def trigger(request, id, slug):
 	except TriggerExecution.DoesNotExist:
 		te = None
 
-	if te and te.pledge_count_with_contribs > 0:
+	if te and te.pledge_count_with_contribs > 0 and te.pledge_count == trigger.pledge_count:
 		# Get the contribution aggregates by outcome and sort by total amount of contributions.
 		outcomes = te.get_outcomes()
 
@@ -370,3 +370,69 @@ def cancel_pledge(request):
 		raise Exception()
 	p.delete()
 	return { "status": "ok" }
+
+@anonymous_view
+@json_response
+def trigger_execution_report(request, id):
+	# get the object & validate that there is data
+	trigger = get_object_or_404(Trigger, id=id)
+	try:
+		te = trigger.execution
+	except TriggerExecution.DoesNotExist:
+		raise Http404("This trigger is not executed.")
+	if te.pledge_count_with_contribs == 0:
+		raise Http404("This trigger did not have any contributions.")
+	if te.pledge_count != trigger.pledge_count:
+		raise Http404("This trigger is still being executed.")
+
+	# form response
+	ret = { }
+
+	# Aggregates by outcome.
+	ret['outcomes'] = te.get_outcomes()
+
+	# Aggregates by actor.
+	actions = list(te.actions.all().select_related('actor'))
+	actions.sort(key = lambda a : ((a.total_contributions_for + a.total_contributions_against) == 0, -(a.total_contributions_for - a.total_contributions_against), a.actor.name_sort))
+	def build_actor_info(action):
+		ret = {
+			"name": action.name_long,
+			trigger.strings['action']: action.outcome_label(),
+			"contribs": action.total_contributions_for,
+			"contribs_to_opponent": action.total_contributions_against,
+			"actor_id": action.actor.id,
+		}
+		for idscheme in ('bioguide', 'govtrack', 'opensecrets'):
+			if idscheme in action.extra['legislators-current']['id']:
+				ret[idscheme+"_id"] = action.extra['legislators-current']['id'][idscheme]
+		for key in ('state', 'district', 'url', 'end'):
+			v = action.extra['legislators-current']['terms'][-1].get(key)
+			if key == 'url': key = 'homepage'
+			if key == 'end': key = 'term_end'
+			if v:
+				ret[key] = v
+		return ret
+	ret[trigger.strings['actors']] = [build_actor_info(a) for a in actions]
+
+	# All donors.
+	from contrib.models import PledgeExecutionProblem, Contribution
+	ret['donors'] = [{
+		"desired_outcome": pe.pledge.desired_outcome_label,
+		"contribs": pe.charged-pe.fees,
+		"congressional_district": pe.district,
+		"date": pe.pledge.created,
+	} for pe in te.pledges.filter(problem=PledgeExecutionProblem.NoProblem).select_related('pledge', 'pledge__trigger')]
+
+	# All contributions.
+	ret['contributions'] = [{
+		'amount': c.amount,
+		'donor_congressional_district': c.pledge_execution.district,
+		'donor_desired_outcome': c.pledge_execution.pledge.desired_outcome_label,
+		'recipient_name': c.recipient.name,
+		'recipient_actor_id' if not c.recipient.is_challenger else "incumbent_actor_id":
+			c.recipient.actor_id,
+	} for c in Contribution.objects.filter(pledge_execution__pledge__trigger=trigger)
+		.select_related('pledge_execution', 'pledge_execution__pledge', 'pledge_execution__pledge_trigger', 'recipient')]
+
+	# report
+	return ret

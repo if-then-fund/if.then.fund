@@ -707,6 +707,10 @@ class Recipient(models.Model):
 	def __str__(self):
 		return "[%s%s] %s" % (self.actor.name_short, ':' + self.challenger.name if self.challenger else "", self.name)
 
+	@property
+	def is_challenger(self):
+		return self.challenger is not None
+
 	@staticmethod
 	def create_for(actor):
 		# Ensure a recipient exists for the Actor and any potential challengers of a different party.
