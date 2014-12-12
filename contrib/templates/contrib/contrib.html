@@ -10,10 +10,9 @@
 
 <p>You {% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}made{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}have scheduled{% else %}scheduled{% endif %} a campaign contribution for this {{trigger.strings.action}}:</p>
 
-<table class="table">
-	<tr>
-		<td>Amount:</td>
-		<td>
+<dl>
+		<dt>Amount</dt>
+		<dd>
 			{% if not execution %}
 				${{pledge.amount|floatformat:2}}
 			{% else %}
@@ -22,23 +21,21 @@
 					<div class="small">Your credit card was charged less than your pledge of ${{pledge.amount|floatformat:2}}. We can only make whole-penny contributions to the recipients of your contribution, so we had to round down.</div>
 				{% endif %}
 			{% endif %}
-		</td>
-	</tr>
+		</dd>
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
 		{% if pledge.trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
-			<tr><td>Status:</td> <td>The {{trigger.strings.action}} has not yet occurred. The contribution will only be made once it occurs.</td></tr>
+			<dt>Status</dt> <dd>The {{trigger.strings.action}} has not yet occurred. The contribution will only be made once it occurs.</dd>
 		{% else %}
-			<tr><td>Status:</td> <td>Your contribution has not yet been made. You are still able to cancel the contribution.</td></tr>
+			<dt>Status</dt> <dd>Your contribution has not yet been made. You are still able to cancel the contribution.</dd>
 		{% endif %}
 	{% endif %}
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Vacated' %}
-	<tr><td>Status:</td> <td>The event that this contribution was pledged for is not expected to occur. The pledge is cancelled.</td></tr>
+		<dt>Status</dt> <dd>The event that this contribution was pledged for is not expected to occur. The pledge is cancelled.</dd>
 	{% endif %}
 
-	<tr>
-		<td>For:</td>
-		<td>
+		<dt>For</dt>
+		<dd>
 			{{pledge.targets_summary}}
 
 			{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}
@@ -58,16 +55,32 @@
 					<p class="small">Plus fees.</p>
 				</div>
 			{% endif %}		
-		</td>
-	</tr>
+		</dd>
 
-	<tr><td>Pledged:</td> <td>{{pledge.created|date}}</td></tr>
+	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' and pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
+	<p><a href="#" onclick="$('#my-contrib-details').fadeToggle(); return false;">show more details</a></p>
 
-	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
-	<tr><td colspan=2><a href="#" onclick="return cancel_pledge()">Cancel?</a></td></tr>
+	<div id="my-contrib-details" style="display: none">
+		<dt>Pledged</dt> <dd>{{pledge.created|date}}</dd>
+
+		<dt>Contributor</dt>
+		<dd>
+			<p>
+				{{pledge.extra.contribNameFirst}} {{pledge.extra.contribNameLast}}<br>
+				{{pledge.extra.contribAddress}}<br>
+				{{pledge.extra.contribCity}}, {{pledge.extra.contribState}} {{pledge.extra.contribZip}}<br>
+				{{pledge.extra.contribOccupation}} / {{pledge.extra.contribEmployer}}
+			</p>
+			<p class="expl">The information above is made available to the candidates receiving your contributions. If you make $200 in contributions to any one candidate in a calendar year, the information also becomes a matter of public record by law.</p>
+		</dd>
+	</div>
 	{% endif %}
 
-</table>
+	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
+	<p><a href="#" onclick="return cancel_pledge()">Cancel?</a></p>
+	{% endif %}
+
+</dl>
 
 <script>
 function cancel_pledge(desire) {

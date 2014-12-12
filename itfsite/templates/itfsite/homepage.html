@@ -95,7 +95,11 @@ h3 {
 					{% for t in recent_executed_triggers %}
 						<li>
 							<a href="{{t.get_absolute_url}}">{{t.title}}</a>
-							<br><span>{{t.execution.total_contributions|currency}} total contributions</span>
+							<br><span>
+							{% for outcome in t.execution.get_outcomes %}
+								{{outcome.label}}: {{outcome.contribs|currency}}
+								{% if not forloop.last %} | {% endif %}
+							{% endfor %}
 						</li>
 					{% endfor %}
 				</ul>
