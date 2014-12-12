@@ -55,9 +55,12 @@ a {
 	background-color: #EEE;
 }
 
-	a.navbar-brand, #homepage h1 {
+	a.navbar-brand, #homepage h1, .site-brand {
 		font-family: 'Fredoka One', cursive;
 	}
+		.site-brand {
+			padding-right: 2px;
+		}
 
 	.navbar a {
 		border: none;

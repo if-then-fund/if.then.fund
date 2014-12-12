@@ -74,6 +74,7 @@
               <a href="/">Home</a>
             | <a href="{% url 'simplepage' 'about' %}">About</a>
             | <a href="http://ifthenfund.wordpress.com/">Blog</a>
+            | <a href="{% url 'simplepage' 'privacy' %}">Privacy</a>
             | <a href="{% url 'simplepage' 'legal' %}">Legal</a>
           </p>
         </div>
@@ -83,6 +84,10 @@
           </p>
         </div>
       </div>
+      <p>Have an idea for shaping Congress? Want to know more about the site? Send us a note at <script>
+              var addr = "olleh".split("").reverse().join("") + String.fromCharCode(2*0x20) + "if.then.fund";
+              document.write("\x3ca class='email' href='mailto:" + addr + "'\x3e" + addr + "\x3c/a\x3e");
+              </script>.</p>
       <p>&copy; {% now 'Y' %} Civic Responsibility LLC</p>
     </footer>
   </div> <!-- /container -->
