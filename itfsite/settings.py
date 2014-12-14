@@ -56,7 +56,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 AUTHENTICATION_BACKENDS = ['itfsite.accounts.DirectLoginBackend', 'itfsite.accounts.EmailPasswordLoginBackend']
 
-# Database
+# Database and Cache
 
 DATABASES = {
 	'default': {
@@ -64,6 +64,18 @@ DATABASES = {
 		'NAME': local('db.sqlite3'),
 	}
 }
+if environment['db']:
+	DATABASES['default'].update(environment['db'])
+	CONN_MAX_AGE = 60
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+if environment['memcached']:
+	CACHES['default']['BACKEND'] = 'django.core.cache.backends.memcached.MemcachedCache'
+	SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 # Settings
 
@@ -79,15 +91,32 @@ USE_TZ = True
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 AUTH_USER_MODEL = 'itfsite.User'
 
+if environment["email"]:
+	EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+	EMAIL_HOST = environment["email"]["host"]
+	EMAIL_PORT = environment["email"]["port"]
+	EMAIL_HOST_USER = environment["email"]["user"]
+	EMAIL_HOST_PASSWORD = environment["email"]["pw"]
+	EMAIL_USE_TLS = True
+
 if environment["https"]:
 	SESSION_COOKIE_HTTPONLY = True
 	SESSION_COOKIE_SECURE = True
 	CSRF_COOKIE_HTTPONLY = True
 	CSRF_COOKIE_SECURE = True
 
+if not DEBUG:
+	TEMPLATE_LOADERS = (
+	    ('django.template.loaders.cached.Loader', (
+	        'django.template.loaders.filesystem.Loader',
+	        'django.template.loaders.app_directories.Loader',
+	    )),
+	)
+
 # Paths
 
 STATIC_URL = '/static/'
+STATIC_ROOT = environment.get("static", None)
 LOGIN_REDIRECT_URL = '/home'
 
 # App settings
@@ -100,6 +129,7 @@ SITE_ROOT_URL = "https://unnamedsite"
 
 # Local Settings
 
+ADMINS = ["josh@if.then.fund"]
 NO_SMTP_CHECK = environment["no_smtp_check"]
 DE_API = environment['democracyengine']
 CDYNE_API_KEY = environment['cdyne_key']

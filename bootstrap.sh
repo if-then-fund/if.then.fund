@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# Check that the environment file exists.
+if [ ! -f local/environment.json ]; then
+	echo "Missing: local/environment.json"
+	exit 1
+fi
+
+# DEPLOYED TO WEB ONLY
+if [ "$1" == "--deployed" ]; then
+	git config --global user.name "Joshua Tauberer"
+	git config --global user.email jt@occams.info
+	git config --global push.default simple
+
+	sudo apt-get update && sudo apt-get upgrade
+fi
+
 # Get remote libraries.
 
 git submodule update --init
@@ -21,24 +36,66 @@ function apt_install {
 	done
 
 	if [[ ! -z "$TO_INSTALL" ]]; then
-		DEBIAN_FRONTEND=noninteractive sudo apt-get -y install $PACKAGES
+		sudo DEBIAN_FRONTEND=noninteractive sudo apt-get -y install $PACKAGES
 	fi
 }
 
-apt_install python3-dnspython python3-yaml python3-lxml python3-dateutil
+apt_install python3 python-virtualenv python3-pip python3-dnspython python3-yaml python3-lxml python3-dateutil
 
-# Create the Python virtual environment for pip package installation.
-# We ues --system-site-packages to take advantage of Ubuntu security
-# updates.
-if [ ! -d .env ]; then
-	virtualenv -p python3 --system-site-packages .env
+# DEPLOYED TO WEB ONLY
+if [ "$1" == "--deployed" ]; then
+	# Get nginx from a PPA to get version 1.6 so we can support SPDY.
+	if [ ! -f /etc/apt/sources.list.d/nginx-stable-trusty.list ]; then
+		sudo apt_install software-properties-common # provides apt-add-repository
+		sudo add-apt-repository -y ppa:nginx/stable
+		sudo apt-get update
+	fi
+
+	# Install nginx, uwsgi, memcached etc.
+	apt_install nginx uwsgi-plugin-python3 memcached python3-psycopg2
+
+	# Turn off nginx's default website.
+	sudo rm -f /etc/nginx/sites-enabled/default
+
+	# Put in our site.
+	sudo rm -f /etc/nginx/sites-enabled/ifthenfund.conf /etc/nginx/nginx-ssl.conf
+	sudo ln -s `pwd`/conf/nginx.conf /etc/nginx/sites-enabled/ifthenfund.conf
+	sudo ln -s `pwd`/conf/nginx-ssl.conf /etc/nginx/nginx-ssl.conf
+
+	# DHparams for perfect forward secrecy
+	if [ ! -f /etc/ssl/local/dh2048.pem ]; then
+		mkdir -p /etc/ssl/local
+		sudo openssl dhparam -out /etc/ssl/local/dh2048.pem 2048
+	fi
+
+	# A place to collect static files and to serve as the virtual root.
+	mkdir -p /home/ubuntu/public_html/static
+	sudo service nginx restart
+
+	# Execute pip as root because the uwsgi process starter doesn't
+	# work (at least not obviously so) with a virtualenv.
+	easy_install3 pip # http://stackoverflow.com/questions/27341064/how-do-i-fix-importerror-cannot-import-name-incompleteread
+	PIP="sudo pip3"
 fi
 
-# Activate virtual environment.
-source .env/bin/activate
+# LOCAL ONLY
+if [ "$1" == "--local" ]; then
+	# Create the Python virtual environment for pip package installation.
+	# We use --system-site-packages to make it easier to get dependencies
+	# via apt first.
+	if [ ! -d .env ]; then
+		virtualenv -p python3 --system-site-packages .env
+	fi
+	
+	# Activate virtual environment.
+	source .env/bin/activate
+
+	# How shall we execute pip.
+	PIP=pip -q
+fi
 
 # Install dependencies.
-pip install -q --upgrade \
+$PIP install --upgrade \
 	"rtyaml" \
 	"django>=1.7.1" \
 	"requests" \
@@ -46,21 +103,27 @@ pip install -q --upgrade \
 	"jsonfield" \
 	"enum3field"
 
-pip install -q --upgrade -r \
+$PIP install --upgrade -r \
 	ext/django-email-confirm-la/requirements.txt
 
 # Required by django-html-emailer. Need to get Python 3 fork.
-pip install git+https://github.com/dcramer/pynliner@python3
+$PIP install git+https://github.com/dcramer/pynliner@python3
 
-# Create database / migrate database.
-./manage.py makemigrations itfsite contrib
-./manage.py migrate
+# LOCAL ONLY
+if [ "$1" == "--local" ]; then
+	# Create database / migrate database.
+	./manage.py makemigrations itfsite contrib
+	./manage.py migrate
 
-# Create an 'admin' user which will own all of the triggers, if the
-# user doesn't already exist.
-./manage.py createsuperuser --email=admin@unnamedsite.com --noinput 2&> /dev/null
-# gain access with: ./manage.py changepassword admin
+	# Create an 'admin' user.
+	./manage.py createsuperuser --email=admin@unnamedsite.com --noinput 2&> /dev/null
+	# gain access with: ./manage.py changepassword admin
 
-# Load fixtures. Only for testing...
-./manage.py loaddata fixtures/actors.json
+	# Load fixtures. Only for testing...
+	./manage.py loaddata fixtures/actors.json
+fi
 
+# DEPLOYED TO WEB ONLY
+if [ "$1" == "--deployed" ]; then
+	python3 manage.py collectstatic --noinput
+fi

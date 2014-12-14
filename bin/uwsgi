@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# Start, stop, reload, or restart the uwsgi server.
+#
+# With no arguments, starts or gracefully reloads the uwsgi server.
+# With 'stop', stops an executing server.
+# With 'restart', stops then starts it anew.
+
+# Sanity checks.
+if [ "$USER" = "" ]; then
+	echo "USER environment variable not set.";
+	exit;
+fi
+
+# Get the path to this script, since we'll execute it recursively
+# to do a restart.
+ME=`readlink -m $0`
+
+if [ "$1" = "restart" ]; then
+	# Hard restart: Do a stop first. The rest of this script
+	# will start a new instance on the default port.
+	$ME stop
+fi
+
+# Load configuration file if it exists.
+CONF=`dirname $ME`/../conf/uwsgi.conf
+NAME=default
+WSGI=wsgi.py
+PROCESSES=1
+DAEMONIZE=1
+if [ -f $CONF ]; then
+	source $CONF
+fi
+
+# Stop a running process.
+pidfile=/tmp/uwsgi_$NAME.pid
+if [[ "$1" = "stop" ]]; then
+if [[ -e $pidfile ]]; then
+	echo "Stopping..."
+	pid=$(cat $pidfile)
+	kill -QUIT $pid
+
+	# Wait till it actually exists.
+	while kill -0 $pid 2> /dev/null;
+	do
+		sleep 1
+		echo Waiting...
+	done
+
+	rm $pidfile
+fi
+exit;
+fi
+
+# Kick a running process to reload.
+if [[ -z "$1" && -e $pidfile ]]; then
+	pid=$(cat $pidfile)
+	if kill -HUP $pid 2>/dev/null; then
+		echo Reload signal sent.
+		exit
+	fi
+	# Process doesn't seem to be running, so continue and start one.
+fi
+
+# Start the new instance...
+
+echo "Starting..."
+
+# Should we daemonize or run in the foreground?
+if [ $DAEMONIZE == 1 ]; then
+	daemonize="--daemonize /tmp/uwsgi_$NAME.log --pidfile $pidfile --processes $PROCESSES --cheaper 2"
+fi
+
+# Span.
+uwsgi_python3 $daemonize --socket /tmp/uwsgi_$NAME.sock --chmod-socket=666 --wsgi-file $WSGI
