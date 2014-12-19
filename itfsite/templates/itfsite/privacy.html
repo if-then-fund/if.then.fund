@@ -1,0 +1,72 @@
+{% extends "master.html" %}
+
+{% block title %}Privacy{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="http://joshdata.github.io/browser-padlock-guide/padlock.css">
+<script src="http://joshdata.github.io/browser-padlock-guide/bowser.min.js"> </script>
+<script src="http://joshdata.github.io/browser-padlock-guide/padlock.js"> </script>
+<script>$('.padlock').padlock();</script>
+{% endblock %}
+
+{% block body %}
+<h1>Your Privacy</h1>
+
+<p><span class="site-brand">if.then.fund</span> is committed to respecting your privacy as we try to shape Congress. This page describes what happens to your information as you use the website.</p>
+
+<h2>The information we collect</h2>
+
+<dl>
+	<dt>Contributor information</dt>
+	<dd><p>When you use this website to make a campaign contribution, we ask for your name, address, occupation, employer, contribution amount, and recipient filters. We use this information to make your campaign contribution. By law we must send this information to the recipients of your contribution (primary campaign committees). If you make $200 in contributions to a candidate in a year, they will send the same information to the Federal Election Commission, a government agency, and your contributor information becomes a part of the public record. We may also display your contributor information on this website either in aggregated or anonymized form.</p></dd>
+
+	<dt>Action information</dt>
+	<dd><p>In addition to the above, we also ask you how you would vote on bills in Congress. We send this information to the recipients of your camapaign contributions, but this information is not sent to the Federal Election Commission and does not become a part of the public record. We may also display your action information on this website either in aggregated or anonymized form.</p></dd>
+
+	<dt>Payment information</dt>
+	<dd><p>In addition to the above, we also ask for payment information: your credit card number, its expiration date, and its verification code. We store the last four digits of your credit card number and a hashed (matchable but non-recoverable) form of your credit card number and expiration date. Since we do not charge your credit card until after a vote in Congress occurs, we also store a random token associated with your credit card that allows us to make the future charge on your card when the vote occurs.</p></dd>
+
+	<dt>Standard logs, cookies</dt>
+	<dd><p>As with your visits to most other websites, the date and time of each resource you access, your computer&rsquo;s IP address, where you came from, and web browser properties are stored for fraud prevention and analytics purposes. We also set a cookie, which let&rsquo;s us remember who you are, such as for keeping you logged in.</p></dd>
+
+	<dt>Accounts</dt>
+	<dd><p>If you create an account, we ask for your email address and a password to protect your account. Your password is stored only in hashed (matchable but non-recoverable) form. We will email you about your contributions and, if you&rsquo;d like, about other ways to take action on this website.</p></dd>
+</dl>
+
+<p>We currently retain all data indefinitely.</p>
+
+<h2>Our security practices</h2>
+
+<p>The connection between your browser and our web server is encrypted. Check that your address bar looks like this to know for sure:</p>
+
+	<div class="padlock" style="max-width: 300px; margin: 1em auto;"> </div>
+
+<p>We additionally employ DNSSEC, PBKDF2+SHA256 hashing for passwords, and TLS with third-party services. This all keeps your information secure. If you can think of something else we should be doing, just let us know.</p>
+
+<h2>Third-party services</h2>
+
+<p>Serving this website relies on several third party services, each of which may obtain some of the information listed above or other data concerning some aspects of your browsing history on this website. The third party services we use are quite common on the Internet today, and you almost certainly visit other websites using them on a regular basis. They are:</p>
+
+<p><a href="http://www.democracyengine.com/">Democracy Engine</a>. Democracy Engine, our sister company owned by one of our co-founders, is our payment processor and routes your contributions to the recipient candidate committees.</p>
+
+<p><a href="https://aws.amazon.com">Amazon Web Services</a>. This website is served from, and our database of all user information is located in, Amazon&rsquo;s commercial cloud hosting services.</p>
+
+<p><a href="https://www.digitalocean.com/">Digital Ocean</a>. Some other aspects of our web infrastructure are served from Digital Ocean&rsquo;s commercial cloud hosting services.</p>
+
+<p><a href="https://www.wordpress.com">WordPress</a>. Our blog is hosted at WordPress.</p>
+
+<p><a href="http://cdyne.com/">CDYNE</a>. This company provides geolocation services. We send CDYNE your street address (but no other information) to determine what congressional district you live in.</p>
+
+<p>Your browser will additionally fetch resources from <a href="http://bootstrapcdn.com/">Bootstrap CDN</a>, <a href="https://www.google.com/fonts/">Google Fonts</a>, <a href="https://developers.google.com/speed/libraries/devguide">Google Hosted Libraries</a>, and <a href="https://www.comodo.com/">Comodo</a> (HTTP OCSP and CRLs). We do not send these services any information about you, but your browser may reveal to these services that you have been visiting this website.</p>
+
+<p>We are not in the business of selling your personal data.</p>
+
+<h2>About us</h2>
+
+<p>And who are we? We&rsquo;re Civic Responsibility LLC, legally speaking. But we&rsquo;re also <a href="/about">humans</a> who have been invested in democracy and technology for more than a decade.</p>
+
+<h2>About this page</h2>
+
+<p>Although this page is subject to change, we will post a clear list of changes here as they are made.</p>
+
+{% endblock %}

@@ -3,39 +3,92 @@
 
 {% block title %}Home{% endblock %}
 
-{% block override_navbar_brand %}
-	{# hide the brand from the nav bar because it's bigger in the jumbotron #}
-{% endblock %}
 
 {% block head %}
 <style>
+@import url(http://fonts.googleapis.com/css?family=Roboto+Condensed:700);
+
 .navbar {
-	background-color: white;
+	background: none;
 	margin-bottom: 0;
 }
+	.navbar-brand {
+		display: none;
+	}
+	.navbar a {
+		color: #999;
+	}
+		.navbar .nav a:hover {
+			text-decoration: none;
+		}
 
-#homepage {
-	padding: 0 1.5em 1.5em 1.5em;
+#banner {
+	background-repeat: no-repeat;
+	background-size: 100%;
+	background-image: url('/static/img/capitol.jpg');
+	background-position: 0 100%;
+	margin-bottom: 2em;
 }
+	@media screen and (max-width: 680px) {
+		#banner {
+			background-size: auto 100%;
+			background-position: 75% 0;
+		}
+	}
+
+	#banner > h1, #banner > #deck, #homepage-body {
+		margin-left: 10vw;
+		margin-right: 8vw;
+	}
+
 	h1 {
-		margin: 0;
-		font-size: 65px;
-		color: #444;
+		font-family: 'Roboto Condensed', sans-serif;
+		font-weight: bold;
+
+		margin-top: .5em;
+		margin-bottom: 0;
+		background-color: rgba(5,100,5, .5);
+		color: white;
+		padding: .1em 20px .06em 20px;
+		font-size: 40px;
 	}
+
 	#deck {
-		padding: 1em 0 0 0;
-		font-size: 25px;
+		margin-top: 40px;
+		margin-bottom: 50px;
+		background-color: rgba(250,250,250, .83);
+		padding: 10px 20px;
+		font-size: 18px;
 		line-height: 160%;
-		color: black;
 		font-family: 'Roboto Slab', serif;
+		color: black;
 	}
 
-	#homepage img {
-		margin: 2em auto;
+	@media screen and (min-width: 440px) and (max-width: 1200px) {
+		h1 {
+			font-size: 65px;
+			font-size: 9vw;
+		}
+		#deck {
+			font-size: 24px;
+		}
+	}
+	@media screen and (min-width: 1200px) {
+		h1 {
+			margin-top: 15vw;
+			font-size: 120px;
+		}
+		#deck {
+			font-size: 28px;
+		}
 	}
 
-h3 {
-	font-weight: bold;
+#homepage-body {
+}
+
+.expl {
+	margin: 2em 0 1em 0;
+	color: #555;
 }
 
 .trigger-list {
@@ -57,61 +110,65 @@ h3 {
 </style>
 {% endblock %}
 
-{% block body %}
-<div id="homepage">
-	<h1>if.then.fund</h1>
+{% block body-wide %}
+<div id="homepage" class="container-fluid">
+	<div id="banner" class="row">
+		{% include "navbar.html" %}
 
-	<div id="deck">
-		Reshaping Congress by empowering <strong>small dollar donors</strong> to make contributions based on <strong>what politicians do</strong> — not what they promise.
+		<h1>if.then.fund</h1>
+		<div id="deck">
+			Reshaping Congress by empowering <strong>small dollar donors</strong> to make contributions based on <strong>what politicians do</strong> — not what they promise.
+		</div>
 	</div>
 
-	<img src="/static/img/homepage-diagram.svg" class="img-responsive" title="How It Works">
-
-	<hr>
-
-	<div class="row" id="tron">
-		{% if open_triggers|length > 0 %}
-		<div class="col-md-7">
-			<h3 class="invert"><span>Upcoming votes</span></h3>
-			<ul class="trigger-list">
-				{% for t in open_triggers %}
-					<li>
-						<div><a href="{{t.get_absolute_url}}">{{t.title}}</a></div>
-						<div>
-							<span>{{t.total_pledged|currency}} committed so far</span>
-							&mdash; <a href="{{t.get_absolute_url}}">Take Action</a>
-						</div>
-					</li>
-				{% endfor %}
-			</ul>
-		</div>
-		{% endif %}
-
-		{% if recent_executed_triggers|length > 0 %}
-		<div class="col-md-{% if open_triggers|length > 0 %}5{% else %}12{% endif %}">
-			<div class="{% if open_triggers|length > 0 %}col-md-left-border{% endif %}">
-				<h3 class="invert"><span>Recently</span></h3>
+	<div id="homepage-body">
+		<div class="row" id="tron">
+			{% if open_triggers|length > 0 %}
+			<div class="col-md-7">
+				<h3 class="invert"><span>Upcoming votes</span></h3>
+				<p class="expl">Make a contribution to senators, representatives, or their next opponents based on the outcome of one of these upcoming votes:</p>
 				<ul class="trigger-list">
-					{% for t in recent_executed_triggers %}
+					{% for t in open_triggers %}
 						<li>
-							<a href="{{t.get_absolute_url}}">{{t.title}}</a>
-							<br><span>
-							{% for outcome in t.execution.get_outcomes %}
-								{{outcome.label}}: {{outcome.contribs|currency}}
-								{% if not forloop.last %} | {% endif %}
-							{% endfor %}
+							<div><a href="{{t.get_absolute_url}}">{{t.title}}</a></div>
+							<div>
+								<span>{{t.total_pledged|currency}} committed so far</span>
+								&mdash; <a href="{{t.get_absolute_url}}" style="text-decoration: underline">Take Action</a>
+							</div>
 						</li>
 					{% endfor %}
 				</ul>
 			</div>
+			{% endif %}
+
+			{% if recent_executed_triggers|length > 0 %}
+			<div class="col-md-{% if open_triggers|length > 0 %}5{% else %}12{% endif %}">
+				<div class="{% if open_triggers|length > 0 %}col-md-left-border{% endif %}">
+					<div class="visible-xs visible-sm" style="height: 1em"> </div>
+					<h3 class="invert"><span>Recently</span></h3>
+					<p class="expl">Check out recent votes our users made campaign contributions about:</p>
+					<ul class="trigger-list">
+						{% for t in recent_executed_triggers %}
+							<li>
+								{{t.title}}
+								<br><span>
+								{% for outcome in t.execution.get_outcomes %}
+									{{outcome.label}}: {{outcome.contribs|currency}}
+									{% if not forloop.last %} | {% endif %}
+								{% endfor %}</span>
+								<br><a href="{{t.get_absolute_url}}">view details</a>
+							</li>
+						{% endfor %}
+					</ul>
+				</div>
+			</div>
+			{% endif %}
 		</div>
-		{% endif %}
-	</div>
 
-	<hr>
+		<hr>
 
-	<h2>Why we&rsquo;re doing this</h2>
+		<h2>Why we&rsquo;re doing this</h2>
 
-	<p>By targeting real outcomes, shaping the next Congress, aggregating donations, and reaching all members of Congress, we hope to raise the tide of small-donor supporters and shift the balance of power away from concentrated wealth. Read <a href="/about">more about the site</a> for more details.</p>
+		<p>By targeting real outcomes, shaping the next Congress, aggregating donations, and reaching all members of Congress, we hope to raise the tide of small-donor supporters and shift the balance of power away from concentrated wealth. Read <a href="/about">more about the site</a> for more details.</p>
 
 {% endblock %}

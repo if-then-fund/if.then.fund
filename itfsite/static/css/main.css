@@ -5,6 +5,7 @@
 @import url(http://fonts.googleapis.com/css?family=Roboto+Slab:400,300,700);
 
 body {
+	background-color: #FAFAFA;
 	font-family: 'Noto Serif', serif;
 	font-size: 16px;
 	line-height: 140%;
@@ -55,7 +56,7 @@ a {
 	background-color: #EEE;
 }
 
-	a.navbar-brand, #homepage h1, .site-brand {
+	a.navbar-brand, .site-brand {
 		font-family: 'Fredoka One', cursive;
 	}
 		.site-brand {
@@ -105,6 +106,7 @@ a {
 
 h3.invert {
 	margin: 1em 0 1em -2px;
+	font-weight: bold;
 	color: white;
 }
 	h3.invert span {
