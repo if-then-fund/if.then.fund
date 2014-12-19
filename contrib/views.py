@@ -406,7 +406,7 @@ def trigger_execution_report(request, id):
 			if idscheme in action.extra['legislators-current']['id']:
 				ret[idscheme+"_id"] = action.extra['legislators-current']['id'][idscheme]
 		for key in ('state', 'district', 'url', 'end'):
-			v = action.extra['legislators-current']['terms'][-1].get(key)
+			v = action.extra['legislators-current']['term'].get(key)
 			if key == 'url': key = 'homepage'
 			if key == 'end': key = 'term_end'
 			if v:

@@ -32,6 +32,8 @@ class Command(BaseCommand):
 		for p in r:
 			# The last term is the Member of Congress's current term.
 			term = p['terms'][-1]
+			del p['terms']
+			p['term'] = term
 
 			# Group independents with the party they caucus with. Try the
 			# 'caucus' field first, and if it's not set (which is typical)
