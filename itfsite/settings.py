@@ -64,7 +64,7 @@ DATABASES = {
 		'NAME': local('db.sqlite3'),
 	}
 }
-if environment['db']:
+if environment.get('db'):
 	DATABASES['default'].update(environment['db'])
 	CONN_MAX_AGE = 60
 
@@ -73,7 +73,7 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
-if environment['memcached']:
+if environment.get('memcached'):
 	CACHES['default']['BACKEND'] = 'django.core.cache.backends.memcached.MemcachedCache'
 	SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
@@ -91,7 +91,7 @@ USE_TZ = True
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 AUTH_USER_MODEL = 'itfsite.User'
 
-if environment["email"]:
+if environment.get("email"):
 	EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 	EMAIL_HOST = environment["email"]["host"]
 	EMAIL_PORT = environment["email"]["port"]
