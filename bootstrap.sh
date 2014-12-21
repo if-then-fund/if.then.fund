@@ -12,7 +12,7 @@ if [ "$1" == "--deployed" ]; then
 	git config --global user.email jt@occams.info
 	git config --global push.default simple
 
-	sudo apt-get update && sudo apt-get upgrade
+	sudo apt-get update -q -q && sudo apt-get upgrade
 fi
 
 # Get remote libraries.
@@ -98,6 +98,7 @@ fi
 $PIP install --upgrade \
 	"rtyaml" \
 	"django>=1.7.1" \
+	"python3-memcached" \
 	"requests" \
 	"markdown2" \
 	"jsonfield" \

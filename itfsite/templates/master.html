@@ -37,6 +37,10 @@
     <!--[if lt IE 8]><p>Internet Explorer version 8 or any modern web browser is required to use this website, sorry.<![endif]-->
     <!--[if gt IE 7]><!-->
 
+  {% if SITE_MODE == "demo" %}
+  <div id="not-production">This is the demo server. Use fake data here. No transactions are real.</div>
+  {% endif %}
+
   {% block body-wide %}
   <div id="body-content" class="container">
     <div class="row">

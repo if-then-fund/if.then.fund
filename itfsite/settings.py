@@ -41,6 +41,7 @@ MIDDLEWARE_CLASSES = (
 	'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
 	'django.contrib.messages.middleware.MessageMiddleware',
 	'django.middleware.clickjacking.XFrameOptionsMiddleware',
+	'twostream.middleware.CacheLogic',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -51,7 +52,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 	"django.core.context_processors.static",
 	"django.core.context_processors.tz",
 	"django.contrib.messages.context_processors.messages",
-	'django.core.context_processors.request',
+	"django.core.context_processors.request",
+	"itfsite.middleware.itfsite_template_context_processor",
 	)
 
 AUTHENTICATION_BACKENDS = ['itfsite.accounts.DirectLoginBackend', 'itfsite.accounts.EmailPasswordLoginBackend']
@@ -71,6 +73,7 @@ if environment.get('db'):
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': '127.0.0.1:11211',
     }
 }
 if environment.get('memcached'):
@@ -122,13 +125,14 @@ LOGIN_REDIRECT_URL = '/home'
 # App settings
 
 EMAIL_CONFIRM_LA_HTTP_PROTOCOL = 'https' if environment["https"] else 'http'
-EMAIL_CONFIRM_LA_DOMAIN = 'itfsite.unnamed.example'
+EMAIL_CONFIRM_LA_DOMAIN = environment['host']
 EMAIL_CONFIRM_LA_SAVE_EMAIL_TO_INSTANCE = False
-DEFAULT_FROM_EMAIL = 'if.then.fund <hello@itfsite.unnamed.example>'
-SITE_ROOT_URL = "https://unnamedsite"
+DEFAULT_FROM_EMAIL = 'if.then.fund <hello@mail.if.then.fund>'
+SITE_ROOT_URL = EMAIL_CONFIRM_LA_HTTP_PROTOCOL + "://" + environment['host']
 
 # Local Settings
 
+SITE_MODE = environment.get("mode")
 ADMINS = ["josh@if.then.fund"]
 NO_SMTP_CHECK = environment["no_smtp_check"]
 DE_API = environment['democracyengine']
