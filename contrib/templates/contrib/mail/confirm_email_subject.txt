@@ -1,3 +1,3 @@
 {% autoescape off %}
-Confirm Your Contribution for {{pledge.target.title}}
+Confirm Your Contribution for {{pledge.trigger.title}}
 {% endautoescape %}
