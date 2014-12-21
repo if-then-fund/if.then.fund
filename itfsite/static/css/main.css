@@ -89,6 +89,13 @@ a {
 	border: none;
 }
 
+#not-production {
+	background-color: #E93;
+	padding: 2px;
+	text-align: center;
+	color: white;
+}
+
 /* PAGE ELEMENTS */
 
 @media screen and (min-width: 992px) {
