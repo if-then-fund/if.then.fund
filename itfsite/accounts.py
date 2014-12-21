@@ -107,6 +107,10 @@ class LoginResult(enum.Enum):
 	Success = 3
 
 def validate_email(email, simple=False):
+	def log(s):
+		import sys
+		print(s, file=sys.stderr)
+
 	# First check that the email is of a valid form.
 
 	# Based on RFC 2822 and https://github.com/SyrusAkbary/validate_email/blob/master/validate_email.py,
@@ -122,6 +126,7 @@ def validate_email(email, simple=False):
 
 	m = re.match(ADDR_SPEC, email)
 	if not m:
+		log("email sytax error: %s" % email)
 		return ValidateEmailResult.Invalid
 
 	if simple:
@@ -152,9 +157,11 @@ def validate_email(email, simple=False):
 			except (dns.resolver.NoNameservers, dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
 				# If there was any problem resolving the domain name,
 				# then the address is not valid.
+				log("email dns error: %s" % email)
 				return ValidateEmailResult.Invalid
-	except:
+	except Exception as e:
 		# Some unhandled condition should not propagate.
+		log("email unhandled error: %s %s" % (email, str(e)))
 		return ValidateEmailResult.Error
 
 
@@ -178,6 +185,7 @@ def validate_email(email, simple=False):
 			continue
 		except:
 			# Some unhandled condition should not propagate.
+			log("email delivery error: %s" % email)
 			return ValidateEmailResult.Error
 
 		try:
@@ -201,22 +209,19 @@ def validate_email(email, simple=False):
 				# That's common. But we can err on the side of deliverability
 				# here.
 				return ValidateEmailResult.Deliverable
-			elif status == 450:
-				# Although this is a temporary failure code and a nonexistent
-				# mailbox is a subset, there would be little reason for the MTA
-				# to issue this response if the address were actually deliverable.
-				return ValidateEmailResult.Invalid
 			else:
 				# Other conditions mean we don't know. The address looks reasonably
 				# valid but we can't speak to deliverability. There could be other
-				# reasons our test is being rejected.
+				# reasons our test is being rejected, such as greylisting.
 				return ValidateEmailResult.Valid
-		except:
+		except Exception as e:
 			# Some unhandled condition should not propagate.
+			log("email unhandled error: %s %s" % (email, str(e)))
 			return ValidateEmailResult.Error
 
 	# There was no MX that was open to a connection, so the domain
 	# is probably not valid.
+	log("email has no listening MTA: %s" % email)
 	return ValidateEmailResult.Invalid
 
 # A view that validates an email (passed in the 'email' POST argument)
