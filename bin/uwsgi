@@ -64,11 +64,11 @@ fi
 
 # Start the new instance...
 
-echo "Starting..."
+echo "Starting $NAME..."
 
 # Should we daemonize or run in the foreground?
 if [ $DAEMONIZE == 1 ]; then
-	daemonize="--daemonize /tmp/uwsgi_$NAME.log --pidfile $pidfile --processes $PROCESSES --cheaper 2"
+	daemonize="--daemonize /tmp/uwsgi_$NAME.log --pidfile $pidfile --processes $PROCESSES"
 fi
 
 # Span.
