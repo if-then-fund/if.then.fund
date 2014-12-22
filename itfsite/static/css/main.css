@@ -55,6 +55,9 @@ a {
 .navbar {
 	background-color: #EEE;
 }
+	.navbar .navbar-toggle .icon-bar {
+		background-color: #888;
+	}
 
 	a.navbar-brand, .site-brand {
 		font-family: 'Fredoka One', cursive;
