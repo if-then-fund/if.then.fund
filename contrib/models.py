@@ -421,14 +421,13 @@ class Pledge(models.Model):
 		if self.filter_competitive:
 			actors += " in competitive races"
 
-		action = "who %s %s" % (
-			self.trigger.strings['action'],
-			desired_outcome_label)
+		verb = self.trigger.strings['action' if self.status != PledgeStatus.Executed else "action_past"]
+		action = "who %s %s" % (verb, desired_outcome_label)
 
 		descr = party_filter + actors + " " + action
 
 		if self.incumb_challgr == 0:
-			descr += " or their next general election opponent for those that vote the other way"
+			descr += " or their next general election opponent for those that %s the other way" % verb
 
 		return descr
 

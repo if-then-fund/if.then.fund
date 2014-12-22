@@ -48,6 +48,7 @@ def create_trigger_from_bill(bill_id, chamber):
 	t.strings = {
 		"actors": chamber_actors,
 		"action": "vote",
+		"action_past": "voted",
 	}
 
 	t.extra = {

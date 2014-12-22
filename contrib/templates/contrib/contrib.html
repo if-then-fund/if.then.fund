@@ -1,68 +1,78 @@
 {% load itfsite_utils %}
 
-<h2>Your Contribution</h2>
-
 {% if not pledge.user %}
-<div class="alert alert-warning">
-	We sent an email to {{pledge.email}}. You must click the link in the email to confirm your email address before this contribution can be scheduled.
+<div class="panel panel-danger">
+<div class="panel-heading">
+	<h3 class="panel-title">Confirm your email address</h3>
 </div>
+<div class="panel-body">
+	<p>We sent an email to {{pledge.email}}. You must click the link in the email to confirm your email address before the contribution can be made.</p>
+	<hr>
+{% else %}
+<div class="panel panel-success">
+<div class="panel-heading">
+	<h3 class="panel-title">Your contribution</h3>
+</div>
+<div class="panel-body">
 {% endif %}
 
-<p>You {% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}made{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}have scheduled{% else %}scheduled{% endif %} a campaign contribution for this {{trigger.strings.action}}:</p>
+	<p>You
+	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}made{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}have scheduled{% else %}scheduled{% endif %}
+	a campaign contribution of
+	{% if not execution %}
+		${{pledge.amount|floatformat:2}}
+	{% else %}
+		${{execution.charged|floatformat:2}}
+	{% endif %}
+	for this {{trigger.strings.action}}.
+	It
+	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}was{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}will be{% else %}would have been{% endif %}
+	split among
+	{{pledge.targets_summary}}.
+	</p>
 
-<dl>
-		<dt>Amount</dt>
-		<dd>
-			{% if not execution %}
-				${{pledge.amount|floatformat:2}}
-			{% else %}
-				${{execution.charged|floatformat:2}}
-				{% if execution.charged < pledge.amount %}
-					<div class="small">Your credit card was charged less than your pledge of ${{pledge.amount|floatformat:2}}. We can only make whole-penny contributions to the recipients of your contribution, so we had to round down.</div>
-				{% endif %}
-			{% endif %}
-		</dd>
+	{% if execution and execution.charged < pledge.amount %}
+		<p class="small text-muted">Your credit card was charged less than your intended contribution of ${{pledge.amount|floatformat:2}}. We can only make whole-penny contributions to the recipients of your contribution, so we had to round down.</p>
+	{% endif %}
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
 		{% if pledge.trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
-			<dt>Status</dt> <dd>The {{trigger.strings.action}} has not yet occurred. The contribution will only be made once it occurs.</dd>
+			<p>Your credit card will be charged only after the {{trigger.strings.action}} occurs.</p>
 		{% else %}
-			<dt>Status</dt> <dd>Your contribution has not yet been made. You are still able to cancel the contribution.</dd>
+			<p>The {{trigger.strings.action}} has occurred, and we are about to process your contribution. You are still able to cancel the contribution before we process it.</p>
 		{% endif %}
+	{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Vacated' %}
+		<p>The event that this contribution was for is no longer expected to occur. Your contribution has been cancelled. Your credit card was not charged.</dd>
 	{% endif %}
-	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Vacated' %}
-		<dt>Status</dt> <dd>The event that this contribution was pledged for is not expected to occur. The pledge is cancelled.</dd>
+
+	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
+	<p><a href="#" onclick="return cancel_pledge()">Cancel?</a></p>
 	{% endif %}
-
-		<dt>For</dt>
-		<dd>
-			{{pledge.targets_summary}}
-
-			{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}
-				(<a href="#" onclick="$('#my_recipients').fadeToggle(); return false;">show {{contribs|length}} recipient{{contribs|length|pluralize}}</a>)
-
-				<div id="my_recipients" style="display: none;">
-					<table class="table small" style="margin: .5em 0 10px 0">
-					<thead>
-						<tr><th style="padding-left: 0">Amount</th> <th>Recipient</th></tr>
-					</thead>
-					<tbody>
-					{% for contrib in contribs %}
-						<tr><td style="padding-left: 0">${{contrib.amount|floatformat:2}}</td> <td>{{contrib.recipient.name}}</td></tr>
-					{% endfor %}
-					</tbody>
-					</table>
-					<p class="small">Plus fees.</p>
-				</div>
-			{% endif %}		
-		</dd>
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' and pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
-	<p><a href="#" onclick="$('#my-contrib-details').fadeToggle(); return false;">show more details</a></p>
+	<p>
+		show:
+		<a href="#" onclick="$('#my_recipients').fadeToggle(); return false;">{{contribs|length}} recipient{{contribs|length|pluralize}}</a>
+		|
+		<a href="#" onclick="$('#my-contrib-details').fadeToggle(); return false;">your details</a>
+	</p>
 
+	<div id="my_recipients" style="display: none;">
+		<table class="table small" style="margin: .5em 0 10px 0">
+		<thead>
+			<tr><th style="padding-left: 0">Amount</th> <th>Recipient</th></tr>
+		</thead>
+		<tbody>
+		{% for contrib in contribs %}
+			<tr><td style="padding-left: 0">${{contrib.amount|floatformat:2}}</td> <td>{{contrib.recipient.name}}</td></tr>
+		{% endfor %}
+		</tbody>
+		</table>
+		<p class="small">Plus {{pledge.execution.fees|currency}} fees.</p>
+	</div>
+	
 	<div id="my-contrib-details" style="display: none">
-		<dt>Pledged</dt> <dd>{{pledge.created|date}}</dd>
-
+		<dl>
 		<dt>Contributor</dt>
 		<dd>
 			<p>
@@ -73,14 +83,13 @@
 			</p>
 			<p class="expl">The information above is made available to the candidates receiving your contributions. If you make $200 in contributions to any one candidate in a calendar year, the information also becomes a matter of public record by law.</p>
 		</dd>
+		</dl>
 	</div>
 	{% endif %}
 
-	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
-	<p><a href="#" onclick="return cancel_pledge()">Cancel?</a></p>
-	{% endif %}
+  </div>
+</div>
 
-</dl>
 
 <script>
 function cancel_pledge(desire) {

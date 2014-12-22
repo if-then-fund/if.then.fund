@@ -75,6 +75,9 @@
 }
 </style>
 
+<div id="my-pledge">
+</div>
+
 <div id="make-pledge">
   <h2>How would you {{trigger.strings.action}}?</h2>
 
@@ -365,7 +368,8 @@ function pledge_init() {
   // the user's session. Replace the form and return since
   // everything else is about form validation.
   if (the_page && the_page.pledge_made) {
-    $('#make-pledge').html(the_page.pledge_made);
+    $('#make-pledge').hide();
+    $('#my-pledge').html(the_page.pledge_made);
     return;
   }
 

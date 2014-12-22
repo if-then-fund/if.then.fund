@@ -19,23 +19,24 @@
 }
   .meta-stat .num {
   	margin-bottom: 8px;
-    font-size: 36px;
+	font-size: 36px;
   	color: #444;
   }
   .meta-stat .lbl {
 	color: #555;
   }
+  .meta-stat.lesser .num {
+	font-size: 30px;
+  }
 
-#my-pledge dd {
-	margin-bottom: .5em;
+#my-pledge {
+	margin: 1.5em 0 2em 0;
 }
-#my-pledge .expl {
-	font-style: italic;
-}
-	#trigger-metadata #my-pledge {
-		font-size: 88%;
-	}
 
+#trigger-metadata .panel-body {
+	line-height: 130%;
+	font-size: 88%;
+}
 </style>
 {% endblock %}
 
@@ -81,10 +82,14 @@
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
 			{{execution.description|render_text:execution.description_format}}
 
+			<h2>Contributions</h2>
+
 			<p>{{execution.pledge_count_with_contribs}} donor{{execution.pledge_count_with_contribs|pluralize}} made contributions totalling {{execution.total_contributions|currency}}.</p>
 
-			<h2>Totals</h2>
+			<div id="my-pledge">
+			</div>
 
+			<h3>Totals</h3>
 
 			<div class="row">
 				<div class="col-sm-6">
@@ -119,10 +124,12 @@
 				</div>
 			</div>
 
-			<p><a href="#" onclick="$(this).parent().remove(); $('#contribs-by-recipient').fadeIn(); return false;">Show Details</a></p>
+			<p>{{num_recips}} {{trigger.strings.actors}} {{trigger.strings.action_past}}.
+			<span><a href="#" onclick="$(this).parent().remove(); $('#contribs-by-recipient').fadeIn(); return false;">Show Details</a>.</span>
+			</p>
 
 			<div id="contribs-by-recipient" style="display: none">
-				<h2>Contributions to {{trigger.strings.actors|capfirst}}</h2>
+				<h3>{{trigger.strings.actors|capfirst}}</h3>
 
 				<table class="table" style="width: auto">
 				<thead>
@@ -140,8 +147,10 @@
 						<td {% if not action.has_outcome %}style="font-style: italic"{% endif %}>
 							{{action.outcome_label}}
 						</td>
-						<td class="{% if action.total_contributions_for %}text-success{% else %}text-muted{% endif %}">${{action.total_contributions_for|floatformat:2}}</td>
-						<td class="{% if action.total_contributions_against %}text-danger{% else %}text-muted{% endif %}">${{action.total_contributions_against|floatformat:2}}</td>
+						{% if action.has_outcome %}
+						<td class="{% if action.total_contributions_for %}text-success{% else %}text-muted{% endif %}">{{action.total_contributions_for|currency}}</td>
+						<td class="{% if action.total_contributions_against %}text-danger{% else %}text-muted{% endif %}">{{action.total_contributions_against|currency}}</td>
+						{% endif %}
 					</tr>
 				{% endfor %}
 				</tbody>
@@ -172,9 +181,6 @@
 			<p>This action was posted on {{trigger.created|date}}.</p>
 
 		{% else %}
-			<div id="my-pledge">
-			</div>
-
 			<h2>Summary</h2>
 
 			<div class="meta-stat">
@@ -187,26 +193,31 @@
 				<div class="lbl">donor{{execution.pledge_count_with_contribs|pluralize}}</div>
 			</div>
 
-			<div class="meta-stat">
+			<hr>
+
+			<div class="meta-stat lesser">
 				<div class="num">{{avg_pledge|currency}}</div>
 				<div class="lbl">average contributions per donor</div>
 			</div>
 
-			<div class="meta-stat">
+			<hr>
+
+			<div class="meta-stat lesser">
 				<div class="num">{{num_contribs}}</div>
-				<div class="lbl">contributon{{num_contribs|pluralize}}</div>
+				<div class="lbl">contribution{{num_contribs|pluralize}}</div>
 			</div>
 
-			<div class="meta-stat">
+			<div class="meta-stat lesser">
 				<div class="num">{{avg_contrib|currency}}</div>
 				<div class="lbl">average contribution</div>
 			</div>
 
-			<div class="meta-stat">
+			<hr>
+
+			<div class="meta-stat lesser">
 				<div class="num">{{num_recips}}</div>
 				<div class="lbl">recipient{{num_recips|pluralize}}</div>
 			</div>
-
 		{% endif %}
 	</div>
 </div>

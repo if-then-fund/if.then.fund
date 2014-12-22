@@ -36,7 +36,15 @@ def user_home(request):
 	else:
 		total_pledged = total_pledged.aggregate(total_pledged=Sum('amount'))['total_pledged']
 
+	# Get the user's total amount of executed campaign contributions.
+	total_contribs = pledges.filter(status=PledgeStatus.Executed)
+	if len(total_contribs) == 0:
+		total_contribs = 0.0
+	else:
+		total_contribs = total_contribs.aggregate(total_contribs=Sum('execution__charged'))['total_contribs']
+
 	return render(request, "itfsite/home.html", {
 		'pledges': pledges,
 		'total_pledged': total_pledged,
+		'total_contribs': total_contribs,
 		})
