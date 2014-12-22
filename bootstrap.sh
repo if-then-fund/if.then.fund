@@ -117,8 +117,8 @@ if [ "$1" == "--local" ]; then
 	./manage.py migrate
 
 	# Create an 'admin' user.
-	./manage.py createsuperuser --email=admin@unnamedsite.com --noinput 2&> /dev/null
-	# gain access with: ./manage.py changepassword admin
+	./manage.py createsuperuser --email=ops@if.then.fund --noinput 2&> /dev/null
+	# gain access with: ./manage.py changepassword ops@if.then.fund
 
 	# Load fixtures. Only for testing...
 	./manage.py loaddata fixtures/actors.json
