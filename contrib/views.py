@@ -123,13 +123,18 @@ def get_user_defaults(request):
 	if not isinstance(user, User):
 		return { "status": str(user) }
 
+	# check that the user hasn't already done this
+	trigger = Trigger.objects.get(id=request.POST['trigger'])
+	if trigger.pledges.filter(user=user).exists():
+		return { "status": "AlreadyPledged" }
+
 	# get recent data
 	return get_recent_pledge_defaults(user, request)
 
 def get_recent_pledge_defaults(user, request):
 	ret = { }
 
-	if request.user.is_authenticated():
+	if user.is_authenticated():
 		pledge = Pledge.objects.filter(user=user).order_by('-created').first()
 		if not pledge: return ret
 	elif request.session.get('anon_pledge_created'):

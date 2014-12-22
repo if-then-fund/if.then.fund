@@ -220,7 +220,7 @@
             <td><label for="emailEmailNoPassword">No, this is my first time here.</label></td>
           </tr>
           <tr>
-            <td><input id="emailEmailYesPassword" type="radio" name="hasPassword" value="1"></td>
+            <td><input id="emailEmailYesPassword" type="radio" name="hasPassword" value="1" onchange="setTimeout('$(&quot;#emailPassword&quot;).focus()', 1)"></td>
             <td><label for="emailEmailYesPassword">Yes, I have a password:</label></td>
           </tr>
           <tr>
@@ -591,13 +591,15 @@ function do_pledge_login() {
 
   if ($('#emailEmailYesPassword').prop('checked')) {
     // User wants to log in. An AJAX login will reset the CSRF token, so
-    // we'll avoid actually logging the user in now.
+    // we'll avoid actually logging the user in now and just do validation
+    // and get defaults for the fields that follow.
     ajax({
       url: "/contrib/_defaults",
       method: "POST",
       data: {
         email: $('#emailEmail').val(),
         password: $('#emailPassword').val(),
+        trigger: {{trigger.id}}
       },
       success: function(response) {
         if (response.status == "ValidateEmailResult.Invalid") {
@@ -606,6 +608,11 @@ function do_pledge_login() {
         }
         if (response.status == "LoginResult.Incorrect" || response.status == "LoginResult.Inactive") {
           $('#login-error').text("Your email address or password does not match an account here.");
+          $('#login-error').slideDown();
+          return;
+        }
+        if (response.status == "AlreadyPledged") {
+          $('#login-error').text("You have already scheduled a contribution for this {{trigger.strings.action|escapejs}}. Please log in to see details.");
           $('#login-error').slideDown();
           return;
         }
