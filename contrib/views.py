@@ -132,6 +132,9 @@ def get_user_defaults(request):
 	return get_recent_pledge_defaults(user, request)
 
 def get_recent_pledge_defaults(user, request):
+	# Return a dictionary of information submitted with the user's most recent pledge
+	# so that we can pre-fill form fields.
+
 	ret = { }
 
 	if user.is_authenticated():
@@ -154,6 +157,9 @@ def get_recent_pledge_defaults(user, request):
 			ret[field] = float(ret[field])
 		elif isinstance(ret[field], ActorParty):
 			ret[field] = str(ret[field])
+
+	ret['cclastfour'] = pledge.cclastfour
+	ret['cc_from_pledge'] = pledge.id
 
 	return ret
 
@@ -241,22 +247,6 @@ def create_pledge(request):
 	elif request.POST['filter_party'] == 'R':
 		p.filter_party = ActorParty.Republican
 
-	# Store the last four digits of the credit card number so we can
-	# quickly locate a Pledge by CC number (approximately).
-	p.cclastfour = request.POST['billingCCNum'][-4:]
-	ccnum = request.POST['billingCCNum'].replace(" ", "").strip() # Stripe's javascript inserts spaces
-	ccexpmonth = int(request.POST['billingCCExpMonth'])
-	ccexpyear = int(request.POST['billingCCExpYear'])
-	cccvc = request.POST['billingCCCVC'].strip()
-
-	# Store a hashed version of the credit card information so we can
-	# do a verification if the user wants to look up a Pledge by CC
-	# info. Use Django's built-in password hashing functionality to
-	# handle this.
-	from django.contrib.auth.hashers import make_password
-	cc_key = ','.join((ccnum, str(ccexpmonth), str(ccexpyear)))
-	p.extra['billingInfoHashed'] = make_password(cc_key)
-			
 	# Validation. Some are checked client side, so errors are internal
 	# error conditions and not validation problems to show the user.
 	if p.algorithm != Pledge.current_algorithm()["id"]:
@@ -277,23 +267,60 @@ def create_pledge(request):
 		# Re-wrap into something @json_response will catch.
 		raise ValueError("Something went wrong: " + str(e))
 
-	# Perform an authorization test on the credit card.
-	#   a) This tests that the billing info is valid.
-	#   b) We get a token that we can use on future transactions so that we
-	#      do not need to collect the credit card info again.
-	# This may raise all sorts of exceptions, which will cause the database
-	# transaction to roll back. A HumanReadableValidationError will be caught
-	# in the calling function and shown to the user. Other exceptions will
-	# just generate generic unhandled error messages.
-	de_txn = run_authorization_test(p, ccnum, ccexpmonth, ccexpyear, cccvc, request)
+	if not request.POST["billingFromPledge"]:
+		# Get and do simple validation on the billing fields.
+		ccnum = request.POST['billingCCNum'].replace(" ", "").strip() # Stripe's javascript inserts spaces
+		ccexpmonth = int(request.POST['billingCCExpMonth'])
+		ccexpyear = int(request.POST['billingCCExpYear'])
+		cccvc = request.POST['billingCCCVC'].strip()
 
-	# Note that any exception after this point is okay because the authorization
-	# will expire on its own anyway.
+		# Store the last four digits of the credit card number so we can
+		# quickly locate a Pledge by CC number (approximately).
+		p.cclastfour = ccnum[-4:]
+	
+		# Store a hashed version of the credit card information so we can
+		# do a verification if the user wants to look up a Pledge by CC
+		# info. Use Django's built-in password hashing functionality to
+		# handle this.
+		from django.contrib.auth.hashers import make_password
+		cc_key = ','.join((ccnum, str(ccexpmonth), str(ccexpyear)))
+		p.extra['billingInfoHashed'] = make_password(cc_key)
+			
+		# Perform an authorization test on the credit card.
+		#   a) This tests that the billing info is valid.
+		#   b) We get a token that we can use on future transactions so that we
+		#      do not need to collect the credit card info again.
+		# This may raise all sorts of exceptions, which will cause the database
+		# transaction to roll back. A HumanReadableValidationError will be caught
+		# in the calling function and shown to the user. Other exceptions will
+		# just generate generic unhandled error messages.
+		de_txn = run_authorization_test(p, ccnum, ccexpmonth, ccexpyear, cccvc, request)
 
-	# Store the transaction authorization, which contains the credit card token,
-	# into the pledge.
-	p.extra["authorization"] = de_txn
-	p.extra["de_cc_token"] = de_txn['token']
+		# Note that any exception after this point is okay because the authorization
+		# will expire on its own anyway.
+
+		# Store the transaction authorization, which contains the credit card token,
+		# into the pledge.
+		p.extra["authorization"] = de_txn
+		p.extra["de_cc_token"] = de_txn['token']
+	else:
+		# This is a returning user and we are re-using the DE credit card token
+		# from a previous pledge. Validate that the pledge id corresponds to a
+		# pledge previously submitted by this user. Only works for an authenticated
+		# user.
+		prev_p = Pledge.objects.get(
+			id=request.POST["billingFromPledge"],
+			user=p.user)
+
+		# Copy all of the billing fields forward except for 'authorization' since
+		# in this case there is no authorization.
+		p.extra["de_cc_token"] = prev_p.extra["de_cc_token"]
+		p.extra["billingInfoHashed"] = prev_p.extra["billingInfoHashed"]
+		p.cclastfour = prev_p.cclastfour
+
+		# Record where we got the info from.
+		p.extra["de_cc_via_pledge"] = prev_p.id
+
 	p.save()
 
 	# Increment the trigger's pledge_count and total_pledged fields (atomically).

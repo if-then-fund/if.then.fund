@@ -120,6 +120,7 @@
     <input type="hidden" name="filter_competitive" value=""/>
     <input type="hidden" name="billingCCExpMonth" value="?"/>
     <input type="hidden" name="billingCCExpYear" value="?"/>
+    <input type="hidden" name="billingFromPledge" value=""/>
 
     <div class="tab-content">
       <div class="tab-pane active" id="start">
@@ -310,6 +311,7 @@
       <div class="tab-pane" id="payment">
         <div class="row">
           <div class="col-md-6">
+            <div id="payment-new">
             <p>Enter your payment information:</p>
 
             <table>
@@ -340,6 +342,16 @@
                 </td>
               </tr>
             </table>
+            </div>
+
+            <div id="payment-old" style="display: none">
+              <p>When the {{trigger.strings.action}} occurs, we&rsquo;ll charge your credit card ending in <span class="cc-num"></span>.</p>
+              <p><a href="#" onclick="$('#pledge-info input[name=&quot;billingFromPledge&quot;]').val(''); $('#payment-old').hide(); $('#payment-new').show(); return false;">Enter new card information?</a></p>
+              <div class="buttons">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
+                <button type="button" class="btn btn-warning" onclick="pledge_submit()">Confirm</button>
+              </div>
+            </div>
           </div>
           <div class="col-md-6">
             <div class="panel panel-info">
@@ -382,6 +394,8 @@ function pledge_init() {
 
   // Set some defaults based on the user's last pledge.
   if (the_page && the_page.pledge_defaults) {
+    // Set defaults for the first tab, which appears before the user has a chance to login.
+
     if (the_page.pledge_defaults['amount'])
       $('#pledge-amount input').val(the_page.pledge_defaults['amount'].toFixed(2));
 
@@ -403,6 +417,7 @@ function pledge_init() {
     if (the_page.pledge_defaults.email)
         $('#emailEmail').val(the_page.pledge_defaults.email);
 
+    // Set defaults for the other post-login tabs.
     setPledgeDefaults(the_page.pledge_defaults)
   }
 
@@ -441,6 +456,13 @@ function setPledgeDefaults(pledge_defaults) {
     var v = pledge_defaults[fields[i]];
     if (v)
       $('#' + fields[i]).val(v)
+  }
+
+  if (pledge_defaults.cc_from_pledge && pledge_defaults.cclastfour) {
+    $('#payment-new').hide();
+    $('#payment-old').show();
+    $('#payment-old .cc-num').text(pledge_defaults.cclastfour);
+    $('#pledge-info input[name="billingFromPledge"]').val(pledge_defaults.cc_from_pledge);
   }
 }
 
@@ -667,6 +689,32 @@ function do_contributor() {
   $('a[href="#payment"]').tab('show') 
 }
 
+function validate_and_set_cc_fields() {
+  $('#billingCCNum').popover('destroy');
+  $('#billingCCExp').popover('destroy');
+  $('#billingCCCVC').popover('destroy');
+
+  if (!$.payment.validateCardNumber($('#billingCCNum').val())) {
+    $('#billingCCNum').popover({ content: "Enter a valid credit card number." }).popover('show');
+    return false;
+  }
+
+  var exp = $('#billingCCExp').payment('cardExpiryVal');
+  if (!$.payment.validateCardExpiry(exp.month, exp.year)) {
+    $('#billingCCExp').popover({ content: "Enter a valid expiration date." }).popover('show');
+    return false;
+  }
+  $('#pledge-info input[name="billingCCExpMonth"]').val(exp.month);
+  $('#pledge-info input[name="billingCCExpYear"]').val(exp.year);
+
+  if (!$.payment.validateCardCVC($('#billingCCCVC').val())) {
+    $('#billingCCCVC').popover({ content: "Enter your card verification code, often found on the back side of the card." }).popover('show');
+    return false;
+  }
+
+  return true;
+}
+
 function pledge_submit() {
   // fill in some form fields
   $('#pledge-info input[name="amount"]').val(get_contribution_amount())
@@ -674,29 +722,10 @@ function pledge_submit() {
   $('#pledge-info input[name="filter_party"]').val(getPartyFilterValue())
   $('#pledge-info input[name="filter_competitive"]').val($('#pledge-competitive-races').prop('checked') ? 1 : 0)
 
-  // validate credit card information
-
-  $('#billingCCNum').popover('destroy');
-  $('#billingCCExp').popover('destroy');
-  $('#billingCCCVC').popover('destroy');
-
-  if (!$.payment.validateCardNumber($('#billingCCNum').val())) {
-    $('#billingCCNum').popover({ content: "Enter a valid credit card number." }).popover('show');
-    return;
-  }
-
-  var exp = $('#billingCCExp').payment('cardExpiryVal');
-  if (!$.payment.validateCardExpiry(exp.month, exp.year)) {
-    $('#billingCCExp').popover({ content: "Enter a valid expiration date." }).popover('show');
-    return;
-  }
-  $('#pledge-info input[name="billingCCExpMonth"]').val(exp.month);
-  $('#pledge-info input[name="billingCCExpYear"]').val(exp.year);
-
-  if (!$.payment.validateCardCVC($('#billingCCCVC').val())) {
-    $('#billingCCCVC').popover({ content: "Enter your card verification code, often found on the back side of the card." }).popover('show');
-    return;
-  }
+  // validate credit card information and set form fields, but only if we're not reusing an old pledge token
+  if ($('#pledge-info input[name="billingFromPledge"]').val() == '')
+    if (!validate_and_set_cc_fields())
+      return;
 
   // Valid. Submit! Collect all of the form fields.
   var form_params = $('#pledge-info').serializeArray();
@@ -708,8 +737,17 @@ function pledge_submit() {
     method: "POST",
     data: data,
     success: function(res) {
-      setTimeout("$('#ajax_loading_indicator').fadeIn()", 100);
-      window.location.reload()
+      if (res && res.status == "ok") {
+        // show a loading indicator and have it go indefinitely until the page reloads
+        // to show the user updated info on the pledge he/she made
+        setTimeout("$('#ajax_loading_indicator').fadeIn()", 100);
+        window.location.reload()
+      } else if (res.status == "error" && res.message) {
+        show_modal_error("Error", res.message);
+      } else {
+        show_modal_error("Error", "Something went wrong, sorry.");
+        console.log(res);
+      }
     }
   })
 }
