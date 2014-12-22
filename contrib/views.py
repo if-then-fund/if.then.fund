@@ -371,6 +371,8 @@ def create_pledge(request):
 # A user confirms an email address on an anonymous pledge.
 @receiver(post_email_confirm)
 def post_email_confirm_callback(sender, confirmation, request=None, **kwargs):
+	from itfsite.accounts import first_time_confirmed_user
+
 	# The user making the request confirms that he owns an email address
 	# tied to a pledge.
 
@@ -382,6 +384,13 @@ def post_email_confirm_callback(sender, confirmation, request=None, **kwargs):
 	from itfsite.accounts import User
 	user = User.get_or_create(email)
 
+	# The pledge might have already been cancelled! Well, create an
+	# account for the user, but when we redirect go to the homepage
+	# and say the pledge was cancelled.
+	if pledge is None:
+		messages.add_message(request, messages.ERROR, 'It looks like you canceled the contribution already, sorry.')
+		return first_time_confirmed_user(request, user, '/')
+
 	# Confirm the pledge. This signal may be called more than once, and
 	# confirm_email is okay with that. It returns True just on the first
 	# time (when the pledge is actually confirmed).
@@ -391,7 +400,6 @@ def post_email_confirm_callback(sender, confirmation, request=None, **kwargs):
 
 	# The user may be new, so take them to a welcome page.
 	# pledge.user may not be set because confirm_email uses a clone for locking.
-	from itfsite.accounts import first_time_confirmed_user
 	return first_time_confirmed_user(request, user, pledge.trigger.get_absolute_url())
 
 @json_response
