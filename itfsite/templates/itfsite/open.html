@@ -1,0 +1,53 @@
+{% extends "master.html" %}
+
+{% block title %}Open Source / Open Data{% endblock %}
+
+{% block head %}
+<style>
+</style>
+{% endblock %}
+
+{% block body %}
+<h1>Open @ if.then.fund</h1>
+
+<div class="row">
+	<div class="col-sm-6">
+		<h2>Open Data</h2>
+
+		<p>Information on bills in Congress and members of Congress comes from:</p>
+
+		<ul>
+		<li><a href="https://www.govtrack.us/developers">GovTrack&rsquo;s open data and API</a></li>
+		<li><a href="https://github.com/unitedstates/congress">unitedstates/congress</a> and <a href="https://github.com/unitedstates/congress-legislators">unitedstates/congress-legislators</a> repositories on github.</li>
+		</ul>
+	</div>
+
+	<div class="col-sm-6">
+		<h2>Open Source</h2>
+
+		<p>We&rsquo;re on github. Our organization name is <a href="https://github.com/if-then-fund">@if-then-fund</a>.</p>
+
+		<p>Here are some open source projects we created or contribute to at <span class="site-brand">if.then.fund</span>:</p>
+
+		<dl>
+			<dt><a href="https://github.com/if-then-fund/django-html-emailer">if-then-fund/django-html-emailer</a></dt>
+			<dd><p>Simplify the sending of HTML-format emails combining HTML Email Boilerplate and the CSS inliner pynliner, for Django 1.7.</p></dd>
+
+			<dt><a href="https://github.com/if-then-fund/django-enum3field">if-then-fund/django-enum3field</a></dt>
+			<dd><p>Provides a Django 1.7 model field for Python 3 enums.</p></dd>
+
+			<dt><a href="https://github.com/if-then-fund/django-email-confirm-la-itf">if-then-fund/django-email-confirm-la-itf</a></dt>
+			<dd><p>A Django 1.7 app for email address confirmations. Originally by @vinta and extended by @if-then-fund.</p></dd>
+
+			<dt><a href="https://github.com/JoshData/django-bootstrap-form">JoshData/django-bootstrap-form</a></dt>
+			<dd><p>Render Django forms using Bootstrap. Originally by @tzangms and extended by @JoshData.</p></dd>
+
+			<dt><a href="https://github.com/govtrack/twostream">govtrack/twostream</a></dt>
+			<dd><p>Django 1.7 middleware that makes it easy to split each page request into one stream marked as being cachable at the HTTP server and a second non-cached AJAX stream for fetching user-specific content.</p></dd>
+		</dl>
+
+		<p>We&rsquo;re also thankful for the opportunity to make use of <a href="https://github.com/stripe/jquery.payment">stripe/jquery.payment</a>, <a href="http://getbootstrap.com/">Bootstrap</a>, and <a href="https://jquery.org/">jQuery</a>.</p>
+	</div>
+</div>
+
+{% endblock %}
