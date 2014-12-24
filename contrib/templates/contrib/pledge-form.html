@@ -79,7 +79,7 @@
 </div>
 
 <div id="make-pledge">
-  <h2>How would you {{trigger.strings.action}}?</h2>
+  <h2>How would you {{trigger.strings.action_vb_inf}}?</h2>
 
   <p id="pledge-outcomes" style="margin-left: 1em">
   {% for outcome in trigger.outcomes %}
@@ -90,7 +90,7 @@
   {% endfor %}
   </p>
 
-  <p>We&rsquo;ll schedule campaign contributions to {{trigger.strings.actors}} who {{trigger.strings.action}} the way you want them to &mdash; or to their opponents if they don&rsquo;t.</p>
+  <p>We&rsquo;ll schedule campaign contributions to {{trigger.strings.actors}} who {{trigger.strings.action_vb_inf}} the way you want them to &mdash; or to their opponents if they don&rsquo;t.</p>
 </div>
 
 <div id="pledge-pay" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="pledge-payModalTitle" aria-hidden="true">
@@ -149,7 +149,7 @@
                 <div class="control-group">
                   <label for="filterIncumbents">
                     <input id="filterIncumbents" type="checkbox" onchange="update_start_next_state()" checked>
-                    {{trigger.strings.actors|capfirst}} who {{trigger.strings.action}} <span class="fill-in"> </span>
+                    {{trigger.strings.actors|capfirst}} who {{trigger.strings.action_vb_inf}} <span class="fill-in"> </span>
                     <div>(keep &rsquo;em in)</div>
                   </label>
                 </div>
@@ -157,7 +157,7 @@
                 <div class="control-group">
                   <label for="filterChallengers">
                     <input id="filterChallengers" type="checkbox" onchange="update_start_next_state()" checked>
-                    Opponents of {{trigger.strings.actors}} who {{trigger.strings.action}} <span class="fill-in"> </span>
+                    Opponents of {{trigger.strings.actors}} who {{trigger.strings.action_vb_inf}} <span class="fill-in"> </span>
                     <div>(throw &rsquo;em out)</div>
                   </label>
                 </div>
@@ -345,7 +345,7 @@
             </div>
 
             <div id="payment-old" style="display: none">
-              <p>When the {{trigger.strings.action}} occurs, we&rsquo;ll charge your credit card ending in <span class="cc-num"></span>.</p>
+              <p>When the {{trigger.strings.action_noun}} occurs, we&rsquo;ll charge your credit card ending in <span class="cc-num"></span>.</p>
               <p><a href="#" onclick="$('#pledge-info input[name=&quot;billingFromPledge&quot;]').val(''); $('#payment-old').hide(); $('#payment-new').show(); return false;">Enter new card information?</a></p>
               <div class="buttons">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
@@ -357,8 +357,8 @@
             <div class="panel panel-info">
               <div class="panel-heading">Payment information</div>
               <div class="panel-body">
-                <p>You are about to schedule a campaign contribution for if and when the {{trigger.strings.action}} occurs. Your contribution may be split up to {{trigger.extra.max_split}} ways depending on the outcome of the {{trigger.strings.action}}.</p>
-                <p>We will not charge your credit card until the {{trigger.strings.action}} occurs, and you can cancel this contribution any time before then.</p>
+                <p>You are about to schedule a campaign contribution for if and when the {{trigger.strings.action_noun}} occurs. Your contribution may be split up to {{trigger.extra.max_split}} ways depending on the outcome of the {{trigger.strings.action_noun}}.</p>
+                <p>We will not charge your credit card until the {{trigger.strings.action_noun}} occurs, and you can cancel this contribution any time before then.</p>
                 <p>You may see a $1 authorization for Democracy Engine, LLC on your credit card. This is how we test that your credit card information is valid. The $1 authorization will not result in an actual charge.</p>
               </div>
             </div>
@@ -584,13 +584,13 @@ function update_start_next_state(no_popover) {
     var who;
     var ic = getIncumbentChallengerValue();
     if (ic == 1)
-      who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text();
+      who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text();
     else if (ic == -1)
-      who = party + " challengers" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = party + " challengers" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
     else if (party == "")
-      who = "all {{trigger.strings.actors|escapejs}}" + compet + ". They will get a donation if they {{trigger.strings.action|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". If they {{trigger.strings.action|escapejs}} the other way the donation will go to their next general election opponent"
+      who = "all {{trigger.strings.actors|escapejs}}" + compet + ". They will get a donation if they {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". If they {{trigger.strings.action_vb_inf|escapejs}} the other way the donation will go to their next general election opponent"
     else
-      who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and " + party + " challengers" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and " + party + " challengers" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
 
     $('#filter-summary span').text("We will split your contribution evenly across " + who + ".");
   }
@@ -634,7 +634,7 @@ function do_pledge_login() {
           return;
         }
         if (response.status == "AlreadyPledged") {
-          $('#login-error').text("You have already scheduled a contribution for this {{trigger.strings.action|escapejs}}. Please log in to see details.");
+          $('#login-error').text("You have already scheduled a contribution for this {{trigger.strings.action_noun|escapejs}}. Please log in to see details.");
           $('#login-error').slideDown();
           return;
         }

@@ -12,6 +12,7 @@ def create_trigger_from_bill(bill_id, chamber):
 	# validate chamber
 	if chamber not in ('s', 'h'): raise ValueError("Chamber must be one of 'h' or 's'.")
 	chamber_name = { 's': 'Senate', 'h': 'House' }[chamber]
+	chamber_actor = { 's': 'senator', 'h': 'representative' }[chamber]
 	chamber_actors = { 's': 'senators', 'h': 'representatives' }[chamber]
 
 	# get bill data from GovTrack
@@ -46,9 +47,12 @@ def create_trigger_from_bill(bill_id, chamber):
 		{ "vote_key": "-", "label": "Less Government", "tip": "No on %s" % short_title },
 	]
 	t.strings = {
+		"actor": chamber_actor,
 		"actors": chamber_actors,
-		"action": "vote",
-		"action_past": "voted",
+		"action_noun": "vote",
+		"action_vb_inf": "vote",
+		"action_vb_pres_s": "votes",
+		"action_vb_past": "voted",
 	}
 
 	t.extra = {

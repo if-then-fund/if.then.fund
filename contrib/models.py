@@ -421,7 +421,7 @@ class Pledge(models.Model):
 		if self.filter_competitive:
 			actors += " in competitive races"
 
-		verb = self.trigger.strings['action' if self.status != PledgeStatus.Executed else "action_past"]
+		verb = self.trigger.strings['action_vb_inf' if self.status != PledgeStatus.Executed else "action_vb_past"]
 		action = "who %s %s" % (verb, desired_outcome_label)
 
 		descr = party_filter + actors + " " + action

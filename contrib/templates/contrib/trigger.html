@@ -74,7 +74,7 @@
 			<p>This action has been cancelled. We determined that the event will likely never occur and have vacated all of the pledges.</p>
 
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' and trigger.pledge_count > trigger.execution.pledge_count %}
-			<p class="text-danger" style="margin-top: 1.5em">The {{trigger.strings.action}} ocurred, and we are now in the process of making campaign contributions. Check back soon for further details.</p>
+			<p class="text-danger" style="margin-top: 1.5em">The {{trigger.strings.action_noun}} ocurred, and we are now in the process of making campaign contributions. Check back soon for further details.</p>
 
 			<div id="my-pledge">
 			</div>
@@ -124,7 +124,7 @@
 				</div>
 			</div>
 
-			<p>{{num_recips}} {{trigger.strings.actors}} {{trigger.strings.action_past}}.
+			<p>{{num_recips}} {{trigger.strings.actors}} {{trigger.strings.action_vb_past}}.
 			<span><a href="#" onclick="$(this).parent().remove(); $('#contribs-by-recipient').fadeIn(); return false;">Show Details</a>.</span>
 			</p>
 
@@ -135,7 +135,7 @@
 				<thead>
 					<tr>
 						<th>Candidate</th>
-						<th>{{trigger.strings.action|capfirst}}</th>
+						<th>{{trigger.strings.action_noun|capfirst}}</th>
 						<th>Contributions<br>To Candidate</th>
 						<th>Contributions<br>To Opponent</th>
 					</tr>
@@ -172,7 +172,7 @@
 				<div class="lbl">donor{{trigger.pledge_count|pluralize}} {% if trigger.pledge_count == 0 %}&mdash; be the first!{% endif %}</div>
 			</div>
 
-			<p>Contributions will only be made once the {{trigger.strings.action}} occurs.</p>
+			<p>Contributions will only be made once the {{trigger.strings.action_noun}} occurs.</p>
 
 			{% if trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
 				<p class="text-danger">Pledges were vacated.</p>
