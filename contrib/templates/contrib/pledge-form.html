@@ -2,12 +2,9 @@
 #make-pledge h2 {
   text-align: center;
 }
-#make-pledge p {
-  margin: 1.5em 0;
-  text-align: center;
-}
 #pledge-outcomes {
   margin: 1em 0;
+  text-align: center;
 }
   #pledge-outcomes button {
     margin-left: 1em;
@@ -24,6 +21,20 @@
     font-weight: normal;
   }
 
+#advanced-filters label {
+  font-weight: normal;
+}
+  #advanced-filters label div {
+    margin-left: 1.5em;
+    font-size: 85%;
+  }
+  #pledge-party {
+    margin-bottom: .25em;
+  }
+  #pledge-party .control-group {
+    float: left;
+    margin-right: 1em;
+  }
 
 #pledge-amount {
   max-width: 10em;
@@ -36,43 +47,29 @@
     text-align: right;
   }
 
-#pledge-targets button {
-  max-width: 45%;
-  white-space: normal;
-}
-  #pledge-targets button div {
-    font-size: 70%;
-    padding-top: 5px;
-    font-style: italic;
-  }
-
-
-#pledge-pay table {
-  width: 308px;
-}
-#pledge-pay label {
+#pledge-info label {
   font-weight: normal;
-  font-size: 15px;
-  padding-right: 1em;
+  font-size: 14px;
+  padding-right: .5em;
 }
-#pledge-pay td {
-  padding-bottom: .25em;
+
+.input-table {
+  margin-bottom: 1.5em;
 }
-  #pledge-pay input[type=text] {
-    padding: 2px 3px;
+  .input-table td {
+    padding-right: .4em;
+    padding-bottom: 2px;
+  }
+  .input-table td input {
   }
 
-#pledge-pay .buttons {
-  text-align: right;
-  padding-bottom: 1em; /* when stacked on narrow screens */
+#pledge-info .panel-info {
+  font-size: 85%;
+  line-height: 130%;
 }
-  #pledge-pay .buttons button {
-    margin: 1em 0 0 1em;
+  #pledge-info .panel-info p:last-child {
+    margin:0;
   }
-
-.loginpw td {
-  padding-right: .4em;
-}
 </style>
 
 <div id="my-pledge">
@@ -81,35 +78,16 @@
 <div id="make-pledge">
   <h2>How would you {{trigger.strings.action_vb_inf}}?</h2>
 
-  <p id="pledge-outcomes" style="margin-left: 1em">
+  <div id="pledge-outcomes" style="margin-left: 1em">
   {% for outcome in trigger.outcomes %}
     <button class="btn btn-lg btn-success" onclick="pledge_go(this)" data-index="{{forloop.counter0}}">
       <span>{{outcome.label}}</span>
       {% if outcome.tip %}<small>{{outcome.tip}}</small>{% endif %}
     </button>
   {% endfor %}
-  </p>
+  </div>
 
-  <p>We&rsquo;ll schedule campaign contributions to {{trigger.strings.actors}} who {{trigger.strings.action_vb_inf}} the way you want them to &mdash; or to their opponents if they don&rsquo;t.</p>
-</div>
-
-<div id="pledge-pay" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="pledge-payModalTitle" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-  <div class="modal-content">
-    <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-    <h4 class="modal-title" id="pledge-payModalTitle">Make a campaign contribution</h4>
-    </div>
-    <div class="modal-body">
-
-    <ul class="nav nav-pills small" role="tablist" style="margin-bottom: 1em">
-      <li class="active"><a href="#start" role="tab" data-toggle="tab">Amount &amp; Filters</a></li>
-      <li               ><a href="#email" role="tab" data-toggle="tab">Email</a></li>
-      <li               ><a href="#contributor" role="tab" data-toggle="tab">Contributor</a></li>
-      <li               ><a href="#payment" role="tab" data-toggle="tab">Payment</a></li>
-    </ul>
-
-    <form id="pledge-info" onsubmit="return false;">
+  <form id="pledge-info" onsubmit="return false;" style="margin-top: 2em; display: none">
     
     <input type="hidden" name="trigger" value="{{trigger.id}}"/>
     <input type="hidden" name="algorithm" value="{{alg.id}}"/>
@@ -122,255 +100,249 @@
     <input type="hidden" name="billingCCExpYear" value="?"/>
     <input type="hidden" name="billingFromPledge" value=""/>
 
-    <div class="tab-content">
-      <div class="tab-pane active" id="start">
-        <div class="row">
-          <div class="col-sm-6">
-            <p style="margin-top: 1.5em">How much of a campaign contribution in total do you want to make?</p>
+    <div class="panel panel-success">
+      <div class="panel-body">
+        <div id="pledge-start">
+          <h3 style="margin-top: 0">Contribution amount</h3>
 
-            <div id="pledge-amount" class="input-group">
-              <div class="input-group-addon">$</div>
-              <input class="form-control" type="text" value="5.00" pattern="^([0-9]+(,[0-9]{3})*)?(\.[0-9]{0,2})?$" onkeyup="update_start_next_state()" onchange="update_start_next_state()">
-            </div>
-
-            <p id="filter-summary">
-              <span>...</span>
-              <a href="#" onclick="$(this).remove(); $('#advanced-filters').slideDown(); return false;">Edit</a>
-            </p>
+          <div id="pledge-amount" class="input-group">
+            <div class="input-group-addon">$</div>
+            <input class="form-control focus-on-shown" type="text" value="5.00" pattern="^([0-9]+(,[0-9]{3})*)?(\.[0-9]{0,2})?$" onkeyup="update_start_next_state()" onchange="update_start_next_state()">
           </div>
 
-          <div class="col-sm-6">
-            <div id="advanced-filters" style="display: none">
-              <h3>Advanced Filters</h3>
+          <div id="advanced-filters" style="display: none" class="panel panel-default">
+            <div class="panel-heading">Who gets your contribution?</div>
+            <div class="panel-body">
 
-              <p>Want to just keep &rsquo;em in or just throw &rsquo;em out? Give to:</p>
+            <div> {# scopes the text-danger #}
+              <div class="control-group">
+                <label for="filterIncumbents">
+                  <input id="filterIncumbents" type="checkbox" onchange="update_start_next_state()" checked>
+                  If a {{trigger.strings.actor}} {{trigger.strings.action_vb_pres_s}} <span class="fill-in"> </span>, then fund their reelection campaign.
+                  <div><em>&ldquo;keep &rsquo;em in&rdquo;</em></div>
+                </label>
+              </div>
 
-              <div style="margin-left: 1em">
-                <div class="control-group">
-                  <label for="filterIncumbents">
-                    <input id="filterIncumbents" type="checkbox" onchange="update_start_next_state()" checked>
-                    {{trigger.strings.actors|capfirst}} who {{trigger.strings.action_vb_inf}} <span class="fill-in"> </span>
-                    <div>(keep &rsquo;em in)</div>
-                  </label>
-                </div>
-
-                <div class="control-group">
-                  <label for="filterChallengers">
-                    <input id="filterChallengers" type="checkbox" onchange="update_start_next_state()" checked>
-                    Opponents of {{trigger.strings.actors}} who {{trigger.strings.action_vb_inf}} <span class="fill-in"> </span>
-                    <div>(throw &rsquo;em out)</div>
-                  </label>
-                </div>
+              <div class="control-group">
+                <label for="filterChallengers">
+                  <input id="filterChallengers" type="checkbox" onchange="update_start_next_state()" checked>
+                  If a {{trigger.strings.actor}} {{trigger.strings.action_vb_pres_s}} <span class="fill-in"> </span>, then fund their opponent&rsquo;s campaign.
+                  <div><em>&ldquo;throw &rsquo;em out&rdquo;</em></div>
+                </label>
               </div>
 
               <p class="text-danger" style="display: none">You must choose at least one.</p>
+            </div>
 
-              <p>Only make contributions to:</p>
+            <p>Only make contributions to:</p>
 
-              <div id="pledge-party" style="margin-left: 1em">
-                <div class="control-group">
-                  <label for="filterPartyR" data-value="R">
-                    <input id="filterPartyR" type="checkbox" onchange="update_start_next_state()" checked>
-                    Republicans
-                  </label>
-                </div>
-
-                <div class="control-group">
-                  <label for="filterPartyD" data-value="D">
-                    <input id="filterPartyD" type="checkbox" onchange="update_start_next_state()" checked>
-                    Democrats
-                  </label>
-                </div>
-
-                <p class="text-danger" style="display: none">You must choose at least one.</p>
-              </div>
-
-              <p>Other options:</p>
-
-              <div id="pledge-other-filters" style="margin-left: 1em">
-                <label for="pledge-competitive-races">
-                  <input id="pledge-competitive-races" type="checkbox" onchange="update_start_next_state()">
-                  Just give to candidates in competitive races
+            <div id="pledge-party">
+              <div class="control-group">
+                <label for="filterPartyR" data-value="R">
+                  <input  id="filterPartyR" type="checkbox" onchange="update_start_next_state()" checked>
+                  Republicans
                 </label>
               </div>
+
+              <div class="control-group">
+                <label for="filterPartyD" data-value="D">
+                  <input id="filterPartyD" type="checkbox" onchange="update_start_next_state()" checked>
+                  Democrats
+                </label>
+              </div>
+
+              <div class="clearfix"> </div>
+
+              <p class="text-danger" style="display: none">You must choose at least one.</p>
             </div>
+
+            <div id="pledge-other-filters">
+              <label for="pledge-competitive-races">
+                <input id="pledge-competitive-races" type="checkbox" onchange="update_start_next_state()">
+                Candidates in competitive races
+              </label>
+            </div>
+
           </div>
-        </div>
+          </div> <!-- /advnaced-filters -->
 
-        <div style="margin: 1em 0">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
-          <button type="button" class="btn btn-warning" onclick="do_pledge_start_next()">Next &gt;</button
-          >
-        </div>
-      </div>
+          <p id="filter-summary">
+            <span class="text"> </span>
+            <span>[<a href="#" onclick="return show_and_scroll('advanced-filters', this.parentNode);">Advanced Filters</a>]</span>
+          </p>
 
-      <div class="tab-pane" id="email">
-        <p>What is your e-mail address?</p>
+          <div class="buttons">
+            <button type="button" class="btn btn-default" onclick="do_pledge_start_cancel();">Cancel</button>        
+            <button id="start-next" type="button" class="btn btn-warning" onclick="do_pledge_start_next()">Next &gt;</button
+            >
+          </div>
+        </div> <!-- /pledge-start -->
 
-        <table>
-          <tr>
-            <td colspan="2"><input type="email" name="email" id="emailEmail" class="form-control tab-first-focus" placeholder="yourname@yourprovider.com"></td>
-          </tr>
-        </table>
+        <div id="pledge-login" style="display: none">
+          <h3>Your email address</h3>
 
-        <p style="margin-top: 1em">Do you have an if.then.fund password?</p>
+          <p>What is your e-mail address?</p>
 
-        <table class='loginpw'>
-          <tr>
-            <td><input id="emailEmailNoPassword" type="radio" name="hasPassword" value="0" checked></td>
-            <td><label for="emailEmailNoPassword">No, this is my first time here.</label></td>
-          </tr>
-          <tr>
-            <td><input id="emailEmailYesPassword" type="radio" name="hasPassword" value="1" onchange="setTimeout('$(&quot;#emailPassword&quot;).focus()', 1)"></td>
-            <td><label for="emailEmailYesPassword">Yes, I have a password:</label></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td><input type="password" id="emailPassword" name="password" class="form-control" disabled>
-              <div class="small" style="margin-top: .5em">Forgot your password? Choose &ldquo;No, this is my first time here.&rdquo;</div></td>
-          </tr>
-          <tr>
-            <td colspan="2">
-              <p id="login-error" class="text-danger" style="display: none; padding-top: 1em"></p>
-            </td>
-          </tr>
-          <tr>
-            <td></td>
-            <td class="buttons">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
-              <button type="button" class="btn btn-warning" onclick="do_pledge_login()">Next &gt;</button>
-            </td>
-          </tr>
-        </table>
-      </div>
+          <table>
+            <tr>
+              <td colspan="2"><input type="email" name="email" id="emailEmail" class="form-control focus-on-shown" placeholder="yourname@yourprovider.com"></td>
+            </tr>
+          </table>
 
-      <div class="tab-pane" id="contributor">
-        <div class="row">
-          <div class="col-md-6 col-md-push-6">
-            <div class="panel panel-info">
-              <div class="panel-heading">Contributor requirements</div>
-              <div class="panel-body">
-                <p>Federal law restricts who can make a campaign contribution to a candidate for office:</p>
-                <p>You must be at least eighteen years old and be either a U.S. Citizen or lawfully admitted permanent resident (i.e., a green card holder). You cannot be employed <i>directly</i> by the federal government as a contractor. You must make this contribution with your own funds, which were not provided to you by any other person or entity. You must use your own personal credit card, and not a corporate or business card or a card issued to another person.</p>
-                <p>If you make more than $200 in contributions to any one candidate in a calendar year, your name, address, employment, and contribution amount become a part of the public record.</p>
+          <p style="margin-top: 1em">Do you have an <span class="site-brand">if.then.fund</span> password?</p>
+
+          <table class='input-table'>
+            <tr>
+              <td><input id="emailEmailNoPassword" type="radio" name="hasPassword" value="0" checked></td>
+              <td><label for="emailEmailNoPassword">No, this is my first time here.</label></td>
+            </tr>
+            <tr>
+              <td><input id="emailEmailYesPassword" type="radio" name="hasPassword" value="1" onchange="setTimeout('$(&quot;#emailPassword&quot;).focus()', 1)"></td>
+              <td><label for="emailEmailYesPassword">Yes, I have a password:</label></td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><input type="password" id="emailPassword" name="password" class="form-control" disabled>
+                <div class="small" style="margin-top: .5em">Forgot your password? Choose &ldquo;No, this is my first time here.&rdquo;</div></td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <p id="login-error" class="text-danger" style="display: none; padding-top: 1em"></p>
+              </td>
+            </tr>
+          </table>
+
+          <div class="buttons">
+            <button type="button" class="btn btn-default" onclick="do_pledge_login_cancel()">&lt; Back</button>        
+            <button type="button" class="btn btn-warning" onclick="do_pledge_login_next()">Next &gt;</button>
+          </div>
+        </div> <!-- /pledge-login -->
+
+        <div id="pledge-contributor" style="display: none">
+          <h3>Contributor information</h3>
+
+          <div class="row">
+            <div class="col-md-6 col-md-push-6">
+              <div class="panel panel-info">
+                <div class="panel-heading">Contributor requirements</div>
+                <div class="panel-body">
+                  <p>Federal law restricts who can make a campaign contribution to a candidate for office:</p>
+                  <p>You must be at least eighteen years old and be either a U.S. Citizen or lawfully admitted permanent resident (i.e., a green card holder). You cannot be employed <i>directly</i> by the federal government as a contractor. You must make this contribution with your own funds, which were not provided to you by any other person or entity. You must use your own personal credit card, and not a corporate or business card or a card issued to another person.</p>
+                  <p>If you make more than $200 in contributions to any one candidate in a calendar year, your name, address, employment, and contribution amount become a part of the public record.</p>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="col-md-6 col-md-pull-6">
-            <p>The Federal Election Commission requires all contributors to federal campaigns to provide the following information:</p>
+            <div class="col-md-6 col-md-pull-6">
+              <p>The Federal Election Commission requires all contributors to federal campaigns to provide the following information:</p>
 
-            <table>
-              <tr>
-                <td><label for="contribNameFirst">First Name</label></td>
-                <td><input type="text" id="contribNameFirst" name="contribNameFirst" class="tab-first-focus"></td>
-              </tr>
-              <tr>
-                <td><label for="contribNameLast">Last Name</label></td>
-                <td><input type="text" id="contribNameLast" name="contribNameLast"></td>
-              </tr>
-              <tr>
-                <td><label for="contribAddress">Address</label></td>
-                <td><input type="text" id="contribAddress" name="contribAddress"></td>
-              </tr>
-              <tr>
-                <td><label for="contribCity">City</label></td>
-                <td><input type="text" id="contribCity" name="contribCity"></td>
-              </tr>
-              <tr>
-                <td><label for="contribState">State/ZIP</label></td>
-                <td>
-                  <input type="text" id="contribState" name="contribState" maxlength="2" style="width: 70px">
-                  <input type="text" id="contribZip" name="contribZip" maxlength="10" style="width: 135px;">
-                </td>
-              </tr>
-              <tr><td colspan="2">
-                <label for="contribUnemployed">
-                  <input id="contribUnemployed" type="checkbox" onchange="$('.contribUnemployedTarget').toggle(!$(this).prop('checked')); if ($(this).prop('checked')) { $('#contribOccupation').val('not employed'); $('#contribEmployer').val('none'); }">
-                  Retired or not employed?
-                </label>
-              </td></tr>
-              <tr class="contribUnemployedTarget">
-                <td><label for="contribOccupation">Occupation</label></td>
-                <td><input type="text" id="contribOccupation" name="contribOccupation"></td>
-              </tr>
-              <tr class="contribUnemployedTarget">
-                <td><label for="contribEmployer">Employer</label></td>
-                <td><input type="text" id="contribEmployer" name="contribEmployer"></td>
-              </tr>
-              <tr>
-                <td></td>
-                <td class="buttons">
-                  <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
-                  <button type="button" class="btn btn-warning" onclick="do_contributor()">Next &gt;</button>
-                </td>
-              </tr>
-            </table>
-          </div>
-        </div>        
-      </div>
-      <div class="tab-pane" id="payment">
-        <div class="row">
-          <div class="col-md-6">
-            <div id="payment-new">
-            <p>Enter your payment information:</p>
-
-            <table>
-              <tr>
-                <td><label for="billingCCNum">Number</label></td>
-                <td>
-                  <input type="text" class="cc-num tab-first-focus" id="billingCCNum" name="billingCCNum" pattern="\d*" novalidate autocomplete="cc-number" placeholder="0000 0000 0000 0000" required>
-                </td>
-              </tr>
-              <tr>
-                <td><label for="billingCCExp">Expiration</label></td>
-                <td>
-                  <input type="text" class="cc-exp" id="billingCCExp" pattern="\d+/\d+" novalidate placeholder="MM/YYYY">
-                </td>
-              </tr>
-              <tr>
-                <td><label for="billingCCCVC">CVC</label></td>
-                <td>
-                  <input type="text" class="cc-cvc" id="billingCCCVC" name="billingCCCVC" autocomplete="off">
-                </td>
-              </tr>
-
-              <tr>
-                <td></td>
-                <td class="buttons">
-                  <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
-                  <button type="button" class="btn btn-warning" onclick="pledge_submit()">Confirm</button>
-                </td>
-              </tr>
-            </table>
-            </div>
-
-            <div id="payment-old" style="display: none">
-              <p>When the {{trigger.strings.action_noun}} occurs, we&rsquo;ll charge your credit card ending in <span class="cc-num"></span>.</p>
-              <p><a href="#" onclick="$('#pledge-info input[name=&quot;billingFromPledge&quot;]').val(''); $('#payment-old').hide(); $('#payment-new').show(); return false;">Enter new card information?</a></p>
+              <table class="input-table">
+                <tr>
+                  <td><label for="contribNameFirst">First Name</label></td>
+                  <td><input type="text" id="contribNameFirst" name="contribNameFirst" class="focus-on-shown form-control"></td>
+                </tr>
+                <tr>
+                  <td><label for="contribNameLast">Last Name</label></td>
+                  <td><input type="text" id="contribNameLast" name="contribNameLast" class="form-control"></td>
+                </tr>
+                <tr>
+                  <td><label for="contribAddress">Address</label></td>
+                  <td><input type="text" id="contribAddress" name="contribAddress" class="form-control"></td>
+                </tr>
+                <tr>
+                  <td><label for="contribCity">City</label></td>
+                  <td><input type="text" id="contribCity" name="contribCity" class="form-control"></td>
+                </tr>
+                <tr>
+                  <td><label for="contribState">State</label></td>
+                  <td>
+                    <input type="text" id="contribState" name="contribState" maxlength="2" style="width: 50px; display: inline-block;" class="form-control">
+                    <label for="contribZip" style="padding: 0 0 0 2em">Zip</label>
+                    <input type="text" id="contribZip" name="contribZip" maxlength="10" style="width: 110px; display: inline-block;" class="form-control">
+                  </td>
+                </tr>
+                <tr><td colspan="2">
+                  <label for="contribUnemployed">
+                    <input id="contribUnemployed" type="checkbox" onchange="$('.contribUnemployedTarget').toggle(!$(this).prop('checked')); if ($(this).prop('checked')) { $('#contribOccupation').val('not employed'); $('#contribEmployer').val('none'); }">
+                    Retired or not employed?
+                  </label>
+                </td></tr>
+                <tr class="contribUnemployedTarget">
+                  <td><label for="contribOccupation">Occupation</label></td>
+                  <td><input type="text" id="contribOccupation" name="contribOccupation" class="form-control"></td>
+                </tr>
+                <tr class="contribUnemployedTarget">
+                  <td><label for="contribEmployer">Employer</label></td>
+                  <td><input type="text" id="contribEmployer" name="contribEmployer" class="form-control"></td>
+                </tr>
+              </table>
               <div class="buttons">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>        
+                <button type="button" class="btn btn-default" onclick="do_contributor_cancel();">&lt; Back</button>        
+                <button type="button" class="btn btn-warning" onclick="do_contributor_next()">Next &gt;</button>
+              </div>
+            </div>
+          </div>        
+        </div> <!-- /pledge-contributor -->
+
+        <div id="pledge-payment" style="display: none">
+          <h3>Payment information</h3>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div id="payment-new">
+              <p>Enter the credit card information that you would like us to charge when the {{trigger.strings.action_noun}} occurs.</p>
+
+              <table class="input-table">
+                <tr>
+                  <td><label for="billingCCNum">Number</label></td>
+                  <td>
+                    <input type="text" class="cc-num focus-on-shown form-control" id="billingCCNum" name="billingCCNum" pattern="\d*" novalidate autocomplete="cc-number" placeholder="0000 0000 0000 0000" required>
+                  </td>
+                </tr>
+                <tr>
+                  <td><label for="billingCCExp">Expiration</label></td>
+                  <td>
+                    <input type="text" class="cc-exp form-control" id="billingCCExp" pattern="\d+/\d+" novalidate placeholder="MM/YYYY">
+                  </td>
+                </tr>
+                <tr>
+                  <td><label for="billingCCCVC">CVC</label></td>
+                  <td>
+                    <input type="text" class="cc-cvc form-control" id="billingCCCVC" name="billingCCCVC" autocomplete="off">
+                  </td>
+                </tr>
+              </table>
+              </div>
+
+              <div id="payment-old" style="display: none">
+                <p>When the {{trigger.strings.action_noun}} occurs, we&rsquo;ll charge your credit card ending in <span class="cc-num"></span>.
+                  <a href="#" onclick="$('#pledge-info input[name=&quot;billingFromPledge&quot;]').val(''); $('#payment-old').hide(); $('#payment-new').show(); $('#payment-new .focus-on-shown').focus(); return false;">Change card?</a>
+                </p>
+              </div>
+
+              <div class="buttons" style="margin-top: 1.5em">
+                <button type="button" class="btn btn-default" onclick="pledge_payment_cancel()">&lt; Back</button>
                 <button type="button" class="btn btn-warning" onclick="pledge_submit()">Confirm</button>
               </div>
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="panel panel-info">
-              <div class="panel-heading">Payment information</div>
-              <div class="panel-body">
-                <p>You are about to schedule a campaign contribution for if and when the {{trigger.strings.action_noun}} occurs. Your contribution may be split up to {{trigger.extra.max_split}} ways depending on the outcome of the {{trigger.strings.action_noun}}.</p>
-                <p>We will not charge your credit card until the {{trigger.strings.action_noun}} occurs, and you can cancel this contribution any time before then.</p>
-                <p>You may see a $1 authorization for Democracy Engine, LLC on your credit card. This is how we test that your credit card information is valid. The $1 authorization will not result in an actual charge.</p>
+            <div class="col-md-6">
+              <div class="panel panel-info">
+                <div class="panel-heading">What happens next</div>
+                <div class="panel-body">
+                  <p>You are about to schedule a campaign contribution for if and when the {{trigger.strings.action_noun}} occurs. Your contribution may be split up to {{trigger.extra.max_split}} ways depending on the outcome of the {{trigger.strings.action_noun}}.</p>
+                  <p>We will not charge your credit card until the {{trigger.strings.action_noun}} occurs, and you can cancel this contribution any time before then.</p>
+                  <p>You may see a $1 authorization for Democracy Engine, LLC on your credit card. This is how we test that your credit card information is valid. The $1 authorization will not result in an actual charge.</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-    </form>
-    </div>
-  </div>
-  </div>
+        </div> <!-- /pledge-payment -->
+      </div> <!-- /panel-body -->
+    </div> <!-- /panel -->
+  </form>
 </div>
+
+
+      
     
 <script>
 function pledge_init() {
@@ -385,16 +357,9 @@ function pledge_init() {
     return;
   }
 
-  if (the_user) {
-    // If the user is logged in, remove the first tab of the pledge
-    // modal that asks them to log in.
-    $('#email').remove()
-    $('#pledge-pay .nav a[href="#email"]').parent().remove();
-  }
-
   // Set some defaults based on the user's last pledge.
   if (the_page && the_page.pledge_defaults) {
-    // Set defaults for the first tab, which appears before the user has a chance to login.
+    // First set defaults for the fields that are displayed prior to the option to login.
 
     if (the_page.pledge_defaults['amount'])
       $('#pledge-amount input').val(the_page.pledge_defaults['amount'].toFixed(2));
@@ -421,6 +386,7 @@ function pledge_init() {
     setPledgeDefaults(the_page.pledge_defaults)
   }
 
+  // Set up dynamic validation event handlers.
 
   $('#emailEmailYesPassword, #emailEmailNoPassword').change(function() {
     $('#emailPassword').prop('disabled', !$('#emailEmailYesPassword').prop('checked'));
@@ -430,9 +396,7 @@ function pledge_init() {
   $('input.cc-exp').payment('formatCardExpiry');
   $('input.cc-cvc').payment('formatCardCVC');
 
-  $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-    $(e.target.getAttribute('href')).find('.tab-first-focus').focus();
-  })
+  // For testing, pre-fill form fields with demonstration values.
 
   if (window.location.hash == "#demo") {
     $('#emailEmail').val("my@mycompany.com")
@@ -537,7 +501,18 @@ function pledge_go(outcome_elem) {
 
   // Validation and show modal.
   update_start_next_state(true);
-  $('#pledge-pay').modal();
+  show_and_scroll('pledge-info')
+}
+
+function show_and_scroll(elem_id, kill_elem) {
+  var elem = $('#' + elem_id);
+  elem.fadeIn('fast', function() {
+    smooth_scroll_to(elem);
+    elem.find('.focus-on-shown').focus();
+  })
+  if (kill_elem)
+    $(kill_elem).remove();
+  return false; // for onclick events
 }
 
 function update_start_next_state(no_popover) {
@@ -569,7 +544,7 @@ function update_start_next_state(no_popover) {
       $('#filterPartyR').parents('.control-group').parent().find('.text-danger').slideUp();
   }
 
-  $('#start .btn.btn-warning').toggleClass('disabled', !valid);
+  $('#start-next').toggleClass('disabled', !valid);
 
   if (valid) {
     // Human-readable explanation of the current filter choices.
@@ -586,13 +561,13 @@ function update_start_next_state(no_popover) {
     if (ic == 1)
       who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text();
     else if (ic == -1)
-      who = party + " challengers" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = "the " + party + " challengers" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
     else if (party == "")
-      who = "all {{trigger.strings.actors|escapejs}}" + compet + ". They will get a donation if they {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". If they {{trigger.strings.action_vb_inf|escapejs}} the other way the donation will go to their next general election opponent"
+      who = "all {{trigger.extra.max_split}} {{trigger.strings.actors|escapejs}}" + compet + ". Each will get a part of your contribution if they {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.strings.action_vb_inf|escapejs}} the other way, their part of your contribution will go to their next general election challenger"
     else
-      who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and " + party + " challengers" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + party + " challengers" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
 
-    $('#filter-summary span').text("We will split your contribution evenly across " + who + ".");
+    $('#filter-summary span.text').text("We will split your contribution evenly across " + who + ".");
   }
 
   return valid;
@@ -600,14 +575,25 @@ function update_start_next_state(no_popover) {
 
 function do_pledge_start_next() {
   if (!update_start_next_state(true)) return;
-  if (!the_user)
-    $('a[href="#email"]').tab('show') 
-  else
-    // user is logged in, email tab is not shown
-    $('a[href="#contributor"]').tab('show') 
+  $('#pledge-amount input').prop('readonly', true);
+  $('#pledge-start .buttons').hide();
+  if (!the_user) {
+    // The user is not logged in. Ask for their email address and
+    // let them log in to pre-fill defaults.
+    show_and_scroll('pledge-login');
+  } else {
+    // The user is logged in, so show the contributor panel.
+    do_pledge_login_next_success();
+  }
 }
 
-function do_pledge_login() {
+function do_pledge_start_cancel() {
+  $('#pledge-info').fadeOut();
+  smooth_scroll_to($('body'));
+}
+
+
+function do_pledge_login_next() {
   $('#emailEmail').popover('destroy');
   $('#login-error').fadeOut();
 
@@ -643,7 +629,7 @@ function do_pledge_login() {
         setPledgeDefaults(response);
 
         // Move to the next tab.
-        $('a[href="#contributor"]').tab('show') 
+        do_pledge_login_next_success();
       }
     })
 
@@ -666,13 +652,28 @@ function do_pledge_login() {
             return;
         }
 
-        $('a[href="#contributor"]').tab('show') 
+        do_pledge_login_next_success();
       }
     })
   }
 }
 
-function do_contributor() {
+function do_pledge_login_next_success() {
+  $('#pledge-login input').prop('readonly', true);
+  $('#pledge-login .buttons').hide();
+  show_and_scroll('pledge-contributor');
+}
+
+function do_pledge_login_cancel() {
+  $('#pledge-amount input').prop('readonly', false);
+  $('#pledge-login').hide();
+  $('#pledge-start .buttons').show();
+  smooth_scroll_to($('#pledge-start'));
+}
+
+function do_contributor_next() {
+  // Validate contributor fields.
+
   var required_fields = ['contribNameFirst', 'contribNameLast', 'contribOccupation', 'contribEmployer', 'contribAddress', 'contribCity', 'contribState', 'contribZip'];
   var valid = true;
 
@@ -686,7 +687,17 @@ function do_contributor() {
   }
 
   if (!valid) return;
-  $('a[href="#payment"]').tab('show') 
+
+  $('#pledge-contributor input').prop('readonly', true);
+  $('#pledge-contributor .buttons').hide();
+  show_and_scroll('pledge-payment'); 
+}
+
+function do_contributor_cancel() {
+  $('#pledge-contributor').hide();
+  $('#pledge-login input').prop('readonly', false);
+  $('#pledge-login .buttons').fadeIn();
+  show_and_scroll('pledge-login');
 }
 
 function validate_and_set_cc_fields() {
@@ -695,7 +706,7 @@ function validate_and_set_cc_fields() {
   $('#billingCCCVC').popover('destroy');
 
   if (!$.payment.validateCardNumber($('#billingCCNum').val())) {
-    $('#billingCCNum').popover({ content: "Enter a valid credit card number." }).popover('show');
+    $('#billingCCNum').popover({ content: "Enter a credit card number." }).popover('show');
     return false;
   }
 
@@ -750,5 +761,11 @@ function pledge_submit() {
       }
     }
   })
+}
+
+function pledge_payment_cancel() {
+  $('#pledge-contributor input').prop('readonly', false);
+  $('#pledge-contributor .buttons').show();
+  $('#pledge-payment').hide();
 }
 </script>

@@ -87,3 +87,9 @@ function ajax(options) {
   $.ajax(options);
   return false; // handy when called from onclick
 }
+
+function smooth_scroll_to(elem) {
+  $('html, body').animate({
+      scrollTop: Math.max(elem.offset().top-50, 0)
+  });
+}
