@@ -312,13 +312,14 @@ def create_pledge(request):
 			id=request.POST["billingFromPledge"],
 			user=p.user)
 
-		# Copy all of the billing fields forward except for 'authorization' since
-		# in this case there is no authorization.
+		# Copy all of the billing fields forward.
+		p.extra["authorization"] = prev_p.extra["authorization"]
 		p.extra["de_cc_token"] = prev_p.extra["de_cc_token"]
 		p.extra["billingInfoHashed"] = prev_p.extra["billingInfoHashed"]
 		p.cclastfour = prev_p.cclastfour
 
-		# Record where we got the info from.
+		# Record where we got the info from. Also signals that the "authorization"
+		# field was copied from a previous pledge.
 		p.extra["de_cc_via_pledge"] = prev_p.id
 
 	p.save()
