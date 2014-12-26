@@ -94,7 +94,7 @@ a {
 
 #not-production {
 	background-color: #E93;
-	padding: 2px;
+	padding: 2px .5em;
 	text-align: center;
 	color: white;
 }

@@ -162,6 +162,8 @@
 
 	<div id="trigger-metadata" class="col-sm-4">
 		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' or trigger.execution.pledge_count < trigger.pledge_count %}
+			<h2>So far...</h2>
+
 			<div class="meta-stat">
 				<div class="num">{{trigger.total_pledged|currency}}</div>
 				<div class="lbl">committed</div>
