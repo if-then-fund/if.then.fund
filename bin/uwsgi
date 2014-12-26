@@ -68,8 +68,11 @@ echo "Starting $NAME..."
 
 # Should we daemonize or run in the foreground?
 if [ $DAEMONIZE == 1 ]; then
-	daemonize="--daemonize /tmp/uwsgi_$NAME.log --pidfile $pidfile --processes $PROCESSES"
+	daemonize="--daemonize /tmp/uwsgi_$NAME.log --processes $PROCESSES"
 fi
 
 # Span.
-uwsgi_python3 $daemonize --socket /tmp/uwsgi_$NAME.sock --chmod-socket=666 --wsgi-file $WSGI
+uwsgi_python3 $daemonize \
+	--socket /tmp/uwsgi_$NAME.sock --chmod-socket=666 \
+	--pidfile $pidfile \
+	--wsgi-file $WSGI
