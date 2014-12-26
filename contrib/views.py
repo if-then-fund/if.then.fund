@@ -392,6 +392,13 @@ def post_email_confirm_callback(sender, confirmation, request=None, **kwargs):
 		messages.add_message(request, messages.ERROR, 'It looks like you canceled the contribution already, sorry.')
 		return first_time_confirmed_user(request, user, '/')
 
+	# The user may have anonymously created a second Pledge for the same
+	# trigger. We can't tell them before they confirm their email that
+	# they already made a pledge.
+	if pledge.trigger.pledges.filter(user=user).exists():
+		messages.add_message(request, messages.ERROR, 'You had a previous contribution already scheduled for the same thing. Your more recent contribution will be ignored.')
+		return first_time_confirmed_user(request, user, pledge.trigger.get_absolute_url())
+
 	# Confirm the pledge. This signal may be called more than once, and
 	# confirm_email is okay with that. It returns True just on the first
 	# time (when the pledge is actually confirmed).
