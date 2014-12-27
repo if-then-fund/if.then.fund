@@ -52,6 +52,10 @@
   font-size: 14px;
   padding-right: .5em;
 }
+#pledge-info p {
+  font-size: 14px;
+  line-height: 137%;
+}
 
 .input-table {
   margin-bottom: 1.5em;
@@ -63,13 +67,20 @@
   .input-table td input {
   }
 
-#pledge-info .panel-info {
-  font-size: 85%;
-  line-height: 130%;
+#pledge-info .panel-info .panel-heading {
+  font-size: 14px;
 }
+  #pledge-info .panel-info p {
+    font-size: 13px;
+    line-height: 130%;
+  }
   #pledge-info .panel-info p:last-child {
     margin:0;
   }
+
+#make-pledge .buttons {
+  margin-top: 1.5em;
+}
 </style>
 
 <div id="my-pledge">
@@ -255,9 +266,9 @@
                 <tr>
                   <td><label for="contribState">State</label></td>
                   <td>
-                    <input type="text" id="contribState" name="contribState" maxlength="2" style="width: 50px; display: inline-block;" class="form-control">
-                    <label for="contribZip" style="padding: 0 0 0 2em">Zip</label>
-                    <input type="text" id="contribZip" name="contribZip" maxlength="10" style="width: 110px; display: inline-block;" class="form-control">
+                    <input type="text" id="contribState" name="contribState" maxlength="2" style="width: 55px; display: inline-block;" class="form-control">
+                    <label for="contribZip" style="padding: 0 0 0 .75em">Zip</label>
+                    <input type="text" id="contribZip" name="contribZip" maxlength="10" style="width: 80px; display: inline-block;" class="form-control">
                   </td>
                 </tr>
                 <tr><td colspan="2">
@@ -354,6 +365,15 @@ function pledge_init() {
   if (the_page && the_page.pledge_made) {
     $('#make-pledge').hide();
     $('#my-pledge').html(the_page.pledge_made);
+
+    // Mobile browsers (iOS and Android) don't seem to scroll
+    // to the page top on a reload, which we do after pledge
+    // submission to update the page so we end up here. At the
+    // least we should scroll up, but also the user's pledge
+    // may not be visible if we scroll to the top. So scroll
+    // to that.
+    smooth_scroll_to($('#my-pledge'));
+
     return;
   }
 
