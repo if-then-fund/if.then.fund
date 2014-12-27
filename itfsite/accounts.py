@@ -164,14 +164,14 @@ def validate_email(email, simple=False):
 		log("email unhandled error: %s %s" % (email, str(e)))
 		return ValidateEmailResult.Error
 
+	return ValidateEmailResult.Valid
+
+	# Everything below here is very flaky and not worth using.
 
 	# Try to deliver. Only try 5 MXs, since otherwise it could
 	# take a while. This check requires that we're able to make
 	# outbound port 25 connections (problematic in testing from
 	# local residential networks).
-
-	if settings.NO_SMTP_CHECK:
-		return ValidateEmailResult.Valid
 
 	import smtplib
 	for priority, host in mtas[0:3]:
