@@ -1,0 +1,5 @@
+#!/bin/bash
+git pull --rebase && \
+git submodule update --init && \
+python3 manage.py collectstatic --noinput && \
+bin/uwsgi
