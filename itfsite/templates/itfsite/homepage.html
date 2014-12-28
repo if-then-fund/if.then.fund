@@ -233,7 +233,7 @@ function start_splash_animation() {
 		// Does a single iteration of a bubble.
 		function make_bubble(pelem, pwidth, duration, text) {
 			var b = $('<div class="splash-anim-bubble"></div>').clone();
-			b.text(text);
+			b.html(text);
 
 			$('body').append(b);
 			b.css({
@@ -263,12 +263,10 @@ function start_splash_animation() {
 		var anim_counter = 0;
 		var anim_text = [ ];
 		for (var a1 in { representative: null, senator: null }) {
-			for (var a2 in { 'for': null, 'against': null }) {
-				for (var a3 in { 'support': null, 'oppose': null }) {
-					anim_text.push(['a ' + a1 + ' votes ' + a2 + ' something you ' + a3,
-						((a2 == 'for') == (a3 == 'support')) ? "their reelection" : "their opponent"
+			for (var a2 in { 'supports': null, 'oppposes': null }) {
+				anim_text.push(['a ' + a1 + '<br>' + a2 + '<br>your position',
+						(a2 == 'supports') ? "their reelection" : "their opponent"
 						])
-				}
 			}
 		}
 		function do_anim() {
