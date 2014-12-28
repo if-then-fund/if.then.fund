@@ -27,8 +27,8 @@ def trigger(request, id, slug):
 
 	outcomes = None
 	actions = None
-	avg_pledge = None
-	avg_contrib = None
+	avg_pledge = 0
+	avg_contrib = 0
 	num_contribs = None
 	num_recips = None
 	by_incumb_chlngr = []
