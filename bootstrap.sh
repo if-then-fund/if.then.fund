@@ -91,7 +91,7 @@ if [ "$1" == "--local" ]; then
 	source .env/bin/activate
 
 	# How shall we execute pip.
-	PIP=pip -q
+	PIP="pip -q"
 fi
 
 # Install dependencies.
