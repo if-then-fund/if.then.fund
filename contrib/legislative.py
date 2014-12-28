@@ -1,4 +1,5 @@
 from contrib.models import Trigger, TextFormat, Actor
+from django.conf import settings
 
 def create_trigger_from_bill(bill_id, chamber):
 	# split/validate the bill ID
@@ -107,6 +108,10 @@ def execute_trigger_from_vote(trigger, govtrack_url):
 		try:
 			actor = Actor.objects.get(govtrack_id=voter.get('id'))
 		except Actor.DoesNotExist:
+			if settings.DEBUG:
+				print("No Actor instance exists here for Member of Congress with GovTrack ID %d." % int(voter.get('id')))
+				continue
+				
 			raise Exception("No Actor instance exists here for Member of Congress with GovTrack ID %d." % int(voter.get('id')))
 
 		# Map vote keys '+' and '-' to outcome indexes.
