@@ -187,7 +187,7 @@
 
 			<div class="meta-stat">
 				<div class="num">{{execution.total_contributions|currency}}</div>
-				<div class="lbl">total contributions</div>
+				<div class="lbl">total contributed</div>
 			</div>
 
 			<div class="meta-stat">
@@ -199,19 +199,7 @@
 
 			<div class="meta-stat lesser">
 				<div class="num">{{avg_pledge|currency}}</div>
-				<div class="lbl">average contributions per donor</div>
-			</div>
-
-			<hr>
-
-			<div class="meta-stat lesser">
-				<div class="num">{{num_contribs}}</div>
-				<div class="lbl">contribution{{num_contribs|pluralize}}</div>
-			</div>
-
-			<div class="meta-stat lesser">
-				<div class="num">{{avg_contrib|currency}}</div>
-				<div class="lbl">average contribution</div>
+				<div class="lbl">average contribution per donor</div>
 			</div>
 
 			<hr>
@@ -220,6 +208,12 @@
 				<div class="num">{{num_recips}}</div>
 				<div class="lbl">recipient{{num_recips|pluralize}}</div>
 			</div>
+
+			<div class="meta-stat lesser">
+				<div class="num">{{avg_contrib|currency}}</div>
+				<div class="lbl">average contribution to each recipient by each donor</div>
+			</div>
+
 		{% endif %}
 	</div>
 </div>

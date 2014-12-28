@@ -127,25 +127,25 @@
 
             <div> {# scopes the text-danger #}
               <div class="control-group">
+                <p style="margin-bottom: 0"><strong>Keep &rsquo;em in.</strong></p>
                 <label for="filterIncumbents">
                   <input id="filterIncumbents" type="checkbox" onchange="update_start_next_state()" checked>
                   If a {{trigger.strings.actor}} {{trigger.strings.action_vb_pres_s}} <span class="fill-in"> </span>, then fund their reelection campaign.
-                  <div><em>&ldquo;keep &rsquo;em in&rdquo;</em></div>
                 </label>
               </div>
 
               <div class="control-group">
+                <p style="margin-bottom: 0"><strong>Throw &rsquo;em out.</strong></p>
                 <label for="filterChallengers">
                   <input id="filterChallengers" type="checkbox" onchange="update_start_next_state()" checked>
                   If a {{trigger.strings.actor}} {{trigger.strings.action_vb_pres_s}} <span class="fill-in"> </span>, then fund their opponent&rsquo;s campaign.
-                  <div><em>&ldquo;throw &rsquo;em out&rdquo;</em></div>
                 </label>
               </div>
 
               <p class="text-danger" style="display: none">You must choose at least one.</p>
             </div>
 
-            <p>Only make contributions to:</p>
+            <p style="margin-bottom: 0"><strong>Only make contributions to:</strong></p>
 
             <div id="pledge-party">
               <div class="control-group">
@@ -237,9 +237,9 @@
               <div class="panel panel-info">
                 <div class="panel-heading">Contributor requirements</div>
                 <div class="panel-body">
-                  <p>Federal law restricts who can make a campaign contribution to a candidate for office:</p>
-                  <p>You must be at least eighteen years old and be either a U.S. Citizen or lawfully admitted permanent resident (i.e., a green card holder). You cannot be employed <i>directly</i> by the federal government as a contractor. You must make this contribution with your own funds, which were not provided to you by any other person or entity. You must use your own personal credit card, and not a corporate or business card or a card issued to another person.</p>
-                  <p>If you make more than $200 in contributions to any one candidate in a calendar year, your name, address, employment, and contribution amount become a part of the public record.</p>
+                  <p>Federal law restricts who can make campaign contribution:</p>
+                  <p>You must be either a U.S. citizen or lawfully admitted permanent resident (i.e., a green card holder). You cannot be employed <i>directly</i> by the federal government as a contractor. You must make this contribution with your own funds, which were not provided to you by any other person or entity. You must use your own personal credit card, and not a corporate or business card or a card issued to another person.</p>
+                  <p>If you make more than $200 in contributions to any one candidate in an election cycle, your name, address, employment, and contribution amount become a part of the public record.</p>
                 </div>
               </div>
             </div>
@@ -330,7 +330,7 @@
                 </p>
               </div>
 
-              <p style="margin: 1.5em 0">By clicking next, you agree that you have reviewed the Contributor Requirements above and our terms of service.</p>
+              <p style="margin: 1.5em 0">By clicking next, you agree that you have reviewed the Contributor Requirements above and our <a href="/legal" target="_blank">terms of service</a>.</p>
 
               <div class="buttons" style="margin: 1.5em 0">
                 <button type="button" class="btn btn-default" onclick="pledge_payment_cancel()">&lt; Back</button>
@@ -343,7 +343,7 @@
                 <div class="panel-body">
                   <p>You are about to schedule a campaign contribution for if and when the {{trigger.strings.action_noun}} occurs. Your contribution may be split up to {{trigger.extra.max_split}} ways depending on the outcome of the {{trigger.strings.action_noun}}.</p>
                   <p>We will not charge your credit card until the {{trigger.strings.action_noun}} occurs, and you can cancel this contribution any time before then.</p>
-                  <p>You may see a $1 authorization for Democracy Engine, LLC on your credit card. This is how we test that your credit card information is valid. The $1 authorization will not result in an actual charge.</p>
+                  <p>You may see a $1 authorization from Democracy Engine, LLC on your credit card. This is how we test that your credit card information is valid. The $1 authorization will not result in an actual charge.</p>
                 </div>
               </div>
             </div>
@@ -583,11 +583,11 @@ function update_start_next_state(no_popover) {
     if (ic == 1)
       who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text();
     else if (ic == -1)
-      who = "the " + party + " challengers" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = "the " + party + " opponents" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
     else if (party == "")
-      who = "all {{trigger.extra.max_split}} {{trigger.strings.actors|escapejs}}" + compet + ". Each will get a part of your contribution if they {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.strings.action_vb_inf|escapejs}} the other way, their part of your contribution will go to their next general election challenger"
+      who = "all {{trigger.extra.max_split}} {{trigger.strings.actors|escapejs}}" + compet + ". Each will get a part of your contribution if they {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.strings.action_vb_inf|escapejs}} the other way, their part of your contribution will go to their next general election opponent"
     else
-      who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + party + " challengers" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + party + " opponents" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
 
     $('#filter-summary span.text').text("We will split your contribution evenly across " + who + ".");
   }
