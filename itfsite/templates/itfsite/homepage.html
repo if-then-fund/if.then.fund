@@ -259,38 +259,25 @@ function start_splash_animation() {
 		}
 
 		// Create bubbles indefinitely.
-		function do_anim(anim_args) {
-			make_bubble(anim_args.elem, anim_args.width, anim_args.duration,
-				anim_args.text[anim_args.counter]);
-			setTimeout(function() { do_anim(anim_args) }, anim_args.duration);
-			anim_args.counter = (anim_args.counter + 1) % anim_args.text.length;
+		var anim_duration = 4500;
+		var anim_counter = 0;
+		var anim_text = [ ];
+		for (var a1 in { representative: null, senator: null }) {
+			for (var a2 in { 'for': null, 'against': null }) {
+				for (var a3 in { 'support': null, 'oppose': null }) {
+					anim_text.push(['a ' + a1 + ' votes ' + a2 + ' something you ' + a3,
+						((a2 == 'for') == (a3 == 'support')) ? "their reelection" : "their opponent"
+						])
+				}
+			}
 		}
-		do_anim({
-			elem: $('h1 .p1'),
-			width: p1width,
-			duration: 4500,
-			counter: 0,
-			text: [
-				'a senator votes yes',
-				'a representative votes no',
-				'a senator votes no',
-				'a representative votes yes',
-				'a Republican votes yes',
-				'a Democrat votes no',
-				'a Republican votes no',
-				'a Democrat votes yes'
-			]
-		});
-		do_anim({
-			elem: $('h1 .p3'),
-			width: p3width,
-			duration: 4500*2/3,
-			counter: 0,
-			text: [
-				'their reelection campaign.',
-				'their opponent’s campaign.'
-			]
-		});
+		function do_anim() {
+			make_bubble($('h1 .p1'), p1width, anim_duration, anim_text[anim_counter][0]);
+			make_bubble($('h1 .p3'), p3width, anim_duration, anim_text[anim_counter][1]);
+			anim_counter = (anim_counter + 1) % anim_text.length;
+			setTimeout(do_anim, anim_duration);
+		}
+		do_anim(); // start
 	}
 }
 </script>
