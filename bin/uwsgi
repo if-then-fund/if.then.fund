@@ -25,9 +25,10 @@ fi
 # Load configuration file if it exists.
 CONF=`dirname $ME`/../conf/uwsgi.conf
 NAME=default
-WSGI=wsgi.py
-PROCESSES=1
+WSGI=itfsite/wsgi.py
+PROCESSES=2 # SIGHUP doesn't work right when only one process
 DAEMONIZE=1
+export PYTHONPATH=lib
 if [ -f $CONF ]; then
 	source $CONF
 fi
