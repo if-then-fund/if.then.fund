@@ -1,6 +1,0 @@
-#!django_script
-import sys
-from contrib.models import *
-Pledge.objects.get(id=sys.argv[1]).execute()
-
-
