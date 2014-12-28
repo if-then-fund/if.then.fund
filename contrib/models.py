@@ -697,7 +697,7 @@ class Recipient(models.Model):
 
 	name = models.CharField(max_length=255, help_text="The name of the Recipient, typically for internal/debugging use only.")
 
-	de_id = models.CharField(max_length=64, help_text="The Democracy Engine ID that we have assigned to this recipient.")
+	de_id = models.CharField(max_length=64, blank=True, null=True, help_text="The Democracy Engine ID that we have assigned to this recipient.")
 	fec_id = models.CharField(max_length=64, blank=True, null=True, help_text="The FEC ID of the campaign.")
 
 	class Meta:
@@ -738,13 +738,6 @@ class Recipient(models.Model):
 				if not is_new:
 					print(recipient, '\t', old_name, '=>', recipient.name)
 				recipient.save(update_fields=['name'])
-
-
-	@transaction.atomic
-	def create_de_record(self):
-		# Creates/updates a Democracy Engine recipient.
-		pass
-
 
 class Contribution(models.Model):
 	"""A fully executed campaign contribution."""

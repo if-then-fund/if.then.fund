@@ -70,7 +70,9 @@ def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, request)
 
 def get_pledge_recipients(trigger, pledge):
 	# For pledge execution, figure out how to split the contribution
-	# across actual recipients.
+	# across actual recipients. Raise an exception if any of the
+	# recipients have a null Democracy Engine id, meaning we can't
+	# make a line item for them.
 
 	from contrib.models import ActorParty, Recipient
 
@@ -99,7 +101,8 @@ def get_pledge_recipients(trigger, pledge):
 			r = action.actor.get_recipient(incumbent=True)
 
 		elif action.party == ActorParty.Independent:
-			# Cannot give to the opponent of an Independent per FEC rules.
+			# Cannot give to the opponent of an Independent per FEC rules
+			# because there is no opposing party for us to target.
 			continue
 
 		else:
@@ -123,6 +126,10 @@ def get_pledge_recipients(trigger, pledge):
 
 		# TODO: Competitive races? Assuming all are competitive now so
 		# nothing to filter.
+
+		# Check early that we will be able to make a line item for the recipient.
+		if r.de_id is None:
+			raise ValueError("%s is missing de_id." % str(r))
 
 		# If we got here, then r is an acceptable recipient.
 		recipients.append( (r, action) )
@@ -200,8 +207,9 @@ def create_pledge_donation(pledge, recipients):
 
 	# Create the line items for campaign recipients.
 	for recipient, action, amount in recip_contribs:
+		if recipient.de_id is None: raise ValueError("%s is missing de_id." % str(recipient))
 		line_items.append({
-			"recipient_id": settings.DE_API['testing-recipient-id'], # recipient.de_id
+			"recipient_id": recipient.de_id,
 			"amount": "$%0.2f" % amount,
 			})
 
@@ -355,34 +363,6 @@ class DemocracyEngineAPI(object):
 
 	def get_recipient(self, id, live_request=False, http_method=None):
 		return self(method="recipient", argument=('recipient_id', id), http_method=http_method, live_request=live_request)
-
-	def create_recipient(self, info):
-		return self(
-			method="recipients",
-			post_data=
-				{ "recipient":
-					{
-						"remote_recipient_id": info["id"],
-						"name": info["committee_name"],
-						"registered_id": info["committee_id"],
-						"recipient_type": "federal_candidate",
-						#"contact": { "first_name", "last_name", "phone", "address1", "city", "state", "zip" },
-						"user": {
-							"first_name": "Generic",
-							"last_name": "User",
-							"login": "c%d" % info["id"],
-							"initial_password": info["user_password"],
-							"email": "de.user@civicresponsibilityllc.com"
-						},
-						"recipient_tags": {
-							"party": info["party"], # e.g. "Democrat"
-							"state": info["state"], # USPS
-							"office": info["office"], # senator, representative
-							"district": info["district"], # integer
-							"cycle": info["cycle"] # year, integer
-						}
-					}
-				})
 
 	def transactions(self, live_request=False):
 		return self(method="transactions", live_request=live_request)
