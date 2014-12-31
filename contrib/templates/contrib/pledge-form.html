@@ -106,7 +106,6 @@
     <input type="hidden" name="amount" value="?"/>
     <input type="hidden" name="incumb_challgr" value="?"/>
     <input type="hidden" name="filter_party" value=""/>
-    <input type="hidden" name="filter_competitive" value=""/>
     <input type="hidden" name="billingCCExpMonth" value="?"/>
     <input type="hidden" name="billingCCExpYear" value="?"/>
     <input type="hidden" name="billingFromPledge" value=""/>
@@ -165,13 +164,6 @@
               <div class="clearfix"> </div>
 
               <p class="text-danger" style="display: none">You must choose at least one.</p>
-            </div>
-
-            <div id="pledge-other-filters">
-              <label for="pledge-competitive-races">
-                <input id="pledge-competitive-races" type="checkbox" onchange="update_start_next_state()">
-                Candidates in competitive races
-              </label>
             </div>
 
           </div>
@@ -399,8 +391,6 @@ function pledge_init() {
     $('#filterPartyR').prop('checked', the_page.pledge_defaults.filter_party == 'ActorParty.Republican' || the_page.pledge_defaults.filter_party == null);
     $('#filterPartyD').prop('checked', the_page.pledge_defaults.filter_party == 'ActorParty.Democratic' || the_page.pledge_defaults.filter_party == null);
 
-    $('#pledge-competitive-races').prop('checked', the_page.pledge_defaults.filter_competitive);
-
     if (the_page.pledge_defaults.email)
         $('#emailEmail').val(the_page.pledge_defaults.email);
 
@@ -575,19 +565,16 @@ function update_start_next_state(no_popover) {
     if (getPartyFilterValue() == "D") party = "Democratic ";
     if (getPartyFilterValue() == "R") party = "Republican ";
 
-    var compet = "";
-    if ($('#pledge-competitive-races').prop('checked')) compet = " in competitive races";
-
     var who;
     var ic = getIncumbentChallengerValue();
     if (ic == 1)
-      who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text();
+      who = party + "{{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text();
     else if (ic == -1)
-      who = "the " + party + " opponents" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = "the " + party + " opponents in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
     else if (party == "")
-      who = "all {{trigger.extra.max_split}} {{trigger.strings.actors|escapejs}}" + compet + ". Each will get a part of your contribution if they {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.strings.action_vb_inf|escapejs}} the other way, their part of your contribution will go to their next general election opponent"
+      who = "all {{trigger.extra.max_split}} {{trigger.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.strings.action_vb_inf|escapejs}} the other way, their part of your contribution will go to their next general election opponent"
     else
-      who = party + "{{trigger.strings.actors|escapejs}}" + compet + " who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + party + " opponents" + compet + " in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = party + "{{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + party + " opponents in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
 
     $('#filter-summary span.text').text("We will split your contribution evenly across " + who + ".");
   }
@@ -753,7 +740,6 @@ function pledge_submit() {
   $('#pledge-info input[name="amount"]').val(get_contribution_amount())
   $('#pledge-info input[name="incumb_challgr"]').val(getIncumbentChallengerValue())
   $('#pledge-info input[name="filter_party"]').val(getPartyFilterValue())
-  $('#pledge-info input[name="filter_competitive"]').val($('#pledge-competitive-races').prop('checked') ? 1 : 0)
 
   // validate credit card information and set form fields, but only if we're not reusing an old pledge token
   if ($('#pledge-info input[name="billingFromPledge"]').val() == '')

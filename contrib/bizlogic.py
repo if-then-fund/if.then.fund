@@ -124,9 +124,6 @@ def get_pledge_recipients(trigger, pledge):
 		if pledge.filter_party is not None and party != pledge.filter_party:
 			continue
 
-		# TODO: Competitive races? Assuming all are competitive now so
-		# nothing to filter.
-
 		# Check early that we will be able to make a line item for the recipient.
 		if r.de_id is None:
 			raise ValueError("%s is missing de_id." % str(r))

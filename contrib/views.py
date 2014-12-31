@@ -218,7 +218,7 @@ def create_pledge(request):
 	# Field values & validation.
 
 	# integer fields that have the same field name as form element name
-	for field in ('algorithm', 'desired_outcome', 'filter_competitive'):
+	for field in ('algorithm', 'desired_outcome'):
 		try:
 			setattr(p, field, int(request.POST[field]))
 		except ValueError:
