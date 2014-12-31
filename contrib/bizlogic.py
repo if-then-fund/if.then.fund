@@ -70,9 +70,7 @@ def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, request)
 
 def get_pledge_recipients(trigger, pledge):
 	# For pledge execution, figure out how to split the contribution
-	# across actual recipients. Raise an exception if any of the
-	# recipients have a null Democracy Engine id, meaning we can't
-	# make a line item for them.
+	# across actual recipients.
 
 	from contrib.models import ActorParty, Recipient
 
@@ -98,12 +96,7 @@ def get_pledge_recipients(trigger, pledge):
 			party = action.party
 
 			# Get the Recipient object.
-			r = action.actor.get_recipient(incumbent=True)
-
-		elif action.party == ActorParty.Independent:
-			# Cannot give to the opponent of an Independent per FEC rules
-			# because there is no opposing party for us to target.
-			continue
+			r = Recipient.objects.get(actor=action.actor)
 
 		else:
 			# The incumbent did something other than what the user wanted, so the
@@ -113,20 +106,28 @@ def get_pledge_recipients(trigger, pledge):
 			if pledge.incumb_challgr == 1:
 				continue
 
-			# Party filtering is based on that opposite party.
-			party = action.party.opposite()
+			if action.challenger is None:
+				# We don't have a challenger Recipient associated. There should always
+				# be a challenger. If there is not, create a Recipient and set its
+				# active field to false.
+				raise ValueError("Action has no challenger: %s" % action)
 
 			# Get the Recipient object.
-			r = action.actor.get_recipient(challenger_party=party)
+			r = action.challenger
+
+			# Party filtering is based on the party on the recipient object.
+			party = r.party
+
+		# The Recipient may not be currently taking contributions.
+		# Silently skip.
+
+		if not r.active:
+			continue
 
 		# Filter by party.
 
 		if pledge.filter_party is not None and party != pledge.filter_party:
 			continue
-
-		# Check early that we will be able to make a line item for the recipient.
-		if r.de_id is None:
-			raise ValueError("%s is missing de_id." % str(r))
 
 		# If we got here, then r is an acceptable recipient.
 		recipients.append( (r, action) )
@@ -204,7 +205,6 @@ def create_pledge_donation(pledge, recipients):
 
 	# Create the line items for campaign recipients.
 	for recipient, action, amount in recip_contribs:
-		if recipient.de_id is None: raise ValueError("%s is missing de_id." % str(recipient))
 		line_items.append({
 			"recipient_id": recipient.de_id,
 			"amount": "$%0.2f" % amount,

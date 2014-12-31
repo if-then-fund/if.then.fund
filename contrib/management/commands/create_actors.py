@@ -1,9 +1,13 @@
-# Load and parse current Members of Congress
-# ------------------------------------------
+# Creates/updates Actor and Recipient objects using the
+# congress-legislators database of current Members of
+# Congress and the Democracy Engine recipients list for
+# challengers
+# -----------------------------------------------------
 #
-# Data is obtained from https://github.com/unitedstates/congress-legislators.
+# See https://github.com/unitedstates/congress-legislators.
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 from django.conf import settings
 from django.contrib.humanize.templatetags.humanize import ordinal
 
@@ -11,6 +15,7 @@ import requests
 import rtyaml
 
 from contrib.models import Actor, ActorParty, Recipient
+from contrib.bizlogic import DemocracyEngineAPI
 
 party_map = {
 	'Democrat': ActorParty.Democratic,
@@ -21,12 +26,17 @@ statenames = {"AL":"Alabama", "AK":"Alaska", "AS":"American Samoa", "AZ":"Arizon
 
 class Command(BaseCommand):
 	args = ''
-	help = 'Creates/updates Actor instances for current Members of Congress via the unitedstates/congress-legislators project.'
+	help = 'Creates/updates Actor and Recipient instances.'
 
+	@transaction.atomic
 	def handle(self, *args, **options):
 		# Load and parse current Members of Congress YAML.
 		r = requests.get("https://raw.githubusercontent.com/unitedstates/congress-legislators/114th_congress/legislators-current.yaml")
 		r = rtyaml.load(r.content)
+
+		# Pre-load all of the Democracy Engine recipients and build a map.
+		de_recips = DemocracyEngineAPI.recipients()
+		de_recips = { r['recipient_id']: r for r in de_recips }
 
 		# Create Actor instances.
 		for p in r:
@@ -73,7 +83,59 @@ class Command(BaseCommand):
 			if is_new:
 				self.stdout.write('Added: ' + actor.name_long)
 
-			Recipient.create_for(actor)
+			# Create a Recipient for this Actor.
+			de_id = "p_%d" % actor.govtrack_id
+			if de_id not in de_recips:
+				self.stdout.write('Missing recipient for: ' + actor.name_long)
+			else:
+				recipient, is_new = Recipient.objects.get_or_create(
+					actor=actor,
+					office_sought=None,
+					party=None,
+					defaults={ "de_id": de_id }
+					)
+				if is_new:
+					self.stdout.write('Added recipient for: %s (%s)' % (actor.name_long, de_recips[de_id]['name']))
+				self.update_recipient_active(recipient, de_recips)
+
+			# Create a challenger for the Actor if one is not yet set.
+			if actor.challenger is None:
+				# Get the office based on the Actor's current term and opposing party.
+				term = actor.extra['legislators-current']['term']
+				if term['type'] == 'rep':
+					office = ["H", term['state'], "%02d" % term['district']]
+				elif term['type'] == 'sen':
+					office = ["S", term['state'], "%02d" % term['class']]
+				else:
+					raise ValueError()
+				party = actor.party.opposite()
+
+				# See if the Democracy Engine recipient exists.
+				de_id = "c_" + "-".join(office + [party.name[0]])
+				if de_id not in de_recips:
+					self.stdout.write('Missing challenger recipient %s. ' % de_id)
+				else:
+					recipient, is_new = Recipient.objects.get_or_create(
+						actor=None,
+						office_sought="-".join(office),
+						party=party,
+						defaults={ "de_id": de_id }
+						)
+					actor.challenger = recipient
+					actor.save()
+					self.stdout.write('%s challenger recipient for %s (%s).' %
+						("Created" if is_new else "Associated", actor.name_long, de_id))
+
+			# Update the 'active' field on the challenger.
+			if actor.challenger:
+				self.update_recipient_active(actor.challenger, de_recips)
+
+	def update_recipient_active(self, recipient, de_recips):
+		active = (de_recips[recipient.de_id]['status'] == 'active')
+		if recipient.active != active:
+			self.stdout.write('Setting recipient %s active to %s.' % (recipient, str(active)))
+			recipient.active = active
+			recipient.save()
 
 def build_name(p, t, mode):
 	# Based on:
@@ -133,3 +195,4 @@ def build_title(p, t):
 		return "Representative for " + statenames[t['state']] + " At-Large"
 	else:
 		return "Representative for " + statenames[t['state']] + "’s " + ordinal(t['district']) + " Congressional District"
+

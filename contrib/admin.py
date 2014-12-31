@@ -17,11 +17,12 @@ class TriggerExecutionAdmin(admin.ModelAdmin):
     pledge_count_.short_description = "pledges (exct'd/contrib'd)"
 
 class ActorAdmin(admin.ModelAdmin):
-    list_display = ['name_long', 'party', 'govtrack_id']
+    list_display = ['name_long', 'party', 'govtrack_id', 'challenger']
+    raw_id_fields = ['challenger']
 
 class ActionAdmin(admin.ModelAdmin):
     list_display = ['id', 'created', 'trigger', 'name', 'outcome_', 'total_contributions_for', 'total_contributions_against']
-    readonly_fields = ['execution', 'actor', 'total_contributions_for', 'total_contributions_against']
+    readonly_fields = ['execution', 'actor', 'challenger', 'total_contributions_for', 'total_contributions_against']
     def created(self, obj):
         return obj.execution.created
     def trigger(self, obj):
@@ -57,8 +58,10 @@ class PledgeExecutionAdmin(admin.ModelAdmin):
         return obj.pledge.trigger
 
 class RecipientAdmin(admin.ModelAdmin):
-    list_display = ['name', 'actor', 'challenger']
+    list_display = ['name', 'de_id', 'actor', 'office_sought', 'party']
     raw_id_fields = ['actor']
+    def name(self, obj):
+        return str(obj)
 
 class ContributionAdmin(admin.ModelAdmin):
     list_display = ['id', 'created', 'amount', 'recipient', 'user_or_email', 'trigger']
