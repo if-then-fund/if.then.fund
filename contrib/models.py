@@ -390,6 +390,15 @@ class Pledge(models.Model):
 		return self.trigger.outcomes[1 - self.desired_outcome]["label"]
 
 	@property
+	def get_nice_status(self):
+		if self.status != PledgeStatus.Executed:
+			return self.status.name
+		elif self.execution.problem == PledgeExecutionProblem.NoProblem:
+			return "Finished"
+		else:
+			return "Failed"
+
+	@property
 	def targets_summary(self):
 		# This is mirrored in pledge_form.html.
 
@@ -654,6 +663,18 @@ class PledgeExecution(models.Model):
 		txns = set(item['transaction_guid'] for item in self.extra['donation']['line_items'])
 		for txn in txns:
 			print(rtyaml.dump(DemocracyEngineAPI.get_transaction(txn)))
+
+	@property
+	def problem_text(self):
+		if self.problem == PledgeExecutionProblem.EmailUnconfirmed:
+			return "Your contribution was not made because you did not confirm your email address prior to the %s." \
+				% self.pledge.trigger.strings['action_noun']
+		if self.problem == PledgeExecutionProblem.TransactionFailed:
+			return "There was a problem charging your credit card and making the contribution: %s. Your contribution could not be made." \
+				% self.pledge.execution.extra['exception']
+		if self.problem == PledgeExecutionProblem.FiltersExcludedAll:
+			return "Your contribution was not made because there were no %s that met your criteria of %s." \
+				% (self.pledge.trigger.strings['actors'], self.pledge.targets_summary)
 
 	@transaction.atomic
 	def update_district(self, district, other):

@@ -25,12 +25,16 @@ def trigger(request, id, slug):
 	if trigger.slug != slug:
 		return redirect(trigger.get_absolute_url())
 
+	# Defaults. Note that these are also used for triggers that have been executed
+	# but for which there were no pledges that resulted in transactions, so use
+	# zeros instead of None's where needed.
+
 	outcomes = None
 	actions = None
 	avg_pledge = 0
 	avg_contrib = 0
 	num_contribs = None
-	num_recips = None
+	num_recips = 0
 	by_incumb_chlngr = []
 
 	try:

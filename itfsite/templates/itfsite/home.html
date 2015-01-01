@@ -35,9 +35,18 @@
 	{% endif %}
 
 	<tr>
-		<td><a href="{{pledge.trigger.get_absolute_url}}">{{pledge.trigger.title}}</a></td>
-		<td>${% firstof pledge.execution.charged|floatformat:2 pledge.amount|floatformat:2 %}</td>
-		<td>{{pledge.get_status_display}}</td>
+		<td>
+			<a href="{{pledge.trigger.get_absolute_url}}">{{pledge.trigger.title}}</a>
+			{% if pledge.execution.problem|stringformat:'s' != 'PledgeExecutionProblem.NoProblem' %}
+				<p class="text-danger" style="margin-top: .25em; font-size: 90%">{{ pledge.execution.problem_text }}</p>
+			{% endif %}
+		</td>
+		<td>
+			${% firstof pledge.execution.charged|floatformat:2 pledge.amount|floatformat:2 %}
+		</td>
+		<td>
+			{{pledge.get_nice_status}}
+		</td>
 	</tr>
 
 	{% if forloop.last %}

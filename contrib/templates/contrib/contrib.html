@@ -8,13 +8,21 @@
 <div class="panel-body">
 	<p>We sent an email to {{pledge.email}}. You must click the link in the email to confirm your email address before the contribution can be made.</p>
 	<hr>
-{% else %}
+{% elif not pledge.execution or pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
 <div class="panel panel-success">
 <div class="panel-heading">
 	<h3 class="panel-title">Your contribution</h3>
 </div>
 <div class="panel-body">
+{% else %}
+<div class="panel panel-danger">
+<div class="panel-heading">
+	<h3 class="panel-title">Your contribution</h3>
+</div>
+<div class="panel-body">
 {% endif %}
+
+{% if not pledge.execution or pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
 
 	<p>You
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}made{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}have scheduled{% else %}scheduled{% endif %}
@@ -88,6 +96,11 @@
 	{% endif %}
 
   </div>
+
+{% else %}
+	<p>{{pledge.execution.problem_text}}</p>
+
+{% endif %}
 </div>
 
 
