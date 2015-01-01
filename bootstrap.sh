@@ -102,6 +102,7 @@ $PIP install --upgrade \
 	"requests" \
 	"markdown2" \
 	"jsonfield" \
+	"tqdm==1.0" \
 	"enum3field"
 
 $PIP install --upgrade -r \

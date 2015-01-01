@@ -1,7 +1,0 @@
-#!django_script
-import sys
-from contrib.models import *
-for p in Pledge.objects.filter(trigger_id=sys.argv[1]):
-	p.execute()
-
-
