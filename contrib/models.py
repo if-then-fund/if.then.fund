@@ -510,7 +510,7 @@ class Pledge(models.Model):
 				# Catch typical exceptions and log them in the PledgeExecutionObject.
 				except HumanReadableValidationError as e:
 					problem = PledgeExecutionProblem.TransactionFailed
-					exception = e
+					exception = str(e)
 
 		# From here on, if there is a problem then we need to print DE API donation
 		# information before we lose track of it, since nothing will be written to
