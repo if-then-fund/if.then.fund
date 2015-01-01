@@ -113,7 +113,11 @@
     <div class="panel panel-success">
       <div class="panel-body">
         <div id="pledge-start">
-          <h3 style="margin-top: 0">Contribution amount</h3>
+          <h3 style="margin-top: 0">Your position</h3>
+
+          <p>You want {{trigger.strings.actors}} to {{trigger.strings.action_vb_inf}} <span id="repeat-desired-outcome" class="fill-in" style="font-weight: bold"> </span>.</p>
+
+          <h3>Contribution amount</h3>
 
           <div id="pledge-amount" class="input-group">
             <div class="input-group-addon">$</div>
@@ -500,6 +504,7 @@ function pledge_go(outcome_elem) {
 
   // Fill in the incumbents via the user's choice.
   fill_in(outcome_elem, '#filterIncumbents');
+  fill_in(outcome_elem, '#repeat-desired-outcome');
 
   // Fill in the challengers via the button that the user didn't choose.
   // If there is more than one option in the future, this will need to be revised.
@@ -560,6 +565,7 @@ function update_start_next_state(no_popover) {
 
   if (valid) {
     // Human-readable explanation of the current filter choices.
+    // This is mirrored in models.py's Pledge.targets_summary().
 
     var party = "";
     if (getPartyFilterValue() == "D") party = "Democratic ";
@@ -572,7 +578,7 @@ function update_start_next_state(no_popover) {
     else if (ic == -1)
       who = "the " + party + " opponents in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
     else if (party == "")
-      who = "all {{trigger.extra.max_split}} {{trigger.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.strings.action_vb_inf|escapejs}} the other way, their part of your contribution will go to their next general election opponent"
+      who = "all {{trigger.extra.max_split}} {{trigger.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.strings.action_vb_inf|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + ", their part of your contribution will go to their next general election opponent"
     else
       who = party + "{{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + party + " opponents in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
 

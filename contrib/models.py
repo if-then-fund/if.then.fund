@@ -391,32 +391,36 @@ class Pledge(models.Model):
 
 	@property
 	def targets_summary(self):
-		def ucfirst(s):
-			return s[0].upper() + s[1:]
+		# This is mirrored in pledge_form.html.
+
+		desired_outcome_label = self.desired_outcome_label
+		antidesired_outcome_label = self.antidesired_outcome_label
 
 		party_filter = ""
 		if self.filter_party is not None:
 			party_filter = self.filter_party.name + " "
 
-		actors = self.trigger.strings['actors']
-		if party_filter == "":
-			actors = ucfirst(actors)
-
-		desired_outcome_label = self.desired_outcome_label
-
-		if self.incumb_challgr == -1:
-			actors = "challengers of " + actors
-			desired_outcome_label = self.antidesired_outcome_label
-
+		noun = self.trigger.strings['actors']
 		verb = self.trigger.strings['action_vb_inf' if self.status != PledgeStatus.Executed else "action_vb_past"]
-		action = "who %s %s" % (verb, desired_outcome_label)
 
-		descr = party_filter + actors + " " + action
-
-		if self.incumb_challgr == 0:
-			descr += " or their next general election opponent for those that %s the other way" % verb
-
-		return descr
+		if self.incumb_challgr == 1:
+			# "keep em in"
+			return "%s%s who %s %s" \
+				% (party_filter, noun, verb, desired_outcome_label)
+		elif self.incumb_challgr == -1:
+			# "throw em out"
+			return "the %sopponents in the next general election of %s who %s %s" \
+				% (party_filter, noun, verb, antidesired_outcome_label)
+		elif party_filter == "":
+			# goes to incumbents and challengers, no party filter
+			return "all %s %s, each getting a part of your contribution if they %s %s, but if they %s %s their part of your contribution will go to their next general election opponent" \
+				% (self.trigger.extra['max_split'], noun, verb, desired_outcome_label,
+				   verb, antidesired_outcome_label)
+		else:
+			# goes to incumbents and challengers, with a party filter
+			return "%s%s who %s %s and the %sopponents in the next general election of %s who %s %s" \
+				% (party_filter, noun, verb, desired_outcome_label,
+				   party_filter, noun, verb, antidesired_outcome_label)
 
 
 	@transaction.atomic
