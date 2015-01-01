@@ -4,21 +4,27 @@
 
 {% block head %}
 <style>
+ul li {
+	margin: .75em 0;
+}
 </style>
 {% endblock %}
 
 {% block body %}
 <h1>Open @ if.then.fund</h1>
 
+<p>See below for how we used both open data and open source to build <span class="site-brand">if.then.fund</span>.</p>
+
 <div class="row">
 	<div class="col-sm-6">
 		<h2>Open Data</h2>
 
-		<p>Information on bills in Congress and members of Congress comes from:</p>
+		<p><span class="site-brand">if.then.fund</span> relies on open data about Members of Congress and votes in Congress, which you can use to build your own open government hacks. We get information on bills in Congress and members of Congress from these open data projects:</p>
 
 		<ul>
 		<li><a href="https://www.govtrack.us/developers">GovTrack&rsquo;s open data and API</a></li>
-		<li><a href="https://github.com/unitedstates/congress">unitedstates/congress</a> and <a href="https://github.com/unitedstates/congress-legislators">unitedstates/congress-legislators</a> repositories on github.</li>
+		<li><a href="https://github.com/unitedstates/congress-legislators">unitedstates/congress-legislators</a> on github for the roster of Members of Congress</li>
+		<li><a href="https://github.com/unitedstates/congress">unitedstates/congress</a> on github to scrape information on bills and votes from official websites</li>
 		</ul>
 	</div>
 
@@ -46,7 +52,7 @@
 			<dd><p>Django 1.7 middleware that makes it easy to split each page request into one stream marked as being cachable at the HTTP server and a second non-cached AJAX stream for fetching user-specific content.</p></dd>
 		</dl>
 
-		<p>We&rsquo;re also thankful for the opportunity to make use of <a href="https://github.com/stripe/jquery.payment">stripe/jquery.payment</a>, <a href="http://getbootstrap.com/">Bootstrap</a>, and <a href="https://jquery.org/">jQuery</a>.</p>
+		<p>We&rsquo;re also thankful for the opportunity to make use of <a href="https://www.djangoproject.com/">Django</a>, <a href="https://github.com/stripe/jquery.payment">stripe/jquery.payment</a>, <a href="http://getbootstrap.com/">Bootstrap</a>, and <a href="https://jquery.org/">jQuery</a>.</p>
 	</div>
 </div>
 
