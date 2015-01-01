@@ -52,13 +52,24 @@ a {
 
 /* MASTER ELEMENTS */
 
-.navbar {
-	background-color: #EEE;
+#nav-wrap {
+	background-color: #333;
+	margin-bottom: 20px;
 }
+	.navbar {
+		margin: 0;
+		border: none;
+	}
 	.navbar .navbar-toggle .icon-bar {
 		background-color: #888;
 	}
 
+	.navbar a.navbar-brand {
+		background-color: #38601f;
+		color: white;
+		letter-spacing: .4px;
+		font-size: 18px;
+	}
 	a.navbar-brand, .site-brand {
 		font-family: 'Fredoka One', cursive;
 	}
@@ -68,9 +79,11 @@ a {
 
 	.navbar a {
 		border: none;
+		color: #E7E7E7;
+		font-size: 14px;
 	}
 		.navbar .nav a:hover {
-			text-decoration: underline;
+			background-color: #555;
 		}
 
 @media screen and (min-width: 768px) {

@@ -42,11 +42,14 @@
   {% endif %}
 
   {% block body-wide %}
-  <div id="body-content" class="container">
-    <div class="row">
-      {% include "navbar.html" %}
+  <div id="nav-wrap" class="container-fluid">
+    <div class="container">
+      <div class="row">
+        {% include "navbar.html" %}
+      </div>
     </div>
-
+  </div>
+  <div id="body-content" class="container">
     {% block body %}
     {% endblock %}
 
