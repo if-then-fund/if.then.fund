@@ -197,17 +197,33 @@ def create_pledge_donation(pledge, recipients):
 	# Prepare line items for the API.
 	line_items = []
 
+	def fmt_decimal(value):
+		# Ensure decimal value has no more than two decimal places.
+		try:
+			sign, digits, exp = value.quantize(decimal.Decimal('0.01')).as_tuple()
+		except decimal.InvalidOperation:
+			raise ValueError("Rounding issue with %s." % value)
+		if sign != 0:
+			raise ValueError("Rounding issue with %s (sign=%d)." % (value, sign))
+		if exp != -2:
+			raise ValueError("Rounding issue with %s (^%d)." % (value, exp))
+
+		# Format with dollar sign, decimal point, and at least a leading zero.
+		digits = [str(d) for d in digits]
+		while len(digits) < 3: digits.insert(0, '0')
+		return "$%s.%s" % (''.join(digits[:-2]), ''.join(digits[-2:]))
+
 	# Create the line item for fees.
 	line_items.append({
 		"recipient_id": settings.DE_API['fees-recipient-id'],
-		"amount": "$%0.2f" % fees,
+		"amount": fmt_decimal(fees),
 		})
 
 	# Create the line items for campaign recipients.
 	for recipient, action, amount in recip_contribs:
 		line_items.append({
 			"recipient_id": recipient.de_id,
-			"amount": "$%0.2f" % amount,
+			"amount": fmt_decimal(amount),
 			})
 
 	# Prepare the donation record for authorization & capture.
@@ -229,6 +245,11 @@ def create_pledge_donation(pledge, recipients):
 			"pledge": pledge.id,
 			})
 		})
+
+	# Sanity check the total.
+	if sum(decimal.Decimal(li['amount'].replace("$", "")) for li in de_don_req['line_items']) \
+		!= total_charge:
+		raise ValueError("Sum of line items does not match total charge.")
 	
 	# Create the 'donation', which creates a transaction and performs cc authorization.
 	don = DemocracyEngineAPI.create_donation(de_don_req)
