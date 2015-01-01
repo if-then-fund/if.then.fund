@@ -40,6 +40,7 @@ function apt_install {
 	fi
 }
 
+apt_install postgresql-client-9.3
 apt_install python3 python-virtualenv python3-pip python3-dnspython python3-yaml python3-lxml python3-dateutil
 
 # DEPLOYED TO WEB ONLY
