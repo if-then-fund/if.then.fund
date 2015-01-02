@@ -194,12 +194,16 @@
 	border: 1px solid #FFF;
 	border-radius: 15px;
 	background-color: #38601f;
-	color: white;
 	padding: 7px 5px;
-	font-family: 'Roboto Condensed', sans-serif;
-	font-weight: bold;
+	color: white;
+	font-family: sans-serif;
 	text-align: center;
 	line-height: 110%;
+}
+.splash-anim-bubble span {
+	font-family: 'Roboto Condensed', sans-serif;
+	font-weight: bold;
+	font-size: 120%;
 }
 </style>
 
@@ -241,7 +245,7 @@ function start_splash_animation() {
 				left: pelem.offset().left + .1*pwidth,
 				top: $('h1').offset().top + 2*$('h1').height(),
 				width: .8 * pwidth,
-				fontSize: pwidth/9,
+				fontSize: pwidth/11,
 				opacity: 0
 			})
 			b
@@ -264,8 +268,8 @@ function start_splash_animation() {
 		var anim_text = [ ];
 		for (var a1 in { representative: null, senator: null }) {
 			for (var a2 in { 'supports': null, 'oppposes': null }) {
-				anim_text.push(['a ' + a1 + '<br>' + a2 + '<br>your position',
-						(a2 == 'supports') ? "their reelection" : "their opponent"
+				anim_text.push(['a ' + a1 + '<br><span>' + a2 + '</span><br>your position',
+						(a2 == 'supports') ? "<span>their reelection</span>" : "their <span>opponent</span>"
 						])
 			}
 		}
