@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
 import os
+from urllib.parse import urlencode
 
 class Command(BaseCommand):
 	args = ''
@@ -13,23 +14,19 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 		d = settings.DATABASES['default']
 
-		# write password so we don't have to enter it manually
-		with open('/home/ubuntu/.pgpass', 'w') as f:
-			f.write(':'.join([d['HOST'], d['PORT'], d['NAME'], d['USER'], d['PASSWORD']]))
-		os.chmod('/home/ubuntu/.pgpass', 0o600)
+		# build a connection string so that we can specify sslmode
+		conn = "postgresql://%s:%s@%s:%s/%s" % (
+			d['USER'], d['PASSWORD'], d['HOST'], d['PORT'], d['NAME'])
+		if d.get('OPTIONS', {}):
+			conn += "?" + urlencode(d['OPTIONS'])
 
 		# args
-		psqlargs = [
-			'psql',
-			'-h', d['HOST'],
-			'-p', d['PORT'],
-			d['NAME'],
-			d['USER'],
-			]
+		psqlargs = ['psql', conn]
 		if len(args) > 0:
 			psqlargs.append('-c')
 			psqlargs.append(" ".join(args))
 		
 		# replace this process with psql
+		print(" ".join(psqlargs))
 		os.execv('/usr/bin/psql', psqlargs)
 
