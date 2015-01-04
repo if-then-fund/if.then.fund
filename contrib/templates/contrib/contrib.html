@@ -57,7 +57,7 @@
 	{% endif %}
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
-	<p><a href="#" onclick="return cancel_pledge()">Cancel?</a></p>
+	<p style="text-align: right; margin-bottom: 0"><a href="#" onclick="return cancel_pledge()" class="btn {% if not pledge.user %}btn-default{% else %}btn-danger{% endif %}">Cancel Contribution</a></p>
 	{% endif %}
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' and pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
@@ -112,7 +112,7 @@ function cancel_pledge(desire) {
 	show_modal_confirm(
 		"Cancel contribution?",
 		"Are you sure you want to cancel this contribution?",
-		"Cancel Contribution",
+		["Cancel Contribution", "Nevermind"],
 		function() {
 			ajax({
 			    url: '/contrib/_cancel',

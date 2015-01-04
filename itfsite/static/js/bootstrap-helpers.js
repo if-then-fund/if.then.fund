@@ -52,8 +52,13 @@ function show_modal_confirm(title, question, verb, yes_callback, cancel_callback
     $('#global_modal .modal-dialog').removeClass("modal-sm");
     $('#global_modal .modal-body').html("").append(question);
   }
-  $('#global_modal .btn-default').show().text("Cancel");
-  $('#global_modal .btn-danger').show().text(verb);
+  if (typeof verb == String) {
+    $('#global_modal .btn-default').show().text("Cancel");
+    $('#global_modal .btn-danger').show().text(verb);
+  } else {
+    $('#global_modal .btn-default').show().text(verb[1]);
+    $('#global_modal .btn-danger').show().text(verb[0]);
+  }
   global_modal_funcs = [yes_callback, cancel_callback];
   global_modal_state = null;
   $('#global_modal').modal({});
