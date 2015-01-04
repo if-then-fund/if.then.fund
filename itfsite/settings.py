@@ -134,6 +134,7 @@ SITE_ROOT_URL = EMAIL_CONFIRM_LA_HTTP_PROTOCOL + "://" + environment['host']
 
 SITE_MODE = environment.get("mode")
 ADMINS = ["josh@if.then.fund"]
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
 NO_SMTP_CHECK = environment["no_smtp_check"]
 DE_API = environment['democracyengine']
 CDYNE_API_KEY = environment['cdyne_key']

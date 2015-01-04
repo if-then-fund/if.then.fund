@@ -130,7 +130,7 @@
         {% include "twostream/head.html" %}
         <script>
           // Django Messages
-          if (django_messages.length > 0) {
+          if (typeof django_messages != "undefined" && django_messages.length > 0) {
             var msg = $("<div></div>");
             for (var i = 0; i < django_messages.length; i++) {
               var n = $("<p/>")
@@ -142,16 +142,18 @@
           }
 
           // User Login Buttons
-          if (!the_user)
-            $('.if-anonymous').removeClass('hidden')
-          else
-            $('.if-logged-in').removeClass('hidden')
-          {% if request.path != '/' and request.path != '/accounts/login' %}
-          {# on the home and login page, dont redirect back to those pages after a login but instead go to the users account page #}
-          $('.log-inout-link a').each(function() {
-              $(this).attr('href', $(this).attr('href') + '?next=' + encodeURIComponent('{{request.path|escapejs}}'));
-            });
-          {% endif %}
+          if (typeof the_user != "undefined") {
+            if (!the_user)
+              $('.if-anonymous').removeClass('hidden')
+            else
+              $('.if-logged-in').removeClass('hidden')
+            {% if request.path != '/' and request.path != '/accounts/login' %}
+            {# on the home and login page, dont redirect back to those pages after a login but instead go to the users account page #}
+            $('.log-inout-link a').each(function() {
+                $(this).attr('href', $(this).attr('href') + '?next=' + encodeURIComponent('{{request.path|escapejs}}'));
+              });
+            {% endif %}
+          }
         </script>
 
         {% block scripts %}
