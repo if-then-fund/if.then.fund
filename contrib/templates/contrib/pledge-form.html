@@ -424,6 +424,8 @@ function pledge_init() {
     $('#contribZip').val('00001-1234')
     $('#contribOccupation').val('demonstrator')
     $('#contribEmployer').val('self')
+  }
+  if (window.location.hash == "#demo" {% if SITE_MODE == "demo" %} || 1{% endif %}) {
     $('#billingCCNum').val('4111111111111111')
     $('#billingCCExp').val('1/2020')
     $('#billingCCCVC').val('000')
