@@ -31,7 +31,7 @@ class Command(BaseCommand):
 	@transaction.atomic
 	def handle(self, *args, **options):
 		# Load and parse current Members of Congress YAML.
-		r = requests.get("https://raw.githubusercontent.com/unitedstates/congress-legislators/114th_congress/legislators-current.yaml")
+		r = requests.get("https://raw.githubusercontent.com/unitedstates/congress-legislators/master/legislators-current.yaml")
 		r = rtyaml.load(r.content)
 
 		# Pre-load all of the Democracy Engine recipients and build a map.
