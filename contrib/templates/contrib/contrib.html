@@ -75,7 +75,7 @@
 		</thead>
 		<tbody>
 		{% for contrib in contribs %}
-			<tr><td style="padding-left: 0">${{contrib.amount|floatformat:2}}</td> <td>{{contrib.recipient.name}}</td></tr>
+			<tr><td style="padding-left: 0">${{contrib.amount|floatformat:2}}</td> <td>{{contrib.name_long}}</td></tr>
 		{% endfor %}
 		</tbody>
 		</table>

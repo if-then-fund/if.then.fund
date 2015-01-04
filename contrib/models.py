@@ -752,6 +752,14 @@ class Contribution(models.Model):
 	def __str__(self):
 		return "$%0.2f to %s for %s" % (self.amount, self.recipient, self.pledge_execution)
 
+	def name_long(self):
+		if not self.recipient.is_challenger:
+			# is an incumbent
+			return self.action.name_long
+		else:
+			# is a challenger
+			return "Challenger to " + self.action.name_long
+
 	@transaction.atomic
 	def delete(self):
 		# Delete this object. You almost certainly do NOT want to do this
@@ -767,7 +775,7 @@ class Contribution(models.Model):
 	def inc_action_contrib_total(self, factor=1):
 		# Increment the totals on the Action instance. This excludes fees because
 		# this is based on transaction line items.
-		if self.recipient.challenger is None:
+		if not self.recipient.is_challenger:
 			# Contribution was to the Actor.
 			field = 'total_contributions_for'
 		else:

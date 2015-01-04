@@ -103,7 +103,7 @@ def trigger_user_view(request, id, slug):
 		import django.template
 		template = django.template.loader.get_template("contrib/contrib.html")
 		pe = PledgeExecution.objects.filter(pledge=p).first()
-		contribs = sorted(Contribution.objects.filter(pledge_execution=pe).select_related("action"), key=lambda c : c.action.name_sort)
+		contribs = sorted(Contribution.objects.filter(pledge_execution=pe).select_related("action"), key=lambda c : (c.recipient.is_challenger, c.action.name_sort))
 		ret["pledge_made"] = template.render(django.template.Context({
 			"trigger": trigger,
 			"pledge": p,
