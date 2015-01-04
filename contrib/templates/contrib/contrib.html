@@ -1,15 +1,18 @@
 {% load itfsite_utils %}
 
-{% if not pledge.user %}
+{% if not pledge.user and not pledge.execution %}
 <div class="panel panel-danger">
 <div class="panel-heading">
-	<h3 class="panel-title">Confirm your email address</h3>
+	<h3 class="panel-title">Check your email for a link</h3>
 </div>
 <div class="panel-body">
-	<p>We sent an email to {{pledge.email}}. You must click the link in the email to confirm your email address before the contribution can be made.</p>
-	<hr>
-{% elif not pledge.execution or pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
-<div class="panel panel-success">
+	We sent an email to {{pledge.email}}. You must click the link in the email to confirm your email address before the contribution can be made.
+</div>
+</div>
+{% endif %}
+
+{% if not pledge.execution or pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
+<div class="panel {% if not pledge.user %}panel-default{% else %}panel-success{% endif %}">
 <div class="panel-heading">
 	<h3 class="panel-title">Your contribution</h3>
 </div>
