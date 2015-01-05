@@ -1,10 +1,15 @@
 {% extends "master.html" %}
 {% load itfsite_utils %}
 
-{% block title %}Home{% endblock %}
-
+{% block title2 %}if.then.fund - {% include "tagline.txt" %}{% endblock %}
 
 {% block head %}
+<meta name="og:title" content="if.then.fund" />
+<meta name="description" content="{% include "tagline.txt" %}">
+<meta name="og:description" content="{% include "tagline.txt" %}">
+<meta property="og:image" content="{{ROOT_URL}}static/img/logo.png" /> {# for Twitter summary card, mix size 120x120 #}
+<meta name="twitter:card" content="summary" />
+
 <style>
 @import url(https://fonts.googleapis.com/css?family=Roboto+Condensed:700);
 

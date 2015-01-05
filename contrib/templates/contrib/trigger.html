@@ -4,6 +4,11 @@
 {% block title %}{{trigger.title}}{% endblock %}
 
 {% block head %}
+<meta name="og:title" content="{{trigger.title}} (if.then.fund)" />
+<meta name="og:description" content="Reshape Congress by making a contribution based on how {{trigger.strings.actors}} {{trigger.strings.action_vb_inf}}.">
+<meta property="og:image" content="{{ROOT_URL}}static/img/logo.png" /> {# for Twitter summary card, mix size 120x120 #}
+<meta name="twitter:card" content="summary" />
+
 <style>
 @media screen and (min-width: 768px) {
 	#trigger-metadata {
