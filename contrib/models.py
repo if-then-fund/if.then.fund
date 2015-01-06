@@ -734,7 +734,7 @@ class Recipient(models.Model):
 		else:
 			try:
 				# is a currently challenger of someone
-				return "Challenger to " + str(self.challenger_to)
+				return self.party.name + " Challenger to " + str(self.challenger_to) + " (" + self.office_sought + ")"
 			except:
 				# is not a current challenger of someone, so just use office/party designation
 				return self.office_sought + ":" + str(self.party)
@@ -769,8 +769,10 @@ class Contribution(models.Model):
 			# is an incumbent
 			return self.action.name_long
 		else:
-			# is a challenger
-			return "Challenger to " + self.action.name_long
+			# is a challenger, but who it was a challenger to may be different
+			# from who the recipient is a challenger to now, so use the action
+			# to get the name of the incumbent.
+			return self.recipient.party.name + " Challenger to " + self.action.name_long
 
 	@transaction.atomic
 	def delete(self):
