@@ -126,7 +126,7 @@
 				</div>
 			</div>
 
-			<p>{{num_recips}} {{trigger.trigger_type.strings.actors}} {{trigger.trigger_type.strings.action_vb_past}}.
+			<p>{{num_recips}} {{trigger.trigger_type.strings.actors}} {{trigger.trigger_type.strings.action_vb_past}} and received contributions.
 			<span><a href="#" onclick="$(this).parent().remove(); $('#contribs-by-recipient').fadeIn(); return false;">Show Details</a>.</span>
 			</p>
 
@@ -146,7 +146,7 @@
 				{% for action in actions %}
 					<tr>
 						<td>{{action.name_long}}</td>
-						<td {% if not action.has_outcome %}style="font-style: italic"{% endif %}>
+						<td {% if not action.has_outcome %}colspan="3" style="font-style: italic"{% endif %}>
 							{{action.outcome_label}}
 						</td>
 						{% if action.has_outcome %}

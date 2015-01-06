@@ -51,7 +51,15 @@ def trigger(request, id, slug):
 		# the contributions plus the negative of the contributions to their challengers. For ties,
 		# sort alphabetically on name.
 		actions = list(te.actions.all().select_related('actor'))
-		actions.sort(key = lambda a : ((a.total_contributions_for + a.total_contributions_against) == 0, -(a.total_contributions_for - a.total_contributions_against), a.actor.name_sort))
+		actions.sort(key = lambda a : (
+			a.outcome is None, # non-voting actors at the end
+			(a.total_contributions_for + a.total_contributions_against) == 0, # no contribs either way at end
+			-(a.total_contributions_for - a.total_contributions_against), # sort by contribs for minus contribs against
+			a.reason_for_no_outcome, # among non-voting actors, sort by the reason
+			a.outcome, # among voting actors, group by vote
+			a.actor.name_sort # finally, by last name
+			)
+		)
 		num_recips = 0
 		for a in actions:
 			if a.total_contributions_for > 0: num_recips += 1
