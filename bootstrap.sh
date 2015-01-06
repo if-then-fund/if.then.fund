@@ -36,11 +36,11 @@ function apt_install {
 	done
 
 	if [[ ! -z "$TO_INSTALL" ]]; then
+		echo Need to install: $TO_INSTALL
 		sudo DEBIAN_FRONTEND=noninteractive sudo apt-get -y install $PACKAGES
 	fi
 }
 
-apt_install postgresql-client-9.3
 apt_install python3 python-virtualenv python3-pip python3-dnspython python3-yaml python3-lxml python3-dateutil
 
 # DEPLOYED TO WEB ONLY
@@ -53,7 +53,7 @@ if [ "$1" == "--deployed" ]; then
 	fi
 
 	# Install nginx, uwsgi, memcached etc.
-	apt_install nginx uwsgi-plugin-python3 memcached python3-psycopg2
+	apt_install nginx uwsgi-plugin-python3 memcached python3-psycopg2 postgresql-client-9.3
 
 	# Turn off nginx's default website.
 	sudo rm -f /etc/nginx/sites-enabled/default
