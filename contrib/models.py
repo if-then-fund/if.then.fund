@@ -30,6 +30,18 @@ class TextFormat(enum.Enum):
 #
 #####################################################################
 
+class TriggerType(models.Model):
+	"""A class of triggers, like a House vote."""
+
+	key = models.CharField(max_length=64, blank=True, null=True, db_index=True, unique=True, help_text="An opaque look-up key to quickly locate this object.")
+	title = models.CharField(max_length=200, help_text="The title for the trigger.")
+
+	created = models.DateTimeField(auto_now_add=True, db_index=True)
+	updated = models.DateTimeField(auto_now=True, db_index=True)
+
+	strings = JSONField(default={}, help_text="A dictionary of displayable text.")
+	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
+
 @django_enum
 class TriggerStatus(enum.Enum):
 	Draft = 0
@@ -45,6 +57,7 @@ class Trigger(models.Model):
 
 	title = models.CharField(max_length=200, help_text="The title for the trigger.")
 	owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT, help_text="The user which created the trigger and can update it.")
+	trigger_type = models.ForeignKey(TriggerType, on_delete=models.PROTECT, help_text="The type of the trigger, which determines how it is described in text.")
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True, db_index=True)
@@ -55,7 +68,6 @@ class Trigger(models.Model):
 	status = EnumField(TriggerStatus, default=TriggerStatus.Draft, help_text="The current status of the trigger: Open (accepting pledges), Paused (not accepting pledges), Executed (funds distributed), Vacated (existing pledges invalidated).")
 	outcomes = JSONField(default=[], help_text="An array (order matters!) of information for each possible outcome of the trigger, e.g. ['Voted Yes', 'Voted No'].")
 
-	strings = JSONField(default={}, help_text="Display strings.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
 	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges made.")
@@ -409,8 +421,8 @@ class Pledge(models.Model):
 		if self.filter_party is not None:
 			party_filter = self.filter_party.name + " "
 
-		noun = self.trigger.strings['actors']
-		verb = self.trigger.strings['action_vb_inf' if self.status != PledgeStatus.Executed else "action_vb_past"]
+		noun = self.trigger.trigger_type.strings['actors']
+		verb = self.trigger.trigger_type.strings['action_vb_inf' if self.status != PledgeStatus.Executed else "action_vb_past"]
 
 		if self.incumb_challgr == 1:
 			# "keep em in"
@@ -668,13 +680,13 @@ class PledgeExecution(models.Model):
 	def problem_text(self):
 		if self.problem == PledgeExecutionProblem.EmailUnconfirmed:
 			return "Your contribution was not made because you did not confirm your email address prior to the %s." \
-				% self.pledge.trigger.strings['action_noun']
+				% self.pledge.trigger.trigger_type.strings['action_noun']
 		if self.problem == PledgeExecutionProblem.TransactionFailed:
 			return "There was a problem charging your credit card and making the contribution: %s. Your contribution could not be made." \
 				% self.pledge.execution.extra['exception']
 		if self.problem == PledgeExecutionProblem.FiltersExcludedAll:
 			return "Your contribution was not made because there were no %s that met your criteria of %s." \
-				% (self.pledge.trigger.strings['actors'], self.pledge.targets_summary)
+				% (self.pledge.trigger.trigger_type.strings['actors'], self.pledge.targets_summary)
 
 	@transaction.atomic
 	def update_district(self, district, other):

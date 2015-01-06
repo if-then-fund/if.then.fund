@@ -35,7 +35,7 @@
 	{% else %}
 		${{execution.charged|floatformat:2}}
 	{% endif %}
-	for this {{trigger.strings.action_noun}}.
+	for this {{trigger.trigger_type.strings.action_noun}}.
 	It
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}was{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}will be{% else %}would have been{% endif %}
 	split among
@@ -48,9 +48,9 @@
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
 		{% if pledge.trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
-			<p>Your credit card will be charged only after the {{trigger.strings.action_noun}} occurs.</p>
+			<p>Your credit card will be charged only after the {{trigger.trigger_type.strings.action_noun}} occurs.</p>
 		{% else %}
-			<p>The {{trigger.strings.action_noun}} has occurred, and we are about to process your contribution. You are still able to cancel the contribution before we process it.</p>
+			<p>The {{trigger.trigger_type.strings.action_noun}} has occurred, and we are about to process your contribution. You are still able to cancel the contribution before we process it.</p>
 		{% endif %}
 	{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Vacated' %}
 		<p>The event that this contribution was for is no longer expected to occur. Your contribution has been cancelled. Your credit card was not charged.</dd>

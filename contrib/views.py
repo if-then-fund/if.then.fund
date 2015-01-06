@@ -449,7 +449,7 @@ def trigger_execution_report(request, id):
 	def build_actor_info(action):
 		ret = {
 			"name": action.name_long,
-			trigger.strings['action']: action.outcome_label(),
+			"action": action.outcome_label(),
 			"contribs": action.total_contributions_for,
 			"contribs_to_opponent": action.total_contributions_against,
 			"actor_id": action.actor.id,
@@ -464,7 +464,7 @@ def trigger_execution_report(request, id):
 			if v:
 				ret[key] = v
 		return ret
-	ret[trigger.strings['actors']] = [build_actor_info(a) for a in actions]
+	ret['actors'] = [build_actor_info(a) for a in actions]
 
 	# All donors.
 	from contrib.models import PledgeExecutionProblem, Contribution

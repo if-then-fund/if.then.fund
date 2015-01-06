@@ -87,7 +87,7 @@
 </div>
 
 <div id="make-pledge">
-  <h2>How would you {{trigger.strings.action_vb_inf}}?</h2>
+  <h2>How would you {{trigger.trigger_type.strings.action_vb_inf}}?</h2>
 
   <div id="pledge-outcomes" style="margin-left: 1em">
   {% for outcome in trigger.outcomes %}
@@ -115,7 +115,7 @@
         <div id="pledge-start">
           <h3 style="margin-top: 0">Your position</h3>
 
-          <p>You want {{trigger.strings.actors}} to {{trigger.strings.action_vb_inf}} <span id="repeat-desired-outcome" class="fill-in" style="font-weight: bold"> </span>.</p>
+          <p>You want {{trigger.trigger_type.strings.actors}} to {{trigger.trigger_type.strings.action_vb_inf}} <span id="repeat-desired-outcome" class="fill-in" style="font-weight: bold"> </span>.</p>
 
           <h3>Contribution amount</h3>
 
@@ -133,7 +133,7 @@
                 <p style="margin-bottom: 0"><strong>Keep &rsquo;em in.</strong></p>
                 <label for="filterIncumbents">
                   <input id="filterIncumbents" type="checkbox" onchange="update_start_next_state()" checked>
-                  If a {{trigger.strings.actor}} {{trigger.strings.action_vb_pres_s}} <span class="fill-in"> </span>, then fund their reelection campaign.
+                  If a {{trigger.trigger_type.strings.actor}} {{trigger.trigger_type.strings.action_vb_pres_s}} <span class="fill-in"> </span>, then fund their reelection campaign.
                 </label>
               </div>
 
@@ -141,7 +141,7 @@
                 <p style="margin-bottom: 0"><strong>Throw &rsquo;em out.</strong></p>
                 <label for="filterChallengers">
                   <input id="filterChallengers" type="checkbox" onchange="update_start_next_state()" checked>
-                  If a {{trigger.strings.actor}} {{trigger.strings.action_vb_pres_s}} <span class="fill-in"> </span>, then fund their opponent&rsquo;s campaign.
+                  If a {{trigger.trigger_type.strings.actor}} {{trigger.trigger_type.strings.action_vb_pres_s}} <span class="fill-in"> </span>, then fund their opponent&rsquo;s campaign.
                 </label>
               </div>
 
@@ -296,7 +296,7 @@
           <div class="row">
             <div class="col-md-6">
               <div id="payment-new">
-              <p>Enter the credit card information that you would like us to charge when the {{trigger.strings.action_noun}} occurs.</p>
+              <p>Enter the credit card information that you would like us to charge when the {{trigger.trigger_type.strings.action_noun}} occurs.</p>
 
               <table class="input-table">
                 <tr>
@@ -321,7 +321,7 @@
               </div>
 
               <div id="payment-old" style="display: none">
-                <p>When the {{trigger.strings.action_noun}} occurs, we&rsquo;ll charge your credit card ending in <span class="cc-num"></span>.
+                <p>When the {{trigger.trigger_type.strings.action_noun}} occurs, we&rsquo;ll charge your credit card ending in <span class="cc-num"></span>.
                   <a href="#" onclick="$('#pledge-info input[name=&quot;billingFromPledge&quot;]').val(''); $('#payment-old').hide(); $('#payment-new').show(); $('#payment-new .focus-on-shown').focus(); return false;">Change card?</a>
                 </p>
               </div>
@@ -337,8 +337,8 @@
               <div class="panel panel-info">
                 <div class="panel-heading">What happens next</div>
                 <div class="panel-body">
-                  <p>You are about to schedule a campaign contribution for if and when the {{trigger.strings.action_noun}} occurs. Your contribution may be split up to {{trigger.extra.max_split}} ways depending on the outcome of the {{trigger.strings.action_noun}}.</p>
-                  <p>We will not charge your credit card until the {{trigger.strings.action_noun}} occurs, and you can cancel this contribution any time before then.</p>
+                  <p>You are about to schedule a campaign contribution for if and when the {{trigger.trigger_type.strings.action_noun}} occurs. Your contribution may be split up to {{trigger.extra.max_split}} ways depending on the outcome of the {{trigger.trigger_type.strings.action_noun}}.</p>
+                  <p>We will not charge your credit card until the {{trigger.trigger_type.strings.action_noun}} occurs, and you can cancel this contribution any time before then.</p>
                   <p>You may see a $1 authorization from Democracy Engine, LLC on your credit card. This is how we test that your credit card information is valid. The $1 authorization will not result in an actual charge.</p>
                 </div>
               </div>
@@ -576,13 +576,13 @@ function update_start_next_state(no_popover) {
     var who;
     var ic = getIncumbentChallengerValue();
     if (ic == 1)
-      who = party + "{{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text();
+      who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text();
     else if (ic == -1)
-      who = "the " + party + " opponents in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = "the " + party + " opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
     else if (party == "")
-      who = "all {{trigger.extra.max_split}} {{trigger.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.strings.action_vb_inf|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + ", their part of your contribution will go to their next general election opponent"
+      who = "all {{trigger.extra.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.trigger_type.strings.action_vb_inf|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + ", their part of your contribution will go to their next general election opponent"
     else
-      who = party + "{{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + party + " opponents in the next general election of {{trigger.strings.actors|escapejs}} who {{trigger.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + party + " opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
 
     $('#filter-summary span.text').text("We will split your contribution evenly across " + who + ".");
   }
@@ -637,7 +637,7 @@ function do_pledge_login_next() {
           return;
         }
         if (response.status == "AlreadyPledged") {
-          $('#login-error').text("You have already scheduled a contribution for this {{trigger.strings.action_noun|escapejs}}. Please log in to see details.");
+          $('#login-error').text("You have already scheduled a contribution for this {{trigger.trigger_type.strings.action_noun|escapejs}}. Please log in to see details.");
           $('#login-error').slideDown();
           return;
         }

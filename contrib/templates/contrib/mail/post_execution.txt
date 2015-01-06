@@ -6,7 +6,7 @@
 To see who your contributions were made to, please head over to the following address:
 {% else %}Your campaign contributions to {{pledge.targets_summary}} could not be made.
 
-{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.FiltersExcludedAll' %}No {% if pledge.incumb_challgr == 1 %}{{pledge.trigger.strings.actors}}{% else %}recipients{% endif %} matched your criteria.{% endif %}{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.TransactionFailed' %}There was a problem charging your credit card.{% endif %}
+{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.FiltersExcludedAll' %}No {% if pledge.incumb_challgr == 1 %}{{pledge.trigger.trigger_type.strings.actors}}{% else %}recipients{% endif %} matched your criteria.{% endif %}{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.TransactionFailed' %}There was a problem charging your credit card.{% endif %}
 
 For more information, please head over to the following address:
 {% endif %}

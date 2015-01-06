@@ -14,7 +14,7 @@
 <p>Your campaign contributions to {{pledge.targets_summary}} could not be made.</p>
 
 {% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.FiltersExcludedAll' %}
-<p>No {% if pledge.incumb_challgr == 1 %}{{pledge.trigger.strings.actors}}{% else %}recipients{% endif %} matched your criteria.</p>
+<p>No {% if pledge.incumb_challgr == 1 %}{{pledge.trigger.trigger_type.strings.actors}}{% else %}recipients{% endif %} matched your criteria.</p>
 {% endif %}
 
 {% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.TransactionFailed' %}
