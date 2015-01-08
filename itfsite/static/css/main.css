@@ -36,11 +36,11 @@ small, .small {
 	line-height: 125%;
 }
 
-a {
+a, a:visited {
 	color: #272;
 	border-bottom: 1px solid #0A0; /* accessibility */
 }
-	a:hover {
+	a:hover, a:active {
 		text-decoration: none;
 		color: #0A0;
 		border-color: #0B0;
@@ -140,3 +140,22 @@ h3.invert {
 		content: "●●";
 		padding-left: .66em;
 	}
+
+#page-sections-nav {
+	margin-top: -2em;
+}
+	#page-sections-nav li, #page-sections-nav-xs li {
+		background-color: #EEE;
+		margin-bottom: 4px;
+	}
+		#page-sections-nav li a, #page-sections-nav-xs li a {
+			border: none;
+		}
+	#page-sections-nav-xs {
+		margin: 1em;
+		font-size: 90%;
+	}
+		#page-sections-nav-xs li a {
+			padding: 5px 10px;
+		}
+

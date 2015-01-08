@@ -4,7 +4,7 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = patterns('',
 	url(r'^$', 'itfsite.views.homepage', name='homepage'),
-	url(r'^(about|about/how-it-works|about/theory-of-change|privacy|terms|open)$', 'itfsite.views.simplepage', name='simplepage'),
+	url(r'^(about|about/how-it-works|about/theory-of-change|about/legal|privacy|terms|open)$', 'itfsite.views.simplepage', name='simplepage'),
 	url(r'^accounts/welcome$', 'itfsite.accounts.welcome', name='welcome'),
 	url(r'^home$', 'itfsite.views.user_home', name='home'),
 

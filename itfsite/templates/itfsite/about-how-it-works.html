@@ -10,24 +10,26 @@
 {% block body %}
 <h1>How It Works</h1>
 
-<div class="row">
-<div class="col-sm-9 col-lg-7">
+{% include "page-section-nav.html" %}
 
-<h2>The basics</h2>
+<h2 data-nav-text="Basics">The basics</h2>
 
 	<p>When there is an upcoming vote in Congress you have an opinion about, use <span class="site-brand">if.then.fund</span> to schedule a donation to members of Congress based on the outcome of the vote.</p>
+	
+	<p>After the vote, we’ll split your donation across the representatives and senators in Congress depending on how they vote. If they vote the way you wanted, they’ll get a portion of your donation. If they vote the other way, their next general election opponent will get their portion of your donation instead. We can split your donation all the way down to 1¢ per recipient if needed!</p>
 
-	<p>After the vote, we&rsquo;ll split your donation across the representatives and senators in Congress depending on how they vote. If they vote the way you wanted, they&rsquo;ll get a portion of your donation. If they vote the other way, their next opponent in a general election will get their portion of your donation instead. We can split your donation all the way down to 1¢ per recipient if needed!</p>
+<h2 data-nav-text="Fees">What are the fees?</h2>
 
-<h2>What are the fees?</h2>
+	<p><span class="site-brand">if.then.fund</span> applies a 5% fee to donations. Our partner <a href="http://www.democracyengine.com/">Democracy Engine</a> applies a 4% + 20¢ credit card processing fee to your total donation. Fees are deducted from your donation amount before we split it up.</p>
 
-	<p><span class="site-brand">if.then.fund</span> applies a 5% fee to donations. Our partner <a href="http://www.democracyengine.com/">Democracy Engine</a> applies a 4% + 20¢ credit card processing fee to your total donation. Fees are deducted from your donation amount.</p>
+<h2 data-nav-text="Donations to opponents">How does a donation to the next general election opponent work?</h2>
+	
+	<p>Donations made to throw out an elected official are a donation to the general election opponent of that elected official in their next election. The opponent will be the candidate of the other major party. The opponent may not be known at the time you make your contribution. <a href="http://www.democracyengine.com/">Democracy Engine</a> Inc PAC will hold your contribution until the opponent is known following the next primary election.</p>
 
-<h2>How does a donation to the next general election opponent work?</h2>
-
-	<p>Donations made to throw out an elected official are a donation to the general election opponent of that elected official in their next election. The opponent will be the candidate of the other major party. The oppponent may not be known at the time you make your contribution. Our partner <a href="http://www.democracyengine.com/">Democracy Engine</a> will hold your contribution until the opponent is known following the next primary election. By law Democracy Engine must distribute your funds within 10 days of the opponent becoming known.</p>
+	<p>By law Democracy Engine Inc PAC must distribute your funds within 10 days of the opponent becoming known.  In the rare situation in which there is no opposition candidate of the correct party, your donation will be forwarded to the appropriate national party committee. Check out our <a href="/about/legal">Legal Background</a> page for more details about the legal framework under which these donations are made.</p>
 
 </div>
 </div>
+
 
 {% endblock %}
