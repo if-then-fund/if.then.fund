@@ -156,15 +156,12 @@
 
           // Page Affixed Nav: Create the nav items dynamically from the h2's.
           if ($('#page-sections-nav').length > 0) {
-            // Set required attributes.
-            $('#page-sections-nav').attr('data-offset-top', $('header').height());
-
             // Create nav elements.
             $('h2').each(function() {
               var target = $(this);
-              var id = target.text().replace(/\W/g, '').toLowerCase();
               var text = target.text();
               if (target.attr('data-nav-text')) text = target.attr('data-nav-text');
+              var id = text.replace(/\W/g, '').toLowerCase();
               var n = $("<li role=\"presentation\"><a></a></li>");
               n.find('a').attr('href', '#' + id);
               n.find('a').text(text);
@@ -183,6 +180,10 @@
               n2.find('a').click(my_click_handler);
               $('#page-sections-nav-xs ul').append(n2);
             });
+
+            // Set required attributes.
+            $('#page-sections-nav').attr('data-offset-top', $('header').height());
+            $('#page-sections-nav').attr('data-offset-bottom', $('#page-sections-nav').height());
 
             // enable scrollspy
             $('body')
