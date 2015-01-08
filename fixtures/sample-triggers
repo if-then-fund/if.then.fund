@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from contrib.models import *
 from contrib.legislative import create_trigger_from_bill
 
-for bill in ("hr135-113", "s1948-113", "s1463-113"):
+for bill in ("hconres1-114", "hr22-114", "s1-114"):
 	try:
 		t = create_trigger_from_bill(bill, 'h')
 		t.status = TriggerStatus.Open
