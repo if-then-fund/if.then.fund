@@ -1,0 +1,8640 @@
+- fields:
+    active: true
+    actor: 1
+    de_id: p_400050
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-OH-01-R
+    office_sought: S-OH-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 2
+- fields:
+    active: true
+    actor: 2
+    de_id: p_300018
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 3
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-WA-01-R
+    office_sought: S-WA-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 4
+- fields:
+    active: true
+    actor: 3
+    de_id: p_400064
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 5
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MD-01-R
+    office_sought: S-MD-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 6
+- fields:
+    active: true
+    actor: 4
+    de_id: p_300019
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 7
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-DE-01-R
+    office_sought: S-DE-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 8
+- fields:
+    active: true
+    actor: 5
+    de_id: p_412246
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 9
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-PA-01-R
+    office_sought: S-PA-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 10
+- fields:
+    active: true
+    actor: 6
+    de_id: p_412248
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 11
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-TN-01-D
+    office_sought: S-TN-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 12
+- fields:
+    active: true
+    actor: 7
+    de_id: p_300043
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 13
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-CA-01-R
+    office_sought: S-CA-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 14
+- fields:
+    active: true
+    actor: 8
+    de_id: p_300052
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 15
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-UT-01-D
+    office_sought: S-UT-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 16
+- fields:
+    active: true
+    actor: 9
+    de_id: p_412242
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 17
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MN-01-R
+    office_sought: S-MN-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 18
+- fields:
+    active: true
+    actor: 10
+    de_id: p_412243
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 19
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MO-01-R
+    office_sought: S-MO-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 20
+- fields:
+    active: true
+    actor: 11
+    de_id: p_400272
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 21
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NJ-01-R
+    office_sought: S-NJ-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 22
+- fields:
+    active: true
+    actor: 12
+    de_id: p_300078
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 23
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-FL-01-R
+    office_sought: S-FL-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 24
+- fields:
+    active: true
+    actor: 13
+    de_id: p_400357
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 25
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-VT-01-R
+    office_sought: S-VT-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 26
+- fields:
+    active: true
+    actor: 14
+    de_id: p_300093
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 27
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MI-01-R
+    office_sought: S-MI-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 28
+- fields:
+    active: true
+    actor: 15
+    de_id: p_412244
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 29
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MT-01-R
+    office_sought: S-MT-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 30
+- fields:
+    active: true
+    actor: 16
+    de_id: p_412247
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 31
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-RI-01-R
+    office_sought: S-RI-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 32
+- fields:
+    active: true
+    actor: 17
+    de_id: p_412251
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 33
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-WY-01-D
+    office_sought: S-WY-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 34
+- fields:
+    active: true
+    actor: 18
+    de_id: p_400432
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 35
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MS-01-D
+    office_sought: S-MS-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 36
+- fields:
+    active: true
+    actor: 19
+    de_id: p_300002
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 37
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-TN-02-D
+    office_sought: S-TN-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 38
+- fields:
+    active: true
+    actor: 20
+    de_id: p_300023
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 39
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MS-02-D
+    office_sought: S-MS-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 40
+- fields:
+    active: true
+    actor: 21
+    de_id: p_300025
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 41
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-ME-02-D
+    office_sought: S-ME-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 42
+- fields:
+    active: true
+    actor: 22
+    de_id: p_300027
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 43
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-TX-02-D
+    office_sought: S-TX-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 44
+- fields:
+    active: true
+    actor: 23
+    de_id: p_300038
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 45
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-IL-02-R
+    office_sought: S-IL-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 46
+- fields:
+    active: true
+    actor: 24
+    de_id: p_300041
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 47
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-WY-02-D
+    office_sought: S-WY-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 48
+- fields:
+    active: true
+    actor: 25
+    de_id: p_300047
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 49
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-SC-02-D
+    office_sought: S-SC-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 50
+- fields:
+    active: true
+    actor: 26
+    de_id: p_300055
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 51
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-OK-02-D
+    office_sought: S-OK-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 52
+- fields:
+    active: true
+    actor: 27
+    de_id: p_300072
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 53
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-KY-02-D
+    office_sought: S-KY-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 54
+- fields:
+    active: true
+    actor: 28
+    de_id: p_412325
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 55
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-OR-02-R
+    office_sought: S-OR-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 56
+- fields:
+    active: true
+    actor: 29
+    de_id: p_300081
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 57
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-RI-02-R
+    office_sought: S-RI-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 58
+- fields:
+    active: true
+    actor: 30
+    de_id: p_412322
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 59
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-ID-02-D
+    office_sought: S-ID-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 60
+- fields:
+    active: true
+    actor: 31
+    de_id: p_300083
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 61
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-KS-02-D
+    office_sought: S-KS-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 62
+- fields:
+    active: true
+    actor: 32
+    de_id: p_300088
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 63
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-AL-02-D
+    office_sought: S-AL-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 64
+- fields:
+    active: true
+    actor: 33
+    de_id: p_412323
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 65
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NH-02-R
+    office_sought: S-NH-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 66
+- fields:
+    active: true
+    actor: 34
+    de_id: p_400413
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 67
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NM-02-R
+    office_sought: S-NM-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 68
+- fields:
+    active: true
+    actor: 35
+    de_id: p_412321
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 69
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-VA-02-R
+    office_sought: S-VA-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 70
+- fields:
+    active: true
+    actor: 36
+    de_id: p_412223
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 71
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NY-01-R
+    office_sought: S-NY-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 72
+- fields:
+    active: true
+    actor: 37
+    de_id: p_412378
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 73
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MN-02-R
+    office_sought: S-MN-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 74
+- fields:
+    active: true
+    actor: 38
+    de_id: p_412390
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 75
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-DE-02-R
+    office_sought: S-DE-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 76
+- fields:
+    active: true
+    actor: 39
+    de_id: p_412391
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 77
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-WV-01-R
+    office_sought: S-WV-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 78
+- fields:
+    active: true
+    actor: 40
+    de_id: p_400004
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 79
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AL-04-D
+    office_sought: H-AL-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 80
+- fields:
+    active: true
+    actor: 41
+    de_id: p_412438
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 81
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-03-D
+    office_sought: H-MI-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 82
+- fields:
+    active: true
+    actor: 42
+    de_id: p_412493
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 83
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NH-03-D
+    office_sought: S-NH-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 84
+- fields:
+    active: true
+    actor: 43
+    de_id: p_400013
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 85
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-WI-01-R
+    office_sought: S-WI-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 86
+- fields:
+    active: true
+    actor: 44
+    de_id: p_412469
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 87
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-11-D
+    office_sought: H-PA-11
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 88
+- fields:
+    active: true
+    actor: 45
+    de_id: p_400018
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 89
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-06-D
+    office_sought: H-TX-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 90
+- fields:
+    active: true
+    actor: 46
+    de_id: p_412404
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 91
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-37-R
+    office_sought: H-CA-37
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 92
+- fields:
+    active: true
+    actor: 47
+    de_id: p_400021
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 93
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-34-R
+    office_sought: H-CA-34
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 94
+- fields:
+    active: true
+    actor: 48
+    de_id: p_412436
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 95
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-01-D
+    office_sought: H-MI-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 96
+- fields:
+    active: true
+    actor: 49
+    de_id: p_412330
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 97
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-CO-03-R
+    office_sought: S-CO-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 98
+- fields:
+    active: true
+    actor: 50
+    de_id: p_412250
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 99
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-12-D
+    office_sought: H-FL-12
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 100
+- fields:
+    active: true
+    actor: 51
+    de_id: p_400029
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 101
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-UT-01-D
+    office_sought: H-UT-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 102
+- fields:
+    active: true
+    actor: 52
+    de_id: p_400030
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 103
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-02-R
+    office_sought: H-GA-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 104
+- fields:
+    active: true
+    actor: 53
+    de_id: p_412478
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 105
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TN-06-D
+    office_sought: H-TN-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 106
+- fields:
+    active: true
+    actor: 54
+    de_id: p_400032
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 107
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TN-07-D
+    office_sought: H-TN-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 108
+- fields:
+    active: true
+    actor: 55
+    de_id: p_400033
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 109
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OR-03-R
+    office_sought: H-OR-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 110
+- fields:
+    active: true
+    actor: 56
+    de_id: p_412490
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 111
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-CT-03-R
+    office_sought: S-CT-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 112
+- fields:
+    active: true
+    actor: 57
+    de_id: p_400034
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 113
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MO-03-D
+    office_sought: S-MO-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 114
+- fields:
+    active: true
+    actor: 58
+    de_id: p_400036
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 115
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-08-D
+    office_sought: H-OH-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 116
+- fields:
+    active: true
+    actor: 59
+    de_id: p_400040
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 117
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-AR-03-D
+    office_sought: S-AR-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 118
+- fields:
+    active: true
+    actor: 60
+    de_id: p_400041
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 119
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GU-00-R
+    office_sought: H-GU-00
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 120
+- fields:
+    active: true
+    actor: 61
+    de_id: p_400636
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 121
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-LA-03-D
+    office_sought: H-LA-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 122
+- fields:
+    active: true
+    actor: 62
+    de_id: p_300011
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 123
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-CA-03-R
+    office_sought: S-CA-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 124
+- fields:
+    active: true
+    actor: 63
+    de_id: p_400046
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 125
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-08-D
+    office_sought: H-TX-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 126
+- fields:
+    active: true
+    actor: 64
+    de_id: p_400047
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 127
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-01-R
+    office_sought: H-PA-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 128
+- fields:
+    active: true
+    actor: 65
+    de_id: p_412395
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 129
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AL-05-D
+    office_sought: H-AL-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 130
+- fields:
+    active: true
+    actor: 66
+    de_id: p_400048
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 131
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-05-R
+    office_sought: H-FL-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 132
+- fields:
+    active: true
+    actor: 67
+    de_id: p_412196
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 133
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-16-D
+    office_sought: H-FL-16
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 134
+- fields:
+    active: true
+    actor: 68
+    de_id: p_412427
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 135
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IN-08-D
+    office_sought: H-IN-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 136
+- fields:
+    active: true
+    actor: 69
+    de_id: p_400052
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 137
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-26-D
+    office_sought: H-TX-26
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 138
+- fields:
+    active: true
+    actor: 70
+    de_id: p_400054
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 139
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NC-03-D
+    office_sought: S-NC-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 140
+- fields:
+    active: true
+    actor: 71
+    de_id: p_400616
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 141
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-01-R
+    office_sought: H-NC-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 142
+- fields:
+    active: true
+    actor: 72
+    de_id: p_400057
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 143
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-42-D
+    office_sought: H-CA-42
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 144
+- fields:
+    active: true
+    actor: 73
+    de_id: p_400061
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 145
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-WV-02-D
+    office_sought: S-WV-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 146
+- fields:
+    active: true
+    actor: 74
+    de_id: p_400062
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 147
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-24-R
+    office_sought: H-CA-24
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 148
+- fields:
+    active: true
+    actor: 75
+    de_id: p_400063
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 149
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MA-07-R
+    office_sought: H-MA-07
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 150
+- fields:
+    active: true
+    actor: 76
+    de_id: p_412407
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 151
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-DE-00-R
+    office_sought: H-DE-00
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 152
+- fields:
+    active: true
+    actor: 77
+    de_id: p_412258
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 153
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IN-07-R
+    office_sought: H-IN-07
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 154
+- fields:
+    active: true
+    actor: 78
+    de_id: p_400068
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 155
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-31-D
+    office_sought: H-TX-31
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 156
+- fields:
+    active: true
+    actor: 79
+    de_id: p_412269
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 157
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-LA-02-D
+    office_sought: S-LA-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 158
+- fields:
+    active: true
+    actor: 80
+    de_id: p_412195
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 159
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-14-R
+    office_sought: H-FL-14
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 160
+- fields:
+    active: true
+    actor: 81
+    de_id: p_400071
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 161
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-01-D
+    office_sought: H-OH-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 162
+- fields:
+    active: true
+    actor: 82
+    de_id: p_412270
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 163
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-UT-03-D
+    office_sought: H-UT-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 164
+- fields:
+    active: true
+    actor: 83
+    de_id: p_412379
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 165
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-27-R
+    office_sought: H-CA-27
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 166
+- fields:
+    active: true
+    actor: 84
+    de_id: p_412470
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 167
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-RI-01-R
+    office_sought: H-RI-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 168
+- fields:
+    active: true
+    actor: 85
+    de_id: p_412221
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 169
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-09-R
+    office_sought: H-NY-09
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 170
+- fields:
+    active: true
+    actor: 86
+    de_id: p_400074
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 171
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MO-01-R
+    office_sought: H-MO-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 172
+- fields:
+    active: true
+    actor: 87
+    de_id: p_400639
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 173
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MO-05-R
+    office_sought: H-MO-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 174
+- fields:
+    active: true
+    actor: 88
+    de_id: p_400075
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 175
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-SC-06-R
+    office_sought: H-SC-06
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 176
+- fields:
+    active: true
+    actor: 89
+    de_id: p_402675
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 177
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-IN-03-D
+    office_sought: S-IN-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 178
+- fields:
+    active: true
+    actor: 90
+    de_id: p_412271
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 179
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CO-06-D
+    office_sought: H-CO-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 180
+- fields:
+    active: true
+    actor: 91
+    de_id: p_412236
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 181
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TN-09-R
+    office_sought: H-TN-09
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 182
+- fields:
+    active: true
+    actor: 92
+    de_id: p_400077
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 183
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OK-04-D
+    office_sought: H-OK-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 184
+- fields:
+    active: true
+    actor: 93
+    de_id: p_400655
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 185
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-11-D
+    office_sought: H-TX-11
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 186
+- fields:
+    active: true
+    actor: 94
+    de_id: p_412272
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 187
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VA-11-R
+    office_sought: H-VA-11
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 188
+- fields:
+    active: true
+    actor: 95
+    de_id: p_400080
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 189
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-13-R
+    office_sought: H-MI-13
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 190
+- fields:
+    active: true
+    actor: 96
+    de_id: p_400081
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 191
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TN-05-R
+    office_sought: H-TN-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 192
+- fields:
+    active: true
+    actor: 97
+    de_id: p_400618
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 193
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-16-R
+    office_sought: H-CA-16
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 194
+- fields:
+    active: true
+    actor: 98
+    de_id: p_412193
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 195
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CT-02-R
+    office_sought: H-CT-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 196
+- fields:
+    active: true
+    actor: 99
+    de_id: p_300030
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 197
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-ID-03-D
+    office_sought: S-ID-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 198
+- fields:
+    active: true
+    actor: 100
+    de_id: p_412400
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 199
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AR-01-D
+    office_sought: H-AR-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 200
+- fields:
+    active: true
+    actor: 101
+    de_id: p_400086
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 201
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-04-D
+    office_sought: H-FL-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 202
+- fields:
+    active: true
+    actor: 102
+    de_id: p_400087
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 203
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-14-R
+    office_sought: H-NY-14
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 204
+- fields:
+    active: true
+    actor: 103
+    de_id: p_400657
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 205
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-28-R
+    office_sought: H-TX-28
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 206
+- fields:
+    active: true
+    actor: 104
+    de_id: p_400089
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 207
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-07-D
+    office_sought: H-TX-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 208
+- fields:
+    active: true
+    actor: 105
+    de_id: p_400090
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 209
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MD-07-R
+    office_sought: H-MD-07
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 210
+- fields:
+    active: true
+    actor: 106
+    de_id: p_400093
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 211
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-07-R
+    office_sought: H-IL-07
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 212
+- fields:
+    active: true
+    actor: 107
+    de_id: p_400097
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 213
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-53-R
+    office_sought: H-CA-53
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 214
+- fields:
+    active: true
+    actor: 108
+    de_id: p_400100
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 215
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OR-04-R
+    office_sought: H-OR-04
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 216
+- fields:
+    active: true
+    actor: 109
+    de_id: p_400101
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 217
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CO-01-R
+    office_sought: H-CO-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 218
+- fields:
+    active: true
+    actor: 110
+    de_id: p_400103
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 219
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CT-03-R
+    office_sought: H-CT-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 220
+- fields:
+    active: true
+    actor: 111
+    de_id: p_412403
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 221
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-10-D
+    office_sought: H-CA-10
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 222
+- fields:
+    active: true
+    actor: 112
+    de_id: p_400648
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 223
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-15-D
+    office_sought: H-PA-15
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 224
+- fields:
+    active: true
+    actor: 113
+    de_id: p_412477
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 225
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TN-04-D
+    office_sought: H-TN-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 226
+- fields:
+    active: true
+    actor: 114
+    de_id: p_412385
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 227
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-21-R
+    office_sought: H-FL-21
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 228
+- fields:
+    active: true
+    actor: 115
+    de_id: p_400108
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 229
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-25-D
+    office_sought: H-FL-25
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 230
+- fields:
+    active: true
+    actor: 116
+    de_id: p_400111
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 231
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-35-R
+    office_sought: H-TX-35
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 232
+- fields:
+    active: true
+    actor: 117
+    de_id: p_412205
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 233
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-IN-01-R
+    office_sought: S-IN-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 234
+- fields:
+    active: true
+    actor: 118
+    de_id: p_400114
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 235
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-14-R
+    office_sought: H-PA-14
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 236
+- fields:
+    active: true
+    actor: 119
+    de_id: p_412488
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 237
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WI-07-D
+    office_sought: H-WI-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 238
+- fields:
+    active: true
+    actor: 120
+    de_id: p_412472
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 239
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-SC-03-D
+    office_sought: H-SC-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 240
+- fields:
+    active: true
+    actor: 121
+    de_id: p_400116
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 241
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TN-02-D
+    office_sought: H-TN-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 242
+- fields:
+    active: true
+    actor: 122
+    de_id: p_412263
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 243
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MD-04-R
+    office_sought: H-MD-04
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 244
+- fields:
+    active: true
+    actor: 123
+    de_id: p_412215
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 245
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MN-05-R
+    office_sought: H-MN-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 246
+- fields:
+    active: true
+    actor: 124
+    de_id: p_412457
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 247
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-02-D
+    office_sought: H-NC-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 248
+- fields:
+    active: true
+    actor: 125
+    de_id: p_400122
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 249
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-16-R
+    office_sought: H-NY-16
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 250
+- fields:
+    active: true
+    actor: 126
+    de_id: p_400124
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 251
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-18-R
+    office_sought: H-CA-18
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 252
+- fields:
+    active: true
+    actor: 127
+    de_id: p_412482
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 253
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-27-D
+    office_sought: H-TX-27
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 254
+- fields:
+    active: true
+    actor: 128
+    de_id: p_400129
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 255
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-20-R
+    office_sought: H-CA-20
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 256
+- fields:
+    active: true
+    actor: 129
+    de_id: p_400130
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 257
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-02-R
+    office_sought: H-PA-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 258
+- fields:
+    active: true
+    actor: 130
+    de_id: p_412479
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 259
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TN-08-D
+    office_sought: H-TN-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 260
+- fields:
+    active: true
+    actor: 131
+    de_id: p_400646
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 261
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-08-D
+    office_sought: H-PA-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 262
+- fields:
+    active: true
+    actor: 132
+    de_id: p_400134
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 263
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-AZ-01-D
+    office_sought: S-AZ-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 264
+- fields:
+    active: true
+    actor: 133
+    de_id: p_412476
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 265
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TN-03-D
+    office_sought: H-TN-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 266
+- fields:
+    active: true
+    actor: 134
+    de_id: p_412275
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 267
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-LA-04-D
+    office_sought: H-LA-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 268
+- fields:
+    active: true
+    actor: 135
+    de_id: p_412480
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 269
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-17-D
+    office_sought: H-TX-17
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 270
+- fields:
+    active: true
+    actor: 136
+    de_id: p_400137
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 271
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VA-04-D
+    office_sought: H-VA-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 272
+- fields:
+    active: true
+    actor: 137
+    de_id: p_400640
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 273
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NE-01-D
+    office_sought: H-NE-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 274
+- fields:
+    active: true
+    actor: 138
+    de_id: p_400643
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 275
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-05-D
+    office_sought: H-NC-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 276
+- fields:
+    active: true
+    actor: 139
+    de_id: p_400141
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 277
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AZ-08-D
+    office_sought: H-AZ-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 278
+- fields:
+    active: true
+    actor: 140
+    de_id: p_400142
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 279
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NJ-11-D
+    office_sought: H-NJ-11
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 280
+- fields:
+    active: true
+    actor: 141
+    de_id: p_412327
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 281
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-11-R
+    office_sought: H-OH-11
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 282
+- fields:
+    active: true
+    actor: 142
+    de_id: p_412382
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 283
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-03-R
+    office_sought: H-CA-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 284
+- fields:
+    active: true
+    actor: 143
+    de_id: p_412406
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 285
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-CO-02-D
+    office_sought: S-CO-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 286
+- fields:
+    active: true
+    actor: 144
+    de_id: p_400145
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 287
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NJ-05-D
+    office_sought: H-NJ-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 288
+- fields:
+    active: true
+    actor: 145
+    de_id: p_412463
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 289
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-07-D
+    office_sought: H-OH-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 290
+- fields:
+    active: true
+    actor: 146
+    de_id: p_412453
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 291
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-19-D
+    office_sought: H-NY-19
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 292
+- fields:
+    active: true
+    actor: 147
+    de_id: p_400651
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 293
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-01-D
+    office_sought: H-TX-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 294
+- fields:
+    active: true
+    actor: 148
+    de_id: p_400154
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 295
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VA-06-D
+    office_sought: H-VA-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 296
+- fields:
+    active: true
+    actor: 149
+    de_id: p_412397
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 297
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AZ-04-D
+    office_sought: H-AZ-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 298
+- fields:
+    active: true
+    actor: 150
+    de_id: p_412473
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 299
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-SC-04-D
+    office_sought: H-SC-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 300
+- fields:
+    active: true
+    actor: 151
+    de_id: p_400157
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 301
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-12-D
+    office_sought: H-TX-12
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 302
+- fields:
+    active: true
+    actor: 152
+    de_id: p_300048
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 303
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-IA-03-D
+    office_sought: S-IA-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 304
+- fields:
+    active: true
+    actor: 153
+    de_id: p_400158
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 305
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MO-06-D
+    office_sought: H-MO-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 306
+- fields:
+    active: true
+    actor: 154
+    de_id: p_412388
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 307
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-14-D
+    office_sought: H-GA-14
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 308
+- fields:
+    active: true
+    actor: 155
+    de_id: p_400653
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 309
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-09-R
+    office_sought: H-TX-09
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 310
+- fields:
+    active: true
+    actor: 156
+    de_id: p_400160
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 311
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-29-R
+    office_sought: H-TX-29
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 312
+- fields:
+    active: true
+    actor: 157
+    de_id: p_412485
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 313
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VA-09-D
+    office_sought: H-VA-09
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 314
+- fields:
+    active: true
+    actor: 158
+    de_id: p_400162
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 315
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AZ-03-R
+    office_sought: H-AZ-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 316
+- fields:
+    active: true
+    actor: 159
+    de_id: p_412278
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 317
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-KY-02-D
+    office_sought: H-KY-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 318
+- fields:
+    active: true
+    actor: 160
+    de_id: p_400163
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 319
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-04-R
+    office_sought: H-IL-04
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 320
+- fields:
+    active: true
+    actor: 161
+    de_id: p_412454
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 321
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-22-D
+    office_sought: H-NY-22
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 322
+- fields:
+    active: true
+    actor: 162
+    de_id: p_412280
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 323
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MS-03-D
+    office_sought: H-MS-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 324
+- fields:
+    active: true
+    actor: 163
+    de_id: p_412434
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 325
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MD-01-D
+    office_sought: H-MD-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 326
+- fields:
+    active: true
+    actor: 164
+    de_id: p_412444
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 327
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MO-04-D
+    office_sought: H-MO-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 328
+- fields:
+    active: true
+    actor: 165
+    de_id: p_400170
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 329
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-20-R
+    office_sought: H-FL-20
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 330
+- fields:
+    active: true
+    actor: 166
+    de_id: p_412446
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 331
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NV-03-D
+    office_sought: H-NV-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 332
+- fields:
+    active: true
+    actor: 167
+    de_id: p_412281
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 333
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NM-01-R
+    office_sought: S-NM-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 334
+- fields:
+    active: true
+    actor: 168
+    de_id: p_400175
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 335
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-05-D
+    office_sought: H-TX-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 336
+- fields:
+    active: true
+    actor: 169
+    de_id: p_412486
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 337
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WA-03-D
+    office_sought: H-WA-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 338
+- fields:
+    active: true
+    actor: 170
+    de_id: p_400641
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 339
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-26-R
+    office_sought: H-NY-26
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 340
+- fields:
+    active: true
+    actor: 171
+    de_id: p_412282
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 341
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CT-04-R
+    office_sought: H-CT-04
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 342
+- fields:
+    active: true
+    actor: 172
+    de_id: p_400179
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 343
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-15-R
+    office_sought: H-TX-15
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 344
+- fields:
+    active: true
+    actor: 173
+    de_id: p_412200
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 345
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-HI-01-R
+    office_sought: S-HI-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 346
+- fields:
+    active: true
+    actor: 174
+    de_id: p_412494
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 347
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-ND-03-D
+    office_sought: S-ND-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 348
+- fields:
+    active: true
+    actor: 175
+    de_id: p_400185
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 349
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-17-R
+    office_sought: H-CA-17
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 350
+- fields:
+    active: true
+    actor: 176
+    de_id: p_400189
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 351
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MD-05-R
+    office_sought: H-MD-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 352
+- fields:
+    active: true
+    actor: 177
+    de_id: p_412429
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 353
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-KS-01-D
+    office_sought: H-KS-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 354
+- fields:
+    active: true
+    actor: 178
+    de_id: p_412437
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 355
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-02-D
+    office_sought: H-MI-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 356
+- fields:
+    active: true
+    actor: 179
+    de_id: p_412422
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 357
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-14-D
+    office_sought: H-IL-14
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 358
+- fields:
+    active: true
+    actor: 180
+    de_id: p_412283
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 359
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-50-D
+    office_sought: H-CA-50
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 360
+- fields:
+    active: true
+    actor: 181
+    de_id: p_412484
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 361
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VA-05-D
+    office_sought: H-VA-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 362
+- fields:
+    active: true
+    actor: 182
+    de_id: p_400194
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 363
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-GA-03-D
+    office_sought: S-GA-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 364
+- fields:
+    active: true
+    actor: 183
+    de_id: p_400195
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 365
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-03-R
+    office_sought: H-NY-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 366
+- fields:
+    active: true
+    actor: 184
+    de_id: p_400196
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 367
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-49-D
+    office_sought: H-CA-49
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 368
+- fields:
+    active: true
+    actor: 185
+    de_id: p_400199
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 369
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-18-R
+    office_sought: H-TX-18
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 370
+- fields:
+    active: true
+    actor: 186
+    de_id: p_412284
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 371
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-KS-02-D
+    office_sought: H-KS-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 372
+- fields:
+    active: true
+    actor: 187
+    de_id: p_412460
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 373
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-06-D
+    office_sought: H-OH-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 374
+- fields:
+    active: true
+    actor: 188
+    de_id: p_400204
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 375
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-30-R
+    office_sought: H-TX-30
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 376
+- fields:
+    active: true
+    actor: 189
+    de_id: p_412199
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 377
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-04-R
+    office_sought: H-GA-04
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 378
+- fields:
+    active: true
+    actor: 190
+    de_id: p_412496
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 379
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-WI-03-D
+    office_sought: S-WI-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 380
+- fields:
+    active: true
+    actor: 191
+    de_id: p_400206
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 381
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-03-D
+    office_sought: H-TX-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 382
+- fields:
+    active: true
+    actor: 192
+    de_id: p_400209
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 383
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-03-D
+    office_sought: H-NC-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 384
+- fields:
+    active: true
+    actor: 193
+    de_id: p_412226
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 385
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-04-D
+    office_sought: H-OH-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 386
+- fields:
+    active: true
+    actor: 194
+    de_id: p_400211
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 387
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-09-R
+    office_sought: H-OH-09
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 388
+- fields:
+    active: true
+    actor: 195
+    de_id: p_412435
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 389
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MA-09-R
+    office_sought: H-MA-09
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 390
+- fields:
+    active: true
+    actor: 196
+    de_id: p_412465
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 391
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-03-D
+    office_sought: H-PA-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 392
+- fields:
+    active: true
+    actor: 197
+    de_id: p_400218
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 393
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WI-03-R
+    office_sought: H-WI-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 394
+- fields:
+    active: true
+    actor: 198
+    de_id: p_400219
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 395
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-02-D
+    office_sought: H-NY-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 396
+- fields:
+    active: true
+    actor: 199
+    de_id: p_400220
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 397
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IA-04-D
+    office_sought: H-IA-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 398
+- fields:
+    active: true
+    actor: 200
+    de_id: p_412421
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 399
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-16-D
+    office_sought: H-IL-16
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 400
+- fields:
+    active: true
+    actor: 201
+    de_id: p_400222
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 401
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-IL-03-D
+    office_sought: S-IL-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 402
+- fields:
+    active: true
+    actor: 202
+    de_id: p_400224
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 403
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MN-02-D
+    office_sought: H-MN-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 404
+- fields:
+    active: true
+    actor: 203
+    de_id: p_412419
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 405
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-ID-01-D
+    office_sought: H-ID-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 406
+- fields:
+    active: true
+    actor: 204
+    de_id: p_412191
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 407
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CO-05-D
+    office_sought: H-CO-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 408
+- fields:
+    active: true
+    actor: 205
+    de_id: p_412290
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 409
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NJ-07-D
+    office_sought: H-NJ-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 410
+- fields:
+    active: true
+    actor: 206
+    de_id: p_400230
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 411
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-RI-02-R
+    office_sought: H-RI-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 412
+- fields:
+    active: true
+    actor: 207
+    de_id: p_412464
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 413
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-OK-03-D
+    office_sought: S-OK-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 414
+- fields:
+    active: true
+    actor: 208
+    de_id: p_400232
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 415
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WA-02-R
+    office_sought: H-WA-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 416
+- fields:
+    active: true
+    actor: 209
+    de_id: p_400233
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 417
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CT-01-R
+    office_sought: H-CT-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 418
+- fields:
+    active: true
+    actor: 210
+    de_id: p_412256
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 419
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-05-D
+    office_sought: H-OH-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 420
+- fields:
+    active: true
+    actor: 211
+    de_id: p_300065
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 421
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-VT-03-R
+    office_sought: S-VT-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 422
+- fields:
+    active: true
+    actor: 212
+    de_id: p_400237
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 423
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-13-R
+    office_sought: H-CA-13
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 424
+- fields:
+    active: true
+    actor: 213
+    de_id: p_412495
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 425
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-UT-03-D
+    office_sought: S-UT-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 426
+- fields:
+    active: true
+    actor: 214
+    de_id: p_400238
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 427
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-09-R
+    office_sought: H-MI-09
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 428
+- fields:
+    active: true
+    actor: 215
+    de_id: p_400240
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 429
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-05-R
+    office_sought: H-GA-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 430
+- fields:
+    active: true
+    actor: 216
+    de_id: p_400630
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 431
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-03-R
+    office_sought: H-IL-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 432
+- fields:
+    active: true
+    actor: 217
+    de_id: p_400244
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 433
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NJ-02-D
+    office_sought: H-NJ-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 434
+- fields:
+    active: true
+    actor: 218
+    de_id: p_412209
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 435
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IA-02-R
+    office_sought: H-IA-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 436
+- fields:
+    active: true
+    actor: 219
+    de_id: p_400245
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 437
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-19-R
+    office_sought: H-CA-19
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 438
+- fields:
+    active: true
+    actor: 220
+    de_id: p_412445
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 439
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MO-07-D
+    office_sought: H-MO-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 440
+- fields:
+    active: true
+    actor: 221
+    de_id: p_400246
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 441
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-17-R
+    office_sought: H-NY-17
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 442
+- fields:
+    active: true
+    actor: 222
+    de_id: p_400247
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 443
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OK-03-D
+    office_sought: H-OK-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 444
+- fields:
+    active: true
+    actor: 223
+    de_id: p_412292
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 445
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MO-03-D
+    office_sought: H-MO-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 446
+- fields:
+    active: true
+    actor: 224
+    de_id: p_412293
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 447
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NM-03-R
+    office_sought: H-NM-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 448
+- fields:
+    active: true
+    actor: 225
+    de_id: p_412294
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 449
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WY-00-D
+    office_sought: H-WY-00
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 450
+- fields:
+    active: true
+    actor: 226
+    de_id: p_400249
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 451
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MA-08-R
+    office_sought: H-MA-08
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 452
+- fields:
+    active: true
+    actor: 227
+    de_id: p_400251
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 453
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-12-R
+    office_sought: H-NY-12
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 454
+- fields:
+    active: true
+    actor: 228
+    de_id: p_400656
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 455
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-24-D
+    office_sought: H-TX-24
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 456
+- fields:
+    active: true
+    actor: 229
+    de_id: p_412468
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 457
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-10-D
+    office_sought: H-PA-10
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 458
+- fields:
+    active: true
+    actor: 230
+    de_id: p_400253
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 459
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MA-02-R
+    office_sought: S-MA-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 460
+- fields:
+    active: true
+    actor: 231
+    de_id: p_400663
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 461
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-06-R
+    office_sought: H-CA-06
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 462
+- fields:
+    active: true
+    actor: 232
+    de_id: p_300071
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 463
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-AZ-03-D
+    office_sought: S-AZ-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 464
+- fields:
+    active: true
+    actor: 233
+    de_id: p_412190
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 465
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-23-D
+    office_sought: H-CA-23
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 466
+- fields:
+    active: true
+    actor: 234
+    de_id: p_400654
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 467
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-10-D
+    office_sought: H-TX-10
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 468
+- fields:
+    active: true
+    actor: 235
+    de_id: p_412295
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 469
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-04-D
+    office_sought: H-CA-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 470
+- fields:
+    active: true
+    actor: 236
+    de_id: p_400259
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 471
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MN-04-R
+    office_sought: H-MN-04
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 472
+- fields:
+    active: true
+    actor: 237
+    de_id: p_400262
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 473
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WA-07-R
+    office_sought: H-WA-07
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 474
+- fields:
+    active: true
+    actor: 238
+    de_id: p_400263
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 475
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MA-02-R
+    office_sought: H-MA-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 476
+- fields:
+    active: true
+    actor: 239
+    de_id: p_400644
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 477
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-10-D
+    office_sought: H-NC-10
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 478
+- fields:
+    active: true
+    actor: 240
+    de_id: p_412487
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 479
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WV-01-D
+    office_sought: H-WV-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 480
+- fields:
+    active: true
+    actor: 241
+    de_id: p_400659
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 481
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WA-05-D
+    office_sought: H-WA-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 482
+- fields:
+    active: true
+    actor: 242
+    de_id: p_412189
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 483
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-09-R
+    office_sought: H-CA-09
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 484
+- fields:
+    active: true
+    actor: 243
+    de_id: p_412466
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 485
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-07-D
+    office_sought: H-PA-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 486
+- fields:
+    active: true
+    actor: 244
+    de_id: p_400271
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 487
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-05-R
+    office_sought: H-NY-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 488
+- fields:
+    active: true
+    actor: 245
+    de_id: p_400273
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 489
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-07-D
+    office_sought: H-FL-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 490
+- fields:
+    active: true
+    actor: 246
+    de_id: p_300073
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 491
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MD-03-R
+    office_sought: S-MD-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 492
+- fields:
+    active: true
+    actor: 247
+    de_id: p_400276
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 493
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-10-D
+    office_sought: H-MI-10
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 494
+- fields:
+    active: true
+    actor: 248
+    de_id: p_400279
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 495
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-01-D
+    office_sought: H-FL-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 496
+- fields:
+    active: true
+    actor: 249
+    de_id: p_400661
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 497
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WI-04-R
+    office_sought: H-WI-04
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 498
+- fields:
+    active: true
+    actor: 250
+    de_id: p_400284
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 499
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-KS-03-D
+    office_sought: S-KS-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 500
+- fields:
+    active: true
+    actor: 251
+    de_id: p_412474
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 501
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-SC-05-D
+    office_sought: H-SC-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 502
+- fields:
+    active: true
+    actor: 252
+    de_id: p_300075
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 503
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-AK-03-D
+    office_sought: S-AK-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 504
+- fields:
+    active: true
+    actor: 253
+    de_id: p_412194
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 505
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-CT-01-R
+    office_sought: S-CT-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 506
+- fields:
+    active: true
+    actor: 254
+    de_id: p_400285
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 507
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-18-D
+    office_sought: H-PA-18
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 508
+- fields:
+    active: true
+    actor: 255
+    de_id: p_300076
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 509
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-WA-03-R
+    office_sought: S-WA-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 510
+- fields:
+    active: true
+    actor: 256
+    de_id: p_400289
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 511
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-10-R
+    office_sought: H-NY-10
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 512
+- fields:
+    active: true
+    actor: 257
+    de_id: p_400290
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 513
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-32-R
+    office_sought: H-CA-32
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 514
+- fields:
+    active: true
+    actor: 258
+    de_id: p_400291
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 515
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MA-01-R
+    office_sought: H-MA-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 516
+- fields:
+    active: true
+    actor: 259
+    de_id: p_400441
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 517
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-19-D
+    office_sought: H-TX-19
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 518
+- fields:
+    active: true
+    actor: 260
+    de_id: p_412475
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 519
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-SD-00-D
+    office_sought: H-SD-00
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 520
+- fields:
+    active: true
+    actor: 261
+    de_id: p_400295
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 521
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-DC-00-R
+    office_sought: H-DC-00
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 522
+- fields:
+    active: true
+    actor: 262
+    de_id: p_412409
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 523
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-11-D
+    office_sought: H-FL-11
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 524
+- fields:
+    active: true
+    actor: 263
+    de_id: p_400297
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 525
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-22-D
+    office_sought: H-CA-22
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 526
+- fields:
+    active: true
+    actor: 264
+    de_id: p_412442
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 527
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MS-01-D
+    office_sought: H-MS-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 528
+- fields:
+    active: true
+    actor: 265
+    de_id: p_412302
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 529
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-22-D
+    office_sought: H-TX-22
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 530
+- fields:
+    active: true
+    actor: 266
+    de_id: p_412443
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 531
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MS-04-D
+    office_sought: H-MS-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 532
+- fields:
+    active: true
+    actor: 267
+    de_id: p_400308
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 533
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NJ-06-R
+    office_sought: H-NJ-06
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 534
+- fields:
+    active: true
+    actor: 268
+    de_id: p_400309
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 535
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NJ-09-R
+    office_sought: H-NJ-09
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 536
+- fields:
+    active: true
+    actor: 269
+    de_id: p_412492
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 537
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-KY-03-D
+    office_sought: S-KY-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 538
+- fields:
+    active: true
+    actor: 270
+    de_id: p_412303
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 539
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MN-03-D
+    office_sought: H-MN-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 540
+- fields:
+    active: true
+    actor: 271
+    de_id: p_400313
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 541
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NM-02-D
+    office_sought: H-NM-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 542
+- fields:
+    active: true
+    actor: 272
+    de_id: p_400314
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 543
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-12-R
+    office_sought: H-CA-12
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 544
+- fields:
+    active: true
+    actor: 273
+    de_id: p_412192
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 545
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CO-07-R
+    office_sought: H-CO-07
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 546
+- fields:
+    active: true
+    actor: 274
+    de_id: p_412305
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 547
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MI-02-R
+    office_sought: S-MI-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 548
+- fields:
+    active: true
+    actor: 275
+    de_id: p_400316
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 549
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MN-07-R
+    office_sought: H-MN-07
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 550
+- fields:
+    active: true
+    actor: 276
+    de_id: p_412306
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 551
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PR-00-R
+    office_sought: H-PR-00
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 552
+- fields:
+    active: true
+    actor: 277
+    de_id: p_412307
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 553
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-ME-01-R
+    office_sought: H-ME-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 554
+- fields:
+    active: true
+    actor: 278
+    de_id: p_400320
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 555
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-16-D
+    office_sought: H-PA-16
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 556
+- fields:
+    active: true
+    actor: 279
+    de_id: p_400652
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 557
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-02-D
+    office_sought: H-TX-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 558
+- fields:
+    active: true
+    actor: 280
+    de_id: p_412308
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 559
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CO-02-R
+    office_sought: H-CO-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 560
+- fields:
+    active: true
+    actor: 281
+    de_id: p_412431
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 561
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-KS-04-D
+    office_sought: H-KS-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 562
+- fields:
+    active: true
+    actor: 282
+    de_id: p_400325
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 563
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-OH-03-D
+    office_sought: S-OH-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 564
+- fields:
+    active: true
+    actor: 283
+    de_id: p_412309
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 565
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-08-D
+    office_sought: H-FL-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 566
+- fields:
+    active: true
+    actor: 284
+    de_id: p_400326
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 567
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-04-R
+    office_sought: H-NC-04
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 568
+- fields:
+    active: true
+    actor: 285
+    de_id: p_400626
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 569
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-06-D
+    office_sought: H-GA-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 570
+- fields:
+    active: true
+    actor: 286
+    de_id: p_412331
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 571
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-05-R
+    office_sought: H-IL-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 572
+- fields:
+    active: true
+    actor: 287
+    de_id: p_400333
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 573
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-13-R
+    office_sought: H-NY-13
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 574
+- fields:
+    active: true
+    actor: 288
+    de_id: p_412393
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 575
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-23-D
+    office_sought: H-NY-23
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 576
+- fields:
+    active: true
+    actor: 289
+    de_id: p_400660
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 577
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WA-08-D
+    office_sought: H-WA-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 578
+- fields:
+    active: true
+    actor: 290
+    de_id: p_300082
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 579
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NV-03-R
+    office_sought: S-NV-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 580
+- fields:
+    active: true
+    actor: 291
+    de_id: p_412462
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 581
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-16-D
+    office_sought: H-OH-16
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 582
+- fields:
+    active: true
+    actor: 292
+    de_id: p_412489
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 583
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WI-08-D
+    office_sought: H-WI-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 584
+- fields:
+    active: true
+    actor: 293
+    de_id: p_412432
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 585
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-LA-02-R
+    office_sought: H-LA-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 586
+- fields:
+    active: true
+    actor: 294
+    de_id: p_412483
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 587
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VA-02-D
+    office_sought: H-VA-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 588
+- fields:
+    active: true
+    actor: 295
+    de_id: p_412394
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 589
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AL-02-D
+    office_sought: H-AL-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 590
+- fields:
+    active: true
+    actor: 296
+    de_id: p_412310
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 591
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TN-01-D
+    office_sought: H-TN-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 592
+- fields:
+    active: true
+    actor: 297
+    de_id: p_400340
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 593
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-KY-05-D
+    office_sought: H-KY-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 594
+- fields:
+    active: true
+    actor: 298
+    de_id: p_400341
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 595
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AL-03-D
+    office_sought: H-AL-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 596
+- fields:
+    active: true
+    actor: 299
+    de_id: p_400343
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 597
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-48-D
+    office_sought: H-CA-48
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 598
+- fields:
+    active: true
+    actor: 300
+    de_id: p_412426
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 599
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IN-04-D
+    office_sought: H-IN-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 600
+- fields:
+    active: true
+    actor: 301
+    de_id: p_412311
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 601
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-17-D
+    office_sought: H-FL-17
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 602
+- fields:
+    active: true
+    actor: 302
+    de_id: p_400344
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 603
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-27-D
+    office_sought: H-FL-27
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 604
+- fields:
+    active: true
+    actor: 303
+    de_id: p_412202
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 605
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-06-D
+    office_sought: H-IL-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 606
+- fields:
+    active: true
+    actor: 304
+    de_id: p_412411
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 607
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-15-D
+    office_sought: H-FL-15
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 608
+- fields:
+    active: true
+    actor: 305
+    de_id: p_400347
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 609
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-40-R
+    office_sought: H-CA-40
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 610
+- fields:
+    active: true
+    actor: 306
+    de_id: p_400348
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 611
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-39-D
+    office_sought: H-CA-39
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 612
+- fields:
+    active: true
+    actor: 307
+    de_id: p_412491
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 613
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-FL-03-D
+    office_sought: S-FL-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 614
+- fields:
+    active: true
+    actor: 308
+    de_id: p_400349
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 615
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MD-02-R
+    office_sought: H-MD-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 616
+- fields:
+    active: true
+    actor: 309
+    de_id: p_400350
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 617
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-01-R
+    office_sought: H-IL-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 618
+- fields:
+    active: true
+    actor: 310
+    de_id: p_400351
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 619
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WI-01-D
+    office_sought: H-WI-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 620
+- fields:
+    active: true
+    actor: 311
+    de_id: p_400352
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 621
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-13-R
+    office_sought: H-OH-13
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 622
+- fields:
+    active: true
+    actor: 312
+    de_id: p_412312
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 623
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MP-00-R
+    office_sought: H-MP-00
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 624
+- fields:
+    active: true
+    actor: 313
+    de_id: p_400356
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 625
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-46-R
+    office_sought: H-CA-46
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 626
+- fields:
+    active: true
+    actor: 314
+    de_id: p_412212
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 627
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MD-03-R
+    office_sought: H-MD-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 628
+- fields:
+    active: true
+    actor: 315
+    de_id: p_412261
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 629
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-LA-01-D
+    office_sought: H-LA-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 630
+- fields:
+    active: true
+    actor: 316
+    de_id: p_400360
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 631
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-09-R
+    office_sought: H-IL-09
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 632
+- fields:
+    active: true
+    actor: 317
+    de_id: p_400361
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 633
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-28-R
+    office_sought: H-CA-28
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 634
+- fields:
+    active: true
+    actor: 318
+    de_id: p_412314
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 635
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-18-D
+    office_sought: H-IL-18
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 636
+- fields:
+    active: true
+    actor: 319
+    de_id: p_412315
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 637
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OR-05-R
+    office_sought: H-OR-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 638
+- fields:
+    active: true
+    actor: 320
+    de_id: p_300087
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 639
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NY-03-R
+    office_sought: S-NY-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 640
+- fields:
+    active: true
+    actor: 321
+    de_id: p_412399
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 641
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AZ-06-D
+    office_sought: H-AZ-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 642
+- fields:
+    active: true
+    actor: 322
+    de_id: p_412417
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 643
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-08-D
+    office_sought: H-GA-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 644
+- fields:
+    active: true
+    actor: 323
+    de_id: p_400363
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 645
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-13-R
+    office_sought: H-GA-13
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 646
+- fields:
+    active: true
+    actor: 324
+    de_id: p_400364
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 647
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VA-03-R
+    office_sought: H-VA-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 648
+- fields:
+    active: true
+    actor: 325
+    de_id: p_412471
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 649
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-SC-03-D
+    office_sought: S-SC-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 650
+- fields:
+    active: true
+    actor: 326
+    de_id: p_400365
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 651
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WI-05-D
+    office_sought: H-WI-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 652
+- fields:
+    active: true
+    actor: 327
+    de_id: p_400366
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 653
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-15-R
+    office_sought: H-NY-15
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 654
+- fields:
+    active: true
+    actor: 328
+    de_id: p_400367
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 655
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-32-D
+    office_sought: H-TX-32
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 656
+- fields:
+    active: true
+    actor: 329
+    de_id: p_412396
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 657
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AL-07-R
+    office_sought: H-AL-07
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 658
+- fields:
+    active: true
+    actor: 330
+    de_id: p_300089
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 659
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-AL-03-D
+    office_sought: S-AL-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 660
+- fields:
+    active: true
+    actor: 331
+    de_id: p_400371
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 661
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-30-R
+    office_sought: H-CA-30
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 662
+- fields:
+    active: true
+    actor: 332
+    de_id: p_400373
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 663
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-15-D
+    office_sought: H-IL-15
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 664
+- fields:
+    active: true
+    actor: 333
+    de_id: p_409888
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 665
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-09-D
+    office_sought: H-PA-09
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 666
+- fields:
+    active: true
+    actor: 334
+    de_id: p_400376
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 667
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-ID-02-D
+    office_sought: H-ID-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 668
+- fields:
+    active: true
+    actor: 335
+    de_id: p_412186
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 669
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NJ-08-R
+    office_sought: H-NJ-08
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 670
+- fields:
+    active: true
+    actor: 336
+    de_id: p_400378
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 671
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-25-R
+    office_sought: H-NY-25
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 672
+- fields:
+    active: true
+    actor: 337
+    de_id: p_400379
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 673
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WA-09-R
+    office_sought: H-WA-09
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 674
+- fields:
+    active: true
+    actor: 338
+    de_id: p_412217
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 675
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NE-03-D
+    office_sought: H-NE-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 676
+- fields:
+    active: true
+    actor: 339
+    de_id: p_400380
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 677
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NJ-04-D
+    office_sought: H-NJ-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 678
+- fields:
+    active: true
+    actor: 340
+    de_id: p_400381
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 679
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-21-D
+    office_sought: H-TX-21
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 680
+- fields:
+    active: true
+    actor: 341
+    de_id: p_412259
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 681
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-14-R
+    office_sought: H-CA-14
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 682
+- fields:
+    active: true
+    actor: 342
+    de_id: p_412461
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 683
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-15-D
+    office_sought: H-OH-15
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 684
+- fields:
+    active: true
+    actor: 343
+    de_id: p_412392
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 685
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IN-03-D
+    office_sought: H-IN-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 686
+- fields:
+    active: true
+    actor: 344
+    de_id: p_400355
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 687
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-38-R
+    office_sought: H-CA-38
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 688
+- fields:
+    active: true
+    actor: 345
+    de_id: p_400402
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 689
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MS-02-R
+    office_sought: H-MS-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 690
+- fields:
+    active: true
+    actor: 346
+    de_id: p_400403
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 691
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-05-R
+    office_sought: H-CA-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 692
+- fields:
+    active: true
+    actor: 347
+    de_id: p_412317
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 693
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-05-D
+    office_sought: H-PA-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 694
+- fields:
+    active: true
+    actor: 348
+    de_id: p_400404
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 695
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-13-D
+    office_sought: H-TX-13
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 696
+- fields:
+    active: true
+    actor: 349
+    de_id: p_400546
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 697
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-SD-03-D
+    office_sought: S-SD-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 698
+- fields:
+    active: true
+    actor: 350
+    de_id: p_400406
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 699
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-12-D
+    office_sought: H-OH-12
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 700
+- fields:
+    active: true
+    actor: 351
+    de_id: p_412405
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 701
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CO-03-D
+    office_sought: H-CO-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 702
+- fields:
+    active: true
+    actor: 352
+    de_id: p_412319
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 703
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-20-R
+    office_sought: H-NY-20
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 704
+- fields:
+    active: true
+    actor: 353
+    de_id: p_400408
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 705
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-PA-03-D
+    office_sought: S-PA-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 706
+- fields:
+    active: true
+    actor: 354
+    de_id: p_412254
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 707
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MA-03-R
+    office_sought: H-MA-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 708
+- fields:
+    active: true
+    actor: 355
+    de_id: p_400411
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 709
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-10-D
+    office_sought: H-OH-10
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 710
+- fields:
+    active: true
+    actor: 356
+    de_id: p_400414
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 711
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-06-D
+    office_sought: H-MI-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 712
+- fields:
+    active: true
+    actor: 357
+    de_id: p_400415
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 713
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MD-08-R
+    office_sought: H-MD-08
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 714
+- fields:
+    active: true
+    actor: 358
+    de_id: p_400416
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 715
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-07-R
+    office_sought: H-NY-07
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 716
+- fields:
+    active: true
+    actor: 359
+    de_id: p_400417
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 717
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IN-01-R
+    office_sought: H-IN-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 718
+- fields:
+    active: true
+    actor: 360
+    de_id: p_400418
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 719
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-LA-03-D
+    office_sought: S-LA-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 720
+- fields:
+    active: true
+    actor: 361
+    de_id: p_412213
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 721
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-07-D
+    office_sought: H-MI-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 722
+- fields:
+    active: true
+    actor: 362
+    de_id: p_400419
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 723
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OR-02-D
+    office_sought: H-OR-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 724
+- fields:
+    active: true
+    actor: 363
+    de_id: p_412214
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 725
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MN-01-R
+    office_sought: H-MN-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 726
+- fields:
+    active: true
+    actor: 364
+    de_id: p_400623
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 727
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-23-R
+    office_sought: H-FL-23
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 728
+- fields:
+    active: true
+    actor: 365
+    de_id: p_400422
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 729
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-43-R
+    office_sought: H-CA-43
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 730
+- fields:
+    active: true
+    actor: 366
+    de_id: p_412410
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 731
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-10-D
+    office_sought: H-FL-10
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 732
+- fields:
+    active: true
+    actor: 367
+    de_id: p_412239
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 733
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VT-00-R
+    office_sought: H-VT-00
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 734
+- fields:
+    active: true
+    actor: 368
+    de_id: p_400627
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 735
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-03-D
+    office_sought: H-GA-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 736
+- fields:
+    active: true
+    actor: 369
+    de_id: p_400431
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 737
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-KY-01-D
+    office_sought: H-KY-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 738
+- fields:
+    active: true
+    actor: 370
+    de_id: p_400433
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 739
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-SC-02-D
+    office_sought: H-SC-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 740
+- fields:
+    active: true
+    actor: 371
+    de_id: p_412412
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 741
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-24-R
+    office_sought: H-FL-24
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 742
+- fields:
+    active: true
+    actor: 372
+    de_id: p_412255
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 743
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VA-01-D
+    office_sought: H-VA-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 744
+- fields:
+    active: true
+    actor: 373
+    de_id: p_412402
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 745
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AR-03-D
+    office_sought: H-AR-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 746
+- fields:
+    active: true
+    actor: 374
+    de_id: p_412416
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 747
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-07-D
+    office_sought: H-GA-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 748
+- fields:
+    active: true
+    actor: 375
+    de_id: p_300100
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 749
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-OR-03-R
+    office_sought: S-OR-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 750
+- fields:
+    active: true
+    actor: 376
+    de_id: p_412211
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 751
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-KY-03-R
+    office_sought: H-KY-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 752
+- fields:
+    active: true
+    actor: 377
+    de_id: p_412430
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 753
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-KS-03-D
+    office_sought: H-KS-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 754
+- fields:
+    active: true
+    actor: 378
+    de_id: p_400440
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 755
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AK-00-D
+    office_sought: H-AK-00
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 756
+- fields:
+    active: true
+    actor: 379
+    de_id: p_412428
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 757
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IN-09-D
+    office_sought: H-IN-09
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 758
+- fields:
+    active: true
+    actor: 380
+    de_id: p_412218
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 759
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NV-01-D
+    office_sought: S-NV-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 760
+- fields:
+    active: true
+    actor: 381
+    de_id: p_412498
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 761
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-44-R
+    office_sought: H-CA-44
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 762
+- fields:
+    active: true
+    actor: 382
+    de_id: p_412500
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 763
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NV-02-D
+    office_sought: H-NV-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 764
+- fields:
+    active: true
+    actor: 383
+    de_id: p_412501
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 765
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OR-01-R
+    office_sought: H-OR-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 766
+- fields:
+    active: true
+    actor: 384
+    de_id: p_412505
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 767
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WA-01-R
+    office_sought: H-WA-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 768
+- fields:
+    active: true
+    actor: 385
+    de_id: p_412503
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 769
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-KY-04-D
+    office_sought: H-KY-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 770
+- fields:
+    active: true
+    actor: 386
+    de_id: p_412506
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 771
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NJ-10-R
+    office_sought: H-NJ-10
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 772
+- fields:
+    active: true
+    actor: 387
+    de_id: p_412507
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 773
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-HI-03-R
+    office_sought: S-HI-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 774
+- fields:
+    active: true
+    actor: 388
+    de_id: p_400606
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 775
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AZ-05-D
+    office_sought: H-AZ-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 776
+- fields:
+    active: true
+    actor: 389
+    de_id: p_412257
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 777
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-11-R
+    office_sought: H-IL-11
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 778
+- fields:
+    active: true
+    actor: 390
+    de_id: p_412276
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 779
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-09-R
+    office_sought: H-FL-09
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 780
+- fields:
+    active: true
+    actor: 391
+    de_id: p_412286
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 781
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AZ-01-R
+    office_sought: H-AZ-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 782
+- fields:
+    active: true
+    actor: 392
+    de_id: p_412318
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 783
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NV-01-R
+    office_sought: H-NV-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 784
+- fields:
+    active: true
+    actor: 393
+    de_id: p_412508
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 785
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-AR-02-D
+    office_sought: S-AR-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 786
+- fields:
+    active: true
+    actor: 394
+    de_id: p_412509
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 787
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AZ-09-R
+    office_sought: H-AZ-09
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 788
+- fields:
+    active: true
+    actor: 395
+    de_id: p_412510
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 789
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-01-D
+    office_sought: H-CA-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 790
+- fields:
+    active: true
+    actor: 396
+    de_id: p_412511
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 791
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-02-R
+    office_sought: H-CA-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 792
+- fields:
+    active: true
+    actor: 397
+    de_id: p_412512
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 793
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-07-R
+    office_sought: H-CA-07
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 794
+- fields:
+    active: true
+    actor: 398
+    de_id: p_412513
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 795
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-08-D
+    office_sought: H-CA-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 796
+- fields:
+    active: true
+    actor: 399
+    de_id: p_412514
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 797
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-15-R
+    office_sought: H-CA-15
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 798
+- fields:
+    active: true
+    actor: 400
+    de_id: p_412515
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 799
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-21-D
+    office_sought: H-CA-21
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 800
+- fields:
+    active: true
+    actor: 401
+    de_id: p_412516
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 801
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-26-R
+    office_sought: H-CA-26
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 802
+- fields:
+    active: true
+    actor: 402
+    de_id: p_412517
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 803
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-29-R
+    office_sought: H-CA-29
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 804
+- fields:
+    active: true
+    actor: 403
+    de_id: p_412519
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 805
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-36-R
+    office_sought: H-CA-36
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 806
+- fields:
+    active: true
+    actor: 404
+    de_id: p_412520
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 807
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-41-R
+    office_sought: H-CA-41
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 808
+- fields:
+    active: true
+    actor: 405
+    de_id: p_412521
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 809
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-47-R
+    office_sought: H-CA-47
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 810
+- fields:
+    active: true
+    actor: 406
+    de_id: p_412522
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 811
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-51-R
+    office_sought: H-CA-51
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 812
+- fields:
+    active: true
+    actor: 407
+    de_id: p_412523
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 813
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-52-R
+    office_sought: H-CA-52
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 814
+- fields:
+    active: true
+    actor: 408
+    de_id: p_412524
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 815
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CT-05-R
+    office_sought: H-CT-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 816
+- fields:
+    active: true
+    actor: 409
+    de_id: p_412525
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 817
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-03-D
+    office_sought: H-FL-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 818
+- fields:
+    active: true
+    actor: 410
+    de_id: p_412526
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 819
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-06-D
+    office_sought: H-FL-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 820
+- fields:
+    active: true
+    actor: 411
+    de_id: p_412527
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 821
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-18-R
+    office_sought: H-FL-18
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 822
+- fields:
+    active: true
+    actor: 412
+    de_id: p_412529
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 823
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-22-R
+    office_sought: H-FL-22
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 824
+- fields:
+    active: true
+    actor: 413
+    de_id: p_412531
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 825
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-09-D
+    office_sought: H-GA-09
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 826
+- fields:
+    active: true
+    actor: 414
+    de_id: p_412532
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 827
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-HI-02-R
+    office_sought: H-HI-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 828
+- fields:
+    active: true
+    actor: 415
+    de_id: p_412533
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 829
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-08-R
+    office_sought: H-IL-08
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 830
+- fields:
+    active: true
+    actor: 416
+    de_id: p_412536
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 831
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-13-D
+    office_sought: H-IL-13
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 832
+- fields:
+    active: true
+    actor: 417
+    de_id: p_412537
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 833
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-17-R
+    office_sought: H-IL-17
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 834
+- fields:
+    active: true
+    actor: 418
+    de_id: p_412538
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 835
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IN-02-D
+    office_sought: H-IN-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 836
+- fields:
+    active: true
+    actor: 419
+    de_id: p_412539
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 837
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IN-05-D
+    office_sought: H-IN-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 838
+- fields:
+    active: true
+    actor: 420
+    de_id: p_412540
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 839
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IN-06-D
+    office_sought: H-IN-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 840
+- fields:
+    active: true
+    actor: 421
+    de_id: p_412541
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 841
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-KY-06-D
+    office_sought: H-KY-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 842
+- fields:
+    active: true
+    actor: 422
+    de_id: p_412542
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 843
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MA-01-R
+    office_sought: S-MA-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 844
+- fields:
+    active: true
+    actor: 423
+    de_id: p_412543
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 845
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MA-04-R
+    office_sought: H-MA-04
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 846
+- fields:
+    active: true
+    actor: 424
+    de_id: p_412544
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 847
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MD-06-R
+    office_sought: H-MD-06
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 848
+- fields:
+    active: true
+    actor: 425
+    de_id: p_412545
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 849
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-ME-01-R
+    office_sought: S-ME-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 850
+- fields:
+    active: true
+    actor: 426
+    de_id: p_412546
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 851
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-05-R
+    office_sought: H-MI-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 852
+- fields:
+    active: true
+    actor: 427
+    de_id: p_408211
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 853
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MN-08-R
+    office_sought: H-MN-08
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 854
+- fields:
+    active: true
+    actor: 428
+    de_id: p_412548
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 855
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MO-02-D
+    office_sought: H-MO-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 856
+- fields:
+    active: true
+    actor: 429
+    de_id: p_412549
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 857
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-MT-02-D
+    office_sought: S-MT-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 858
+- fields:
+    active: true
+    actor: 430
+    de_id: p_412550
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 859
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-08-D
+    office_sought: H-NC-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 860
+- fields:
+    active: true
+    actor: 431
+    de_id: p_412551
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 861
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-09-D
+    office_sought: H-NC-09
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 862
+- fields:
+    active: true
+    actor: 432
+    de_id: p_412552
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 863
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-11-D
+    office_sought: H-NC-11
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 864
+- fields:
+    active: true
+    actor: 433
+    de_id: p_412553
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 865
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-13-D
+    office_sought: H-NC-13
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 866
+- fields:
+    active: true
+    actor: 434
+    de_id: p_412554
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 867
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-ND-01-R
+    office_sought: S-ND-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 868
+- fields:
+    active: true
+    actor: 435
+    de_id: p_412555
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 869
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-ND-00-D
+    office_sought: H-ND-00
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 870
+- fields:
+    active: true
+    actor: 436
+    de_id: p_412556
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 871
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NE-01-D
+    office_sought: S-NE-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 872
+- fields:
+    active: true
+    actor: 437
+    de_id: p_412557
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 873
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NH-02-R
+    office_sought: H-NH-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 874
+- fields:
+    active: true
+    actor: 438
+    de_id: p_412558
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 875
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NM-01-R
+    office_sought: H-NM-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 876
+- fields:
+    active: true
+    actor: 439
+    de_id: p_412560
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 877
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-06-R
+    office_sought: H-NY-06
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 878
+- fields:
+    active: true
+    actor: 440
+    de_id: p_412561
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 879
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-08-R
+    office_sought: H-NY-08
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 880
+- fields:
+    active: true
+    actor: 441
+    de_id: p_412562
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 881
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-18-R
+    office_sought: H-NY-18
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 882
+- fields:
+    active: true
+    actor: 442
+    de_id: p_412563
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 883
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-27-D
+    office_sought: H-NY-27
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 884
+- fields:
+    active: true
+    actor: 443
+    de_id: p_412564
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 885
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-02-D
+    office_sought: H-OH-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 886
+- fields:
+    active: true
+    actor: 444
+    de_id: p_412565
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 887
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-03-R
+    office_sought: H-OH-03
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 888
+- fields:
+    active: true
+    actor: 445
+    de_id: p_412566
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 889
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OH-14-D
+    office_sought: H-OH-14
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 890
+- fields:
+    active: true
+    actor: 446
+    de_id: p_412567
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 891
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OK-01-D
+    office_sought: H-OK-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 892
+- fields:
+    active: true
+    actor: 447
+    de_id: p_412568
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 893
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OK-02-D
+    office_sought: H-OK-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 894
+- fields:
+    active: true
+    actor: 448
+    de_id: p_412569
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 895
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-04-D
+    office_sought: H-PA-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 896
+- fields:
+    active: true
+    actor: 449
+    de_id: p_412570
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 897
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-12-D
+    office_sought: H-PA-12
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 898
+- fields:
+    active: true
+    actor: 450
+    de_id: p_412571
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 899
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-17-R
+    office_sought: H-PA-17
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 900
+- fields:
+    active: true
+    actor: 451
+    de_id: p_412572
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 901
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-SC-07-D
+    office_sought: H-SC-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 902
+- fields:
+    active: true
+    actor: 452
+    de_id: p_412573
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 903
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-TX-01-D
+    office_sought: S-TX-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 904
+- fields:
+    active: true
+    actor: 453
+    de_id: p_412574
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 905
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-14-D
+    office_sought: H-TX-14
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 906
+- fields:
+    active: true
+    actor: 454
+    de_id: p_412575
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 907
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-16-R
+    office_sought: H-TX-16
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 908
+- fields:
+    active: true
+    actor: 455
+    de_id: p_412576
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 909
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-20-R
+    office_sought: H-TX-20
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 910
+- fields:
+    active: true
+    actor: 456
+    de_id: p_412578
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 911
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-25-D
+    office_sought: H-TX-25
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 912
+- fields:
+    active: true
+    actor: 457
+    de_id: p_412579
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 913
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-33-R
+    office_sought: H-TX-33
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 914
+- fields:
+    active: true
+    actor: 458
+    de_id: p_412580
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 915
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-34-R
+    office_sought: H-TX-34
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 916
+- fields:
+    active: true
+    actor: 459
+    de_id: p_412581
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 917
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-UT-02-D
+    office_sought: H-UT-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 918
+- fields:
+    active: true
+    actor: 460
+    de_id: p_412582
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 919
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-VA-01-R
+    office_sought: S-VA-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 920
+- fields:
+    active: true
+    actor: 461
+    de_id: p_412583
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 921
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WA-06-R
+    office_sought: H-WA-06
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 922
+- fields:
+    active: true
+    actor: 462
+    de_id: p_412584
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 923
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WA-10-R
+    office_sought: H-WA-10
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 924
+- fields:
+    active: true
+    actor: 463
+    de_id: p_412585
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 925
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WI-02-R
+    office_sought: H-WI-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 926
+- fields:
+    active: true
+    actor: 464
+    de_id: p_412595
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 927
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-02-R
+    office_sought: H-IL-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 928
+- fields:
+    active: true
+    actor: 465
+    de_id: p_400607
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 929
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-SC-01-D
+    office_sought: H-SC-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 930
+- fields:
+    active: true
+    actor: 466
+    de_id: p_412596
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 931
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MO-08-D
+    office_sought: H-MO-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 932
+- fields:
+    active: true
+    actor: 467
+    de_id: p_412598
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 933
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NJ-02-R
+    office_sought: S-NJ-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 934
+- fields:
+    active: true
+    actor: 468
+    de_id: p_412600
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 935
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MA-05-R
+    office_sought: H-MA-05
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 936
+- fields:
+    active: true
+    actor: 469
+    de_id: p_412601
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 937
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AL-01-D
+    office_sought: H-AL-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 938
+- fields:
+    active: true
+    actor: 470
+    de_id: p_412603
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 939
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-13-D
+    office_sought: H-FL-13
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 940
+- fields:
+    active: true
+    actor: 471
+    de_id: p_412604
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 941
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-19-D
+    office_sought: H-FL-19
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 942
+- fields:
+    active: true
+    actor: 472
+    de_id: p_412605
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 943
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VA-07-D
+    office_sought: H-VA-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 944
+- fields:
+    active: true
+    actor: 473
+    de_id: p_412606
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 945
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NJ-01-R
+    office_sought: H-NJ-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 946
+- fields:
+    active: true
+    actor: 474
+    de_id: p_412607
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 947
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-12-R
+    office_sought: H-NC-12
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 948
+- fields:
+    active: true
+    actor: 475
+    de_id: p_412420
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 949
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-10-D
+    office_sought: H-IL-10
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 950
+- fields:
+    active: true
+    actor: 476
+    de_id: p_412447
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 951
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NH-01-D
+    office_sought: H-NH-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 952
+- fields:
+    active: true
+    actor: 477
+    de_id: p_412608
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 953
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AL-06-D
+    office_sought: H-AL-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 954
+- fields:
+    active: true
+    actor: 478
+    de_id: p_412609
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 955
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AR-02-D
+    office_sought: H-AR-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 956
+- fields:
+    active: true
+    actor: 479
+    de_id: p_412610
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 957
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AR-04-D
+    office_sought: H-AR-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 958
+- fields:
+    active: true
+    actor: 480
+    de_id: p_412611
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 959
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AZ-02-D
+    office_sought: H-AZ-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 960
+- fields:
+    active: true
+    actor: 481
+    de_id: p_412612
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 961
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AZ-07-R
+    office_sought: H-AZ-07
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 962
+- fields:
+    active: true
+    actor: 482
+    de_id: p_412613
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 963
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-11-R
+    office_sought: H-CA-11
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 964
+- fields:
+    active: true
+    actor: 483
+    de_id: p_412614
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 965
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-25-D
+    office_sought: H-CA-25
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 966
+- fields:
+    active: true
+    actor: 484
+    de_id: p_412615
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 967
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-31-R
+    office_sought: H-CA-31
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 968
+- fields:
+    active: true
+    actor: 485
+    de_id: p_412616
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 969
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-33-R
+    office_sought: H-CA-33
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 970
+- fields:
+    active: true
+    actor: 486
+    de_id: p_412617
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 971
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-35-R
+    office_sought: H-CA-35
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 972
+- fields:
+    active: true
+    actor: 487
+    de_id: p_412618
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 973
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CA-45-D
+    office_sought: H-CA-45
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 974
+- fields:
+    active: true
+    actor: 488
+    de_id: p_412619
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 975
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-CO-04-D
+    office_sought: H-CO-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 976
+- fields:
+    active: true
+    actor: 489
+    de_id: p_412620
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 977
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-02-R
+    office_sought: H-FL-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 978
+- fields:
+    active: true
+    actor: 490
+    de_id: p_412621
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 979
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-FL-26-D
+    office_sought: H-FL-26
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 980
+- fields:
+    active: true
+    actor: 491
+    de_id: p_412622
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 981
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-01-D
+    office_sought: H-GA-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 982
+- fields:
+    active: true
+    actor: 492
+    de_id: p_412623
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 983
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-10-D
+    office_sought: H-GA-10
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 984
+- fields:
+    active: true
+    actor: 493
+    de_id: p_412624
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 985
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-11-D
+    office_sought: H-GA-11
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 986
+- fields:
+    active: true
+    actor: 494
+    de_id: p_412625
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 987
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-GA-12-D
+    office_sought: H-GA-12
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 988
+- fields:
+    active: true
+    actor: 495
+    de_id: p_412626
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 989
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-HI-01-R
+    office_sought: H-HI-01
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 990
+- fields:
+    active: true
+    actor: 496
+    de_id: p_412627
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 991
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IA-01-D
+    office_sought: H-IA-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 992
+- fields:
+    active: true
+    actor: 497
+    de_id: p_412628
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 993
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IA-03-D
+    office_sought: H-IA-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 994
+- fields:
+    active: true
+    actor: 498
+    de_id: p_412629
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 995
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-IL-12-D
+    office_sought: H-IL-12
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 996
+- fields:
+    active: true
+    actor: 499
+    de_id: p_412630
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 997
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-LA-05-D
+    office_sought: H-LA-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 998
+- fields:
+    active: true
+    actor: 500
+    de_id: p_412631
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 999
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-LA-06-D
+    office_sought: H-LA-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1000
+- fields:
+    active: true
+    actor: 501
+    de_id: p_412632
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1001
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MA-06-R
+    office_sought: H-MA-06
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 1002
+- fields:
+    active: true
+    actor: 502
+    de_id: p_412633
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1003
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-ME-02-D
+    office_sought: H-ME-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1004
+- fields:
+    active: true
+    actor: 503
+    de_id: p_412634
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1005
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-04-D
+    office_sought: H-MI-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1006
+- fields:
+    active: true
+    actor: 504
+    de_id: p_412635
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1007
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-08-D
+    office_sought: H-MI-08
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1008
+- fields:
+    active: true
+    actor: 505
+    de_id: p_412636
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1009
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-11-D
+    office_sought: H-MI-11
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1010
+- fields:
+    active: true
+    actor: 506
+    de_id: p_412637
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1011
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-12-R
+    office_sought: H-MI-12
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 1012
+- fields:
+    active: true
+    actor: 507
+    de_id: p_412638
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1013
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MI-14-R
+    office_sought: H-MI-14
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 1014
+- fields:
+    active: true
+    actor: 508
+    de_id: p_412639
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1015
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MN-06-D
+    office_sought: H-MN-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1016
+- fields:
+    active: true
+    actor: 509
+    de_id: p_412640
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1017
+- fields:
+    active: true
+    actor: 510
+    de_id: p_412641
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1018
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-07-D
+    office_sought: H-NC-07
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1019
+- fields:
+    active: true
+    actor: 511
+    de_id: p_412642
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1020
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NE-02-R
+    office_sought: H-NE-02
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 1021
+- fields:
+    active: true
+    actor: 512
+    de_id: p_412643
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1022
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NJ-03-D
+    office_sought: H-NJ-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1023
+- fields:
+    active: true
+    actor: 513
+    de_id: p_412644
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1024
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NJ-12-R
+    office_sought: H-NJ-12
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 1025
+- fields:
+    active: true
+    actor: 514
+    de_id: p_412645
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1026
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NV-04-D
+    office_sought: H-NV-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1027
+- fields:
+    active: true
+    actor: 515
+    de_id: p_412646
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1028
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-01-D
+    office_sought: H-NY-01
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1029
+- fields:
+    active: true
+    actor: 516
+    de_id: p_412647
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1030
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-04-R
+    office_sought: H-NY-04
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 1031
+- fields:
+    active: true
+    actor: 517
+    de_id: p_412648
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1032
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-21-D
+    office_sought: H-NY-21
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1033
+- fields:
+    active: true
+    actor: 518
+    de_id: p_412649
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1034
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NY-24-D
+    office_sought: H-NY-24
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1035
+- fields:
+    active: true
+    actor: 519
+    de_id: p_412650
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1036
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-OK-05-D
+    office_sought: H-OK-05
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1037
+- fields:
+    active: true
+    actor: 520
+    de_id: p_412651
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1038
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-06-D
+    office_sought: H-PA-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1039
+- fields:
+    active: true
+    actor: 521
+    de_id: p_412652
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1040
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-PA-13-R
+    office_sought: H-PA-13
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 1041
+- fields:
+    active: true
+    actor: 522
+    de_id: p_412653
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1042
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-04-D
+    office_sought: H-TX-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1043
+- fields:
+    active: true
+    actor: 523
+    de_id: p_412654
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1044
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-23-D
+    office_sought: H-TX-23
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1045
+- fields:
+    active: true
+    actor: 524
+    de_id: p_412655
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1046
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-TX-36-D
+    office_sought: H-TX-36
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1047
+- fields:
+    active: true
+    actor: 525
+    de_id: p_412656
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1048
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-UT-04-D
+    office_sought: H-UT-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1049
+- fields:
+    active: true
+    actor: 526
+    de_id: p_412657
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1050
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VA-08-R
+    office_sought: H-VA-08
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 1051
+- fields:
+    active: true
+    actor: 527
+    de_id: p_412658
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1052
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VA-10-D
+    office_sought: H-VA-10
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1053
+- fields:
+    active: true
+    actor: 528
+    de_id: p_412659
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1054
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-VI-00-R
+    office_sought: H-VI-00
+    party: ActorParty.Republican
+  model: contrib.recipient
+  pk: 1055
+- fields:
+    active: true
+    actor: 529
+    de_id: p_412660
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1056
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WA-04-D
+    office_sought: H-WA-04
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1057
+- fields:
+    active: true
+    actor: 530
+    de_id: p_412661
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1058
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WI-06-D
+    office_sought: H-WI-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1059
+- fields:
+    active: true
+    actor: 531
+    de_id: p_412662
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1060
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WV-02-D
+    office_sought: H-WV-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1061
+- fields:
+    active: true
+    actor: 532
+    de_id: p_412663
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1062
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-WV-03-D
+    office_sought: H-WV-03
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1063
+- fields:
+    active: true
+    actor: 533
+    de_id: p_412664
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1064
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-AS-00-D
+    office_sought: H-AS-00
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1065
+- fields:
+    active: true
+    actor: 534
+    de_id: p_412665
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1066
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-AK-02-D
+    office_sought: S-AK-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1067
+- fields:
+    active: true
+    actor: 535
+    de_id: p_412666
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1068
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-GA-02-D
+    office_sought: S-GA-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1069
+- fields:
+    active: true
+    actor: 536
+    de_id: p_412667
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1070
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-IA-02-D
+    office_sought: S-IA-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1071
+- fields:
+    active: true
+    actor: 537
+    de_id: p_412668
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1072
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NC-02-D
+    office_sought: S-NC-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1073
+- fields:
+    active: true
+    actor: 538
+    de_id: p_412669
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1074
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-SD-02-D
+    office_sought: S-SD-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1075
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-NC-06-D
+    office_sought: H-NC-06
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1076
+- fields:
+    active: true
+    actor: ~
+    de_id: c_S-NE-02-D
+    office_sought: S-NE-02
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1077
+- fields:
+    active: true
+    actor: ~
+    de_id: c_H-MT-00-D
+    office_sought: H-MT-00
+    party: ActorParty.Democratic
+  model: contrib.recipient
+  pk: 1078
+- fields:
+    active: true
+    actor: 539
+    de_id: p_412670
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1079
+- fields:
+    active: true
+    actor: 540
+    de_id: p_412671
+    office_sought: ~
+    party: ~
+  model: contrib.recipient
+  pk: 1080

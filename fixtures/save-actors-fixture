@@ -1,2 +1,15 @@
-#!/bin/bash
-python3 manage.py dumpdata --indent=2 contrib.actor contrib.recipient > fixtures/actors.json
+#!django_script
+
+# This saves a Django fixture using rtyaml, which improves on
+# the standard serializers by producing stable output so that
+# it fits better in version control.
+
+from django.core import serializers
+from contrib.models import Actor, Recipient
+import rtyaml
+
+for model in (Actor, Recipient):
+	print(model.__name__ + "...")
+	buffer = serializers.serialize("yaml", model.objects.all())
+	with open("fixtures/" + model.__name__.lower() + ".yaml", "w") as f:
+		f.write(rtyaml.dump(rtyaml.load(buffer)))
