@@ -150,28 +150,43 @@ def get_recent_pledge_defaults(user, request):
 
 	ret = { }
 
+	# Get the pledge object.
 	if user.is_authenticated():
+		# For a logged in user, fetch by the user.
 		pledge = Pledge.objects.filter(user=user).order_by('-created').first()
 		if not pledge: return ret
 	elif request.session.get('anon_pledge_created'):
+		# For anonymous users, we temporarily store pledges they created
+		# in their session. Use the most recent from the session.
 		most_recent = request.session.get('anon_pledge_created')[-1]
 		try:
 			pledge = Pledge.objects.get(id=most_recent)
 		except Pledge.DoesNotExist:
 			return ret
 	else:
+		# For anonymou users without any pledge in their session, return an
+		# empty dict.
 		return ret
 
-	for field in ('email', 'amount', 'incumb_challgr', 'filter_party', 'filter_competitive',
-		'contribNameFirst', 'contribNameLast', 'contribAddress', 'contribCity', 'contribState', 'contribZip',
-		'contribOccupation', 'contribEmployer'):
-		ret[field] = getattr(pledge, field, pledge.extra.get(field))
+	# Copy Pledge fields.
+	for field in ('email', 'amount', 'incumb_challgr', 'filter_party', 'filter_competitive'):
+		ret[field] = getattr(pledge, field)
 		if type(ret[field]).__name__ == "Decimal":
 			ret[field] = float(ret[field])
 		elif isinstance(ret[field], ActorParty):
 			ret[field] = str(ret[field])
 
+	# Copy contributor fields from the extra dict.
+	for field in ('contribNameFirst', 'contribNameLast', 'contribAddress', 'contribCity', 'contribState', 'contribZip',
+		'contribOccupation', 'contribEmployer'):
+		ret[field] = pledge.extra['contributor'][field]
+
+	# Return a summary of billing info to show how we would bill.
 	ret['cclastfour'] = pledge.cclastfour
+
+	# And indicate which pledge we're sourcing this from so that in
+	# the submit view we can retreive it again without having to
+	# pass it back from the (untrusted) client.
 	ret['cc_from_pledge'] = pledge.id
 
 	return ret
@@ -245,12 +260,14 @@ def create_pledge(request):
 			raise Exception("%s is out of range" % field)
 
 	# string fields that go straight into the extras dict.
-	p.extra = {}
+	p.extra = {
+		'contributor': { }
+	}
 	for field in (
 		'contribNameFirst', 'contribNameLast',
 		'contribAddress', 'contribCity', 'contribState', 'contribZip',
 		'contribOccupation', 'contribEmployer'):
-		p.extra[field] = request.POST[field].strip()
+		p.extra['contributor'][field] = request.POST[field].strip()
 
 	# normalize the filter_party field
 	if request.POST['filter_party'] in ('DR', 'RD'):

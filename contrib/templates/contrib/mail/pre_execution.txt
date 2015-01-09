@@ -1,5 +1,5 @@
 {% autoescape off %}
-{{pledge.extra.contribNameFirst}},
+{{pledge.extra.contributor.contribNameFirst}},
 
 We are about to make your campaign contributions to {{pledge.targets_summary}}.
 

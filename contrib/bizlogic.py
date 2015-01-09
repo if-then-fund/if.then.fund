@@ -7,16 +7,16 @@ def create_de_donation_basic_dict(pledge):
 	# Creates basic info for a Democracy Engine API call for creating
 	# a transaction (both authtest and auth+capture calls).
 	return {
-		"donor_first_name": pledge.extra['contribNameFirst'],
-		"donor_last_name": pledge.extra['contribNameLast'],
-		"donor_address1": pledge.extra['contribAddress'],
-		"donor_city": pledge.extra['contribCity'],
-		"donor_state": pledge.extra['contribState'],
-		"donor_zip": pledge.extra['contribZip'],
+		"donor_first_name": pledge.extra['contributor']['contribNameFirst'],
+		"donor_last_name": pledge.extra['contributor']['contribNameLast'],
+		"donor_address1": pledge.extra['contributor']['contribAddress'],
+		"donor_city": pledge.extra['contributor']['contribCity'],
+		"donor_state": pledge.extra['contributor']['contribState'],
+		"donor_zip": pledge.extra['contributor']['contribZip'],
 		"donor_email": pledge.get_email(),
 
-		"compliance_employer": pledge.extra['contribEmployer'],
-		"compliance_occupation": pledge.extra['contribOccupation'],
+		"compliance_employer": pledge.extra['contributor']['contribEmployer'],
+		"compliance_occupation": pledge.extra['contributor']['contribOccupation'],
 
 		"email_opt_in": False,
 		"is_corporate_contribution": False,
@@ -24,9 +24,9 @@ def create_de_donation_basic_dict(pledge):
 		# use contributor info as billing info in the hopes that it might
 		# reduce DE's merchant fees, and maybe we'll get back CC verification
 		# info that might help us with data quality checks in the future?
-		"cc_first_name": pledge.extra['contribNameFirst'],
-		"cc_last_name": pledge.extra['contribNameLast'],
-		"cc_zip": pledge.extra['contribZip'],
+		"cc_first_name": pledge.extra['contributor']['contribNameFirst'],
+		"cc_last_name": pledge.extra['contributor']['contribNameLast'],
+		"cc_zip": pledge.extra['contributor']['contribZip'],
 	}
 
 def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, request):
@@ -96,7 +96,10 @@ def get_pledge_recipients(trigger, pledge):
 			party = action.party
 
 			# Get the Recipient object.
-			r = Recipient.objects.get(actor=action.actor)
+			try:
+				r = Recipient.objects.get(actor=action.actor)
+			except Recipient.DoesNotExist:
+				raise Recipient.DoesNotExist("There is no recipient for " + str(action.actor))
 
 		else:
 			# The incumbent did something other than what the user wanted, so the
