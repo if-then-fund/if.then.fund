@@ -86,7 +86,7 @@ class Command(BaseCommand):
 			# Create a Recipient for this Actor.
 			de_id = "p_%d" % actor.govtrack_id
 			if de_id not in de_recips:
-				self.stdout.write('Missing recipient for: ' + actor.name_long)
+				self.stdout.write('Missing recipient %s for %s!' % (de_id, actor.name_long))
 			else:
 				recipient, is_new = Recipient.objects.get_or_create(
 					actor=actor,
@@ -113,7 +113,7 @@ class Command(BaseCommand):
 				# See if the Democracy Engine recipient exists.
 				de_id = "c_" + "-".join(office + [party.name[0]])
 				if de_id not in de_recips:
-					self.stdout.write('Missing challenger recipient %s. ' % de_id)
+					self.stdout.write('Missing challenger recipient %s!' % de_id)
 				else:
 					recipient, is_new = Recipient.objects.get_or_create(
 						actor=None,
