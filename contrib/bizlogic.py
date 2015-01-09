@@ -230,7 +230,7 @@ def create_pledge_donation(pledge, recipients):
 	de_don_req = create_de_donation_basic_dict(pledge)
 	de_don_req.update({
 		# billing info
-		"token": pledge.extra['de_cc_token'],
+		"token": pledge.extra['billing']['de_cc_token'],
 
 		# line items
 		"line_items": line_items,

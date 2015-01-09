@@ -342,7 +342,7 @@ class Pledge(models.Model):
 	filter_party = EnumField(ActorParty, blank=True, null=True, help_text="Contributions only go to candidates whose party matches this party. Independent is not an allowed value here.")
 	filter_competitive = models.BooleanField(default=False, help_text="Whether to filter contributions to competitive races.")
 
-	cclastfour = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The last four digits of the user's credit card number, stored for fast look-up in case we need to find a pledge from a credit card number.")
+	cclastfour = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The last four digits of the user's credit card number, stored & indexed for fast look-up in case we need to find a pledge from a credit card number.")
 
 	pre_execution_email_sent_at = models.DateTimeField(blank=True, null=True, help_text="The date and time when the user was sent an email letting them know that their pledge is about to be executed.")
 	post_execution_email_sent_at = models.DateTimeField(blank=True, null=True, help_text="The date and time when the user was sent an email letting them know that their pledge was executed.")
@@ -460,14 +460,13 @@ class Pledge(models.Model):
 		return True
 
 	@staticmethod
-	def find_from_billing(cc_number, cc_exp_month, cc_exp_year):
+	def find_from_billing(cc_number):
 		# Returns an interator that yields matchinig Pledge instances.
 		# Must be in parallel to how the view function creates the pledge.
-		cc_key = ','.join([cc_number, cc_exp_month, cc_exp_year])
-		cc_key = cc_key.replace(' ', '')
 		from django.contrib.auth.hashers import check_password
+		cc_number = cc_number.replace(' ', '')
 		for p in Pledge.objects.filter(cclastfour=cc_number[-4:]):
-			if check_password(cc_key, p.extra['billingInfoHashed']):
+			if check_password(cc_number, p.extra['billing']['cc_num_hashed']):
 				yield p
 
 	@transaction.atomic

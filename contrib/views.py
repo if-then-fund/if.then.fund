@@ -14,6 +14,7 @@ from contrib.models import Trigger, TriggerExecution, Pledge, PledgeStatus, Pled
 from contrib.utils import json_response
 from contrib.bizlogic import run_authorization_test, HumanReadableValidationError
 
+import copy
 import rtyaml
 
 @anonymous_view
@@ -290,14 +291,20 @@ def create_pledge(request):
 		# quickly locate a Pledge by CC number (approximately).
 		p.cclastfour = ccnum[-4:]
 	
-		# Store a hashed version of the credit card information so we can
+		# Store a hashed version of the credit card number so we can
 		# do a verification if the user wants to look up a Pledge by CC
 		# info. Use Django's built-in password hashing functionality to
 		# handle this.
+		#
+		# Also store the expiration date so that we can know that a
+		# card has expired prior to using the DE token.
 		from django.contrib.auth.hashers import make_password
-		cc_key = ','.join((ccnum, str(ccexpmonth), str(ccexpyear)))
-		p.extra['billingInfoHashed'] = make_password(cc_key)
-			
+		p.extra['billing'] = {
+			'cc_num_hashed': make_password(ccnum),
+			'cc_exp_month': ccexpmonth,
+			'cc_exp_year': ccexpyear,
+		}
+
 		# Perform an authorization test on the credit card.
 		#   a) This tests that the billing info is valid.
 		#   b) We get a token that we can use on future transactions so that we
@@ -313,8 +320,8 @@ def create_pledge(request):
 
 		# Store the transaction authorization, which contains the credit card token,
 		# into the pledge.
-		p.extra["authorization"] = de_txn
-		p.extra["de_cc_token"] = de_txn['token']
+		p.extra['billing']['authorization'] = de_txn
+		p.extra['billing']['de_cc_token'] = de_txn['token']
 	else:
 		# This is a returning user and we are re-using the DE credit card token
 		# from a previous pledge. Validate that the pledge id corresponds to a
@@ -325,14 +332,12 @@ def create_pledge(request):
 			user=p.user)
 
 		# Copy all of the billing fields forward.
-		p.extra["authorization"] = prev_p.extra["authorization"]
-		p.extra["de_cc_token"] = prev_p.extra["de_cc_token"]
-		p.extra["billingInfoHashed"] = prev_p.extra["billingInfoHashed"]
+		p.extra['billing'] = copy.deepcopy(prev_p.extra['billing'])
 		p.cclastfour = prev_p.cclastfour
 
 		# Record where we got the info from. Also signals that the "authorization"
 		# field was copied from a previous pledge.
-		p.extra["de_cc_via_pledge"] = prev_p.id
+		p.extra['billing']["via_pledge"] = prev_p.id
 
 	p.save()
 
