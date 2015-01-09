@@ -119,7 +119,6 @@ $PIP install git+https://github.com/dcramer/pynliner@python3
 # LOCAL ONLY
 if [ "$1" == "--local" ]; then
 	# Create database / migrate database.
-	./manage.py makemigrations itfsite contrib
 	./manage.py migrate
 
 	# Create an 'admin' user.
