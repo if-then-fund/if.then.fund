@@ -36,9 +36,15 @@
 
 	<tr>
 		<td>
-			<a href="{{pledge.trigger.get_absolute_url}}">{{pledge.trigger.title}}</a>
+			<a href="{{pledge.trigger.get_absolute_url}}" style="border: none">{{pledge.trigger.title}}</a>
+			<p class="text-muted" style="margin: .1em 0 0 0; font-size: 90%">
+				Entered on {{pledge.created|date}}.
+				{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}
+					Contributions {% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}made{% else %}attempted{% endif %} on {{ pledge.execution.created|date }}.
+				{% endif %}
+			</p>
 			{% if pledge.execution.problem|stringformat:'s' != 'PledgeExecutionProblem.NoProblem' %}
-				<p class="text-danger" style="margin-top: .25em; font-size: 90%">{{ pledge.execution.problem_text }}</p>
+				<p class="text-danger" style="margin: .25em 0 0 0; font-size: 90%">{{ pledge.execution.problem_text }}</p>
 			{% endif %}
 		</td>
 		<td>
