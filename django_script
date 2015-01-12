@@ -10,7 +10,7 @@ fi
 export DJANGO_SETTINGS_MODULE=itfsite.settings
 export PYTHONPATH=.:lib
 
-python3 -u -W ignore /dev/stdin $@ << EOF;
+python3 -u -W ignore /dev/stdin "$@" << EOF;
 
 import django
 django.setup()
