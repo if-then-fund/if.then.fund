@@ -221,7 +221,7 @@
 
           <div class="buttons">
             <button type="button" class="btn btn-default" onclick="do_pledge_login_cancel()">&lt; Back</button>        
-            <button type="button" class="btn btn-warning" onclick="do_pledge_login_next()">Next &gt;</button>
+            <button id="login-next" type="button" class="btn btn-warning" onclick="do_pledge_login_next()">Next &gt;</button>
           </div>
         </div> <!-- /pledge-login -->
 
@@ -284,7 +284,7 @@
               </table>
               <div class="buttons">
                 <button type="button" class="btn btn-default" onclick="do_contributor_cancel();">&lt; Back</button>        
-                <button type="button" class="btn btn-warning" onclick="do_contributor_next()">Next &gt;</button>
+                <button id="contrib-next" type="button" class="btn btn-warning" onclick="do_contributor_next()">Next &gt;</button>
               </div>
             </div>
           </div>        
@@ -330,7 +330,7 @@
 
               <div class="buttons" style="margin: 1.5em 0">
                 <button type="button" class="btn btn-default" onclick="pledge_payment_cancel()">&lt; Back</button>
-                <button type="button" class="btn btn-warning" onclick="pledge_submit()">Confirm</button>
+                <button id="billing-next" type="button" class="btn btn-warning" onclick="pledge_submit()">Confirm</button>
               </div>
             </div>
             <div class="col-md-6">

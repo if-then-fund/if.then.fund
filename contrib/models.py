@@ -359,6 +359,26 @@ class Pledge(models.Model):
 
 	objects = NoMassDeleteManager()
 
+	ENFORCE_EXECUTION_EMAIL_DELAY = True # can disable for testing
+
+	@transaction.atomic
+	def save(self, *args, **kwargs):
+		# Override .save() so on the INSERT of a new Pledge we increment
+		# counters on the Trigger.
+		is_new = (not self.id) # if the pk evaluates to false, Django does an INSERT
+
+		# Actually save().
+		super(Pledge, self).save(*args, **kwargs)
+
+		# For a new object, increment the trigger's pledge_count and total_pledged
+		# fields (atomically).
+		if is_new:
+			from django.db import models
+			t = self.trigger
+			t.pledge_count = models.F('pledge_count') + 1
+			t.total_pledged = models.F('total_pledged') + self.amount
+			t.save(update_fields=['pledge_count', 'total_pledged'])
+
 	@transaction.atomic
 	def delete(self):
 		if self.status != PledgeStatus.Open:
@@ -525,7 +545,7 @@ class Pledge(models.Model):
 				if pledge.pre_execution_email_sent_at is None:
 					raise ValueError("User %s has not yet been sent the pre-execution email." % pledge.user)
 				elif (timezone.now() - pledge.pre_execution_email_sent_at) < Pledge.current_algorithm()['pre_execution_warn_time'][0] \
-						and not settings.DEBUG:
+						and not settings.DEBUG and Pledge.ENFORCE_EXECUTION_EMAIL_DELAY:
 					raise ValueError("User %s has not yet been given enough time to cancel the pledge." % pledge.user)
 
 				# Make the donation (an authorization).

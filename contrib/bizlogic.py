@@ -29,11 +29,35 @@ def create_de_donation_basic_dict(pledge):
 		"cc_zip": pledge.extra['contributor']['contribZip'],
 	}
 
-def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, request):
+def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, aux_data):
 	# Runs an authorization test at the time the user is making a pledge,
 	# which tests the card info and also gets a credit card token that
 	# can be used later to make a real charge without other billing
 	# details.
+
+	# Store the last four digits of the credit card number so we can
+	# quickly locate a Pledge by CC number (approximately).
+	pledge.cclastfour = ccnum[-4:]
+
+	# Store a hashed version of the credit card number so we can
+	# do a verification if the user wants to look up a Pledge by CC
+	# info. Use Django's built-in password hashing functionality to
+	# handle this.
+	#
+	# Also store the expiration date so that we can know that a
+	# card has expired prior to using the DE token.
+	from django.contrib.auth.hashers import make_password
+	pledge.extra['billing'] = {
+		'cc_num_hashed': make_password(ccnum),
+		'cc_exp_month': ccexpmonth,
+		'cc_exp_year': ccexpyear,
+	}
+
+	# Logging.
+	aux_data.update({
+		"trigger": pledge.trigger.id,
+		"pledge": pledge.id,
+	})
 
 	# Basic contributor details.
 	de_don_req = create_de_donation_basic_dict(pledge)
@@ -55,18 +79,20 @@ def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, request)
 		# tracking info, which for an auth test stays private?
 		"source_code": "itfsite pledge auth", 
 		"ref_code": "", 
-		"aux_data": rtyaml.dump({ # DE will gives this back to us encoded as YAML, but the dict encoding is ruby-ish so to be sure we can parse it, we'll encode it first
-			"trigger": pledge.trigger.id,
-			"pledge": pledge.id,
-
-			# Add information from the HTTP request in case we need to
-			# block IPs or something.
-			"httprequest": { k: request.META.get(k) for k in ('REMOTE_ADDR', 'REQUEST_URI', 'HTTP_USER_AGENT') },
-			})
+		"aux_data": rtyaml.dump(aux_data), # DE will gives this back to us encoded as YAML, but the dict encoding is ruby-ish so to be sure we can parse it, we'll encode it first
 		})
 
 	# Perform the authorization test and return the transaction record.
-	return DemocracyEngineAPI.create_donation(de_don_req)
+	#
+	#   a) This tests that the billing info is valid.
+	#   b) We get a token that we can use on future transactions so that we
+	#      do not need to collect the credit card info again.
+	de_txn = DemocracyEngineAPI.create_donation(de_don_req)
+
+	# Store the transaction authorization, which contains the credit card token,
+	# into the pledge.
+	pledge.extra['billing']['authorization'] = de_txn
+	pledge.extra['billing']['de_cc_token'] = de_txn['token']
 
 def get_pledge_recipients(trigger, pledge):
 	# For pledge execution, figure out how to split the contribution
@@ -407,3 +433,23 @@ class DemocracyEngineAPI(object):
 # Replace with a singleton instance.
 DemocracyEngineAPI = DemocracyEngineAPI()
 
+class DummyDemocracyEngineAPI(object):
+	"""A stand-in for the DE API for unit tests."""
+
+	issued_tokens = set()
+
+	def create_donation(self, info):
+		if info.get('token_request'):
+			import random, hashlib
+			token = hashlib.md5(str(random.random()).encode('ascii')).hexdigest()
+			self.issued_tokens.add(token)
+			return {
+				"dummy_response": True,
+				"token": token,
+			}
+		else:
+			if info['token'] not in self.issued_tokens:
+				raise Exception("Charge on an invalid token.")
+			return {
+				"dummy_response": True,
+			}

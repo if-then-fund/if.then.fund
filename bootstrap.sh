@@ -128,6 +128,9 @@ if [ "$1" == "--local" ]; then
 	# Load fixtures. Only for testing. Must load actor and recipient files
 	# at once because they have a circular dependency.
 	./manage.py loaddata fixtures/actor.yaml fixtures/recipient.yaml
+
+	# For testing only.
+	pip install selenium
 fi
 
 # DEPLOYED TO WEB ONLY

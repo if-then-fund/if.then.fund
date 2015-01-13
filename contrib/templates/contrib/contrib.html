@@ -27,7 +27,7 @@
 
 {% if not pledge.execution or pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
 
-	<p>You
+	<p id="pledge-explanation">You
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}made{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}have scheduled{% else %}scheduled{% endif %}
 	a campaign contribution of
 	{% if not execution %}

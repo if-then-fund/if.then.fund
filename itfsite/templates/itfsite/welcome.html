@@ -13,7 +13,7 @@
 
 	<p style="margin: 2em; text-align: center;">Thank you for confirming your email address. Now please set a password for your account:</p>
 
-	<form class="form-horizontal" role="form" method="post" onsubmit="return password_validation()">
+	<form id="welcome-form" class="form-horizontal" role="form" method="post" onsubmit="return password_validation()">
 		{% csrf_token %}
 		<div class="form-group">
 			<label>Email address</label>

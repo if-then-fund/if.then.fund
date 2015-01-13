@@ -12,7 +12,7 @@ from twostream.decorators import anonymous_view, user_view_for
 
 from contrib.models import Trigger, TriggerExecution, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty, ContributionAggregate
 from contrib.utils import json_response
-from contrib.bizlogic import run_authorization_test, HumanReadableValidationError
+from contrib.bizlogic import HumanReadableValidationError, run_authorization_test
 
 import copy
 import rtyaml
@@ -304,41 +304,25 @@ def create_pledge(request):
 		ccexpyear = int(request.POST['billingCCExpYear'])
 		cccvc = request.POST['billingCCCVC'].strip()
 
-		# Store the last four digits of the credit card number so we can
-		# quickly locate a Pledge by CC number (approximately).
-		p.cclastfour = ccnum[-4:]
-	
-		# Store a hashed version of the credit card number so we can
-		# do a verification if the user wants to look up a Pledge by CC
-		# info. Use Django's built-in password hashing functionality to
-		# handle this.
-		#
-		# Also store the expiration date so that we can know that a
-		# card has expired prior to using the DE token.
-		from django.contrib.auth.hashers import make_password
-		p.extra['billing'] = {
-			'cc_num_hashed': make_password(ccnum),
-			'cc_exp_month': ccexpmonth,
-			'cc_exp_year': ccexpyear,
+		# For logging:
+		# Add information from the HTTP request in case we need to
+		# block IPs or something.
+		aux_data = {
+			"httprequest": { k: request.META.get(k) for k in ('REMOTE_ADDR', 'REQUEST_URI', 'HTTP_USER_AGENT') },
 		}
 
-		# Perform an authorization test on the credit card.
-		#   a) This tests that the billing info is valid.
-		#   b) We get a token that we can use on future transactions so that we
-		#      do not need to collect the credit card info again.
+		# Perform an authorization test on the credit card and store some CC
+		# details in the pledge object.
+		#
 		# This may raise all sorts of exceptions, which will cause the database
 		# transaction to roll back. A HumanReadableValidationError will be caught
 		# in the calling function and shown to the user. Other exceptions will
 		# just generate generic unhandled error messages.
-		de_txn = run_authorization_test(p, ccnum, ccexpmonth, ccexpyear, cccvc, request)
-
+		#
 		# Note that any exception after this point is okay because the authorization
 		# will expire on its own anyway.
+		run_authorization_test(p, ccnum, ccexpmonth, ccexpyear, cccvc, aux_data)
 
-		# Store the transaction authorization, which contains the credit card token,
-		# into the pledge.
-		p.extra['billing']['authorization'] = de_txn
-		p.extra['billing']['de_cc_token'] = de_txn['token']
 	else:
 		# This is a returning user and we are re-using the DE credit card token
 		# from a previous pledge. Validate that the pledge id corresponds to a
@@ -357,12 +341,6 @@ def create_pledge(request):
 		p.extra['billing']["via_pledge"] = prev_p.id
 
 	p.save()
-
-	# Increment the trigger's pledge_count and total_pledged fields (atomically).
-	from django.db import models
-	p.trigger.pledge_count = models.F('pledge_count') + 1
-	p.trigger.total_pledged = models.F('total_pledged') + p.amount
-	p.trigger.save(update_fields=['pledge_count', 'total_pledged'])
 
 	if not p.user:
 		# The pledge needs to get confirmation of the user's email address,
