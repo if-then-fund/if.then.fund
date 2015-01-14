@@ -38,13 +38,14 @@
 	background-size: 100%;
 	background-image: url('/static/img/capitol.jpg');
 	background-position: 0 100%;
-	margin-bottom: 80px;
+	margin-bottom: 50px;
 	cursor: default;
 }
 	@media screen and (max-width: 850px) {
 		#banner {
 			background-size: auto 100%;
 			background-position: 75% 0;
+			margin-bottom: 25px;
 		}
 	}
 
@@ -153,60 +154,58 @@
 
 <div id="homepage-body" class="container">
 	<div class="row">
-		<div class="row">
-			{% if open_triggers|length > 0 %}
-			<div class="col-md-7">
-				<h3 class="invert"><span>Upcoming votes</span></h3>
-				<p class="expl">Make a contribution to senators, representatives, or their next opponents based on the outcome of one of these upcoming votes:</p>
+		{% if open_triggers|length > 0 %}
+		<div class="col-md-7">
+			<h3 class="invert"><span>Upcoming votes</span></h3>
+			<p class="expl">Make a contribution to senators, representatives, or their next opponents based on the outcome of one of these upcoming votes:</p>
+			<ul class="trigger-list">
+				{% for t in open_triggers %}
+					<li>
+						<div><a href="{{t.get_absolute_url}}">{{t.title}}</a></div>
+						<div>
+							<span>{{t.total_pledged|currency}} committed so far</span>
+							&mdash; <a href="{{t.get_absolute_url}}" style="text-decoration: underline">Take Action</a>
+						</div>
+					</li>
+				{% endfor %}
+			</ul>
+		</div>
+		{% endif %}
+
+		{% if recent_executed_triggers|length > 0 %}
+		<div class="col-md-{% if open_triggers|length > 0 %}5{% else %}12{% endif %}">
+			<div class="{% if open_triggers|length > 0 %}col-md-left-border{% endif %}">
+				<div class="visible-xs visible-sm" style="height: 1em"> </div>
+				<h3 class="invert"><span>Recently</span></h3>
+				<p class="expl">Check out recent votes our users made campaign contributions about:</p>
 				<ul class="trigger-list">
-					{% for t in open_triggers %}
+					{% for t in recent_executed_triggers %}
 						<li>
-							<div><a href="{{t.get_absolute_url}}">{{t.title}}</a></div>
-							<div>
-								<span>{{t.total_pledged|currency}} committed so far</span>
-								&mdash; <a href="{{t.get_absolute_url}}" style="text-decoration: underline">Take Action</a>
-							</div>
+							{{t.title}}
+							<br><span>
+							{% for outcome in t.execution.get_outcomes %}
+								{{outcome.label}}: {{outcome.contribs|currency}}
+								{% if not forloop.last %} | {% endif %}
+							{% endfor %}</span>
+							<br><a href="{{t.get_absolute_url}}">view details</a>
 						</li>
 					{% endfor %}
 				</ul>
 			</div>
-			{% endif %}
-
-			{% if recent_executed_triggers|length > 0 %}
-			<div class="col-md-{% if open_triggers|length > 0 %}5{% else %}12{% endif %}">
-				<div class="{% if open_triggers|length > 0 %}col-md-left-border{% endif %}">
-					<div class="visible-xs visible-sm" style="height: 1em"> </div>
-					<h3 class="invert"><span>Recently</span></h3>
-					<p class="expl">Check out recent votes our users made campaign contributions about:</p>
-					<ul class="trigger-list">
-						{% for t in recent_executed_triggers %}
-							<li>
-								{{t.title}}
-								<br><span>
-								{% for outcome in t.execution.get_outcomes %}
-									{{outcome.label}}: {{outcome.contribs|currency}}
-									{% if not forloop.last %} | {% endif %}
-								{% endfor %}</span>
-								<br><a href="{{t.get_absolute_url}}">view details</a>
-							</li>
-						{% endfor %}
-					</ul>
-				</div>
-			</div>
-			{% endif %}
 		</div>
-
+		{% endif %}
 	</div>
-</div>
 
-<hr style="border-color: #444">
-
-<div class="container">
-	<div class="row">
+	<div>
+		<hr>
 
 		<h2>Why we&rsquo;re doing this</h2>
 
 		<p>By targeting real outcomes, shaping the next Congress, aggregating donations, and reaching all members of Congress, we hope to raise the tide of small-donor supporters and shift the balance of power away from concentrated wealth. Read <a href="/about">more about the site</a> for more details.</p>
+
+	</div>
+
+	{# outer div is closed in master.html #}
 
 {% endblock %}
 
