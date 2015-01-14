@@ -39,6 +39,7 @@
 	background-image: url('/static/img/capitol.jpg');
 	background-position: 0 100%;
 	margin-bottom: 80px;
+	cursor: default;
 }
 	@media screen and (max-width: 850px) {
 		#banner {
@@ -94,6 +95,19 @@
 		}
 	}
 
+	#scroll-me-down {
+		display: block;
+		margin: -60px auto 20px auto;
+		width: 8em;
+		padding: .5em;
+		height: 40px;
+		border: none;
+		text-align: center;
+		background-color: #353;
+		color: white;
+		font-family: 'Roboto Condensed', sans-serif;
+	}
+
 .expl {
 	margin: 2em 0 1em 0;
 	color: #555;
@@ -130,6 +144,9 @@
 		<div id="deck">
 			Reshaping Congress by empowering <strong>small dollar donors</strong> to make contributions based on <strong>what politicians do</strong> — not what they promise.
 		</div>
+		<a id="scroll-me-down" style="display: none" href="#" onclick="smooth_scroll_to($('#homepage-body')); return false;">
+			↓ SCROLL ↓
+		</a>
 	</div>
 </div>
 
@@ -204,6 +221,7 @@
 	font-family: sans-serif;
 	text-align: center;
 	line-height: 110%;
+	cursor: default;
 }
 .splash-anim-bubble span {
 	font-family: 'Roboto Condensed', sans-serif;
@@ -285,6 +303,11 @@ function start_splash_animation() {
 			setTimeout(do_anim, anim_duration);
 		}
 		do_anim(); // start
+
+		// If the window height is too short and the <h3>s aren't visible,
+		// show an arrow to suggest the user scroll down.
+		if ($('#homepage-body h3').offset().top + $('#homepage-body h3').height() > $(window).height())
+			setTimeout("if ($(window).scrollTop() == 0) $('#scroll-me-down').fadeIn();", 2000)
 	}
 }
 </script>
