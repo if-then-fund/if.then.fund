@@ -214,7 +214,7 @@
 
 <script>
 $(function() {
-	if ($(window).width() > 480)
+	if ($(window).width() > 480 && !$('body').hasClass('ie8'))
 		setTimeout(start_splash_animation, 500);
 })
 
