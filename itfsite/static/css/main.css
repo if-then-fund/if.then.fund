@@ -162,3 +162,7 @@ h3.invert {
 	#page-sections-nav.affix-bottom {
 		position: absolute;
 	}
+
+.long-text {
+	line-height: 145%;
+}
