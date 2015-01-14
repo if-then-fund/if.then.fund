@@ -637,6 +637,9 @@ class CancelledPledge(models.Model):
 		cp.user = pledge.user
 		cp.email = pledge.email
 		cp.pledge = { k: getattr(pledge, k) for k in Pledge.cancel_archive_fields }
+		cp.pledge['amount'] = float(cp.pledge['amount']) # can't JSON-serialize a Decimal
+		cp.pledge['created'] = cp.pledge['created'].isoformat() # can't JSON-serialize a DateTime
+		cp.pledge['updated'] = cp.pledge['updated'].isoformat() # can't JSON-serialize a DateTime
 		cp.save()
 
 @django_enum
