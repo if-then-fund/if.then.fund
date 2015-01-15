@@ -289,7 +289,7 @@ function start_splash_animation() {
 		var anim_counter = 0;
 		var anim_text = [ ];
 		for (var a1 in { representative: null, senator: null }) {
-			for (var a2 in { 'supports': null, 'oppposes': null }) {
+			for (var a2 in { 'supports': null, 'opposes': null }) {
 				anim_text.push(['a ' + a1 + '<br><span>' + a2 + '</span><br>your position',
 						(a2 == 'supports') ? "<span>their reelection</span>" : "their <span>opponent</span>"
 						])
