@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Move into project root directory.
+cd $(dirname $(dirname $(readlink $0)))
+
+# Execute daily cleanup scripts.
+python3 manage.py clearsessions
+python3 manage.py clear_expired_email_confirmations > /dev/null

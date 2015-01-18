@@ -81,6 +81,9 @@ if [ "$1" == "--deployed" ]; then
 	# work (at least not obviously so) with a virtualenv.
 	easy_install3 pip # http://stackoverflow.com/questions/27341064/how-do-i-fix-importerror-cannot-import-name-incompleteread
 	PIP="sudo pip3"
+
+	# Install cron jobs.
+	sudo ln -s `pwd`/bin/cron-daily /etc/cron.daily/local
 fi
 
 # LOCAL ONLY
