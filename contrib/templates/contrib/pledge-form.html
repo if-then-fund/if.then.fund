@@ -430,6 +430,8 @@ function pledge_init() {
     $('#billingCCExp').val('1/2020')
     $('#billingCCCVC').val('000')
   }
+
+  mixpanel.track("Pledge Form Shown", { 'trigger': {{trigger.id}} });
 }
 
 function setPledgeDefaults(pledge_defaults) {
@@ -521,6 +523,8 @@ function pledge_go(outcome_elem) {
   // Validation and show modal.
   update_start_next_state(true);
   show_and_scroll('pledge-info')
+
+  mixpanel.track("Pledge Begin", { 'trigger': {{trigger.id}}, 'outcome_index': $(outcome_elem).attr('data-index') });
 }
 
 function show_and_scroll(elem_id, kill_elem) {
@@ -707,7 +711,9 @@ function do_contributor_next() {
 
   $('#pledge-contributor input').prop('readonly', true);
   $('#pledge-contributor .buttons').hide();
-  show_and_scroll('pledge-payment'); 
+  show_and_scroll('pledge-payment');
+
+  mixpanel.track("Pledge Contributor Info Entered", { 'trigger': {{trigger.id}} });
 }
 
 function do_contributor_cancel() {
@@ -777,6 +783,11 @@ function pledge_submit() {
       }
     }
   })
+
+  // Might not execute if the AJAX request above is quick and
+  // the reload begins before the mixpanel AJAX request is
+  // sent.
+  mixpanel.track("Pledge Submitted", { 'trigger': {{trigger.id}} });
 }
 
 function pledge_payment_cancel() {
