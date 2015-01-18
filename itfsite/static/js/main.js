@@ -67,3 +67,22 @@ function build_page_sections_nav() {
 		.css({ 'position': 'relative' })
 		.scrollspy({ target: '#page-sections-nav', offset: 70 });
 }
+
+function make_fixed_header() {
+	if ($('#page-fixed-header').length == 0)
+		return;
+	
+	var h1bot = $('h1').offset().top + $('h1').outerHeight();
+
+	$(window).on('scroll', function() {
+		var top = $(window).scrollTop();
+		if (top < h1bot)
+			$('#page-fixed-header').stop().fadeOut();
+		else
+			$('#page-fixed-header').stop().fadeIn();
+	})
+
+	$('#page-fixed-header').click(function() {
+		smooth_scroll_to($('body'))
+	})
+}
