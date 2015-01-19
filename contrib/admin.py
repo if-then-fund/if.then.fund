@@ -6,6 +6,55 @@ class TriggerAdmin(admin.ModelAdmin):
     raw_id_fields = ['owner']
     readonly_fields = ['pledge_count', 'total_pledged']
 
+    def get_urls(self):
+        from django.conf.urls import patterns
+        urls = super(TriggerAdmin, self).get_urls()
+        return patterns('',
+            (r'^new-from-bill/$', self.admin_site.admin_view((self.new_from_bill)))
+        ) + urls
+
+    def new_from_bill(self, request):
+        # Create a new Trigger from a bill ID and a vote chamber.
+
+        from django.shortcuts import render, redirect
+        from django import forms
+
+        class NewFromBillForm(forms.Form):
+            congress = forms.ChoiceField(label='Congress', choices=((114, '114th Congress'),))
+            bill_type = forms.ChoiceField(label='Bill Type', choices=(('hr', 'H.R.'),('s', 'S.')))
+            bill_number = forms.IntegerField(label='Bill Number', min_value=1, max_value=9999)
+            vote_chamber = forms.ChoiceField(label='Vote in chamber', choices=(('h', 'House'), ('s', 'Senate')))
+            pro_tip = forms.CharField(label='Pro Tip', help_text="e.g. 'Pro-Environment'")
+            con_tip = forms.CharField(label='Con Tip', help_text="e.g. 'Pro-Environment'")
+        
+        if request.method == "POST":
+            form = NewFromBillForm(request.POST)
+            error = None
+            if form.is_valid():
+                from contrib.legislative import create_trigger_from_bill
+                from django.http import HttpResponseRedirect
+                try:
+                    # Create trigger.
+                    bill_id = form.cleaned_data['bill_type'] + str(form.cleaned_data['bill_number']) + "-" + str(form.cleaned_data['congress'])
+                    t = create_trigger_from_bill(bill_id, form.cleaned_data['vote_chamber'])
+
+                    # Set tips.
+                    for outcome in t.outcomes:
+                        if outcome['vote_key'] == "+": outcome['tip'] = form.cleaned_data['pro_tip']
+                        if outcome['vote_key'] == "-": outcome['tip'] = form.cleaned_data['con_tip']
+                    t.save()
+
+                    # Redirect to admin.
+                    return HttpResponseRedirect('/admin/contrib/trigger/%d' % t.id)
+                except Exception as e:
+                    error = str(e)
+
+        else: # GET
+            form = NewFromBillForm()
+            error = None
+
+        return render(request, "contrib/admin/new-trigger-from-bill.html", { 'form': form, 'error': error })
+
 class TriggerStatusUpdateAdmin(admin.ModelAdmin):
     readonly_fields = ['trigger']
 
@@ -37,7 +86,7 @@ class PledgeAdmin(admin.ModelAdmin):
     list_display = ['id', 'status', 'trigger', 'user_or_email', 'amount', 'created']
     readonly_fields = ['user', 'trigger', 'amount', 'algorithm'] # amount is read-only because a total is cached in the Trigger
     def user_or_email(self, obj):
-    	return obj.user if obj.user else obj.email
+        return obj.user if obj.user else obj.email
     user_or_email.short_description = 'User or Unverified Email'
 
 class CancelledPledgeAdmin(admin.ModelAdmin):

@@ -47,6 +47,9 @@ class TriggerType(models.Model):
 	strings = JSONField(default={}, help_text="A dictionary of displayable text.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
+	def __str__(self):
+		return self.key
+
 @django_enum
 class TriggerStatus(enum.Enum):
 	Draft = 0
@@ -68,7 +71,7 @@ class Trigger(models.Model):
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
 	slug = models.SlugField(max_length=200, help_text="The URL slug for this trigger.")
-	description = models.TextField(help_text="Description text in Markdown.")
+	description = models.TextField(help_text="Description text in the format given by description_format.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 	status = EnumField(TriggerStatus, default=TriggerStatus.Draft, help_text="The current status of the trigger: Open (accepting pledges), Paused (not accepting pledges), Executed (funds distributed), Vacated (existing pledges invalidated).")
 	outcomes = JSONField(default=[], help_text="An array (order matters!) of information for each possible outcome of the trigger, e.g. ['Voted Yes', 'Voted No'].")
@@ -148,7 +151,7 @@ class TriggerStatusUpdate(models.Model):
 	trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE, help_text="The Trigger that this update is about.")
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True)
-	text = models.TextField(help_text="Status update text in Markdown.")
+	text = models.TextField(help_text="Status update text in the format given by text_format.")
 	text_format = EnumField(TextFormat, help_text="The format of the text.")
 
 class TriggerExecution(models.Model):

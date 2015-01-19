@@ -1,0 +1,24 @@
+{% extends "master.html" %}
+{% load bootstrap %}
+
+{% block title %}New Trigger From Bill{% endblock %}
+
+{% block body %}
+<form class="form-horizontal" method="POST">
+    <legend>Create a new trigger from a bill in Congress</legend>
+    <p style='margin: 2em 0'>You will be able to edit the trigger details next.</p>
+
+    {% if error %}
+    <p class="text-danger">{{error}}</p>
+    {% endif %}
+
+    {% csrf_token %}
+    {{ form|bootstrap_horizontal }}
+    <div class="form-group">
+      <div class="col-sm-10 col-sm-offset-2">
+        <button type="submit" class="btn btn-primary">Create</button>
+      </div>
+    </div>
+</form>
+{% endblock %}
+

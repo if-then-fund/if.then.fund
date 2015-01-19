@@ -5,7 +5,7 @@ def create_trigger_from_bill(bill_id, chamber):
 	# split/validate the bill ID
 	import re
 	m = re.match("^([a-z]+)(\d+)-(\d+)$", bill_id)
-	if not m: raise ValueError("Not a bill ID, e.g. hr1234-114.")
+	if not m: raise ValueError("'%s' is not a bill ID, e.g. hr1234-114." % bill_id)
 	bill_type, bill_number, bill_congress = m.groups()
 	bill_type = { "hres": "house_resolution", "s": "senate_bill", "sjres": "senate_joint_resolution", "hr": "house_bill", "hconres": "house_concurrent_resolution", "sconres": "senate_concurrent_resolution", "hjres": "house_joint_resolution", "sres": "senate_resolution" }.get(bill_type)
 	if not bill_type: raise ValueError("Not a bill ID, e.g. hr1234-114.")
@@ -58,8 +58,8 @@ def create_trigger_from_bill(bill_id, chamber):
 
 	short_title = bill["display_number"]
 	t.outcomes = [
-		{ "vote_key": "+", "tip": "Pro-Environment", "label": "Yes on %s" % short_title },
-		{ "vote_key": "-", "tip": "Less Government", "label": "No on %s" % short_title },
+		{ "vote_key": "+", "label": "Yes on %s" % short_title },
+		{ "vote_key": "-", "label": "No on %s" % short_title },
 	]
 
 	t.extra = {
