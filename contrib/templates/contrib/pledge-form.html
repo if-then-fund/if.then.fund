@@ -19,6 +19,8 @@
     color: #FFD;
     font-family: sans-serif;
     font-weight: normal;
+    white-space: normal; /* .btn sets it to nowrap */
+    max-width: 20vw;
   }
 
 #advanced-filters label {
@@ -411,6 +413,10 @@ function pledge_init() {
   $('input.cc-num').payment('formatCardNumber');
   $('input.cc-exp').payment('formatCardExpiry');
   $('input.cc-cvc').payment('formatCardCVC');
+
+  // Outcome buttons should be the same size.
+  set_css_to_maximum($('#pledge-outcomes button'), 'width');
+  set_css_to_maximum($('#pledge-outcomes button'), 'height');
 
   // For testing, pre-fill form fields with demonstration values.
 

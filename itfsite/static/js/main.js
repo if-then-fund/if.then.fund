@@ -86,3 +86,16 @@ function make_fixed_header() {
 		smooth_scroll_to($('body'))
 	})
 }
+
+function set_css_to_maximum(elems, property) {
+	// elems should be a jQuery object.
+	// property should be 'width' or 'height'.
+	// Gets the maximum outerWidth/Height of the elements (because bootstrap sets the box model
+	// to use outer dimensions?) and then sets that as the CSS width/height of all the elements.
+	var max_value = 0;
+	elems.each(function() {
+		var v = $(this)[property == 'width' ? 'outerWidth' : 'outerHeight'](); // e.g. elem.outerWidth() or elem.outerHeight()
+		if (v > max_value) max_value = v;
+	});
+	elems.css(property, max_value + "px");
+}
