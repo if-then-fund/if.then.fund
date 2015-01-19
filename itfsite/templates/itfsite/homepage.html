@@ -305,7 +305,7 @@ function start_splash_animation() {
 
 		// If the window height is too short and the <h3>s aren't visible,
 		// show an arrow to suggest the user scroll down.
-		if ($('#homepage-body h3').offset().top + $('#homepage-body h3').height() > $(window).height())
+		if ($('#homepage-body h3') && $('#homepage-body h3').offset().top + $('#homepage-body h3').height() > $(window).height())
 			setTimeout("if ($(window).scrollTop() == 0) $('#scroll-me-down').fadeIn();", 2000)
 	}
 }
