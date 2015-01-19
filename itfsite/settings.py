@@ -120,6 +120,7 @@ if not DEBUG:
 
 STATIC_URL = '/static/'
 STATIC_ROOT = environment.get("static", None)
+LOGIN_URL = '/accounts/login'
 LOGIN_REDIRECT_URL = '/home'
 
 # App settings
