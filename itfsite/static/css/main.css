@@ -1,6 +1,5 @@
 /* Global styles */
 
-@import url(https://fonts.googleapis.com/css?family=Fredoka+One);
 @import url(https://fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic);
 @import url(https://fonts.googleapis.com/css?family=Roboto+Slab:400,300,700);
 
@@ -53,7 +52,7 @@ a, a:visited {
 /* MASTER ELEMENTS */
 
 #nav-wrap {
-	background-color: #333;
+	background-color: #292929;
 	margin-bottom: 20px;
 }
 	.navbar {
@@ -65,17 +64,14 @@ a, a:visited {
 	}
 
 	.navbar a.navbar-brand {
-		background-color: #38601f;
-		color: white;
-		letter-spacing: .4px;
-		font-size: 18px;
+		margin-top: 10px;
+		margin-left: -5px !important;
+		background: url('/static/branding/navbar-title.png');
+		width: 103px;
+		height: 30px;
+		text-indent: -99999em;
+		overflow: hidden;
 	}
-	a.navbar-brand, .site-brand {
-		font-family: 'Fredoka One', cursive;
-	}
-		.site-brand {
-			padding-right: 2px;
-		}
 
 	.navbar a {
 		border: none;
@@ -91,6 +87,16 @@ a, a:visited {
 		border-left: 1px solid #EEE;
 		border-right: 1px solid #EEE;
 	}
+}
+
+.site-brand {
+	display: inline-block;
+	background: url('/static/branding/content-title.png') no-repeat;
+	width: 72px;
+	height: 15px;
+	text-indent: -99999em;
+	overflow: hidden;
+	padding-left: 2px;
 }
 
 .overline {
