@@ -125,19 +125,22 @@ if environment.get("static"):
 LOGIN_URL = '/accounts/login'
 LOGIN_REDIRECT_URL = '/home'
 
-# App settings
+# Email addresses
+
+ADMINS = (("Joshua Tauberer", "josh@if.then.fund"),)
+SERVER_EMAIL = 'if.then.fund error <errors@mail.if.then.fund>'
+DEFAULT_FROM_EMAIL = 'if.then.fund <no.reply@mail.if.then.fund>'
+
+# 3rd party app settings
 
 EMAIL_CONFIRM_LA_HTTP_PROTOCOL = 'https' if environment["https"] else 'http'
 EMAIL_CONFIRM_LA_DOMAIN = environment['host']
 EMAIL_CONFIRM_LA_SAVE_EMAIL_TO_INSTANCE = False
-DEFAULT_FROM_EMAIL = 'if.then.fund <hello@mail.if.then.fund>'
-SITE_ROOT_URL = EMAIL_CONFIRM_LA_HTTP_PROTOCOL + "://" + environment['host']
 
 # Local Settings
 
 SITE_MODE = environment.get("mode")
-ADMINS = ["josh@if.then.fund"]
-SERVER_EMAIL = DEFAULT_FROM_EMAIL
+SITE_ROOT_URL = EMAIL_CONFIRM_LA_HTTP_PROTOCOL + "://" + environment['host']
 DE_API = environment['democracyengine']
 CDYNE_API_KEY = environment['cdyne_key']
 CURRENT_ELECTION_CYCLE = 2016
