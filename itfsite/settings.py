@@ -140,4 +140,4 @@ ADMINS = ["josh@if.then.fund"]
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 DE_API = environment['democracyengine']
 CDYNE_API_KEY = environment['cdyne_key']
-CURRENT_ELECTION_CYCLE = 2014
+CURRENT_ELECTION_CYCLE = 2016
