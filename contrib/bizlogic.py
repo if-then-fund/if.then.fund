@@ -265,13 +265,16 @@ def create_pledge_donation(pledge, recipients):
 		"line_items": line_items,
 
 		# reported to the recipient
-		"source_code": "itfsite", 
-		"ref_code": pledge.trigger.get_short_url(), 
+		"source_code": "",
+		"ref_code": "",
 
 		# tracking info for internal use
 		"aux_data": rtyaml.dump({ # DE will gives this back to us encoded as YAML, but the dict encoding is ruby-ish so to be sure we can parse it, we'll encode it first
 			"trigger": pledge.trigger.id,
 			"pledge": pledge.id,
+			"user": pledge.user.id,
+			"email": pledge.user.email,
+			"pledge_created": pledge.created,
 			})
 		})
 
