@@ -1,5 +1,6 @@
 {% extends "master.html" %}
 {% load itfsite_utils %}
+{% load static from staticfiles %}
 
 {% block title %}{{trigger.title}}{% endblock %}
 
@@ -234,7 +235,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/js/ext/jquery.payment.js"> </script>
+<script src="{% static "js/ext/jquery.payment.js" %}"> </script>
 <script>
 	$(function() {
 		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}

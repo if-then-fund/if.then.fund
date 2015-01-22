@@ -119,7 +119,9 @@ if not DEBUG:
 # Paths
 
 STATIC_URL = '/static/'
-STATIC_ROOT = environment.get("static", None)
+if environment.get("static"):
+	STATIC_ROOT = environment["static"]
+	STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 LOGIN_URL = '/accounts/login'
 LOGIN_REDIRECT_URL = '/home'
 
