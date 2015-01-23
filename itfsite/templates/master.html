@@ -20,6 +20,8 @@
 
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
         <link rel="stylesheet" href="{% static "css/main.css" %}">
 
         <!--[if lt IE 9]>
@@ -65,18 +67,21 @@
             | <a href="{% url 'simplepage' 'terms' %}">Terms of Service</a>
             | <a href="{% url 'simplepage' 'open' %}">Open</a>
           </p>
-        </div>
-        <div class="col-sm-2">
-          <p id="footer-social">
-              
-          </p>
-        </div>
-      </div>
-      <p>Email <script>
+          <p>Email <script>
               var addr = "olleh".split("").reverse().join("") + String.fromCharCode(2*0x20) + "if.then.fund";
               document.write("\x3ca class='email' href='mailto:" + addr + "'\x3e" + addr + "\x3c/a\x3e");
               </script> or tweet us <a href="https://twitter.com/IfThenFund">@IfThenFund</a> to reach us.</p>
-      <p>&copy; {% now 'Y' %} Civic Responsibility LLC</p>
+        </div>
+        <div class="col-sm-2">
+          <ul id="footer-social">
+              <li title="Twitter"><a href="https://twitter.com/IfThenFund"><i class="fa fa-twitter fa-fw"></i> @IfThenFund</a></li>
+              <li title="Facebook"><a href="https://www.facebook.com/if.then.fund"><i class="fa fa-facebook fa-fw"></i> if.then.fund</a></li>
+              <li title="Github"><a href="https://github.com/if-then-fund"><i class="fa fa-github fa-fw"></i> if-then-fund</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <p style="font-size: 90%">&copy; {% now 'Y' %} Civic Responsibility LLC</p>
       
       <hr>
       

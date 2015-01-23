@@ -101,9 +101,18 @@ a, a:visited {
 		margin-top: 0;
 	}
 
-#footer-social a {
-	border: none;
+#footer-social {
+	padding: 0;
+	list-style: none;
+	font-size: 90%;
 }
+	#footer-social a {
+		border: none;
+		color: #575;
+	}
+		#footer-social a:hover {
+			color: #0A0;
+		}
 
 #not-production {
 	background-color: #E93;
