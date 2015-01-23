@@ -5,7 +5,72 @@ from django.test import TestCase
 from itfsite.models import User
 from contrib.models import *
 
-class SimpleTestCase(TestCase):
+class PledgeTestCase(TestCase):
+	def setUp(self):
+		self.trigger_type = TriggerType.objects.create(
+			key="test",
+			strings={
+				"actor": "ACTOR",
+				"actors": "ACTORS",
+				"action_noun": "ACTION",
+				"action_vb_inf": "ACT",
+				"action_vb_pres_s": "ACTS",
+				"action_vb_past": "ACTED",
+			})
+
+		from django.template.defaultfilters import slugify
+		self.trigger = Trigger.objects.create(
+			key="test",
+			title="Test Trigger",
+			owner=None,
+			trigger_type=self.trigger_type,
+			slug=slugify("Test Trigger"),
+			description="This is a test trigger.",
+			description_format=TextFormat.Markdown,
+			outcomes=[
+				{ "label": "Yes", "tip": "YesTip" },
+				{ "label": "No", "tip": "NoTip" },
+			],
+			extra={
+				"max_split": 100,
+			}
+			)
+
+		# Create a user.
+		self.user = User.objects.create(email="test@example.com")
+
+	def _test_pledge(self, desired_outcome, incumb_challgr, filter_party, expected_value):
+		p = Pledge.objects.create(
+			user=self.user,
+			trigger=self.trigger,
+			algorithm=Pledge.current_algorithm()['id'],
+			desired_outcome=desired_outcome,
+			amount=1,
+			incumb_challgr=incumb_challgr,
+			filter_party=filter_party,
+		)
+		self.assertEqual(p.targets_summary, expected_value)
+
+	def test_pledge_simple(self):
+		self._test_pledge(0, 0, None, "all 100 ACTORS, each getting a part of your contribution if they ACT Yes, but if they ACT No their part of your contribution will go to their next general election opponent")
+
+	def test_pledge_keepemin(self):
+		self._test_pledge(0, 1, None, "ACTORS who ACT Yes")
+
+	def test_pledge_throwemout(self):
+		self._test_pledge(0, -1, None, "the opponents in the next general election of ACTORS who ACT No")
+
+	def test_pledge_partyfilter(self):
+		self._test_pledge(0, 0, ActorParty.Democratic, "Democratic ACTORS who ACT Yes and the Democratic opponents in the next general election of ACTORS who ACT No")
+
+	def test_pledge_keepemin_partyfilter(self):
+		self._test_pledge(0, 1, ActorParty.Democratic, "Democratic ACTORS who ACT Yes")
+
+	def test_pledge_throwemout_partyfilter(self):
+		self._test_pledge(0, -1, ActorParty.Democratic, "the Democratic opponents in the next general election of ACTORS who ACT No")
+
+
+class ExecutionTestCase(TestCase):
 	ACTORS_PER_PARTY = 5
 
 	def setUp(self):
