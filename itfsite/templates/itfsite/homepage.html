@@ -55,14 +55,18 @@
 	}
 
 	h1 {
-		font-family: 'Roboto Condensed', sans-serif;
-		font-weight: bold;
-
 		margin-top: .5em;
 		margin-bottom: 0;
-		background-color: rgba(90,170,40, .5);
-		color: white;
-		padding: .1em 20px .06em 20px;
+
+		background: rgba(40,40,40, .6) url(/static/branding/icons/favicon-96x96.png) 7px 50% no-repeat;
+		background-size: auto 38px;
+		padding-left: 55px;
+
+		color: #99c014;
+		font-family: 'Roboto Condensed', sans-serif;
+		font-weight: bold;
+		padding-top: .1em;
+		padding-bottom: .05em;
 		font-size: 40px;
 	}
 
@@ -71,25 +75,32 @@
 		margin-bottom: 80px;
 		background-color: rgba(200,200,200, .83);
 		padding: 10px 20px;
-		font-size: 18px;
+		font-size: 16px;
 		line-height: 150%;
 		font-family: 'Roboto Slab', serif;
 		color: black;
 	}
 
-	@media screen and (min-width: 440px) and (max-width: 1200px) {
+	@media screen and (min-width: 640px) and (max-width: 1200px) {
 		h1 {
-			font-size: 65px;
-			font-size: 8vw;
+			font-size: 60px;
+			font-size: 7vw;
+			background-position: 1.5vw 50%;
+			background-size: auto 55px;
+			background-size: auto 7vw;
+			padding-left: 75px;
+			padding-left: 10vw;
 		}
 		#deck {
-			font-size: 20px;
 		}
 	}
 	@media screen and (min-width: 1200px) {
 		h1 {
 			margin-top: 10vw;
-			font-size: 110px;
+			font-size: 100px;
+			background-position: 1.5vw 45%;
+			background-size: auto 90px;
+			padding-left: 135px;
 		}
 		#deck {
 			font-size: 24px;
@@ -141,7 +152,9 @@
 	<div id="banner" class="row">
 		{% include "navbar.html" %}
 
-		<h1><span>if<span class='p1'>.</span>then<span class='p2'>.</span>fund<span class='p3'></span></span></h1>
+		<h1>
+			<span>if<span class='p1'>.</span>then<span class='p2'>.</span>fund<span class='p3'></span></span>
+		</h1>
 		<div id="deck">
 			Reshaping Congress by empowering <strong>small dollar donors</strong> to make contributions based on <strong>what politicians do</strong> — not what they promise.
 		</div>
@@ -212,11 +225,11 @@
 {% block scripts %}
 <style>
 .splash-anim-bubble {
-	border: 1px solid #FFF;
+	border: 1px solid #555;
 	border-radius: 15px;
-	background-color: #38601f;
+	background-color: #333;
 	padding: 7px 5px;
-	color: white;
+	color: #99c014;
 	font-family: sans-serif;
 	text-align: center;
 	line-height: 110%;
@@ -231,18 +244,19 @@
 
 <script>
 $(function() {
-	if ($(window).width() > 480 && !$('body').hasClass('ie8'))
-		setTimeout(start_splash_animation, 500);
+	if ($(window).width() > 640 && !$('body').hasClass('ie8'))
+		setTimeout(start_splash_animation, 1000);
 })
 
 function start_splash_animation() {
 	// Get dimensions.
-	var total_width = $('h1').innerWidth();
+	var total_width = $('h1').offset().left + $('h1').outerWidth() - $('h1 span').offset().left;
+	total_width *= 1.05;
 	var text_width = $('h1 span').outerWidth();
 	var dot_width = $('h1 .p1').width();
-	var p1width = .475 * (total_width - text_width); // first period
-	var p2width = .05 * (total_width - text_width); // second period
-	var p3width = .475 * (total_width - text_width); // after 'fund'
+	var p1width = .49 * (total_width - text_width); // first period
+	var p2width = .02 * (total_width - text_width); // second period
+	var p3width = .49 * (total_width - text_width); // after 'fund'
 	$('h1 .p1').animate({
 		paddingLeft: (p1width-dot_width)/2, paddingRight: (p1width-dot_width)/2,
 		opacity: .5 })
@@ -272,7 +286,7 @@ function start_splash_animation() {
 			})
 			b
 				.animate({
-					top: $('h1').offset().top + $('h1').height()/2 - b.height()/2,
+					top: $('h1').offset().top + $('h1').height()/2 - b.height()/1.8,
 					opacity: 1
 				}, duration/4)
 				.delay(3*duration/4)
