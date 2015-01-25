@@ -114,7 +114,7 @@ function cancel_pledge(desire) {
 		"Are you sure you want to cancel this contribution?",
 		["Cancel Contribution", "Nevermind"],
 		function() {
-			ajax({
+			ajax_with_indicator({
 			    url: '/contrib/_cancel',
 			    method: "POST",
 			    data: { pledge: {{pledge.id}} },

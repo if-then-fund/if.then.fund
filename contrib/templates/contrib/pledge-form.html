@@ -628,7 +628,7 @@ function do_pledge_login_next() {
     // User wants to log in. An AJAX login will reset the CSRF token, so
     // we'll avoid actually logging the user in now and just do validation
     // and get defaults for the fields that follow.
-    ajax({
+    ajax_with_indicator({
       url: "/contrib/_defaults",
       method: "POST",
       data: {
@@ -667,7 +667,7 @@ function do_pledge_login_next() {
     // invalid. In the future we may want to issue a different
     // message for emails that are Valid but not Deliverable.
     // We also silently skip Error and let the user go forward.
-    ajax({
+    ajax_with_indicator({
       url: "/_ajax/validate_email",
       method: "POST",
       data: {
@@ -771,7 +771,7 @@ function pledge_submit() {
   var data = { };
   for (var i = 0; i < form_params.length; i++)
     data[form_params[i].name] = form_params[i].value;
-  ajax({
+  ajax_with_indicator({
     url: '/contrib/_submit',
     method: "POST",
     data: data,

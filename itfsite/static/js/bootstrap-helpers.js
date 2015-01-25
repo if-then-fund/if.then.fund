@@ -66,7 +66,7 @@ function show_modal_confirm(title, question, verb, yes_callback, cancel_callback
 }
 
 var ajax_num_executing_requests = 0;
-function ajax(options) {
+function ajax_with_indicator(options) {
   setTimeout("if (ajax_num_executing_requests > 0) $('#ajax_loading_indicator').fadeIn()", 100);
   function hide_loading_indicator() {
     ajax_num_executing_requests--;
