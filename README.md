@@ -12,6 +12,7 @@ Deployment
 
 Spin up an Ubuntu 14.04 LTS 64-bit machine. Log in and run:
 
+	sudo apt-get update && sudo apt-get upgrade -y
 	sudo apt-get install -y git
 	git clone --recursive https://github.com/if-then-fund/if.then.fund
 	cd if.then.fund
@@ -19,8 +20,8 @@ Spin up an Ubuntu 14.04 LTS 64-bit machine. Log in and run:
 Create:
 
 	local/environment.json
-    /etc/ssl/local/ssl_certificate.crt
-    /etc/ssl/local/ssl_certificate.key
+	/etc/ssl/local/ssl_certificate.crt
+	/etc/ssl/local/ssl_certificate.key
     
 For a local, testing environment ('runserver', new sqlite database):
 
@@ -30,3 +31,6 @@ For a (pre-)production environment (nginx, existing database):
 
 	./bootstrap.sh --deployed
 
+For a new database, initialize data:
+
+	./manage.py create_actors

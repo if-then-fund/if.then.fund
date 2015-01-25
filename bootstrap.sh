@@ -79,10 +79,11 @@ if [ "$1" == "--deployed" ]; then
 
 	# Execute pip as root because the uwsgi process starter doesn't
 	# work (at least not obviously so) with a virtualenv.
-	easy_install3 pip # http://stackoverflow.com/questions/27341064/how-do-i-fix-importerror-cannot-import-name-incompleteread
+	sudo easy_install3 pip # http://stackoverflow.com/questions/27341064/how-do-i-fix-importerror-cannot-import-name-incompleteread
 	PIP="sudo pip3"
 
 	# Install cron jobs.
+	rm -f /etc/cron.daily/local
 	sudo ln -s `pwd`/bin/cron-daily /etc/cron.daily/local
 fi
 
