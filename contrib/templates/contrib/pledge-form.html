@@ -414,9 +414,16 @@ function pledge_init() {
   $('input.cc-exp').payment('formatCardExpiry');
   $('input.cc-cvc').payment('formatCardCVC');
 
-  // Outcome buttons should be the same size.
-  set_css_to_maximum($('#pledge-outcomes button'), 'width');
-  set_css_to_maximum($('#pledge-outcomes button'), 'height');
+  // Outcome buttons should be the same size. Because the text font may not be
+  // loaded yet, the size we set now may not be correct once the font is loaded.
+  // Re-set the size again after a period of time when we think all of the fonts
+  // should be loaded.
+  function set_button_sizes() {
+    set_css_to_maximum($('#pledge-outcomes button'), 'width');
+    set_css_to_maximum($('#pledge-outcomes button'), 'height');
+  }
+  set_button_sizes();
+  setTimeout(set_button_sizes, 300);
 
   // For testing, pre-fill form fields with demonstration values.
 

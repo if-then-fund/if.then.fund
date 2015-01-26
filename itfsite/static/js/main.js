@@ -93,6 +93,7 @@ function set_css_to_maximum(elems, property) {
 	// Gets the maximum outerWidth/Height of the elements (because bootstrap sets the box model
 	// to use outer dimensions?) and then sets that as the CSS width/height of all the elements.
 	var max_value = 0;
+	elems.css(property, "auto"); // in case a width/height has been set by a previous call, undo it so it recalculates dimensions
 	elems.each(function() {
 		var v = $(this)[property == 'width' ? 'outerWidth' : 'outerHeight'](); // e.g. elem.outerWidth() or elem.outerHeight()
 		if (v > max_value) max_value = v;
