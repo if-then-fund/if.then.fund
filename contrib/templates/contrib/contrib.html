@@ -1,28 +1,39 @@
 {% load itfsite_utils %}
 
 {% if not pledge.user and not pledge.execution %}
-<div class="panel panel-danger">
+{# pre-execution, email not confirmed #}
+<div class="panel panel-primary">
 <div class="panel-heading">
-	<h3 class="panel-title">Check your email for a link</h3>
+	<h3 class="panel-title" style="font-size: 125%">Next steps</h3>
 </div>
 <div class="panel-body">
-	We sent an email to {{pledge.email}}. You must click the link in the email to confirm your email address before the contribution can be made.
-</div>
-</div>
-{% endif %}
+ 	<p class="text-danger">We sent you an email. You <strong>must</strong> click the link in the email to confirm your email address before the contribution can be made. The email went to {{pledge.email}}.</p>
+ 	<hr>
 
-{% if not pledge.execution or pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
+{% elif not pledge.execution %}
+{# pre-execution, email confirmed #}
+<div class="panel {% if not pledge.user %}panel-default{% else %}panel-success{% endif %}">
+<div class="panel-heading">
+	<h3 class="panel-title">Thank you</h3>
+</div>
+<div class="panel-body">
+
+{% elif pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
+{# post-execution but problem #}
 <div class="panel {% if not pledge.user %}panel-default{% else %}panel-success{% endif %}">
 <div class="panel-heading">
 	<h3 class="panel-title">Your contribution</h3>
 </div>
 <div class="panel-body">
+
 {% else %}
+{# post-execution (usual case) #}
 <div class="panel panel-danger">
 <div class="panel-heading">
 	<h3 class="panel-title">Your contribution</h3>
 </div>
 <div class="panel-body">
+
 {% endif %}
 
 {% if not pledge.execution or pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
@@ -47,8 +58,10 @@
 	{% endif %}
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
+		<hr>
 		{% if pledge.trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
-			<p>Your credit card will be charged only after the {{trigger.trigger_type.strings.action_noun}} occurs.</p>
+			<p>Your credit card will not be charged until after the {{trigger.trigger_type.strings.action_noun}} occurs.</p>
+			<p style="line-height: 123%"><small>Your credit card may show a $1 temporary authorization from Democracy Engine, LLC, but this authorization will not result in a charge.</small></p>
 		{% else %}
 			<p>The {{trigger.trigger_type.strings.action_noun}} has occurred, and we are about to process your contribution. You are still able to cancel the contribution before we process it.</p>
 		{% endif %}
@@ -57,6 +70,7 @@
 	{% endif %}
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
+	<hr>
 	<p style="text-align: right; margin-bottom: 0"><a href="#" onclick="return cancel_pledge()" class="btn {% if not pledge.user %}btn-default{% else %}btn-danger{% endif %}">Cancel Contribution</a></p>
 	{% endif %}
 
