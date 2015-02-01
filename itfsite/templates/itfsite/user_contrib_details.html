@@ -1,0 +1,37 @@
+{% extends "master.html" %}
+
+{% block title %}Your Contribution Details{% endblock %}
+
+{% block head %}
+<style>
+</style>
+{% endblock %}
+
+{% block body %}
+<h1>Your Contribution Details</h1>
+
+<form id="do-download" style="float: right; margin: 0 0 3px 0" method="post">
+	{% csrf_token %}
+	<button onclick="$('#do-download').submit()"><span class="glyphicon glyphicon-download"></span> Download</button>
+</form>
+<table class="table">
+<tr>
+	<th>Date</th>
+	<th>Amount</th>
+	<th>Recipient</th>
+	<th>Action</th>
+</tr>
+
+{% for item in items %}
+	<tr>
+		<td>{{item.when|date}}</td>
+		<td>${{item.amount|floatformat:2}}</td>
+		<td>{{item.recipient}}</td>
+		<td><a href="{{item.trigger.get_absolute_url}}">{{item.trigger.title|truncatewords:6}}</a></td>
+	</tr>
+{% empty %}
+	<tr><td colspan=6>You have not yet made a campaign contribution.</td></tr>
+{% endfor %}
+</table>
+
+{% endblock %}
