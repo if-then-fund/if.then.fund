@@ -26,7 +26,8 @@ fi
 CONF=`dirname $ME`/../conf/uwsgi.conf
 NAME=default
 WSGI=itfsite/wsgi.py
-PROCESSES=2 # SIGHUP doesn't work right when only one process
+PROCESSES=16 # SIGHUP doesn't work right when only one process, it kills the wh
+CHEAPER_PROCESSES=4
 DAEMONIZE=1
 export PYTHONPATH=lib
 if [ -f $CONF ]; then
@@ -69,7 +70,7 @@ echo "Starting $NAME..."
 
 # Should we daemonize or run in the foreground?
 if [ $DAEMONIZE == 1 ]; then
-	daemonize="--daemonize /tmp/uwsgi_$NAME.log --processes $PROCESSES"
+	daemonize="--daemonize /tmp/uwsgi_$NAME.log --processes $PROCESSES --cheaper $CHEAPER_PROCESSES"
 fi
 
 # Span.
