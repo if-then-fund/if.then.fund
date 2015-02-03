@@ -83,7 +83,7 @@ if [ "$1" == "--deployed" ]; then
 	PIP="sudo pip3"
 
 	# Install cron jobs.
-	rm -f /etc/cron.daily/local
+	sudo rm -f /etc/cron.daily/local
 	sudo ln -s `pwd`/bin/cron-daily /etc/cron.daily/local
 fi
 
