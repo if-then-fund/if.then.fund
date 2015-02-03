@@ -62,7 +62,11 @@
 
 		<h1>{{trigger.title}}</h1>
 
-		{{trigger.description|render_text:trigger.description_format}}
+		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' or not trigger.execution.description %}
+			{{trigger.description|render_text:trigger.description_format}}
+		{% else %}
+			{{trigger.execution.description|render_text:trigger.execution.description_format}}
+		{% endif %}
 
 		{% if trigger.extra.type == "usbill" and trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}
 			<p class="text-muted small">More info on this {{trigger.extra.bill_info.noun}} can be found on <a href="{{trigger.extra.bill_info.link}}">GovTrack</a>.</p>
@@ -90,8 +94,6 @@
 			</div>
 			
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
-			{{execution.description|render_text:execution.description_format}}
-
 			<h2>Contributions</h2>
 
 			<p>{{execution.pledge_count_with_contribs}} donor{{execution.pledge_count_with_contribs|pluralize}} made contributions totalling {{execution.total_contributions|currency}}.</p>
