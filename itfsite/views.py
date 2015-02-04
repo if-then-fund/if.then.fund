@@ -12,6 +12,11 @@ def homepage(request):
 	open_triggers = Trigger.objects.filter(status=TriggerStatus.Open).order_by('-total_pledged')
 	recent_executed_triggers = Trigger.objects.filter(status=TriggerStatus.Executed).select_related("execution").order_by('-execution__created')
 
+	# Exclude triggers in the process of being executed from the 'recent' list, because
+	# that list shows aggregate stats that are not yet valid
+	recent_executed_triggers = [t for t in recent_executed_triggers
+		if t.pledge_count == t.execution.pledge_count]
+
 	return render(request, "itfsite/homepage.html", {
 		"open_triggers": open_triggers,
 		"recent_executed_triggers": recent_executed_triggers,
