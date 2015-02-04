@@ -92,12 +92,17 @@ a, a:visited {
 .site-brand {
 	display: inline-block;
 	background: url('/static/branding/content-title.png') no-repeat;
-	width: 72px;
+	width: 73px;
 	height: 15px;
 	text-indent: -99999em;
 	overflow: hidden;
-	padding-left: 2px;
+	margin-left: 1px;
 }
+	small .site-brand {
+		width: 62px;
+		height: 12px;
+		background-size: 100%;
+	}
 
 .overline {
 	margin-bottom: .33em;

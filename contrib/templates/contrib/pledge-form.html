@@ -100,6 +100,14 @@
   {% endfor %}
   </div>
 
+  <div id="pledge-about-site" style="padding-top: 2em;">
+    <small>
+    <hr>
+    <p>We aim to shift the balance of power to shape Congress away from concentrated wealth and toward small-dollar donors like you.</p>
+    <p>You will be making a campaign contribution to {{trigger.trigger_type.strings.actors}} or their next opponent. Until the {{trigger.trigger_type.strings.action_noun}} occurs, <span class="site-brand">if.then.fund</span> won't reveal to anyone what action you took. After the {{trigger.trigger_type.strings.action_noun}}, we’ll charge your card and split your contribution based on your instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
+    </small>
+  </div>
+
   <form id="pledge-info" onsubmit="return false;" style="margin-top: 2em; display: none">
     
     <input type="hidden" name="trigger" value="{{trigger.id}}"/>
@@ -535,6 +543,7 @@ function pledge_go(outcome_elem) {
 
   // Validation and show modal.
   update_start_next_state(true);
+  $('#pledge-about-site').hide();
   show_and_scroll('pledge-info')
 
   mixpanel.track("Pledge Begin", { 'trigger': {{trigger.id}}, 'outcome_index': $(outcome_elem).attr('data-index') });
@@ -622,7 +631,9 @@ function do_pledge_start_next() {
 }
 
 function do_pledge_start_cancel() {
-  $('#pledge-info').fadeOut();
+  $('#pledge-info').fadeOut(function() {
+    $('#pledge-about-site').show();
+  });
   smooth_scroll_to($('body'));
 }
 
