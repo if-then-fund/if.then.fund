@@ -46,7 +46,7 @@ def create_trigger_from_bill(bill_id, chamber):
 	# create object
 	t = Trigger()
 	t.key = "usbill:" + bill_id + ":" + chamber
-	t.title = chamber_name + " Vote on " + bill['title']
+	t.title = (chamber_name + " Vote on " + bill['title'])[0:200]
 	t.owner = None
 	t.trigger_type = trigger_type
 
