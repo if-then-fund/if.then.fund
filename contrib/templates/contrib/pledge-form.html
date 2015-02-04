@@ -452,7 +452,7 @@ function pledge_init() {
     $('#billingCCCVC').val('000')
   }
 
-  mixpanel.track("Pledge Form Shown", { 'trigger': {{trigger.id}} });
+  mixpanel.track("Pledge Form Shown", { 'trigger': {{trigger.id}}, 'funnelstate': 1 });
 }
 
 function setPledgeDefaults(pledge_defaults) {
@@ -626,8 +626,9 @@ function do_pledge_start_next() {
     show_and_scroll('pledge-login');
   } else {
     // The user is logged in, so show the contributor panel.
-    do_pledge_login_next_success();
+    do_pledge_login_next_success('already_logged_in');
   }
+  mixpanel.track("Pledge Amount Entered", { 'trigger': {{trigger.id}}, 'amount': get_contribution_amount() });
 }
 
 function do_pledge_start_cancel() {
@@ -674,7 +675,7 @@ function do_pledge_login_next() {
         setPledgeDefaults(response);
 
         // Move to the next tab.
-        do_pledge_login_next_success();
+        do_pledge_login_next_success('login');
       }
     })
 
@@ -697,16 +698,17 @@ function do_pledge_login_next() {
             return;
         }
 
-        do_pledge_login_next_success();
+        do_pledge_login_next_success('anonymous');
       }
     })
   }
 }
 
-function do_pledge_login_next_success() {
+function do_pledge_login_next_success(how) {
   $('#pledge-login input').prop('readonly', true);
   $('#pledge-login .buttons').hide();
   show_and_scroll('pledge-contributor');
+  mixpanel.track("Pledge Contributor Form Shown", { 'trigger': {{trigger.id}}, 'loginMethod': how });
 }
 
 function do_pledge_login_cancel() {
