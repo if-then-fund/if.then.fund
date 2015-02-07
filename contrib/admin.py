@@ -86,7 +86,7 @@ class PledgeAdmin(admin.ModelAdmin):
     list_display = ['id', 'status', 'trigger', 'user_or_email', 'amount', 'created']
     readonly_fields = ['user', 'trigger', 'amount', 'algorithm'] # amount is read-only because a total is cached in the Trigger
     def user_or_email(self, obj):
-        return obj.user if obj.user else obj.email
+        return obj.user if obj.user else (obj.email + " (?)")
     user_or_email.short_description = 'User or Unverified Email'
 
 class CancelledPledgeAdmin(admin.ModelAdmin):
