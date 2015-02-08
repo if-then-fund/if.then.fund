@@ -92,6 +92,16 @@ class Trigger(models.Model):
 		# to campaigns, as well as in emails to users with links back to the site.
 		return settings.SITE_ROOT_URL + ("/a/%d" % self.id)
 
+	def get_minimum_pledge(self):
+		alg = Pledge.current_algorithm()
+		m1 = alg['min_contrib']
+		m2 = 0
+		if 'max_split' in self.extra:
+			# The minimum pledge is one cent to all possible recipients, plus fees.
+			m2 = decimal.Decimal('0.01') * self.extra['max_split'] * (1 + alg['fees_percent']) + alg['fees_fixed']
+			m2 = m2.quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_UP)
+		return max(m1, m2)
+
 	# Execute.
 	@transaction.atomic
 	def execute(self, action_time, actor_outcomes, description, description_format, extra):

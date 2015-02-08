@@ -83,6 +83,7 @@ def trigger(request, id, slug):
 		"execution": te,
 		"outcomes": outcomes,
 		"alg": Pledge.current_algorithm(),
+		"min_contrib": trigger.get_minimum_pledge(),
 		
 		"actions": actions,
 		"by_incumb_chlngr": by_incumb_chlngr,
@@ -283,7 +284,7 @@ def create_pledge(request):
 		raise Exception("algorithm is out of range")
 	if not (0 <= p.desired_outcome < len(p.trigger.outcomes)):
 		raise Exception("desired_outcome is out of range")
-	if not (Pledge.current_algorithm()["min_contrib"] <= p.amount <= Pledge.current_algorithm()["max_contrib"]):
+	if not (p.trigger.get_minimum_pledge() <= p.amount <= Pledge.current_algorithm()["max_contrib"]):
 		raise Exception("amount is out of range")
 	if p.incumb_challgr not in (-1, 0, 1):
 		raise Exception("incumb_challgr is out of range")
