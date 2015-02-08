@@ -131,7 +131,7 @@
 
           <div id="pledge-amount" class="input-group">
             <div class="input-group-addon">$</div>
-            <input class="form-control focus-on-shown" type="text" value="5.00" pattern="^([0-9]+(,[0-9]{3})*)?(\.[0-9]{0,2})?$" onkeyup="update_start_next_state()" onchange="update_start_next_state()">
+            <input class="form-control focus-on-shown" type="text" value="{{suggested_pledge|floatformat:2}}" pattern="^([0-9]+(,[0-9]{3})*)?(\.[0-9]{0,2})?$" onkeyup="update_start_next_state()" onchange="update_start_next_state()">
           </div>
 
           <div id="advanced-filters" style="display: none" class="panel panel-default">
@@ -386,11 +386,14 @@ function pledge_init() {
   }
 
   // Set some defaults based on the user's last pledge.
+  var suggested_pledge = {{suggested_pledge}};
   if (the_page && the_page.pledge_defaults) {
     // First set defaults for the fields that are displayed prior to the option to login.
 
-    if (the_page.pledge_defaults['amount'])
+    if (the_page.pledge_defaults['amount']) {
       $('#pledge-amount input').val(the_page.pledge_defaults['amount'].toFixed(2));
+      suggested_pledge = null; // don't record in mixpanel
+    }
 
     if (the_page.pledge_defaults.incumb_challgr) {
       $('#filterIncumbents, #filterChallengers').prop('checked', false);
@@ -452,7 +455,7 @@ function pledge_init() {
     $('#billingCCCVC').val('000')
   }
 
-  mixpanel.track("Pledge Form Shown", { 'trigger': {{trigger.id}}, 'funnelstate': 1 });
+  mixpanel.track("Pledge Form Shown", { 'trigger': {{trigger.id}}, 'funnelstate': 1, 'suggested_pledge': suggested_pledge });
 }
 
 function setPledgeDefaults(pledge_defaults) {

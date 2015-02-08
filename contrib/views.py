@@ -16,6 +16,7 @@ from contrib.bizlogic import HumanReadableValidationError, run_authorization_tes
 
 import copy
 import rtyaml
+import random
 
 @anonymous_view
 def trigger(request, id, slug):
@@ -77,13 +78,15 @@ def trigger(request, id, slug):
 		avg_pledge = te.total_contributions / te.pledge_count_with_contribs
 		avg_contrib = te.total_contributions / num_contribs
 
+	min_contrib = trigger.get_minimum_pledge()
 
 	return render(request, "contrib/trigger.html", {
 		"trigger": trigger,
 		"execution": te,
 		"outcomes": outcomes,
 		"alg": Pledge.current_algorithm(),
-		"min_contrib": trigger.get_minimum_pledge(),
+		"min_contrib": min_contrib,
+		"suggested_pledge": random.choice([x for x in [2.5, 5, 10, 15, min_contrib] if x >= min_contrib]),
 		
 		"actions": actions,
 		"by_incumb_chlngr": by_incumb_chlngr,
