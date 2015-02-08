@@ -71,7 +71,7 @@ class PledgeTestCase(TestCase):
 
 
 class ExecutionTestCase(TestCase):
-	ACTORS_PER_PARTY = 5
+	ACTORS_PER_PARTY = 20
 
 	def setUp(self):
 		# Replace the Democracy Engine API with our dummy class
@@ -205,37 +205,47 @@ class ExecutionTestCase(TestCase):
 
 	def test_pledge_execution_a(self):
 		self._pledge_execution(desired_outcome=0, amount=10, incumb_challgr=0, filter_party=None,
-			expected_contrib_amount=Decimal('1.28'))
+			expected_contrib_amount=Decimal('0.33'))
 
 	def test_pledge_execution_b(self):
 		self._pledge_execution(desired_outcome=1, amount=10, incumb_challgr=0, filter_party=None,
-			expected_contrib_amount=Decimal('1.28'))
+			expected_contrib_amount=Decimal('0.33'))
 
 	def test_pledge_execution_c(self):
 		self._pledge_execution(desired_outcome=0, amount=10, incumb_challgr=1, filter_party=None,
-			expected_contrib_amount=Decimal('2.24'))
+			expected_contrib_amount=Decimal('0.69'))
 
 	def test_pledge_execution_c(self):
 		self._pledge_execution(desired_outcome=0, amount=10, incumb_challgr=-1, filter_party=None,
-			expected_contrib_amount=Decimal('2.99'))
+			expected_contrib_amount=Decimal('0.69'))
 
 	def test_pledge_execution_d(self):
 		self._pledge_execution(desired_outcome=0, amount=10, incumb_challgr=0, filter_party=ActorParty.Democratic,
-			expected_contrib_amount=Decimal('2.24'))
+			expected_contrib_amount=Decimal('0.64'))
 
 	def test_pledge_execution_e(self):
 		self._pledge_execution(desired_outcome=1, amount=10, incumb_challgr=0, filter_party=ActorParty.Democratic,
-			expected_contrib_amount=Decimal('2.99'))
+			expected_contrib_amount=Decimal('0.69'))
 
 	def test_pledge_execution_f(self):
 		self._pledge_execution(desired_outcome=0, amount=10, incumb_challgr=1, filter_party=ActorParty.Democratic,
-			expected_contrib_amount=Decimal('4.49'))
+			expected_contrib_amount=Decimal('1.28'))
 
 	def test_pledge_execution_g(self):
 		self._pledge_execution(desired_outcome=0, amount=10, incumb_challgr=-1, filter_party=ActorParty.Democratic,
-			expected_contrib_amount=Decimal('4.49'))
+			expected_contrib_amount=Decimal('1.28'))
 
-	def _pledge_execution(self, desired_outcome, amount, incumb_challgr, filter_party, expected_contrib_amount):
+	# contrib is too small
+	def test_pledge_execution_failure_a(self):
+		self._pledge_execution(desired_outcome=0, amount=decimal.Decimal('.1'), incumb_challgr=0, filter_party=None, expected_contrib_amount=None,
+			expected_problem=PledgeExecutionProblem.TransactionFailed, expected_problem_string="The amount is less than the minimum fees.")
+	def test_pledge_execution_failure_b(self):
+		self._pledge_execution(desired_outcome=0, amount=decimal.Decimal('.3'), incumb_challgr=0, filter_party=None, expected_contrib_amount=None,
+			expected_problem=PledgeExecutionProblem.TransactionFailed, expected_problem_string="The amount is not enough to divide evenly across 27 recipients.")
+
+	def _pledge_execution(self, desired_outcome, amount, incumb_challgr, filter_party, expected_contrib_amount,
+		expected_problem=None, expected_problem_string=None):
+
 		# Create a user.
 		user = User.objects.create(email="test@example.com")
 
@@ -286,6 +296,21 @@ class ExecutionTestCase(TestCase):
 
 		# Test general properties.
 		self.assertEqual(p.execution.trigger_execution, t.execution)
+
+		# Testing a case where transaction should fail.
+		if expected_problem:
+			self.assertEqual(p.execution.problem, expected_problem)
+			self.assertEqual(p.execution.extra['exception'], expected_problem_string)
+			self.assertEqual(p.execution.fees, 0)
+			self.assertEqual(p.execution.charged, 0)
+			self.assertEqual(p.execution.contributions.count(), 0)
+			self.assertEqual(p.trigger.execution.pledge_count, 1)
+			self.assertEqual(p.trigger.execution.pledge_count_with_contribs, 0)
+			self.assertEqual(p.trigger.execution.num_contributions, 0)
+			self.assertEqual(p.trigger.execution.total_contributions, 0)
+			return
+
+		# Test more general properties.
 		self.assertEqual(p.execution.problem, PledgeExecutionProblem.NoProblem)
 
 		# Test that every Action lead to a Contribution.

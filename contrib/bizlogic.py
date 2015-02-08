@@ -177,6 +177,8 @@ def compute_charge(pledge, recipients):
 	fees_fixed = Pledge.current_algorithm()['fees_fixed']
 	fees_percent = Pledge.current_algorithm()['fees_percent']
 	max_contrib = (pledge.amount - fees_fixed) / (1 + fees_percent)
+	if max_contrib < decimal.Decimal('0.01'):
+		raise HumanReadableValidationError("The amount is less than the minimum fees.")
 
 	# If we divide that evenly among the recipients, what is the ideal contribution?
 	# Round it down to the nearest cent because we can only make whole-cent contributions
@@ -188,7 +190,7 @@ def compute_charge(pledge, recipients):
 		# This should never happen because our minimum pledge is
 		# more than one cent for each potential recipient for a
 		# Trigger.
-		raise ValueError("Pledge amount is too small to distribute.")
+		raise HumanReadableValidationError("The amount is not enough to divide evenly across %d recipients." % len(recipients))
 
 	# Make a list of line items.
 	recip_contribs = [(recipient, action, recip_contrib) for (recipient, action) in recipients]

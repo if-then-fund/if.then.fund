@@ -581,7 +581,7 @@ class Pledge(models.Model):
 			pe.fees = fees
 			pe.extra = {
 				"donation": de_don, # donation record, which refers to transactions
-				"exception": repr(exception), # 
+				"exception": exception, 
 			}
 			pe.save()
 
