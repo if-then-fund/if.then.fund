@@ -78,15 +78,13 @@ def trigger(request, id, slug):
 		avg_pledge = te.total_contributions / te.pledge_count_with_contribs
 		avg_contrib = te.total_contributions / num_contribs
 
-	min_contrib = trigger.get_minimum_pledge()
-
 	return render(request, "contrib/trigger.html", {
 		"trigger": trigger,
 		"execution": te,
 		"outcomes": outcomes,
 		"alg": Pledge.current_algorithm(),
-		"min_contrib": min_contrib,
-		"suggested_pledge": random.choice([x for x in [2.5, 5, 10, 15, min_contrib] if x >= min_contrib]),
+		"min_contrib": trigger.get_minimum_pledge(),
+		"suggested_pledge": random.choice([5, 10]),
 		
 		"actions": actions,
 		"by_incumb_chlngr": by_incumb_chlngr,
