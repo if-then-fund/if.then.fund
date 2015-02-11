@@ -7,6 +7,11 @@ class SimulationTest(StaticLiveServerTestCase):
 	fixtures = ['fixtures/actor.yaml', 'fixtures/recipient.yaml']
 
 	def setUp(self):
+		# Override the suggested pledge amount so we have a known value
+		# to test against.
+		import contrib.views
+		contrib.views.SUGGESTED_PLEDGE_AMOUNT = 5
+
 		# Replace the Democracy Engine API with our dummy class
 		# so we don't make time consuming remote API calls.
 		import contrib.bizlogic

@@ -18,6 +18,9 @@ import copy
 import rtyaml
 import random
 
+# Used by unit tests to override the suggested pledge.
+SUGGESTED_PLEDGE_AMOUNT = None
+
 @anonymous_view
 def trigger(request, id, slug):
 	# get the object
@@ -84,7 +87,7 @@ def trigger(request, id, slug):
 		"outcomes": outcomes,
 		"alg": Pledge.current_algorithm(),
 		"min_contrib": trigger.get_minimum_pledge(),
-		"suggested_pledge": random.choice([5, 10]),
+		"suggested_pledge": SUGGESTED_PLEDGE_AMOUNT or random.choice([5, 10]),
 		
 		"actions": actions,
 		"by_incumb_chlngr": by_incumb_chlngr,
