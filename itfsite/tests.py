@@ -93,6 +93,10 @@ class SimulationTest(StaticLiveServerTestCase):
 		self.browser.find_element_by_css_selector("#billing-next").click()
 		time.sleep(1)
 
+		# An email confirmation was sent.
+		p = t.pledges.get(email=email)
+		self.assertFalse(p.should_retry_email_confirmation())
+
 		# Get the email confirmation URL that we need to hit to confirm the user.
 		msg = self.pop_email().body
 		m = re.search(r"We need to confirm your email address first. .*(http:\S*/ev/key/\S*/)", msg, re.S)

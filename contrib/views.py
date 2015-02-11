@@ -350,24 +350,7 @@ def create_pledge(request):
 	if not p.user:
 		# The pledge needs to get confirmation of the user's email address,
 		# which will lead to account creation.
-
-		def mailer(context):
-			from htmlemailer import send_mail
-			send_mail(
-				"contrib/mail/confirm_email",
-				settings.DEFAULT_FROM_EMAIL,
-				[context['email']],
-				{
-					"confirmation_url": context['confirmation_url'],
-					"pledge": p,
-				})
-
-		from email_confirm_la.models import EmailConfirmation
-		ec = EmailConfirmation.objects.set_email_for_object(
-			email=p.email,
-			content_object=p,
-			mailer=mailer,
-		)
+		p.send_email_confirmation(first_try=True)
 
 		# And in order for the user to be able to view the pledge on the
 		# next page, prior to email confirmation, we'll need to set a token

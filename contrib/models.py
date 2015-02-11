@@ -486,6 +486,53 @@ class Pledge(models.Model):
 				   party_filter, noun, verb, antidesired_outcome_label)
 
 
+	def send_email_confirmation(self, first_try):
+		# Use a custom mailer function so we can send through our
+		# HTML emailer app.
+		def mailer(context):
+			from htmlemailer import send_mail
+			send_mail(
+				"contrib/mail/confirm_email",
+				settings.DEFAULT_FROM_EMAIL,
+				[context['email']],
+				{
+					"confirmation_url": context['confirmation_url'],
+					"pledge": self,
+					"first_try": first_try,
+				})
+
+		from email_confirm_la.models import EmailConfirmation
+		if first_try:
+			# Make an EmailConfirmation object and send out the email.
+			ec = EmailConfirmation.objects.set_email_for_object(
+				email=self.email,
+				content_object=self,
+				mailer=mailer,
+			)
+		else:
+			# Get an existing EmailConfirmation object and re-send the email.
+			ec = EmailConfirmation.objects.get_for_object(
+				email=self.email,
+				content_object=self
+			)
+			ec.send(None, mailer=mailer)			
+
+	def should_retry_email_confirmation(self):
+		from datetime import timedelta
+		from django.utils import timezone
+		from email_confirm_la.models import EmailConfirmation
+		ec = EmailConfirmation.objects.get_for_object(
+			email=self.email,
+			content_object=self
+		)
+		if ec.send_count >= 3:
+			# Already sent three emails, stop.
+			return False
+		if ec.send_at < timezone.now() - timedelta(days=1):
+			# More than a day has passed since the last email, so send again.
+			return True
+		return False
+
 	@transaction.atomic
 	def confirm_email(self, user):
 		# Can't confirm twice, but this might be called twice. In order
