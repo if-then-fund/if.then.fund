@@ -1,5 +1,6 @@
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 import selenium.webdriver
+import re
 import time
 from decimal import Decimal
 
@@ -11,6 +12,10 @@ class SimulationTest(StaticLiveServerTestCase):
 		# to test against.
 		import contrib.views
 		contrib.views.SUGGESTED_PLEDGE_AMOUNT = 5
+
+		# Override the email backend so that we can capture it.
+		from django.conf import settings
+		settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
 		# Replace the Democracy Engine API with our dummy class
 		# so we don't make time consuming remote API calls.
@@ -28,6 +33,14 @@ class SimulationTest(StaticLiveServerTestCase):
 	def build_test_url(self, path):
 		from urllib.parse import urljoin
 		return urljoin(self.live_server_url, path)
+
+	def pop_email(self):
+		import django.core.mail
+		try:
+			msg = django.core.mail.outbox.pop()
+		except:
+			raise ValueError("No email was sent.")
+		return msg
 
 	def test_test(self):
 		# Create a Trigger.
@@ -80,9 +93,13 @@ class SimulationTest(StaticLiveServerTestCase):
 		self.browser.find_element_by_css_selector("#billing-next").click()
 		time.sleep(1)
 
-		# Confirm the user.
-		from email_confirm_la.models import EmailConfirmation
-		conf_url = EmailConfirmation.objects.get(email=email, is_verified=False).get_confirmation_url()
+		# Get the email confirmation URL that we need to hit to confirm the user.
+		msg = self.pop_email().body
+		m = re.search(r"We need to confirm your email address first. .*(http:\S*/ev/key/\S*/)", msg, re.S)
+		self.assertTrue(m)
+		conf_url = m.group(1)
+		#from email_confirm_la.models import EmailConfirmation
+		#conf_url = EmailConfirmation.objects.get(email=email, is_verified=False).get_confirmation_url()
 		self.assertTrue(conf_url.startswith("http://127.0.0.1/"))
 		conf_url = conf_url.replace("http://127.0.0.1/", "/")
 		self.browser.get(self.build_test_url(conf_url))
