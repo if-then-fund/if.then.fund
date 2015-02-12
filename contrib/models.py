@@ -521,10 +521,14 @@ class Pledge(models.Model):
 		from datetime import timedelta
 		from django.utils import timezone
 		from email_confirm_la.models import EmailConfirmation
-		ec = EmailConfirmation.objects.get_for_object(
-			email=self.email,
-			content_object=self
-		)
+		try:
+			ec = EmailConfirmation.objects.get_for_object(
+				email=self.email,
+				content_object=self
+			)
+		except EmailConfirmation.DoesNotExist as e:
+			# The record expired. No need to send again.
+			return False
 		if ec.send_count >= 3:
 			# Already sent three emails, stop.
 			return False
