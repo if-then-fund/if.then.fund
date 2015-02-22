@@ -473,7 +473,7 @@ class Pledge(models.Model):
 		elif party_filter == "":
 			# goes to incumbents and challengers, no party filter
 			if self.status != PledgeStatus.Executed:
-				count = "all %s" % self.trigger.extra['max_split']
+				count = "up to %d" % self.trigger.extra['max_split']
 			else:
 				count = str(self.execution.contributions.count())
 			return "%s %s, each getting a part of your contribution if they %s %s, but if they %s %s their part of your contribution will go to their next general election opponent" \

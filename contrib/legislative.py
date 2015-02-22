@@ -11,8 +11,8 @@ def create_trigger_from_bill(bill_id, chamber):
 	if not bill_type: raise ValueError("Not a bill ID, e.g. hr1234-114.")
 
 	# validate chamber
-	if chamber not in ('s', 'h'): raise ValueError("Chamber must be one of 'h' or 's'.")
-	chamber_name = { 's': 'Senate', 'h': 'House' }[chamber]
+	if chamber not in ('s', 'h', 'x'): raise ValueError("Chamber must be one of 'h' or 's'.")
+	chamber_name = { 's': 'Senate', 'h': 'House', 'x': 'Congress' }[chamber]
 
 	# get bill data from GovTrack
 	from contrib.utils import query_json_api
@@ -35,8 +35,8 @@ def create_trigger_from_bill(bill_id, chamber):
 		key = "congress_floorvote_%s" % chamber,
 		defaults = {
 			"strings": {
-			"actor": { 's': 'senator', 'h': 'representative' }[chamber],
-			"actors": { 's': 'senators', 'h': 'representatives' }[chamber],
+			"actor": { 's': 'senator', 'h': 'representative', 'x': 'member of Congress' }[chamber],
+			"actors": { 's': 'senators', 'h': 'representatives', 'x': 'members of Congress' }[chamber],
 			"action_noun": "vote",
 			"action_vb_inf": "vote",
 			"action_vb_pres_s": "votes",
@@ -46,7 +46,7 @@ def create_trigger_from_bill(bill_id, chamber):
 	# create object
 	t = Trigger()
 	t.key = "usbill:" + bill_id + ":" + chamber
-	t.title = (chamber_name + " Vote on " + bill['title'])[0:200]
+	t.title = bill['title'][0:200]
 	t.owner = None
 	t.trigger_type = trigger_type
 
@@ -63,7 +63,7 @@ def create_trigger_from_bill(bill_id, chamber):
 	]
 
 	t.extra = {
-		"max_split":  { 's': 100, 'h': 435 }[chamber],
+		"max_split":  { 's': 100, 'h': 435, 'x': 435 }[chamber],
 		"type": "usbill",
 		"bill_id": bill_id,
 		"chamber": chamber,

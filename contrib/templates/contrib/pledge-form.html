@@ -609,7 +609,7 @@ function update_start_next_state(no_popover) {
     else if (ic == -1)
       who = "the " + party + " opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
     else if (party == "")
-      who = "all {{trigger.extra.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.trigger_type.strings.action_vb_inf|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + ", their part of your contribution will go to their next general election opponent"
+      who = "up to {{trigger.extra.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.trigger_type.strings.action_vb_inf|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + ", their part of your contribution will go to their next general election opponent"
     else
       who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + party + " opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
 
