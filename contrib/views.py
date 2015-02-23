@@ -10,7 +10,7 @@ from email_confirm_la.signals import post_email_confirm
 
 from twostream.decorators import anonymous_view, user_view_for
 
-from contrib.models import Trigger, TriggerExecution, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty, ContributionAggregate
+from contrib.models import Trigger, TriggerStatus, TriggerExecution, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty, ContributionAggregate
 from contrib.utils import json_response
 from contrib.bizlogic import HumanReadableValidationError, run_authorization_test
 
@@ -113,16 +113,31 @@ def trigger_user_view(request, id, slug):
 			id__in=request.session.get('anon_pledge_created')).first()
 
 	if p:
-		# The user already made a pledge on this.
+		# The user already made a pledge on this. Render another template
+		# to show what the user's pledge was (and how it was executed, if
+		# it was.)
 		import django.template
 		template = django.template.loader.get_template("contrib/contrib.html")
 		pe = PledgeExecution.objects.filter(pledge=p).first()
 		contribs = sorted(Contribution.objects.filter(pledge_execution=pe).select_related("action"), key=lambda c : (c.recipient.is_challenger, c.action.name_sort))
+
+		# Also include recommendations for further actions.
+		recs = []
+		for t in Trigger.objects.filter(status=TriggerStatus.Open).order_by('-total_pledged'):
+			# Not something the user already took action on (including this pledge!).
+			if p.user is not None and t.pledges.filter(user=p.user).exists(): continue
+			if p.email is not None and t.pledges.filter(email=p.email).exists(): continue
+			# Get up to three.
+			recs.append(t)
+			if len(recs) == 3:
+				break
+
 		ret["pledge_made"] = template.render(django.template.Context({
 			"trigger": trigger,
 			"pledge": p,
 			"execution": pe,
 			"contribs": contribs,
+			"recommendations": recs,
 		}))
 
 	return ret

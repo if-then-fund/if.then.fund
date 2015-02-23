@@ -70,8 +70,7 @@
 	{% endif %}
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
-	<hr>
-	<p style="text-align: right; margin-bottom: 0"><a href="#" onclick="return cancel_pledge()" class="btn {% if not pledge.user %}btn-default{% else %}btn-danger{% endif %}">Cancel Contribution</a></p>
+	<p style="text-align: right; margin-bottom: 0"><a href="#" onclick="return cancel_pledge()" class="btn btn-default btn-sm">Cancel Contribution</a></p>
 	{% endif %}
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' and pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
@@ -119,6 +118,20 @@
 
 {% endif %}
 </div>
+
+{% if not pledge.execution and recommendations|length > 0 %}
+<h2 style="margin: 2em 0 0 0">You might be interested in...</h2>
+<div class="row">
+	{% for t in recommendations %}
+		<div class="col-md-4">
+			<h3><a href="{{t.get_absolute_url}}" style="border: none">{{t.title}}</a></h3>
+			{{trigger.description|render_text:trigger.description_format|truncatewords_html:25}}
+			<p>{{t.total_pledged|currency}} committed so far</p>
+			<p><button onclick="window.location='{{t.get_absolute_url|escapejs}}'" class="btn btn-success">Take Action &raquo;</button></p>
+		</div>
+	{% endfor %}
+</div>
+{% endif %}
 
 
 <script>
