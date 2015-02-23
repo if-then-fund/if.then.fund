@@ -123,7 +123,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		# the user sees an explanation of the pledge.
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You have scheduled a campaign contribution of $12.00 for this vote. It will be split among all 435 representatives, each getting a part of your contribution if they vote Yes on S. 1, but if they vote No on S. 1 their part of your contribution will go to their next general election opponent.")
+			"You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 435 representatives, each getting a part of your contribution if they vote Yes on S. 1, but if they vote No on S. 1 their part of your contribution will go to their next general election opponent.")
 
 		# Check the trigger.
 		t = Trigger.objects.get(id=t.id) # refresh
@@ -182,7 +182,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		# the user sees an explanation of the pledge.
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You have scheduled a campaign contribution of $12.00 for this vote. It will be split among all 100 senators, each getting a part of your contribution if they vote No on S. 1, but if they vote Yes on S. 1 their part of your contribution will go to their next general election opponent.")
+			"You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote No on S. 1, but if they vote Yes on S. 1 their part of your contribution will go to their next general election opponent.")
 
 		# Check the trigger.
 		t = Trigger.objects.get(id=t.id) # refresh
@@ -245,7 +245,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		# the user sees an explanation of the pledge.
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You have scheduled a campaign contribution of $5.00 for this vote. It will be split among all 100 senators, each getting a part of your contribution if they vote No on H.R. 30, but if they vote Yes on H.R. 30 their part of your contribution will go to their next general election opponent.")
+			"You have scheduled a campaign contribution of $5.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote No on H.R. 30, but if they vote Yes on H.R. 30 their part of your contribution will go to their next general election opponent.")
 
 		# Log out and try again --- this time it should report that a pledge has already been made.
 

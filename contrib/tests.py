@@ -52,7 +52,7 @@ class PledgeTestCase(TestCase):
 		self.assertEqual(p.targets_summary, expected_value)
 
 	def test_pledge_simple(self):
-		self._test_pledge(0, 0, None, "all 100 ACTORS, each getting a part of your contribution if they ACT Yes, but if they ACT No their part of your contribution will go to their next general election opponent")
+		self._test_pledge(0, 0, None, "up to 100 ACTORS, each getting a part of your contribution if they ACT Yes, but if they ACT No their part of your contribution will go to their next general election opponent")
 
 	def test_pledge_keepemin(self):
 		self._test_pledge(0, 1, None, "ACTORS who ACT Yes")
