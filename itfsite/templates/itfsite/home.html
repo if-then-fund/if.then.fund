@@ -4,6 +4,8 @@
 
 {% block head %}
 <style>
+#action-summary { width: auto; }
+#action-summary td { border: none; padding-bottom: 0; }
 </style>
 {% endblock %}
 
@@ -18,8 +20,14 @@
 
 <h2>Your Contributions</h2>
 
-<p>Scheduled Contributions: ${{total_pledged|floatformat:2}}</p>
-<p>Past Contributions: ${{total_contribs|floatformat:2}}</p>
+<h3>Summary</h3>
+
+<table id="action-summary" class="table">
+<tr><td>Scheduled Contributions:</td> <td>${{total_pledged|floatformat:2}}</td></tr>
+<tr><td>Past Contributions:</td> <td>${{total_contribs|floatformat:2}} {% if total_contribs > 0 %}(<a href="{% url 'user_contrib_details' %}">view details</a>{% endif %})</td></tr>
+</table>
+
+<h3>History</h3>
 
 {% for pledge in pledges %}
 	{% if forloop.first %}

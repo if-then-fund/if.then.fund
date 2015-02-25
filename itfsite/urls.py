@@ -7,6 +7,7 @@ urlpatterns = patterns('',
 	url(r'^(about|about/how-it-works|about/theory-of-change|about/legal|privacy|terms|open)$', 'itfsite.views.simplepage', name='simplepage'),
 	url(r'^accounts/welcome$', 'itfsite.accounts.welcome', name='welcome'),
 	url(r'^home$', 'itfsite.views.user_home', name='home'),
+	url(r'^home/contributions$', 'itfsite.views.user_contribution_details', name='user_contrib_details'),
 
 	url(r'^', include('contrib.urls')),
 
