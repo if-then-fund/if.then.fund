@@ -11,8 +11,6 @@
 <meta name="twitter:card" content="summary" />
 
 <style>
-@import url(https://fonts.googleapis.com/css?family=Roboto+Condensed:700);
-
 .navbar {
 	background: none;
 	margin-bottom: 0;
@@ -34,116 +32,110 @@
 		}
 
 #banner {
+	background-color: black;
+	margin-bottom: 50px;
+	padding-bottom: 50px;
+	cursor: default;
 	background-repeat: no-repeat;
 	background-size: 100%;
 	background-image: url('/static/img/capitol.jpg');
-	background-position: 0 100%;
-	margin-bottom: 50px;
-	cursor: default;
 }
-	@media screen and (max-width: 767px) {
-		#banner {
-			background-size: auto 100%;
-			background-position: 75% 0;
-			margin-bottom: 25px;
-		}
-	}
-
 	#banner > h1, #banner > #deck {
-		margin-left: 10vw;
-		margin-right: 8vw;
+		margin-left: 5vw;
+		margin-right: 4vw;
 	}
 
 	h1 {
 		margin-top: .5em;
 		margin-bottom: 0;
 
-		background: rgba(40,40,40, .6) url(/static/branding/icons/favicon-96x96.png) 7px 50% no-repeat;
-		background-size: auto 38px;
+		background: url(/static/branding/icons/favicon-96x96.png) 7px 50% no-repeat;
+		background-size: auto 100%;
 		padding-left: 55px;
-
-		color: #99c014;
-		font-family: 'Roboto Condensed', sans-serif;
-		font-weight: bold;
-		padding-top: .1em;
-		padding-bottom: .05em;
-		font-size: 40px;
+		padding-left: 12vw;
+		padding-top: 20px;
+		padding-top: 2vw;
+		height: 100px;
+		height: 10vw;
 	}
+		h1 .p1, h1 .p2 {
+			height: 25px;
+			height: 3.75vw;
+			background: url(/static/branding/homepage-title.png) no-repeat;
+			background-size: auto 100%;
+		}
+		h1 .p1 {
+			width: 17px;
+			width: 2.6vw;
+		}
+		h1 .p2 {
+			background-position: -17px 0;
+			background-position: -2.6vw 0;
+			width: 100px;
+			width: 15.5vw;
+		}
 
 	#deck {
 		margin-top: 80px;
-		margin-bottom: 80px;
-		background-color: rgba(200,200,200, .83);
+		margin-bottom: 40px;
+		background-color: rgba(200,200,200, .4);
+		border-radius: 10px;
 		padding: 10px 20px;
 		font-size: 16px;
 		line-height: 150%;
 		font-family: 'Roboto Slab', serif;
-		color: black;
-	}
-
-	@media screen and (min-width: 640px) and (max-width: 1200px) {
-		h1 {
-			font-size: 60px;
-			font-size: 7vw;
-			background-position: 1.5vw 50%;
-			background-size: auto 55px;
-			background-size: auto 7vw;
-			padding-left: 75px;
-			padding-left: 10vw;
-		}
-		#deck {
-		}
-	}
-	@media screen and (min-width: 1200px) {
-		h1 {
-			margin-top: 10vw;
-			font-size: 100px;
-			background-position: 1.5vw 45%;
-			background-size: auto 90px;
-			padding-left: 135px;
-		}
-		#deck {
-			font-size: 24px;
-		}
-	}
-
-	#scroll-me-down {
-		display: block;
-		margin: -60px auto 20px auto;
-		width: 8em;
-		padding: .5em;
-		height: 40px;
-		border: none;
-		text-align: center;
-		background-color: #353;
 		color: white;
-		font-family: 'Roboto Condensed', sans-serif;
 	}
 
-.expl {
-	margin: 2em 0 1em 0;
-	color: #555;
-}
-
-.trigger-list {
-	list-style: none;
-	padding: 0;
-}
-	.trigger-list li {
-		margin-bottom: 1em;
-	}
-	.trigger-list li a {
-		font-family: 'Roboto Slab', serif;
-		color: #A53;
-		font-weight: bold;
-		border: none;
-	}
-		.trigger-list li a:hover {
-			text-decoration: underline;
+	@media screen and (max-width: 768px) {
+		h1 {
+			padding-top: 0;
+			padding-left: 14vw;
 		}
-	.trigger-list li span {
-		font-style: italic;
 	}
+
+h3 {
+	color: white;
+	margin-bottom: 1em;
+}
+.expl {
+	margin-bottom: 1em;
+	color: #EEE;
+}
+
+.trigger-bubble {
+	border-radius: 10px;
+	border: 2px solid rgba(30,30,30,.4);
+	background: white;
+	padding: 10px;
+	margin-bottom: 1em;
+}
+	.trigger-title {
+		padding-bottom: 6px;
+		border-bottom: 1px solid #494;
+		margin-bottom: 8px;
+		line-height: 132%;
+	}
+		.trigger-title a {
+			font-size: 120%;
+			font-weight: bold;
+			border: none;
+		}
+	.trigger-description {
+		font-size: 90%;
+	}
+		.trigger-description p {
+			line-height: 130%;
+		}
+	.trigger-take-action {
+		margin-top: .75em;
+		text-align: right;
+	}
+		.trigger-take-action a {
+			font-weight: bold;
+			border: none;
+		}
+
 </style>
 {% endblock %}
 
@@ -153,60 +145,61 @@
 		{% include "navbar.html" %}
 
 		<h1>
-			<span>if<span class='p1'>.</span>then<span class='p2'>.</span>fund<span class='p3'></span></span>
+			<span class="site-brand p1">if</span><span class="site-brand p2">then.fund</span>
 		</h1>
 		<div id="deck">
 			Reshaping Congress by empowering <strong>small dollar donors</strong> to make contributions based on <strong>what politicians do</strong> — not what they promise.
 		</div>
-		<a id="scroll-me-down" style="display: none" href="#" onclick="smooth_scroll_to($('#homepage-body')); return false;">
-			↓ SCROLL ↓
-		</a>
-	</div>
-</div>
 
-
-<div id="homepage-body" class="container">
-	<div class="row">
-		{% if open_triggers|length > 0 %}
-		<div class="col-md-7">
-			<h3 class="invert"><span>Upcoming votes</span></h3>
-			<p class="expl">Make a contribution to senators, representatives, or their next opponents based on the outcome of one of these upcoming votes:</p>
-			<ul class="trigger-list">
-				{% for t in open_triggers %}
-					<li>
-						<div><a href="{{t.get_absolute_url}}">{{t.title}}</a></div>
-						<div>
-							<span>{{t.total_pledged|currency}} committed so far</span>
-							&mdash; <a href="{{t.get_absolute_url}}" style="text-decoration: underline">Take Action</a>
+		<div id="homepage-body" class="container">
+			<div class="col-xs-12">
+				{% if open_triggers|length > 0 %}
+				<h3>In Congress now...</h3>
+				<div class="row">
+					{% for t in open_triggers %}
+						{% if forloop.counter0|divisibleby:2 %}<div class="clearfix visible-sm-block"></div>{% endif %}
+						{% if forloop.counter0|divisibleby:3 %}<div class="clearfix visible-md-block"></div><div class="clearfix visible-lg-block"></div>{% endif %}
+						<div class="col-sm-6 col-md-4">
+							<div class="trigger-bubble">
+								<div class="trigger-title"><a href="{{t.get_absolute_url}}">{{t.title}}</a></div>
+								<div class="trigger-description">
+									{{t.description|render_text:t.description_format|truncatewords_html:15}}
+									<p>{{t.total_pledged|currency}} committed so far.</p>
+								</div>
+								<div class="trigger-take-action">
+									<a href="{{t.get_absolute_url}}">Take Action &raquo;</a>
+								</div>
+							</div>
 						</div>
-					</li>
-				{% endfor %}
-			</ul>
-		</div>
-		{% endif %}
-
-		{% if recent_executed_triggers|length > 0 %}
-		<div class="col-md-{% if open_triggers|length > 0 %}5{% else %}12{% endif %}">
-			<div class="{% if open_triggers|length > 0 %}col-md-left-border{% endif %}">
-				<div class="visible-xs visible-sm" style="height: 1em"> </div>
-				<h3 class="invert"><span>Recently</span></h3>
-				<p class="expl">Check out recent votes our users made campaign contributions about:</p>
-				<ul class="trigger-list">
-					{% for t in recent_executed_triggers %}
-						<li>
-							{{t.title}}
-							<br><span>
-							{% for outcome in t.execution.get_outcomes %}
-								{{outcome.label}}: {{outcome.contribs|currency}}
-								{% if not forloop.last %} | {% endif %}
-							{% endfor %}</span>
-							<br><a href="{{t.get_absolute_url}}">view details</a>
-						</li>
 					{% endfor %}
-				</ul>
+				</div>
+				{% endif %}
+
+				{% if recent_executed_triggers|length > 0 %}
+				<hr>
+				<h3>Recently</h3>
+				<p class="expl">Check out recent votes our users made campaign contributions about:</p>
+				<div class="row">
+					{% for t in recent_executed_triggers %}
+						<div class="col-sm-4 col-md-3">
+							<div class="trigger-bubble">
+								<div class="trigger-title"><a href="{{t.get_absolute_url}}">{{t.title}}</a></div>
+								<div class="trigger-description">
+									{{t.description|render_text:t.description_format|truncatewords_html:15}}
+									{% for outcome in t.execution.get_outcomes %}
+										<p>{{outcome.label}}: {{outcome.contribs|currency}}</p>
+									{% endfor %}</span>
+								</div>
+								<div class="trigger-take-action">
+									<a href="{{t.get_absolute_url}}">See Details &raquo;</a>
+								</div>
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+				{% endif %}
 			</div>
 		</div>
-		{% endif %}
 	</div>
 
 	<div>
@@ -224,21 +217,18 @@
 
 {% block scripts %}
 <style>
+@import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700);
 .splash-anim-bubble {
-	border: 1px solid #555;
-	border-radius: 15px;
-	background-color: #333;
-	padding: 7px 5px;
-	color: #99c014;
-	font-family: sans-serif;
+	color: #99dd33;
+	font-family: 'Yanone Kaffeesatz', sans-serif;
 	text-align: center;
 	line-height: 110%;
 	cursor: default;
 }
 .splash-anim-bubble span {
-	font-family: 'Roboto Condensed', sans-serif;
-	font-weight: bold;
-	font-size: 120%;
+}
+.splash-anim-line {
+	border-bottom: 1px solid #99dd33;	
 }
 </style>
 
@@ -250,77 +240,81 @@ $(function() {
 
 function start_splash_animation() {
 	// Get dimensions.
-	var total_width = $('h1').offset().left + $('h1').outerWidth() - $('h1 span').offset().left;
-	total_width *= 1.05;
-	var text_width = $('h1 span').outerWidth();
-	var dot_width = $('h1 .p1').width();
-	var p1width = .49 * (total_width - text_width); // first period
-	var p2width = .02 * (total_width - text_width); // second period
-	var p3width = .49 * (total_width - text_width); // after 'fund'
-	$('h1 .p1').animate({
-		paddingLeft: (p1width-dot_width)/2, paddingRight: (p1width-dot_width)/2,
-		opacity: .5 })
-	$('h1 .p2').animate({
-		paddingLeft: p2width/2, paddingRight: p2width/2,
-		opacity: .5
-		}, start_anims)
+
+	$('h1 .p1, h1 .p2').css({ position: 'relative' });
+	$('h1 .p1').animate({ top: -$('h1').height()/8 });
+	$('h1 .p2').animate({ top: $('h1').height()/2 }
+		, start_anims);
 
 	function start_anims() {
 		// This has to delay until after the first set of p1/p2
 		// animations are done above so that the horizontal location
 		// for the second bubble is known.
 
+		var line1 = make_line($('h1 .p1'))
+		var line2 = make_line($('h1 .p2'))
+		function make_line(pelem) {
+			var b = $('<div class="splash-anim-line"></div>');
+			$('body').append(b);
+			b.css({
+				position: "absolute",
+				left: pelem.offset().left+pelem.outerWidth() + pelem.height()/2,
+				top: pelem.offset().top+pelem.outerHeight() + 3,
+				width: 100,
+				opacity: 0
+			});
+			return b;
+		}
+
 		// Does a single iteration of a bubble.
-		function make_bubble(pelem, pwidth, duration, text) {
+		function make_bubble(pelem, pline, duration, text) {
 			var b = $('<div class="splash-anim-bubble"></div>').clone();
 			b.html(text);
 
 			$('body').append(b);
 			b.css({
 				position: 'absolute',
-				left: pelem.offset().left + .1*pwidth,
-				top: $('h1').offset().top + 2*$('h1').height(),
-				width: .8 * pwidth,
-				fontSize: pwidth/11,
-				opacity: 0
+				left: pelem.offset().left+pelem.outerWidth() + pelem.height()/2,
+				top: pelem.offset().top+100,
+				opacity: 0,
+				fontSize: pelem.height()*1.25,
+				lineHeight: '100%'
 			})
 			b
 				.animate({
-					top: $('h1').offset().top + $('h1').height()/2 - b.height()/1.8,
+					top: pelem.offset().top+pelem.height()-b.height() + 3,
 					opacity: 1
 				}, duration/4)
 				.delay(3*duration/4)
 				.animate({
-					top: $('h1').offset().top - b.height()*2,
+					top: pelem.offset().top-100,
 					opacity: 0
 				}, duration/4, function() {
 					b.remove()
 				})
+
+			pline.animate({
+				width: b.width(),
+				opacity: 1
+			})
 		}
 
 		// Create bubbles indefinitely.
 		var anim_duration = 4500;
 		var anim_counter = 0;
 		var anim_text = [ ];
-		for (var a1 in { representative: null, senator: null }) {
-			for (var a2 in { 'supports': null, 'opposes': null }) {
-				anim_text.push(['a ' + a1 + '<br><span>' + a2 + '</span><br>your position',
-						(a2 == 'supports') ? "<span>their reelection</span>" : "their <span>opponent</span>"
-						])
-			}
+		for (var a2 in { 'support': null, 'oppose': null }) {
+			anim_text.push(['they <span>' + a2 + '</span> your position',
+					(a2 == 'support') ? "<span>their reelection</span>" : "their <span>opponent</span>"
+					])
 		}
 		function do_anim() {
-			make_bubble($('h1 .p1'), p1width, anim_duration, anim_text[anim_counter][0]);
-			make_bubble($('h1 .p3'), p3width, anim_duration, anim_text[anim_counter][1]);
+			make_bubble($('h1 .p1'), line1, anim_duration, anim_text[anim_counter][0]);
+			make_bubble($('h1 .p2'), line2, anim_duration, anim_text[anim_counter][1]);
 			anim_counter = (anim_counter + 1) % anim_text.length;
 			setTimeout(do_anim, anim_duration);
 		}
 		do_anim(); // start
-
-		// If the window height is too short and the <h3>s aren't visible,
-		// show an arrow to suggest the user scroll down.
-		if ($('#homepage-body h3') && $('#homepage-body h3').offset().top + $('#homepage-body h3').height() > $(window).height())
-			setTimeout("if ($(window).scrollTop() == 0) $('#scroll-me-down').fadeIn();", 2000)
 	}
 }
 </script>
