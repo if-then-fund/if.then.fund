@@ -125,7 +125,7 @@
 	{% for t in recommendations %}
 		<div class="col-md-4">
 			<h3><a href="{{t.get_absolute_url}}" style="border: none">{{t.title}}</a></h3>
-			{{trigger.description|render_text:trigger.description_format|truncatewords_html:25}}
+			{{t.description|render_text:t.description_format|truncatewords_html:25}}
 			<p>{{t.total_pledged|currency}} committed so far</p>
 			<p><button onclick="window.location='{{t.get_absolute_url|escapejs}}'" class="btn btn-success">Take Action &raquo;</button></p>
 		</div>
