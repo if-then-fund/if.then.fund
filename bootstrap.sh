@@ -71,7 +71,7 @@ if [ "$1" == "--deployed" ]; then
 
 	# Fetch AWS's CA for its RDS postgres database certificates.
 	# Use sslmode=verify-full and sslrootcert=/etc/ssl/certs/rds-ssl-ca-cert.pem
-	sudo wget -O /etc/ssl/certs/rds-ssl-ca-cert.pem https://rds.amazonaws.com/doc/rds-ssl-ca-cert.pem
+	sudo wget -O /etc/ssl/certs/rds-ssl-ca-cert.pem http://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem
 
 	# A place to collect static files and to serve as the virtual root.
 	mkdir -p /home/ubuntu/public_html/static
