@@ -409,8 +409,12 @@ def post_email_confirm_callback(sender, confirmation, request=None, **kwargs):
 
 	# The user may have anonymously created a second Pledge for the same
 	# trigger. We can't tell them before they confirm their email that
-	# they already made a pledge.
-	if pledge.trigger.pledges.filter(user=user).exists():
+	# they already made a pledge. We can't confirm both --- warn the user
+	# and go on.
+	# (Note: When checking, be sure to exclude the pledge itself from the
+	# test, since it may have already been confirmed.)
+	if pledge.trigger.pledges.filter(user=user)\
+		  .exclude(id=pledge.id if pledge is not None else None).exists():
 		messages.add_message(request, messages.ERROR, 'You had a previous contribution already scheduled for the same thing. Your more recent contribution will be ignored.')
 		return first_time_confirmed_user(request, user, pledge.trigger.get_absolute_url())
 
