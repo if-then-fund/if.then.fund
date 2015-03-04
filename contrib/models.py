@@ -362,6 +362,7 @@ class Pledge(models.Model):
 
 	cclastfour = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The last four digits of the user's credit card number, stored & indexed for fast look-up in case we need to find a pledge from a credit card number.")
 
+	email_confirmed_at = models.DateTimeField(blank=True, null=True, help_text="The date and time that the email address of the pledge became confirmed, if the pledge was originally based on an unconfirmed email address.")
 	pre_execution_email_sent_at = models.DateTimeField(blank=True, null=True, help_text="The date and time when the user was sent an email letting them know that their pledge is about to be executed.")
 	post_execution_email_sent_at = models.DateTimeField(blank=True, null=True, help_text="The date and time when the user was sent an email letting them know that their pledge was executed.")
 
@@ -548,6 +549,7 @@ class Pledge(models.Model):
 		# Move the anonymous pledge to the user's account.
 		pledge.user = user
 		pledge.email = None
+		pledge.email_confirmed_at = timezone.now()
 		pledge.save()
 
 		return True
@@ -561,6 +563,18 @@ class Pledge(models.Model):
 		for p in Pledge.objects.filter(cclastfour=cc_number[-4:]):
 			if check_password(cc_number, p.extra['billing']['cc_num_hashed']):
 				yield p
+
+	def needs_pre_execution_email(self):
+		# If the user confirmed their email address after the trigger
+		# was executed, then the pre-execution emails already went out
+		# and this user probably did not get one because those are only
+		# sent if the email address is confirmed. We don't want to cause
+		# a delay for everyone else, so these users just don't get a
+		# confirmation.
+		trigger_execution = self.trigger.execution
+		if self.email_confirmed_at and self.email_confirmed_at >= trigger_execution.created:
+			return False
+		return True
 
 	@transaction.atomic
 	def execute(self):
@@ -607,12 +621,15 @@ class Pledge(models.Model):
 			else:
 				# Additional checks that don't apply to failed executions for reasons above.
 				if pledge.pre_execution_email_sent_at is None:
-					raise ValueError("User %s has not yet been sent the pre-execution email." % pledge.user)
+					if pledge.needs_pre_execution_email():
+						# Not all pledges require the pre-exeuction email (see that function
+						# for details, but it's users who confirm their email address too late).
+						raise ValueError("User %s has not yet been sent the pre-execution email." % pledge.user)
 				elif (timezone.now() - pledge.pre_execution_email_sent_at) < Pledge.current_algorithm()['pre_execution_warn_time'][0] \
 						and not settings.DEBUG and Pledge.ENFORCE_EXECUTION_EMAIL_DELAY:
 					raise ValueError("User %s has not yet been given enough time to cancel the pledge." % pledge.user)
 
-				# Make the donation (an authorization).
+				# Make the donation (an authorization, since Democracy Engine does a capture later).
 				#
 				# (The transaction records created by the donation are not immediately
 				# available, so we know success but can't get further details.)

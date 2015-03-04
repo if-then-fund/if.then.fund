@@ -29,6 +29,7 @@ class Command(BaseCommand):
 				trigger__status=TriggerStatus.Executed,
 				pre_execution_email_sent_at=None
 				).exclude(user=None)
+			pledge_filter = lambda p : p.needs_pre_execution_email()
 
 		elif pre_or_post == "post":
 			# Executed pledges that were confirmed and have not yet
@@ -37,12 +38,14 @@ class Command(BaseCommand):
 				status=PledgeStatus.Executed,
 				post_execution_email_sent_at=None
 				).exclude(user=None)
+			pledge_filter = lambda p : True
 
 		elif pre_or_post == "emailconfirm":
 			pledges = Pledge.objects.filter(
 				status=PledgeStatus.Open,
 				user=None
 				)
+			pledge_filter = lambda p : True
 
 		else:
 			raise ValueError()
@@ -50,7 +53,11 @@ class Command(BaseCommand):
 		# Send email for each.
 		pledges = pledges.select_related("user")
 		for pledge in pledges:
+			# Apply a post-db-query filter.
+			if not pledge_filter(pledge):
+				continue
 
+			# Call the appropriate send function.
 			if pre_or_post in ("pre", "post"):
 				self.send_pledge_email(pre_or_post, pledge)
 
