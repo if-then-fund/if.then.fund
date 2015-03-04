@@ -24,7 +24,7 @@
 
 <table id="action-summary" class="table">
 <tr><td>Scheduled Contributions:</td> <td>${{total_pledged|floatformat:2}}</td></tr>
-<tr><td>Past Contributions:</td> <td>${{total_contribs|floatformat:2}} {% if total_contribs > 0 %}(<a href="{% url 'user_contrib_details' %}">view details</a>{% endif %})</td></tr>
+<tr><td>Past Contributions:</td> <td>${{total_contribs|floatformat:2}} {% if total_contribs > 0 %}(<a href="{% url 'user_contrib_details' %}">view details</a>){% endif %}</td></tr>
 </table>
 
 <h3>History</h3>
