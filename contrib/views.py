@@ -47,7 +47,7 @@ def trigger(request, id, slug):
 	except TriggerExecution.DoesNotExist:
 		te = None
 
-	if te and te.pledge_count_with_contribs > 0 and te.pledge_count == trigger.pledge_count:
+	if te and te.pledge_count_with_contribs > 0 and te.pledge_count >= .75 * trigger.pledge_count:
 		# Get the contribution aggregates by outcome and sort by total amount of contributions.
 		outcomes = te.get_outcomes()
 
@@ -80,6 +80,11 @@ def trigger(request, id, slug):
 		num_contribs = te.num_contributions
 		avg_pledge = te.total_contributions / te.pledge_count_with_contribs
 		avg_contrib = te.total_contributions / num_contribs
+	else:
+		# If the trigger has been executed but not enough pledges
+		# have completed being executed yet, then pretend like
+		# nothing has been executed.
+		te = None
 
 	return render(request, "contrib/trigger.html", {
 		"trigger": trigger,
