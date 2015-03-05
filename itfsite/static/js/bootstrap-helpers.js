@@ -96,6 +96,6 @@ function ajax_with_indicator(options) {
 
 function smooth_scroll_to(elem) {
   $('html, body').animate({
-      scrollTop: Math.max(elem.offset().top-50, 0)
+      scrollTop: Math.max(elem.offset().top-60, 0)
   });
 }

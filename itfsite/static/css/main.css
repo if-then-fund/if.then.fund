@@ -190,12 +190,13 @@ h3.invert {
 	top: 0;
 	left: 0;
 	right: 0;
-	background-color: #333;
+	background: #333 url('/static/branding/navbar-title.png') 10px 10px no-repeat;
+	min-height: 50px;
 	color: white;
 	font-family: 'Roboto Slab', serif;
 	font-size: 90%;
 	line-height: 125%;
-	padding: 3px;
+	padding: 14px 12px 10px 140px;
 	cursor: default;
 }
 
