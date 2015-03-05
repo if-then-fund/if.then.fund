@@ -142,8 +142,10 @@
 				</div>
 			</div>
 
-			<p>{{num_recips}} {{trigger.trigger_type.strings.actors}} {{trigger.trigger_type.strings.action_vb_past}} and received contributions.
-			<span><a href="#" onclick="$(this).parent().remove(); $('#contribs-by-recipient').fadeIn(); return false;">Show Details</a>.</span>
+			<p>
+				{{num_actors}} {{trigger.trigger_type.strings.actors}} {{trigger.trigger_type.strings.action_vb_past}} and received contributions.
+				{% if num_recips > num_actors %}Contributions also went to their opponents.{% endif %}
+				<span><a href="#" onclick="$(this).parent().remove(); $('#contribs-by-recipient').fadeIn(); return false;">Show Details</a>.</span>
 			</p>
 
 			<div id="contribs-by-recipient" style="display: none">

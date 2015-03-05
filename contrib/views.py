@@ -40,6 +40,7 @@ def trigger(request, id, slug):
 	avg_contrib = 0
 	num_contribs = None
 	num_recips = 0
+	num_actors = 0
 	by_incumb_chlngr = []
 
 	try:
@@ -66,9 +67,11 @@ def trigger(request, id, slug):
 			)
 		)
 		num_recips = 0
+		num_actors = 0
 		for a in actions:
 			if a.total_contributions_for > 0: num_recips += 1
 			if a.total_contributions_against > 0: num_recips += 1
+			if a.total_contributions_for > 0 or a.total_contributions_against > 0: num_actors += 1
 
 		# Incumbent/challengers.
 		by_incumb_chlngr = [["Incumbent", 0, "text-success"], ["Opponent", 0, "text-danger"]]
@@ -99,6 +102,7 @@ def trigger(request, id, slug):
 		"avg_pledge": avg_pledge,
 		"num_contribs": num_contribs,
 		"num_recips": num_recips,
+		"num_actors": num_actors,
 		"avg_contrib": avg_contrib,
 	})
 
