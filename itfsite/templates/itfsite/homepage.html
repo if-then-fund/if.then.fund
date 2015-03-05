@@ -78,7 +78,7 @@
 	#deck {
 		margin-top: 80px;
 		margin-bottom: 40px;
-		background-color: rgba(200,200,200, .4);
+		background-color: rgba(130,130,130, .4);
 		border-radius: 10px;
 		padding: 10px 20px;
 		font-size: 16px;
@@ -94,13 +94,9 @@
 		}
 	}
 
-h3 {
+#banner h2 {
 	color: white;
 	margin-bottom: 1em;
-}
-.expl {
-	margin-bottom: 1em;
-	color: #EEE;
 }
 
 .trigger-bubble {
@@ -110,6 +106,9 @@ h3 {
 	padding: 10px;
 	margin-bottom: 1em;
 }
+	.trigger-bubble a {
+		color: #126712; /* meets contrast requirement on white bg */
+	}
 	.trigger-title {
 		padding-bottom: 6px;
 		border-bottom: 1px solid #494;
@@ -154,7 +153,7 @@ h3 {
 		<div id="homepage-body" class="container">
 			<div class="col-xs-12">
 				{% if open_triggers|length > 0 %}
-				<h3>In Congress now...</h3>
+				<h2>In Congress now...</h2>
 				<div class="row">
 					{% for t in open_triggers %}
 						{% if forloop.counter0|divisibleby:2 %}<div class="clearfix visible-sm-block"></div>{% endif %}
@@ -177,8 +176,7 @@ h3 {
 
 				{% if recent_executed_triggers|length > 0 %}
 				<hr>
-				<h3>Recently</h3>
-				<p class="expl">Check out recent votes our users made campaign contributions about:</p>
+				<h2>Recently</h2>
 				<div class="row">
 					{% for t in recent_executed_triggers %}
 						<div class="col-sm-4 col-md-3">

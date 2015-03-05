@@ -36,8 +36,8 @@ small, .small {
 }
 
 a, a:visited {
-	color: #272;
-	border-bottom: 1px solid #0A0; /* accessibility */
+	color: #0f640f; /* accessibility requires high contrast */
+	border-bottom: 1px solid #0f640f; /* accessibility requires a line */
 }
 	a:hover, a:active {
 		text-decoration: none;
@@ -119,10 +119,10 @@ a, a:visited {
 }
 	#footer-social a {
 		border: none;
-		color: #575;
+		color: #3c5e3c;
 	}
 		#footer-social a:hover {
-			color: #0A0;
+			color: #3c5e3c;
 		}
 
 #not-production {

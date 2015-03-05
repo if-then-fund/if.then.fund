@@ -127,11 +127,15 @@
 
           <p>You want {{trigger.trigger_type.strings.actors}} to {{trigger.trigger_type.strings.action_vb_inf}} <span id="repeat-desired-outcome" class="fill-in" style="font-weight: bold"> </span>.</p>
 
-          <h3>Contribution amount</h3>
+          <h3>
+            <label for="pledge-amount-field" style="margin: 0; padding: 0; font-size: inherit">
+              Contribution amount
+            </label>
+          </h3>
 
           <div id="pledge-amount" class="input-group">
             <div class="input-group-addon">$</div>
-            <input class="form-control focus-on-shown" type="text" value="{{suggested_pledge|floatformat:2}}" pattern="^([0-9]+(,[0-9]{3})*)?(\.[0-9]{0,2})?$" onkeyup="update_start_next_state()" onchange="update_start_next_state()">
+            <input id="pledge-amount-field" class="form-control focus-on-shown" type="text" value="{{suggested_pledge|floatformat:2}}" pattern="^([0-9]+(,[0-9]{3})*)?(\.[0-9]{0,2})?$" onkeyup="update_start_next_state()" onchange="update_start_next_state()" title="Contribution">
           </div>
 
           <div id="advanced-filters" style="display: none" class="panel panel-default">
@@ -219,7 +223,7 @@
             </tr>
             <tr>
               <td></td>
-              <td><input type="password" id="emailPassword" name="password" class="form-control" disabled>
+              <td><input type="password" id="emailPassword" name="password" class="form-control" disabled title="Your if.then.fund password.">
                 <div class="small" style="margin-top: .5em">Forgot your password? Choose &ldquo;No, this is my first time here.&rdquo;</div></td>
             </tr>
             <tr>
