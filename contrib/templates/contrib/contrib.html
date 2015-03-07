@@ -1,39 +1,20 @@
 {% load itfsite_utils %}
 
+<div style="margin: 1.5em -15px 1.5em -16px">
+<div class="panel {% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}panel-default{% elif not pledge.user or pledge.execution %}panel-danger{% else %}panel-default{% endif %}">
+<div class="panel-body">
+
+{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
+	<p style="float: right; margin-bottom: 0"><a href="#" onclick="return cancel_pledge()" class="btn btn-default btn-sm">Cancel Contribution</a></p>
+{% endif %}
+
+<h2 style="margin-top: 0">Your contribution</h2>
+
 {% if not pledge.user and not pledge.execution %}
 {# pre-execution, email not confirmed #}
-<div class="panel panel-primary">
-<div class="panel-heading">
-	<h3 class="panel-title" style="font-size: 125%">Next steps</h3>
-</div>
-<div class="panel-body">
+	<p class="text-danger"><strong>Action Required:</strong></p>
  	<p class="text-danger">We sent you an email. You <strong>must</strong> click the link in the email to confirm your email address before the contribution can be made. The email went to {{pledge.email}}.</p>
  	<hr>
-
-{% elif not pledge.execution %}
-{# pre-execution, email confirmed #}
-<div class="panel {% if not pledge.user %}panel-default{% else %}panel-success{% endif %}">
-<div class="panel-heading">
-	<h3 class="panel-title">Thank you</h3>
-</div>
-<div class="panel-body">
-
-{% elif pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
-{# post-execution but problem #}
-<div class="panel {% if not pledge.user %}panel-default{% else %}panel-success{% endif %}">
-<div class="panel-heading">
-	<h3 class="panel-title">Your contribution</h3>
-</div>
-<div class="panel-body">
-
-{% else %}
-{# post-execution (usual case) #}
-<div class="panel panel-danger">
-<div class="panel-heading">
-	<h3 class="panel-title">Your contribution</h3>
-</div>
-<div class="panel-body">
-
 {% endif %}
 
 {% if not pledge.execution or pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
@@ -58,10 +39,8 @@
 	{% endif %}
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
-		<hr>
 		{% if pledge.trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
-			<p>Your credit card will not be charged until after the {{trigger.trigger_type.strings.action_noun}} occurs.</p>
-			<p style="line-height: 123%"><small>Your credit card may show a $1 temporary authorization from Democracy Engine, LLC, but this authorization will not result in a charge.</small></p>
+			<p style="line-height: 123%"><small>Your credit card will not be charged until after the {{trigger.trigger_type.strings.action_noun}} occurs. Your statement may show a $1 temporary authorization from Democracy Engine, LLC, but this authorization will not result in a charge.</small></p>
 		{% else %}
 			<p>The {{trigger.trigger_type.strings.action_noun}} has occurred, and we are about to process your contribution. You are still able to cancel the contribution before we process it.</p>
 		{% endif %}
@@ -69,8 +48,19 @@
 		<p>The event that this contribution was for is no longer expected to occur. Your contribution has been cancelled. Your credit card was not charged.</dd>
 	{% endif %}
 
-	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
-	<p style="text-align: right; margin-bottom: 0"><a href="#" onclick="return cancel_pledge()" class="btn btn-default btn-sm">Cancel Contribution</a></p>
+	{% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
+		<hr>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-xs-4 col-sm-3">
+					<a href="https://twitter.com/share" class="twitter-share-button" data-text="{{trigger.title|truncatewords:8}}" data-via="IfThenFund" data-size="small">Tweet</a>
+					<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+				</div>
+				<div class="col-xs-4 col-sm-3">
+					<div class="fb-share-button" data-href="{{url}}" data-layout="button_count"></div>
+				</div>
+			</div>
+		</div>
 	{% endif %}
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' and pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
@@ -114,10 +104,12 @@
   </div>
 
 {% else %}
-	<p>{{pledge.execution.problem_text}}</p>
+	<p class="text-danger">{{pledge.execution.problem_text}}</p>
 
 {% endif %}
-</div>
+</div> <!-- /panel-body -->
+</div> <!-- /panel -->
+</div> <!-- negative margin -->
 
 {% if not pledge.execution and recommendations|length > 0 %}
 <h2 style="margin: 2em 0 0 0">You might be interested in...</h2>

@@ -147,6 +147,7 @@ def trigger_user_view(request, id, slug):
 			"execution": pe,
 			"contribs": contribs,
 			"recommendations": recs,
+			"url": request.build_absolute_uri(trigger.get_absolute_url()),
 		}))
 
 	return ret
