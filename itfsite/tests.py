@@ -13,6 +13,10 @@ class SimulationTest(StaticLiveServerTestCase):
 		import contrib.views
 		contrib.views.SUGGESTED_PLEDGE_AMOUNT = 5
 
+		# Override the test that bills we use are not dead.
+		import contrib.legislative
+		contrib.legislative.ALLOW_DEAD_BILL = True
+
 		# Override the email backend so that we can capture it.
 		from django.conf import settings
 		settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'

@@ -1,6 +1,8 @@
 from contrib.models import Trigger, TextFormat, TriggerType, Actor
 from django.conf import settings
 
+ALLOW_DEAD_BILL = False
+
 def create_trigger_from_bill(bill_id, chamber):
 	# split/validate the bill ID
 	import re
@@ -22,7 +24,7 @@ def create_trigger_from_bill(bill_id, chamber):
 	if len(bill_search['objects']) > 1: raise ValueError("Matched multiple bills?")
 
 	bill = bill_search['objects'][0]
-	if not bill['is_alive']: raise ValueError("Bill is not alive.")
+	if not bill['is_alive'] and not ALLOW_DEAD_BILL: raise ValueError("Bill is not alive.")
 
 	# we're going to cache the bill info, so add a timestamp for the retreival date
 	import datetime
