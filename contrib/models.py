@@ -129,6 +129,12 @@ class Trigger(models.Model):
 		# meaning the Actor didn't participate and the string gives
 		# the reason_for_no_outcome value.
 		for actor, outcome in actor_outcomes.items():
+			# If an Actor has an inactive_reason set, then we ignore
+			# any outcome supplied to us and replace it with that.
+			# Probably 'Not running for reelection.'.
+			if actor.inactive_reason:
+				outcome = actor.inactive_reason
+
 			ac = Action.create(te, actor, outcome)
 
 		# Mark as executed.
@@ -234,7 +240,8 @@ class Actor(models.Model):
 	
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
-	challenger = models.OneToOneField('Recipient', unique=True, null=True, blank=True, related_name="challenger_to", help_text="The Recipient that contributions to this Actor's challenger go to. Independents don't have challengers because they have no opposing party.")
+	challenger = models.OneToOneField('Recipient', unique=True, null=True, blank=True, related_name="challenger_to", help_text="The *current* Recipient that contributions to this Actor's challenger go to. Independents don't have challengers because they have no opposing party.")
+	inactive_reason = models.CharField(blank=True, null=True, max_length=200, help_text="If the Actor is still a public official (i.e. generates Actions) but should not get contributions, the reason why. If not None, serves as a flag. E.g. 'Not running for reelection.'.")
 
 	def __str__(self):
 		return self.name_sort

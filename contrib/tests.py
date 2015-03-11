@@ -143,6 +143,18 @@ class ExecutionTestCase(TestCase):
 					actor=actor,
 					)
 
+		# Create one more inactive Actor.
+		actor_counter += 1
+		actor = Actor.objects.create(
+			govtrack_id=actor_counter,
+			name_long="Actor %d" % actor_counter,
+			name_short="Actor %d" % actor_counter,
+			name_sort="Actor %d" % actor_counter,
+			party=ActorParty.Republican,
+			title="Test Inactive Actor",
+			inactive_reason="Inactive for some reason."
+			)
+
 	def test_trigger(self):
 		"""Tests the trigger"""
 		t = Trigger.objects.get(key="test")
@@ -187,7 +199,10 @@ class ExecutionTestCase(TestCase):
 		for action in Action.objects.all():
 			self.assertEqual(action.execution, trigger.execution)
 			self.assertEqual(action.action_time, trigger.execution.action_time)
-			if isinstance(actor_outcomes[action.actor], int):
+			if action.actor.inactive_reason is not None:
+				self.assertEqual(action.outcome, None)
+				self.assertEqual(action.reason_for_no_outcome, action.actor.inactive_reason)
+			elif isinstance(actor_outcomes[action.actor], int):
 				self.assertEqual(action.outcome, actor_outcomes[action.actor])
 				self.assertEqual(action.reason_for_no_outcome, None)
 			else:

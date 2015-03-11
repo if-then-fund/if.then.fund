@@ -148,10 +148,12 @@ def get_pledge_recipients(trigger, pledge):
 			party = r.party
 
 		# The Recipient may not be currently taking contributions.
-		# Silently skip.
-
+		# This condition should be filtered out earlier in the creation
+		# of Action objects --- it should have a null outcome with
+		# explanation.
+		
 		if not r.active:
-			continue
+			raise ValueError("Recipient is inactive: %s => %s" % (action, r))
 
 		# Filter by party.
 
