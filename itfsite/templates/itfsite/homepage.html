@@ -183,7 +183,7 @@
 							<div class="trigger-bubble">
 								<div class="trigger-title"><a href="{{t.get_absolute_url}}">{{t.title}}</a></div>
 								<div class="trigger-description">
-									{{t.description|render_text:t.description_format|truncatewords_html:15}}
+									{{t.execution.description|render_text:t.execution.description_format|truncatewords_html:15}}
 									{% for outcome in t.execution.get_outcomes %}
 										<p>{{outcome.label}}: {{outcome.contribs|currency}}</p>
 									{% endfor %}</span>
