@@ -87,6 +87,7 @@ class Command(BaseCommand):
 			de_id = "p_%d" % actor.govtrack_id
 			if de_id not in de_recips:
 				self.stdout.write('Missing recipient %s for %s!' % (de_id, actor.name_long))
+				continue
 			else:
 				recipient, is_new = Recipient.objects.get_or_create(
 					actor=actor,
@@ -98,8 +99,9 @@ class Command(BaseCommand):
 					self.stdout.write('Added recipient for: %s (%s)' % (actor.name_long, de_recips[de_id]['name']))
 				self.update_recipient_active(recipient, de_recips)
 
-			# Create a challenger for the Actor if one is not yet set.
-			if actor.challenger is None:
+			# Create a challenger for the Actor if one is not yet set
+			# and the Actor has an active recipient itself.
+			if actor.challenger is None and recipient.active:
 				# Get the office based on the Actor's current term and opposing party.
 				term = actor.extra['legislators-current']['term']
 				if term['type'] == 'rep':
