@@ -5,6 +5,7 @@ class TriggerAdmin(admin.ModelAdmin):
     list_display = ['id', 'created', 'status', 'slug', 'title', 'pledge_count', 'total_pledged']
     raw_id_fields = ['owner']
     readonly_fields = ['pledge_count', 'total_pledged']
+    search_fields = ['title', 'description']
 
     def get_urls(self):
         from django.conf.urls import patterns
@@ -68,6 +69,7 @@ class TriggerExecutionAdmin(admin.ModelAdmin):
 class ActorAdmin(admin.ModelAdmin):
     list_display = ['name_long', 'party', 'govtrack_id', 'challenger']
     raw_id_fields = ['challenger']
+    search_fields = ['name_long', 'govtrack_id']
 
 class ActionAdmin(admin.ModelAdmin):
     list_display = ['id', 'created', 'trigger', 'name', 'outcome_', 'total_contributions_for', 'total_contributions_against']
