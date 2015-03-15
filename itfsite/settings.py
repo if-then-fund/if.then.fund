@@ -56,7 +56,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 	"itfsite.middleware.itfsite_template_context_processor",
 	)
 
-AUTHENTICATION_BACKENDS = ['itfsite.accounts.DirectLoginBackend', 'itfsite.accounts.EmailPasswordLoginBackend']
+AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'itfsite.betteruser.DirectLoginBackend']
 
 # Database and Cache
 

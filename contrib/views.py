@@ -161,10 +161,12 @@ def get_user_defaults(request):
 	# requests to fail.
 
 	# authenticate
-	from itfsite.accounts import User, try_login
-	user = try_login(request)
-	if not isinstance(user, User):
-		return { "status": str(user) }
+	from itfsite.accounts import User
+	from itfsite.betteruser import LoginException
+	try:
+		user = User.authenticate(request.POST['email'].strip(), request.POST['password'].strip())
+	except LoginException as e:
+		return { "status": "NotValid", "message": str(e) }
 
 	# check that the user hasn't already done this
 	trigger = Trigger.objects.get(id=request.POST['trigger'])
@@ -247,13 +249,14 @@ def create_pledge(request):
 
 	# Anonymous user is submitting a pledge with an email address & password.
 	elif request.POST.get("hasPassword") == "1":
-		from itfsite.accounts import User, try_login
-		user = try_login(request)
-		if isinstance(user, User):
+		from itfsite.accounts import User
+		from itfsite.betteruser import LoginException
+		try:
+			user = User.authenticate(request.POST['email'].strip(), request.POST['password'].strip())
 			# Login succeeded.
 			p.user = user
 			exists_filters = { 'user': p.user }
-		else:
+		except LoginException as e:
 			# Login failed. We did client-side validation so this should
 			# not occur. Treat as if the user didn't provide a password.
 			pass

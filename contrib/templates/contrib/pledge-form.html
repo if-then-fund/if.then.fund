@@ -663,12 +663,8 @@ function do_pledge_login_next() {
         trigger: {{trigger.id}}
       },
       success: function(response) {
-        if (response.status == "ValidateEmailResult.Invalid") {
-          $('#emailEmail').popover({ content: "That is not a valid email address." }).popover('show');
-          return;
-        }
-        if (response.status == "LoginResult.Incorrect" || response.status == "LoginResult.Inactive") {
-          $('#login-error').text("Your email address or password does not match an account here.");
+        if (response.status == "NotValid") {
+          $('#login-error').text(response.message);
           $('#login-error').slideDown();
           return;
         }
