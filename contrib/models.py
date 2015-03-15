@@ -730,6 +730,15 @@ class CancelledPledge(models.Model):
 		cp.pledge['updated'] = cp.pledge['updated'].isoformat() # can't JSON-serialize a DateTime
 		cp.save()
 
+class IncompletePledge(models.Model):
+	"""Records email addresses users enter. Deleted when they finish a Pledge."""
+	created = models.DateTimeField(auto_now_add=True, db_index=True)
+	trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE, help_text="The Trigger that the pledge was for.")
+	email = models.EmailField(max_length=254, db_index=True, help_text="An email address.")
+	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
+	sent_followup_at = models.DateTimeField(blank=True, null=True, db_index=True, help_text="If we've sent a follow-up email, the date and time we sent it.")
+	completed_pledge = models.ForeignKey(Pledge, blank=True, null=True, on_delete=models.CASCADE, help_text="If the user came back and finished a Pledge, that pledge.")
+
 @django_enum
 class PledgeExecutionProblem(enum.Enum):
 	NoProblem = 0

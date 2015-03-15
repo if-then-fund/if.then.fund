@@ -76,6 +76,10 @@ class SimulationTest(StaticLiveServerTestCase):
 		self.browser.find_element_by_css_selector("#login-next").click()
 		time.sleep(1)
 
+		# Did we record it?
+		from contrib.models import IncompletePledge
+		self.assertTrue(IncompletePledge.objects.filter(email=email, trigger=t).exists())
+
 		# Enter contributor information.
 		self.browser.find_element_by_css_selector("#contribNameFirst").send_keys("John")
 		self.browser.find_element_by_css_selector("#contribNameLast").send_keys("Doe")
@@ -96,6 +100,9 @@ class SimulationTest(StaticLiveServerTestCase):
 		self.browser.execute_script("$('#billingCCCVC').val('123')")
 		self.browser.find_element_by_css_selector("#billing-next").click()
 		time.sleep(1)
+
+		# The IncompletePledge should now be gone.
+		self.assertFalse(IncompletePledge.objects.filter(email=email, trigger=t).exists())
 
 		# An email confirmation was sent.
 		p = t.pledges.get(email=email)

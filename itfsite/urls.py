@@ -11,8 +11,6 @@ urlpatterns = patterns('',
 
 	url(r'^', include('contrib.urls')),
 
-	url(r'_ajax/validate_email$', 'itfsite.accounts.validate_email_view'),
-
 	url(r'^accounts/login$', auth_views.login),
 	url(r'^accounts/logout$', auth_views.logout, { 'next_page': '/' } ),
 	url(r'^accounts/password-change$', auth_views.password_change, { 'post_change_redirect': '/home', 'template_name': 'registration/password_change.html' }, name='password_change' ),

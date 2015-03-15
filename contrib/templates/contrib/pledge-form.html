@@ -690,9 +690,11 @@ function do_pledge_login_next() {
     // message for emails that are Valid but not Deliverable.
     // We also silently skip Error and let the user go forward.
     ajax_with_indicator({
-      url: "/_ajax/validate_email",
+      url: "/contrib/_validate_email",
       method: "POST",
       data: {
+        trigger: {{trigger.id}},
+        desired_outcome: $('#pledge-info input[name="desired_outcome"]').val(),
         email: $('#emailEmail').val()
       },
       success: function(response) {

@@ -1,8 +1,6 @@
 import urllib.parse
 
-from django.http import HttpResponse, HttpResponseRedirect
-from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
 from django.contrib.auth import authenticate, login
@@ -11,14 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 
 # Bring the symbols into this module.
-from itfsite.betteruser import User, DirectLoginBackend, validate_email, ValidateEmailResult
-
-# A view that validates an email (passed in the 'email' POST argument)
-# and returns a ValidateEmailResult as text, e.g. "ValidateEmailResult.Deliverable".
-@csrf_exempt # for testing via curl
-@require_http_methods(["POST"])
-def validate_email_view(request):
-	return HttpResponse(str(validate_email(request.POST['email'])), content_type="text/plain")
+from itfsite.betteruser import User, DirectLoginBackend
 
 def first_time_confirmed_user(request, user, next):
 	# The user has just confirmed their email address. Log them in.

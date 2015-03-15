@@ -1,16 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.dispatch import receiver
 from django.contrib import messages
-from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.conf import settings
 
 from email_confirm_la.signals import post_email_confirm
 
 from twostream.decorators import anonymous_view, user_view_for
 
-from contrib.models import Trigger, TriggerStatus, TriggerExecution, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty, ContributionAggregate
+from contrib.models import Trigger, TriggerStatus, TriggerExecution, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty, ContributionAggregate, IncompletePledge
 from contrib.utils import json_response
 from contrib.bizlogic import HumanReadableValidationError, run_authorization_test
 
@@ -223,6 +224,33 @@ def get_recent_pledge_defaults(user, request):
 
 	return ret
 
+# Validates the email address a new user is providing during
+# the pledge (user says they have no password). Returns a
+# ValidateEmailResult as text, e.g. "ValidateEmailResult.Valid".
+# Also record every email address users enter so we can follow-up
+# if the user did not finish the pledge form.
+@csrf_exempt # for testing via curl
+@require_http_methods(["POST"])
+def validate_email(request):
+	from itfsite.models import User
+	from itfsite.betteruser import validate_email, ValidateEmailResult
+
+	email = request.POST['email'].strip()
+	ret = validate_email(email)
+
+	if ret == ValidateEmailResult.Valid and not User.objects.filter(email=email).exists():
+		# Store for later, if this is not a user already with an account.
+		IncompletePledge.objects.create(
+			trigger=Trigger.objects.get(id=request.POST['trigger']),
+			email=email,
+			extra={
+				"desired_outcome": request.POST['desired_outcome'],
+				}
+			)
+
+	return HttpResponse(str(ret), content_type="text/plain")
+
+
 @require_http_methods(['POST'])
 @json_response
 def submit(request):
@@ -265,7 +293,7 @@ def create_pledge(request):
 	# Will do email verification below.
 	if not p.user:
 		p.email = request.POST.get('email').strip()
-		from itfsite.accounts import validate_email, ValidateEmailResult
+		from itfsite.betteruser import validate_email, ValidateEmailResult
 		if validate_email(p.email, simple=True) != ValidateEmailResult.Valid:
 			raise Exception("email is out of range")
 		exists_filters = { 'email': p.email }
@@ -386,6 +414,9 @@ def create_pledge(request):
 		request.session['anon_pledge_created'] = \
 			request.session.get('anon_pledge_created', [])[-20:] \
 			+ [p.id]
+
+		# Wipe the IncompletePledge because the user finished the form.
+		IncompletePledge.objects.filter(email=p.email, trigger=p.trigger).delete()
 
 	# If the user had good authentication but wasn't logged in yet, log them
 	# in now. This messes up the CSRF token but the client should redirect to
