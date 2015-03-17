@@ -249,14 +249,12 @@
                 <div class="panel-body">
                   <p>Federal law restricts who can make campaign contribution:</p>
                   <p>You must be either a U.S. citizen or lawfully admitted permanent resident (i.e., a green card holder). You cannot be employed <i>directly</i> by the federal government as a contractor. You must make this contribution with your own funds, which were not provided to you by any other person or entity. You must use your own personal credit card, and not a corporate or business card or a card issued to another person.</p>
-                  <p>If you make more than $200 in contributions to any one candidate in a calendar year, your name, address, employment, and contribution amount become a part of the public record.</p>
+                  <p>The Federal Election Commission requires all contributors to federal campaigns to provide all of the information we ask for in this section, and in most cases it becomes a part of the public record and searchable in online databases (<a href="/about/how-it-works#isthisanonymous">more information</a>).</p>
                 </div>
               </div>
             </div>
             <div class="col-md-6 col-md-pull-6">
-              <p>The Federal Election Commission requires all contributors to federal campaigns to provide the following information:</p>
-
-              <table class="input-table">
+              <table class="input-table" style="margin-top: .75em">
                 <tr>
                   <td><label for="contribNameFirst">First Name</label></td>
                   <td><input type="text" id="contribNameFirst" name="contribNameFirst" class="focus-on-shown form-control"></td>
@@ -296,6 +294,7 @@
                   <td><input type="text" id="contribEmployer" name="contribEmployer" class="form-control"></td>
                 </tr>
               </table>
+              <p style="margin-top: -1em">This information will become a part of the public record if the {{trigger.trigger_type.strings.action_noun}} occurs, as required by law.</p>
               <div class="buttons">
                 <button type="button" class="btn btn-default" onclick="do_contributor_cancel();">&lt; Back</button>        
                 <button id="contrib-next" type="button" class="btn btn-warning" onclick="do_contributor_next()">Next &gt;</button>
