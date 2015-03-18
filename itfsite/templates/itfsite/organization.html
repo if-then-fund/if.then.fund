@@ -1,0 +1,79 @@
+{% extends "master.html" %}
+{% load itfsite_utils %}
+
+{% block title %}{{org.name}}{% endblock %}
+
+{% block head %}
+<style>
+#nav-wrap {
+	margin-bottom: 0;
+}
+
+#page-banner {
+	position: relative; /* allow abs positioning of the h1 */
+	height: 300px;
+	background-image: url({{org.get_absolute_url}}/_banner?width=1200);
+}
+
+#page-banner > div {
+	position: absolute;
+	bottom: .5em;
+}
+
+h1 {
+	margin: 0;
+}
+
+@media screen and (max-width: 768px) {
+	#page-banner {
+		background-image: url({{org.get_absolute_url}}/_banner?width=768);
+	}
+}
+@media screen and (max-width: 640px) {
+	#page-banner {
+		background-image: url({{org.get_absolute_url}}/_banner?width=640);
+		height: 200px;
+	}
+	h1 {
+		font-size: 24px;
+	}
+}
+
+
+</style>
+{% endblock %}
+
+{% block body %}
+
+<div class="row">
+	<div id="page-banner" class="organization-banner">
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-9 col-sm-offset-3">
+					<h1>{{org.name}}</h1>
+					<p>{{org.orgtype.display}}</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="row" style="margin-top: 1em">
+	<div class="col-sm-3" style="padding-left: 0; font-size: 90%">
+		<div class="panel panel-default">
+		  <div class="panel-heading hidden-xs">About {{org.name}}</div>
+		  <div class="panel-body">
+			{{org.description|render_text:org.description_format}}
+		  </div>
+		</div>
+	</div>
+	<div class="col-sm-9">
+		{% for tc in triggers %}
+			<h2><a href="{{tc.get_absolute_url}}">{{tc.title}}</a></h2>
+			{{tc.description|render_text:tc.description_format}}
+			<p>{{tc.total_pledged|currency}} committed so far.</p>
+		{% endfor %}
+	</div>
+</div>
+
+{% endblock %}

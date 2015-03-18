@@ -148,5 +148,6 @@ SITE_MODE = environment.get("mode")
 SITE_ROOT_URL = EMAIL_CONFIRM_LA_HTTP_PROTOCOL + "://" + environment['host']
 DE_API = environment['democracyengine']
 CDYNE_API_KEY = environment['cdyne_key']
+FACEBOOK_ACCESS_TOKEN = environment['facebook_access_token']
 MIXPANEL_ID = environment.get('mixpanel_id')
 CURRENT_ELECTION_CYCLE = 2016

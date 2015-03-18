@@ -61,6 +61,8 @@ def create_trigger_from_bill(bill_id, chamber):
 
 	t.description = "The %s will soon vote on %s." % (chamber_name, bill["title"])
 	t.description_format = TextFormat.Markdown
+	t.execution_note = "Contributions will be made when the %s votes on the bill." % chamber_name
+	t.execution_note_format = TextFormat.Markdown
 
 	short_title = bill["display_number"]
 	t.outcomes = [

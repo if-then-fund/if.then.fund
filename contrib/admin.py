@@ -70,6 +70,11 @@ class TriggerAdmin(admin.ModelAdmin):
 class TriggerStatusUpdateAdmin(admin.ModelAdmin):
     readonly_fields = ['trigger']
 
+class TriggerCustomizationAdmin(admin.ModelAdmin):
+    list_display = ['owner', 'trigger', 'title']
+    raw_id_fields = ['trigger', 'owner']
+    readonly_fields = ['pledge_count', 'total_pledged']
+
 class TriggerExecutionAdmin(admin.ModelAdmin):
     list_display = ['id', 'created', 'trigger', 'pledge_count_', 'total_contributions']
     readonly_fields = ['trigger', 'pledge_count', 'pledge_count_with_contribs', 'num_contributions', 'total_contributions']
@@ -152,6 +157,7 @@ class ContributionAdmin(admin.ModelAdmin):
 
 admin.site.register(Trigger, TriggerAdmin)
 admin.site.register(TriggerStatusUpdate, TriggerStatusUpdateAdmin)
+admin.site.register(TriggerCustomization, TriggerCustomizationAdmin)
 admin.site.register(TriggerExecution, TriggerExecutionAdmin)
 admin.site.register(Actor, ActorAdmin)
 admin.site.register(Action, ActionAdmin)

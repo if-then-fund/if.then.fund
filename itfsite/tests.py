@@ -71,15 +71,43 @@ class SimulationTest(StaticLiveServerTestCase):
 		t.save()
 		return t
 
+	def create_test_triggercustomization(self, trigger):
+		from itfsite.models import Organization, OrganizationType
+		org = Organization.objects.create(
+			name="Test Organization",
+			slug="test-organization",
+			orgtype=OrganizationType.C3,
+			description="This is a test organization.",
+			description_format=0,
+			)
+
+		from contrib.models import TriggerCustomization
+		tcust = TriggerCustomization.objects.create(
+			owner=org,
+			trigger=trigger,
+			title="Customized-" + trigger.title,
+			slug="customized-" + trigger.slug,
+			visible=True,
+			description="We think this bill should pass.",
+			description_format=0,
+			incumb_challgr=-1,
+			)
+
+		return tcust
+
 	def _test_pledge_simple(self, t,
+			pledge_summary="You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 435 representatives, each getting a part of your contribution if they vote Yes on S. 1, but if they vote No on S. 1 their part of your contribution will go to their next general election opponent.",
 			with_campaign=False,
-			break_after_email=False, return_from_incomplete_pledge=None
+			break_after_email=False, return_from_incomplete_pledge=None,
+			via=None,
 			):
 
 		# Open the Trigger page.
 
 		# What URL?
 		url = t.get_absolute_url()
+		if via:
+			url = via.get_absolute_url()
 		campaign = None
 		if with_campaign:
 			campaign = "test_campaign_string"
@@ -90,6 +118,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		if return_from_incomplete_pledge:
 			campaign = return_from_incomplete_pledge.get_campaign_string()
 			url = return_from_incomplete_pledge.get_return_url()
+			if via: raise ValueError()
 
 		# Load in browser. Check title.
 		self.browser.get(self.build_test_url(url))
@@ -153,6 +182,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Get the pledge and check its fields.
 		p = t.pledges.get(email=email)
 		self.assertEqual(p.campaign, campaign)
+		self.assertEqual(p.via, via)
 
 		# An email confirmation was sent.
 		self.assertFalse(p.should_retry_email_confirmation())
@@ -183,7 +213,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		# the user sees an explanation of the pledge.
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 435 representatives, each getting a part of your contribution if they vote Yes on S. 1, but if they vote No on S. 1 their part of your contribution will go to their next general election opponent.")
+			pledge_summary)
 
 		return email, pw
 
@@ -213,14 +243,14 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Send pledge post-execution emails.
 		send_pledge_emails().handle()
 
-	def _test_pledge_simple_execution(self, t):
+	def _test_pledge_simple_execution(self, t,
+		pledge_summary="You made a campaign contribution of $9.44 for this vote. It was split among 424 representatives, each getting a part of your contribution if they voted Yes on S. 1, but if they voted No on S. 1 their part of your contribution will go to their next general election opponent."):
 		# Reload the page.
 		self.browser.get(self.build_test_url(t.get_absolute_url()))
 		time.sleep(1)
-
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You made a campaign contribution of $9.44 for this vote. It was split among 424 representatives, each getting a part of your contribution if they voted Yes on S. 1, but if they voted No on S. 1 their part of your contribution will go to their next general election opponent.")
+			pledge_summary)
 
 	def _test_pledge_logged_in(self, t, title, bill, change_profile=False):
 		# Now that we're logged in, try to do another trigger with things pre-filled.
@@ -420,3 +450,17 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		# Test that it appears executed on the site.
 		self._test_pledge_simple_execution(t)
+
+	def test_triggercustomization_pledge(self):
+		# Create a customized trigger.
+		t = self.create_test_trigger("s1-114", "h")
+		tcust = self.create_test_triggercustomization(t)
+		self._test_pledge_simple(t, via=tcust, pledge_summary="You have scheduled a campaign contribution of $12.00 for this vote. It will be split among the opponents in the next general election of representatives who vote No on S. 1.")
+
+		# Execute it.
+		self._test_trigger_execution(t, 1, Decimal('12'), "https://www.govtrack.us/congress/votes/114-2015/h14")
+		from contrib.management.commands.execute_pledges import Command as execute_pledges
+		execute_pledges().do_execute_pledges()
+
+		# Test that it appears executed on the site.
+		self._test_pledge_simple_execution(tcust, pledge_summary="You made a campaign contribution of $11.45 for this vote. It was split among the opponents in the next general election of representatives who voted No on S. 1.")

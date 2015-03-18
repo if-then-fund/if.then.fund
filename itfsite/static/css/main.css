@@ -207,3 +207,15 @@ h3.invert {
 .long-text {
 	line-height: 145%;
 }
+
+.organization-banner {
+	background-color: #999; /* if there is no banner image and we get back a transparent png, this will show */
+	background-position: 0 50%;
+	padding: 40px 15px 20px 15px;
+	border: 1px solid #AAA;
+	color: #fff;
+	-webkit-font-smoothing: antialiased;
+	text-shadow: 0 1px 4px rgba(0, 0, 0, .8);
+	font-size: 24px;
+	font-weight: bold;
+}

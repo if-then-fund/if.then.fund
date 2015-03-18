@@ -5,7 +5,6 @@ from django.conf import settings
 from django.utils import timezone
 from django.dispatch import receiver
 
-from itfsite.models import User
 from contrib.bizlogic import get_pledge_recipients, create_pledge_donation, void_pledge_transaction, HumanReadableValidationError
 
 from jsonfield import JSONField as _JSONField
@@ -14,7 +13,7 @@ from datetime import timedelta
 
 #####################################################################
 #
-# Utilities
+# Utilities / Enums
 #
 #####################################################################
 
@@ -27,6 +26,17 @@ class JSONField(_JSONField):
 	# turns on sort_keys
     def __init__(self, *args, **kwargs):
         super(_JSONField, self).__init__(*args, dump_kwargs={"sort_keys": True}, **kwargs)
+
+@django_enum
+class ActorParty(enum.Enum):
+	Democratic = 1
+	Republican = 2
+	Independent = 3
+
+	def opposite(self):
+		if self == ActorParty.Democratic: return ActorParty.Republican
+		if self == ActorParty.Republican: return ActorParty.Democratic
+		raise ValueError("%s does not have an opposite party." % str(self))
 
 #####################################################################
 #
@@ -65,7 +75,7 @@ class Trigger(models.Model):
 	key = models.CharField(max_length=64, blank=True, null=True, db_index=True, unique=True, help_text="An opaque look-up key to quickly locate this object.")
 
 	title = models.CharField(max_length=200, help_text="The title for the trigger.")
-	owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT, help_text="The user which created the trigger and can update it.")
+	owner = models.ForeignKey('itfsite.Organization', blank=True, null=True, on_delete=models.PROTECT, help_text="The user/organization which created the trigger and can update it. Empty for Triggers created by us.")
 	trigger_type = models.ForeignKey(TriggerType, on_delete=models.PROTECT, help_text="The type of the trigger, which determines how it is described in text.")
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -74,6 +84,8 @@ class Trigger(models.Model):
 	slug = models.SlugField(max_length=200, help_text="The URL slug for this trigger.")
 	description = models.TextField(help_text="Description text in the format given by description_format.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
+	execution_note = models.TextField(help_text="Explanatory note about how this Trigger will be executed, in the format given by execution_note_format.")
+	execution_note_format = EnumField(TextFormat, help_text="The format of the execution_note text.")
 	status = EnumField(TriggerStatus, default=TriggerStatus.Draft, help_text="The current status of the trigger: Open (accepting pledges), Paused (not accepting pledges), Executed (funds distributed), Vacated (existing pledges invalidated).")
 	outcomes = JSONField(default=[], help_text="An array (order matters!) of information for each possible outcome of the trigger, e.g. ['Voted Yes', 'Voted No'].")
 
@@ -171,7 +183,6 @@ class Trigger(models.Model):
 			p.status = PledgeStatus.Vacated
 			p.save()
 
-
 class TriggerStatusUpdate(models.Model):
 	"""A status update about the Trigger providing further information to users looking at the Trigger that was not known when the Trigger was created."""
 
@@ -180,6 +191,48 @@ class TriggerStatusUpdate(models.Model):
 	updated = models.DateTimeField(auto_now=True)
 	text = models.TextField(help_text="Status update text in the format given by text_format.")
 	text_format = EnumField(TextFormat, help_text="The format of the text.")
+
+class TriggerCustomization(models.Model):
+	"""The specialization of a trigger for an Organization."""
+
+	owner = models.ForeignKey('itfsite.Organization', related_name="triggers", on_delete=models.CASCADE, help_text="The user/organization which created the TriggerCustomization.")
+	trigger = models.ForeignKey(Trigger, related_name="customizations", on_delete=models.CASCADE, help_text="The Trigger that this TriggerCustomization customizes.")
+	title = models.CharField(max_length=200, help_text="The customized title for the trigger.")
+	slug = models.SlugField(max_length=200, help_text="The customized URL slug for this trigger.")
+	visible = models.BooleanField(default=False, help_text="Whether this TriggerCustomization can be seen by non-admins.")
+
+	created = models.DateTimeField(auto_now_add=True, db_index=True)
+	updated = models.DateTimeField(auto_now=True, db_index=True)
+
+	description = models.TextField(help_text="Description text in the format given by description_format.")
+	description_format = EnumField(TextFormat, help_text="The format of the description text.")
+
+	outcome = models.IntegerField(blank=True, null=True, help_text="Restrict Pledges to this outcome index.")
+	incumb_challgr = models.FloatField(blank=True, null=True, help_text="Restrict Pledges to this incumb_challgr value.")
+	filter_party = EnumField(ActorParty, blank=True, null=True, help_text="Restrict Pledges to this party.")
+	filter_competitive = models.NullBooleanField(default=False, help_text="Restrict Pledges to this filter_competitive value.")
+
+	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
+
+	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges made.")
+	total_pledged = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of pledges, i.e. prior to execution.")
+
+	def __str__(self):
+		return "%s / %s: %s" % (self.owner, self.trigger, self.title)
+
+	def get_absolute_url(self):
+		return "/a/%d-%d/%s/%s" % (self.trigger.id, self.id, self.owner.slug, self.slug)
+
+	def has_fixed_outcome(self):
+		return self.outcome is not None
+
+	def get_outcome_description(self):
+		if self.outcome is None: raise ValueError()
+		outcome = self.trigger.outcomes[self.outcome]
+		descr = outcome['label']
+		if 'tip' in outcome:
+			descr += " (%s)" % outcome['tip']
+		return descr
 
 class TriggerExecution(models.Model):
 	"""How a Trigger was executed."""
@@ -205,14 +258,14 @@ class TriggerExecution(models.Model):
 	def __str__(self):
 		return "%s [exec %s]" % (self.trigger, self.created.strftime("%x"))
 
-	def get_outcomes(self):
+	def get_outcomes(self, via=None):
 		# Get the contribution aggregates by outcome
 		# and sort by total amount of contributions.
 		outcomes = copy.deepcopy(self.trigger.outcomes)
 		for i in range(len(outcomes)):
 			outcomes[i]['index'] = i
 			outcomes[i]['contribs'] = 0
-		for rec in ContributionAggregate.get_slices('outcome', trigger_execution=self):
+		for rec in ContributionAggregate.get_slices('outcome', trigger_execution=self, via=via):
 			outcomes[rec['outcome']]['contribs'] = rec['total']
 		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
 		return outcomes
@@ -227,17 +280,6 @@ class TriggerExecution(models.Model):
 # Elected officials and their official acts.
 #
 #####################################################################
-
-@django_enum
-class ActorParty(enum.Enum):
-	Democratic = 1
-	Republican = 2
-	Independent = 3
-
-	def opposite(self):
-		if self == ActorParty.Democratic: return ActorParty.Republican
-		if self == ActorParty.Republican: return ActorParty.Democratic
-		raise ValueError("%s does not have an opposite party." % str(self))
 
 class Actor(models.Model):
 	"""A public figure, e.g. elected official with an election campaign, who might take an action."""
@@ -420,12 +462,13 @@ class NoMassDeleteManager(models.Manager):
 class Pledge(models.Model):
 	"""A user's pledge of a contribution."""
 
-	user = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT, help_text="The user making the pledge. When an anonymous user makes a pledge, this is null, the user's email address is stored, and the pledge should be considered unconfirmed/provisional and will not be executed.")
+	user = models.ForeignKey('itfsite.User', blank=True, null=True, on_delete=models.PROTECT, help_text="The user making the pledge. When an anonymous user makes a pledge, this is null, the user's email address is stored, and the pledge should be considered unconfirmed/provisional and will not be executed.")
 	email = models.EmailField(max_length=254, blank=True, null=True, help_text="When an anonymous user makes a pledge, their email address is stored here and we send a confirmation email.")
 	trigger = models.ForeignKey(Trigger, related_name="pledges", on_delete=models.PROTECT, help_text="The Trigger that this Pledge is for.")
 	profile = models.ForeignKey(ContributorInfo, related_name="pledges", on_delete=models.PROTECT, help_text="The contributor information (name, address, etc.) and billing information used for this Pledge. Immutable and cannot be changed after execution.")
 
 	campaign = models.CharField(max_length=24, blank=True, null=True, db_index=True, help_text="An optional string indicating a referral campaign that lead the user to take this action.")
+	via = models.ForeignKey(TriggerCustomization, blank=True, null=True, related_name="pledges", on_delete=models.PROTECT, help_text="The TriggerCustomization that this Pledge was made via.")
 
 	# When a Pledge is cancelled, the object is deleted. The three fields above
 	# are archived, plus the fields listed in this list. The fields below must
@@ -475,10 +518,11 @@ class Pledge(models.Model):
 		# fields (atomically) if this Pledge was made prior to trigger execution.
 		if is_new and not self.made_after_trigger_execution:
 			from django.db import models
-			t = self.trigger
-			t.pledge_count = models.F('pledge_count') + 1
-			t.total_pledged = models.F('total_pledged') + self.amount
-			t.save(update_fields=['pledge_count', 'total_pledged'])
+			for t in [self.trigger, self.via]:
+				if t is not None: # self.via may be None
+					t.pledge_count = models.F('pledge_count') + 1
+					t.total_pledged = models.F('total_pledged') + self.amount
+					t.save(update_fields=['pledge_count', 'total_pledged'])
 
 	@transaction.atomic
 	def delete(self):
@@ -488,9 +532,11 @@ class Pledge(models.Model):
 		# Decrement the Trigger's pledge_count and total_pledged if the Pledge
 		# was made prior to trigger execution.
 		if not self.made_after_trigger_execution:
-			self.trigger.pledge_count = models.F('pledge_count') - 1
-			self.trigger.total_pledged = models.F('total_pledged') - self.amount
-			self.trigger.save(update_fields=['pledge_count', 'total_pledged'])
+			for t in [self.trigger, self.via]:
+				if t is not None: # self.via may be None
+					t.pledge_count = models.F('pledge_count') - 1
+					t.total_pledged = models.F('total_pledged') - self.amount
+					t.save(update_fields=['pledge_count', 'total_pledged'])
 
 		# Archive as a cancelled pledge.
 		cp = CancelledPledge.from_pledge(self)
@@ -498,6 +544,12 @@ class Pledge(models.Model):
 		# Remove record. Will raise an exception and abort the transaction if
 		# the pledge has been executed and a PledgeExecution object refers to this.
 		super(Pledge, self).delete()	
+
+	def get_absolute_url(self):
+		if self.via:
+			return self.via.get_absolute_url()
+		else:
+			return self.trigger.get_absolute_url()
 
 	@staticmethod
 	def current_algorithm():
@@ -792,7 +844,8 @@ class CancelledPledge(models.Model):
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 
 	trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE, help_text="The Trigger that the pledge was for.")
-	user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, help_text="The user who made the pledge, if not anonymous.")
+	via = models.ForeignKey(TriggerCustomization, blank=True, null=True, on_delete=models.CASCADE, help_text="The TriggerCustomization that this Pledge was made via.")
+	user = models.ForeignKey('itfsite.User', blank=True, null=True, on_delete=models.CASCADE, help_text="The user who made the pledge, if not anonymous.")
 	email = models.EmailField(max_length=254, blank=True, null=True, help_text="The email address of an unconfirmed pledge.")
 
 	pledge = JSONField(blank=True, help_text="The original Pledge information.")
@@ -801,6 +854,7 @@ class CancelledPledge(models.Model):
 	def from_pledge(pledge):
 		cp = CancelledPledge()
 		cp.trigger = pledge.trigger
+		cp.via = pledge.via
 		cp.user = pledge.user
 		cp.email = pledge.email
 		cp.pledge = { k: getattr(pledge, k) for k in Pledge.cancel_archive_fields }
@@ -814,6 +868,7 @@ class IncompletePledge(models.Model):
 	"""Records email addresses users enter. Deleted when they finish a Pledge."""
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE, help_text="The Trigger that the pledge was for.")
+	via = models.ForeignKey(TriggerCustomization, blank=True, null=True, on_delete=models.CASCADE, help_text="The TriggerCustomization that this Pledge was made via.")
 	email = models.EmailField(max_length=254, db_index=True, help_text="An email address.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 	sent_followup_at = models.DateTimeField(blank=True, null=True, db_index=True, help_text="If we've sent a follow-up email, the date and time we sent it.")
@@ -877,7 +932,7 @@ def post_email_confirm_callback(sender, confirmation, request=None, **kwargs):
 
 	# The user may be new, so take them to a welcome page.
 	# pledge.user may not be set because confirm_email uses a clone for locking.
-	return first_time_confirmed_user(request, user, pledge.trigger.get_absolute_url())
+	return first_time_confirmed_user(request, user, pledge.get_absolute_url())
 
 @django_enum
 class PledgeExecutionProblem(enum.Enum):
@@ -1082,6 +1137,7 @@ class Contribution(models.Model):
 		from itertools import product
 		for fields in product(
 				[self.action.execution], # trigger_execution
+				set([None, self.pledge_execution.pledge.via]), # via (but exclude the 'None' via)
 				(None, self.pledge_execution.pledge.desired_outcome), # outcome
 				(None, self.action), # action
 				(None, not self.recipient.is_challenger), # incumbent
@@ -1099,6 +1155,7 @@ class ContributionAggregate(models.Model):
 	trigger_execution = models.ForeignKey(TriggerExecution, related_name='contribution_aggregates', on_delete=models.CASCADE, help_text="The TriggerExecution that these cached statistics are about.")
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
+	via = models.ForeignKey(TriggerCustomization, blank=True, null=True, on_delete=models.CASCADE, help_text="The TriggerCustomization that the Pledges were made via.")
 	outcome = models.IntegerField(blank=True, null=True, help_text="The outcome index that was taken. Null if the slice encompasses all outcomes.")
 	action = models.ForeignKey(Action, blank=True, null=True, on_delete=models.CASCADE, help_text="The Action that the contribution was made about.")
 	incumbent = models.NullBooleanField(blank=True, null=True, help_text="Whether the contribution was to the Actor (True) or the Actor's challenger (False).")
@@ -1108,14 +1165,14 @@ class ContributionAggregate(models.Model):
 	count = models.IntegerField(default=0, help_text="A cached total count of campaign contributions executed in this slice.")
 	total = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total dollar amount of campaign contributions executed in this slice, excluding fees.")
 
-	FIELDS = ('trigger_execution', 'outcome', 'action', 'incumbent', 'party', 'district')
+	FIELDS = ('trigger_execution', 'via', 'outcome', 'action', 'incumbent', 'party', 'district')
 
 	class Meta:
 		# not sure how to access FIELDS instance.....
-		unique_together = ('trigger_execution', 'outcome', 'action', 'incumbent', 'party', 'district')
+		unique_together = ('trigger_execution', 'via', 'outcome', 'action', 'incumbent', 'party', 'district')
 
 	def __str__(self):
-		return "%d | %s %s %s %s %s" % (self.trigger_execution_id, self.outcome, self.action_id, self.incumbent, self.party, self.district)
+		return "%d | %s %s %s %s %s %s" % (self.trigger_execution_id, self.via, self.outcome, self.action_id, self.incumbent, self.party, self.district)
 
 	@staticmethod
 	def get_slice(**slce):

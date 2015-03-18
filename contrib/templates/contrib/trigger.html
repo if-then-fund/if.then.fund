@@ -2,10 +2,10 @@
 {% load itfsite_utils %}
 {% load static from staticfiles %}
 
-{% block title %}{{trigger.title}}{% endblock %}
+{% block title %}{{T.title}}{% endblock %}
 
 {% block head %}
-<meta property="og:title" content="{{trigger.title}} (if.then.fund)" />
+<meta property="og:title" content="{{T.title}} (if.then.fund)" />
 <meta property="og:description" content="Reshape Congress by making a contribution based on how {{trigger.trigger_type.strings.actors}} {{trigger.trigger_type.strings.action_vb_inf}}.">
 <meta property="og:image" content="{{ROOT_URL}}static/branding/icons/favicon-192x192.png" /> {# for Twitter summary card, min size 120x120 and < 1MB #}
 <meta name="twitter:card" content="summary" />
@@ -15,6 +15,8 @@
 	#trigger-metadata {
 		padding-top: 86px;
 		background-color: #F7F7F7;
+		font-size: 90%;
+		line-height: 133%;
 	}
 }
 
@@ -47,8 +49,21 @@
 {% endblock %}
 
 {% block body %}
+
+{% if tcust %}
+<div class="visible-xs-block row">
+	<a href="{{tcust.owner.get_absolute_url}}">
+		<div class="organization-banner" style="background-image: url({{tcust.owner.get_absolute_url}}/_banner?width=768); margin: -20px 0 2em 0">
+			<div>
+				{{tcust.owner.name}}
+			</div>
+		</div>
+	</a>
+</div>
+{% endif %}
+
 <div id="page-fixed-header">
-	{{trigger.title}}
+	{{T.title}}
 </div>
 
 <div class="row">
@@ -59,10 +74,12 @@
 			<div class="overline">What Happened</div>
 		{% endif %}
 
-		<h1>{{trigger.title}}</h1>
+		<h1>{{T.title}}</h1>
 
 		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' or not trigger.execution.description %}
-			{{trigger.description|render_text:trigger.description_format}}
+			{{T.description|render_text:T.description_format}}
+			<hr style="margin: .5em 0; border-color: #DDD;">
+			{{trigger.execution_note|render_text:trigger.execution_note_format}}
 		{% else %}
 			{{trigger.execution.description|render_text:trigger.execution.description_format}}
 		{% endif %}
@@ -73,18 +90,28 @@
 
 
 		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Draft' %}
-			<p>This trigger is in draft status. That means it is currently being prepared. Contributions may be accepted soon.</p>
+			<p>This page is in draft status. That means it is currently being prepared. Contributions may be accepted soon.</p>
 
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
 			{% include "contrib/pledge-form.html" %}
 
+			{% if campaigns|length > 0 %}
+				<hr>
+				<h3>{% if tcust %}Other c{% else %}C{% endif %}ampaigns around this {{trigger.trigger_type.strings.action_noun}}</h3>
+				<ul>
+				{% for triggercustomization in campaigns %}
+					<li style="margin-top: .5em"><a href="{{triggercustomization.get_absolute_url}}">{{triggercustomization.owner.name}}: {{triggercustomization.title}}</a></li>
+				{% endfor %}
+				</ul>
+			{% endif %}
+
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Paused' %}
 			<h2>Take action</h2>
-			<p>This action is paused. We may be about to convert the pledges into campaign contributions or we may be researching whether the event occurred.</p>
+			<p>This action is paused. We may be about to convert the pledges into campaign contributions or we may be researching whether the {{trigger.trigger_type.strings.action_noun}} occurred.</p>
 
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
 			<h2>Closed</h2>
-			<p>This action has been cancelled. We determined that the event will likely never occur and have vacated all of the pledges.</p>
+			<p>This action has been cancelled. We determined that the {{trigger.trigger_type.strings.action_noun}} will likely never occur and have vacated all of the pledges.</p>
 
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' and not execution %}
 			{# The event ocurred and we are now in the process of making campaign contributions. But we can keep accepting pledges, just as in the Open state #}
@@ -96,7 +123,7 @@
 			{% include "contrib/pledge-form.html" %}
 
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
-			{% include "contrib/pledge-form.html" with hidemypledge=1 %}
+			{% include "contrib/pledge-form.html" with paneiliz=1 %}
 
 			<h2>Contributions</h2>
 
@@ -104,12 +131,12 @@
 				<p class="text-danger">The {{trigger.trigger_type.strings.action_noun}} ocurred, and we are still in the process of making campaign contributions. The counts below are preliminary.</p>
 			{% endif %}
 			
-			<p>{{execution.pledge_count_with_contribs}} donor{{execution.pledge_count_with_contribs|pluralize}} made contributions totalling {{execution.total_contributions|currency}}.</p>
+			<p>{{total_pledges}} donor{{total_pledges|pluralize}} made contributions totalling {{total_contribs|currency}}.</p>
 
 			<div id="my-pledge">
 			</div>
 
-			{% if execution.pledge_count_with_contribs > 0 %}
+			{% if total_pledges > 0 %}
 
 			<h3>Totals</h3>
 
@@ -117,7 +144,7 @@
 				<div class="col-sm-6">
 					<table class="table" style="width: auto">
 					<thead><tr><th colspan="2">By Desired Outcome</th></tr></thead>
-					{% for outcome in outcomes %}
+					{% for outcome in outcome_totals %}
 						<tr>
 							<th>{{outcome.label}}:</th>
 							<td>{{outcome.contribs|currency}}</td>
@@ -125,7 +152,7 @@
 					{% endfor %}
 					<tr style="color: #333; background-color: #F5F5F5">
 						<th>Total</th>
-						<td style="font-weight: bold">{{execution.total_contributions|currency}}</td>
+						<td style="font-weight: bold">{{total_contribs|currency}}</td>
 					</tr>
 					</table>
 				</div>
@@ -140,7 +167,7 @@
 					{% endfor %}
 					<tr style="color: #333; background-color: #F5F5F5">
 						<th>Total</th>
-						<td style="font-weight: bold">{{execution.total_contributions|currency}}</td>
+						<td style="font-weight: bold">{{total_contribs|currency}}</td>
 					</tr>
 					</table>
 				</div>
@@ -165,15 +192,15 @@
 					</tr>
 				</thead>
 				<tbody>
-				{% for action in actions %}
+				{% for row in actions %}
 					<tr>
-						<td>{{action.name_long}}</td>
-						<td {% if not action.has_outcome %}colspan="3" style="font-style: italic"{% endif %}>
-							{{action.outcome_label}}
+						<td>{{row.action.name_long}}</td>
+						<td {% if not row.action.has_outcome %}colspan="3" style="font-style: italic"{% endif %}>
+							{{row.action.outcome_label}}
 						</td>
-						{% if action.has_outcome %}
-						<td class="{% if action.total_contributions_for %}text-success{% else %}text-muted{% endif %}">{{action.total_contributions_for|currency}}</td>
-						<td class="{% if action.total_contributions_against %}text-danger{% else %}text-muted{% endif %}">{{action.total_contributions_against|currency}}</td>
+						{% if row.action.has_outcome %}
+						<td class="{% if row.total_for %}text-success{% else %}text-muted{% endif %}">{{row.total_for|currency}}</td>
+						<td class="{% if row.total_against %}text-danger{% else %}text-muted{% endif %}">{{row.total_against|currency}}</td>
 						{% endif %}
 					</tr>
 				{% endfor %}
@@ -187,18 +214,41 @@
 	</div>
 
 	<div id="trigger-metadata" class="col-sm-4">
-		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' or not execution %}
-			<h2>So far...</h2>
+		{% if tcust %}
+			<div class="hidden-xs">
+			<p>This page was created by...</p>
+			<a href="{{tcust.owner.get_absolute_url}}">
+				<div class="organization-banner" style="background-image: url({{tcust.owner.get_absolute_url}}/_banner?width=350); margin-bottom: 1em">
+					<div>
+						{{tcust.owner.name}}
+					</div>
+				</div>
+			</a>
+			</div>
+		{% endif %}
+
+		{% if not execution %}
+			{% if T_pre == T %}
+				<h2>So far...</h2>
+			{% else %}
+				<hr>
+				<h2>{{T_pre.title}}</h2>
+				<p style="margin-bottom: 2em;">Here is how all <span class="site-brand">if.then.fund</span> users have acted on <a href="{{T_pre.get_absolute_url}}">this {{trigger.trigger_type.strings.action_noun}}</a> so far:</p>
+			{% endif %}
 
 			<div class="meta-stat">
-				<div class="num">{{trigger.total_pledged|currency}}</div>
+				<div class="num">{{T_pre.total_pledged|currency}}</div>
 				<div class="lbl">committed</div>
 			</div>
 
 			<div class="meta-stat">
-				<div class="num">{{trigger.pledge_count}}</div>
-				<div class="lbl">donor{{trigger.pledge_count|pluralize}} {% if trigger.pledge_count == 0 %}&mdash; be the first!{% endif %}</div>
+				<div class="num">{{T_pre.pledge_count}}</div>
+				<div class="lbl">donor{{T_pre.pledge_count|pluralize}} {% if T_pre.pledge_count == 0 %}&mdash; be the first!{% endif %}</div>
 			</div>
+
+			{% if T_pre != T %}
+			<p>Federal law prevents us from showing what {{T.owner.name}}&rsquo;s totals are prior to the {{trigger.trigger_type.strings.action_noun}}.</p>
+			{% endif %}
 
 			{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}
 			<p>Contributions will only be made once the {{trigger.trigger_type.strings.action_noun}} occurs.</p>
@@ -216,13 +266,13 @@
 			{% endif %}
 
 			<div class="meta-stat">
-				<div class="num">{{execution.total_contributions|currency}}</div>
+				<div class="num">{{total_contribs|currency}}</div>
 				<div class="lbl">total contributed</div>
 			</div>
 
 			<div class="meta-stat">
-				<div class="num">{{execution.pledge_count_with_contribs}}</div>
-				<div class="lbl">donor{{execution.pledge_count_with_contribs|pluralize}}</div>
+				<div class="num">{{total_pledges}}</div>
+				<div class="lbl">donor{{total_pledges|pluralize}}</div>
 			</div>
 
 			<hr>
@@ -247,7 +297,7 @@
 
 		<hr>
 		<small>
-			<p>This page was added to <span class="site-brand">if.then.fund</span> on {{trigger.created|date}}.</p>
+			<p>This page was added to <span class="site-brand">if.then.fund</span> on {{T.created|date}}.</p>
 			{% if trigger.execution %}<p>The {{trigger.trigger_type.strings.action_noun}} occurred on {{trigger.execution.action_time|date}}. Contributions began to be processed on {{trigger.execution.created|date}}.</p>{% endif %}
 			{% if execution %}<p>The most recent contribution was processed on {{trigger.execution.most_recent_pledge_execution.created|date}}.</p>{% endif %}
 

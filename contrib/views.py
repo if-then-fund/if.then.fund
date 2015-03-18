@@ -7,35 +7,66 @@ from django.conf import settings
 
 from twostream.decorators import anonymous_view, user_view_for
 
-from contrib.models import Trigger, TriggerStatus, TriggerExecution, ContributorInfo, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty, ContributionAggregate, IncompletePledge
+from contrib.models import Trigger, TriggerStatus, TriggerExecution, ContributorInfo, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty, ContributionAggregate, IncompletePledge, TriggerCustomization
 from contrib.utils import json_response
 from contrib.bizlogic import HumanReadableValidationError, run_authorization_test
 
 import copy
 import rtyaml
 import random
+import decimal
 
 # Used by unit tests to override the suggested pledge.
 SUGGESTED_PLEDGE_AMOUNT = None
 
 @anonymous_view
-def trigger(request, id, slug):
-	# get the object
+def trigger(request, id, trigger_customization_id):
+	# get the object / redirect to canonical URL if slug does not match
 	trigger = get_object_or_404(Trigger, id=id)
+	if not trigger_customization_id:
+		if request.path != trigger.get_absolute_url():
+			return redirect(trigger.get_absolute_url())
+		tcust = None
+	else:
+		tcust = get_object_or_404(TriggerCustomization, id=trigger_customization_id)
+		if request.path != tcust.get_absolute_url():
+			return redirect(tcust.get_absolute_url())
+		if not tcust.visible: raise Http404()
 
-	# redirect to canonical URL if slug does not match
-	if trigger.slug != slug:
-		return redirect(trigger.get_absolute_url())
+	# Related TriggerCustomization campaigns the user can take action on.
+	campaigns = TriggerCustomization.objects.filter(
+		trigger=trigger,
+		pledge_count__gt=0,
+		visible=True)\
+		.exclude(id=tcust.id if tcust else None)\
+		.order_by('-pledge_count')\
+		[0:8]
 
+	# What pre-execution statistics should we show?
+	#
+	# If we're on a TriggerCustomization that allows all outcomes to be
+	# chosen, then use that for statistics. It has the same pledge_count/
+	# total_pledged interface as a Trigger.
+	t_pre_ex_stats = trigger
+	if tcust and tcust.outcome is None:
+		t_pre_ex_stats = tcust
+
+	# What post-execution statistics should we show?
+	#
 	# Defaults. Note that these are also used for triggers that have been executed
 	# but for which there were no pledges that resulted in transactions, so use
 	# zeros instead of None's where needed.
 
-	outcomes = None
+	outcome_totals = None
 	actions = None
+
+	total_pledges = 0
 	avg_pledge = 0
-	avg_contrib = 0
+
+	total_contribs = 0
 	num_contribs = None
+	avg_contrib = 0
+
 	num_recips = 0
 	num_actors = 0
 	by_incumb_chlngr = []
@@ -47,39 +78,66 @@ def trigger(request, id, slug):
 
 	if te and te.pledge_count_with_contribs > 0 and te.pledge_count >= .75 * trigger.pledge_count:
 		# Get the contribution aggregates by outcome and sort by total amount of contributions.
-		outcomes = te.get_outcomes()
+		outcome_totals = te.get_outcomes(via=tcust)
 
-		# Actions/Actors. Sort with actors that received no contributions either for or against at
+		# Get the Actions/Actors and the total disbursed for each action
+		# to the incumbent or challenger.
+		actions = { a.id:
+			{
+				"action": a,
+				"actor": a.actor,
+				"outcome": a.outcome,
+				"reason_for_no_outcome": a.reason_for_no_outcome,
+				"total_for": decimal.Decimal(0),
+				"total_against": decimal.Decimal(0)
+			}
+			for a in te.actions.all().select_related('actor') }
+
+		# Pull in aggregates.
+		for agg in ContributionAggregate.get_slices('action', 'incumbent', trigger_execution=te, via=tcust):
+			actions[agg['action']]["total_for" if agg['incumbent'] else "total_against"] = agg['total']
+
+		# Sort with actors that received no contributions either for or against at
 		# the end of the list, since they're sort of no-data rows. After that, sort by the sum of
 		# the contributions plus the negative of the contributions to their challengers. For ties,
 		# sort alphabetically on name.
-		actions = list(te.actions.all().select_related('actor'))
+		actions = list(actions.values())
 		actions.sort(key = lambda a : (
-			a.outcome is None, # non-voting actors at the end
-			(a.total_contributions_for + a.total_contributions_against) == 0, # no contribs either way at end
-			-(a.total_contributions_for - a.total_contributions_against), # sort by contribs for minus contribs against
-			a.reason_for_no_outcome, # among non-voting actors, sort by the reason
-			a.outcome, # among voting actors, group by vote
-			a.actor.name_sort # finally, by last name
+			a['outcome'] is None, # non-voting actors at the end
+			(a['total_for'] + a['total_against']) == 0, # no contribs either way at end
+			-(a['total_for'] - a['total_against']), # sort by contribs for minus contribs against
+			a['reason_for_no_outcome'], # among non-voting actors, sort by the reason
+			a['outcome'], # among voting actors, group by vote
+			a['actor'].name_sort, # finally, by last name
 			)
 		)
+
+		# Compute a few other aggregates.
 		num_recips = 0
 		num_actors = 0
-		for a in actions:
-			if a.total_contributions_for > 0: num_recips += 1
-			if a.total_contributions_against > 0: num_recips += 1
-			if a.total_contributions_for > 0 or a.total_contributions_against > 0: num_actors += 1
-
-		# Incumbent/challengers.
 		by_incumb_chlngr = [["Incumbent", 0, "text-success"], ["Opponent", 0, "text-danger"]]
 		for a in actions:
-			by_incumb_chlngr[0][1] += a.total_contributions_for
-			by_incumb_chlngr[1][1] += a.total_contributions_against
+			# counts of actors/recipients
+			if a['total_for'] > 0: num_recips += 1
+			if a['total_against'] > 0: num_recips += 1
+			if a['total_for'] > 0 or a['total_against'] > 0: num_actors += 1
+
+			# totals by incumbent/challenger
+			by_incumb_chlngr[0][1] += a['total_for']
+			by_incumb_chlngr[1][1] += a['total_against']
 
 		# Compute other summary stats.
-		num_contribs = te.num_contributions
-		avg_pledge = te.total_contributions / te.pledge_count_with_contribs
-		avg_contrib = te.total_contributions / num_contribs
+		ag = ContributionAggregate.get_slice(trigger_execution=te, via=tcust)
+		total_contribs = ag['total']
+		num_contribs = ag['count']
+		if num_contribs > 0:
+			avg_contrib = total_contribs / num_contribs
+		if tcust is None:
+			total_pledges = te.pledge_count_with_contribs
+		else:
+			total_pledges = PledgeExecution.objects.filter(trigger_execution=te, pledge__via=tcust, charged__gt=0).count()
+		if total_pledges > 0:
+			avg_pledge = total_contribs / total_pledges
 	else:
 		# If the trigger has been executed but not enough pledges
 		# have completed being executed yet, then pretend like
@@ -88,15 +146,23 @@ def trigger(request, id, slug):
 
 	return render(request, "contrib/trigger.html", {
 		"trigger": trigger,
+		"tcust": tcust,
+		"T": tcust if tcust else trigger,
+		"T_pre": t_pre_ex_stats,
+		
 		"execution": te,
-		"outcomes": outcomes,
+		"outcome_totals": outcome_totals,
 		"alg": Pledge.current_algorithm(),
 		"min_contrib": trigger.get_minimum_pledge(),
+
 		"suggested_pledge": SUGGESTED_PLEDGE_AMOUNT or random.choice([5, 10]),
+		"campaigns": campaigns,
 		
 		"actions": actions,
 		"by_incumb_chlngr": by_incumb_chlngr,
+		"total_pledges": total_pledges,
 		"avg_pledge": avg_pledge,
+		"total_contribs": total_contribs,
 		"num_contribs": num_contribs,
 		"num_recips": num_recips,
 		"num_actors": num_actors,
@@ -113,7 +179,7 @@ def get_user_pledges(user, request):
 		return Pledge.objects.none() # empty QuerySet
 
 @user_view_for(trigger)
-def trigger_user_view(request, id, slug):
+def trigger_user_view(request, id, trigger_customization_id):
 	trigger = get_object_or_404(Trigger, id=id)
 	ret = { }
 
@@ -236,6 +302,7 @@ def validate_email(request):
 		# Only have at most one of these records per trigger-email address pair.
 		IncompletePledge.objects.get_or_create(
 			trigger=Trigger.objects.get(id=request.POST['trigger']),
+			via=TriggerCustomization.objects.get(id=request.POST['via']) if request.POST['via'] != '0' else None,
 			email=email,
 			defaults={
 				"extra": {
@@ -297,8 +364,10 @@ def create_pledge(request):
 	p.trigger = Trigger.objects.get(id=request.POST['trigger'])
 	p.made_after_trigger_execution = (p.trigger.status == TriggerStatus.Executed)
 
-	# campaign
+	# campaign (i.e. utf_campaigm) and TriggerCustomization ('via')
 	p.campaign = get_sanitized_campaign(request)
+	if request.POST['via'] != '0':
+		p.via = TriggerCustomization.objects.get(id=request.POST['via'])
 
 	# Set user from logged in state.
 	if request.user.is_authenticated():
@@ -371,6 +440,10 @@ def create_pledge(request):
 		raise Exception("incumb_challgr is out of range")
 	if p.filter_party == ActorParty.Independent:
 		raise Exception("filter_party is out of range")
+	if p.via and p.via.incumb_challgr and p.incumb_challgr != p.via.incumb_challgr:
+		raise Exception("incumb_challgr is out of range (via)")
+	if p.via and p.via.filter_party and p.filter_party != p.via.filter_party:
+		raise Exception("filter_party is out of range (via)")
 
 	# Get a ContributorInfo to assign to the Pledge.
 	if not request.POST["copyFromPledge"]:

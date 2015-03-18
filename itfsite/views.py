@@ -1,8 +1,13 @@
 from django.db.models import Sum
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import Http404, HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
 
+from itfsite.models import Organization
 from contrib.models import Pledge, PledgeExecution, PledgeStatus
+
+from twostream.decorators import anonymous_view, user_view_for
 
 def homepage(request):
 	# The site homepage.
@@ -124,3 +129,64 @@ def user_contribution_details(request):
 			resp['Content-Disposition'] = 'inline'
 		resp["Content-Length"] = len(buf)
 		return resp
+
+@anonymous_view
+def org_landing_page(request, path, id, slug):
+	# get the object / redirect to canonical URL if slug does not match
+	org = get_object_or_404(Organization, id=id)
+	if request.path != org.get_absolute_url():
+		return redirect(org.get_absolute_url())
+
+	# get the triggers to display & sort
+	from contrib.models import TriggerStatus
+	triggers = list(org.triggers.filter(visible=True,
+		trigger__status__in=(TriggerStatus.Open, TriggerStatus.Executed))\
+		.select_related('trigger'))
+	triggers.sort(key = lambda t : (t.trigger.status==TriggerStatus.Open, t.created), reverse=True)
+
+	return render(request, "itfsite/organization.html", {
+		"org": org,
+		"triggers": triggers,
+	})
+
+def query_facebook(opengraph_id):
+	import json
+	import requests
+	r = requests.get(
+		"https://graph.facebook.com/v2.2/%s?access_token=%s" % (opengraph_id, settings.FACEBOOK_ACCESS_TOKEN),
+		timeout=15,
+		verify=True, # check SSL cert (is default, actually)
+		)
+	r.raise_for_status()
+	return r.json()
+
+def extract_opengraph_id(facebook_url):
+	import re
+	m = re.match("https?://www.facebook.com/pages/[^/]+/(\d+)", facebook_url)
+	if m:
+		return m.group(1)
+	m = re.match("https?://www.facebook.com/([^/\?]+)", facebook_url)
+	if m:
+		return m.group(1)
+	return None
+
+@anonymous_view
+def org_resource(request, path, id, slug, resource_type):
+	org = get_object_or_404(Organization, id=id)
+	if resource_type == "banner":
+		# Get the org's banner image from their Facebook cover image.
+		if org.facebook_url:
+			graph_id = extract_opengraph_id(org.facebook_url)
+			if graph_id:
+				graph = query_facebook(graph_id) # Page
+				graph = query_facebook(graph['cover']['id']) # Cover image
+				desired_width = int(request.GET.get('width', '1024'))
+				url = min(graph['images'], key = lambda im : abs(im['width']-desired_width))['source']
+				return redirect(url)
+
+		# No banner image available. Return the smallest transparent PNG.
+		# Better than a 404. h/t http://garethrees.org/2007/11/14/pngcrush/
+		return HttpResponse(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82',
+			content_type="image/png")
+
+	raise Http404()

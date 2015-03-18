@@ -28,6 +28,8 @@ class PledgeTestCase(TestCase):
 			slug=slugify("Test Trigger"),
 			description="This is a test trigger.",
 			description_format=TextFormat.Markdown,
+			execution_note="The trigger will be executed during the test.",
+			execution_note_format=TextFormat.Markdown,
 			outcomes=[
 				{ "label": "Yes", "tip": "YesTip" },
 				{ "label": "No", "tip": "NoTip" },
@@ -108,6 +110,8 @@ class ExecutionTestCase(TestCase):
 			slug=slugify("Test Trigger"),
 			description="This is a test trigger.",
 			description_format=TextFormat.Markdown,
+			execution_note="The trigger will be executed during the test.",
+			execution_note_format=TextFormat.Markdown,
 			outcomes=[
 				{ "label": "Yes", },
 				{ "label": "No", },
@@ -383,6 +387,7 @@ class ExecutionTestCase(TestCase):
 
 				# What ContributionAggregates should we expect?
 				for fields in product(
+						# via,
 						(None, desired_outcome), # outcome
 						(None, action), # action
 						(None, action.outcome == p.desired_outcome), # incumbent

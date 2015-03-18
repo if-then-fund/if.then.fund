@@ -6,7 +6,7 @@ from django.conf import settings
 def create_de_donation_basic_dict(pledge):
 	# Creates basic info for a Democracy Engine API call for creating
 	# a transaction (both authtest and auth+capture calls) based on a
-	# ContributorInfo instance.
+	# Pledge instance and its ContributorInfo profile.
 	return {
 		"donor_first_name": pledge.profile.extra['contributor']['contribNameFirst'],
 		"donor_last_name": pledge.profile.extra['contributor']['contribNameLast'],
@@ -39,6 +39,7 @@ def run_authorization_test(pledge, ccnum, cccvc, aux_data):
 	# Logging.
 	aux_data.update({
 		"trigger": pledge.trigger.id,
+		"via": pledge.via.id if pledge.via else None,
 		"pledge": pledge.id,
 	})
 
@@ -269,6 +270,7 @@ def create_pledge_donation(pledge, recipients):
 		# tracking info for internal use
 		"aux_data": rtyaml.dump({ # DE will gives this back to us encoded as YAML, but the dict encoding is ruby-ish so to be sure we can parse it, we'll encode it first
 			"trigger": pledge.trigger.id,
+			"via": pledge.via.id if pledge.via else None,
 			"pledge": pledge.id,
 			"user": pledge.user.id,
 			"email": pledge.user.email,

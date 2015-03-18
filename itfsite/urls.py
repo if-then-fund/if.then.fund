@@ -10,11 +10,12 @@ urlpatterns = patterns('',
 	url(r'^home/contributions$', 'itfsite.views.user_contribution_details', name='user_contrib_details'),
 
 	url(r'^', include('contrib.urls')),
+	url(r'^(user|org)/(\d+)/([^/]+)$', 'itfsite.views.org_landing_page'),
+	url(r'^(user|org)/(\d+)/([^/]+)/_(banner)$', 'itfsite.views.org_resource'),
 
 	url(r'^accounts/login$', auth_views.login),
 	url(r'^accounts/logout$', auth_views.logout, { 'next_page': '/' } ),
 	url(r'^accounts/password-change$', auth_views.password_change, { 'post_change_redirect': '/home', 'template_name': 'registration/password_change.html' }, name='password_change' ),
-
 
 	url(r'^admin/', include(admin.site.urls)),
 

@@ -94,31 +94,54 @@
 {% endif %}
 
 <div id="make-pledge" {% if hidemypledge %}style="display: none;"{% endif %}>
-  {% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
-    <h2>How would you {{trigger.trigger_type.strings.action_vb_inf}}?</h2>
-  {% elif hidemypledge %}
+  {% if not hidemypledge %}
+    <h2>
+  {% else %}
     <div style="margin: 1.5em -15px 1.5em -16px">
     <div class="panel panel-default">
     <div class="panel-body">
-    <p><em>How would you have {{trigger.trigger_type.strings.action_vb_past}}?</em></p>
+    <p><em>
+  {% endif %}
+
+  {% if tcust.has_fixed_outcome %}
+    Take Action
+  {% elif trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
+    How would you {{trigger.trigger_type.strings.action_vb_inf}}?
   {% else %}
-    <h2>How would you have {{trigger.trigger_type.strings.action_vb_past}}?</h2>
+    How would you have {{trigger.trigger_type.strings.action_vb_past}}?
+  {% endif %}
+
+  {% if not hidemypledge %}
+    </h2>
+  {% else %}
+    </em></p>
   {% endif %}
 
   <div id="pledge-outcomes" {% if hidemypledge %}style="margin-bottom: -.75em"{% endif %}>
-  {% for outcome in trigger.outcomes %}
-    <button class="btn btn-lg btn-success" onclick="pledge_go(this)" data-index="{{forloop.counter0}}">
-      <span>{{outcome.label}}</span>
-      {% if outcome.tip %}<small>{{outcome.tip}}</small>{% endif %}
+  {% if not tcust.has_fixed_outcome %}
+    {% for outcome in trigger.outcomes %}
+      <button class="btn btn-lg btn-success" onclick="pledge_go(this)" data-index="{{forloop.counter0}}">
+        <span>{{outcome.label}}</span>
+        {% if outcome.tip %}<small>{{outcome.tip}}</small>{% endif %}
+      </button>
+    {% endfor %}
+
+  {% else %}
+    {# This is on a customized trigger page with a restricted outcome. #}
+    <p style="margin-bottom: 1em">Schedule a campaign contribution to {{trigger.trigger_type.strings.actors}} who {{trigger.trigger_type.strings.action_vb_inf}} {{tcust.get_outcome_description}}?</p>
+    <button class="btn btn-lg btn-success" onclick="pledge_go(this)" data-index="{{tcust.outcome}}">
+      <span>Begin &raquo;</span>
     </button>
-  {% endfor %}
+  {% endif %}
   </div>
 
   {% if not hidemypledge %}
   <div id="pledge-about-site" style="padding-top: 2em;">
     <small>
     <hr>
+    {% if not tcust %} {# the 'we' is confusing on a customized page #}
     <p>We aim to shift the balance of power to shape Congress away from concentrated wealth and toward small-dollar donors like you.</p>
+    {% endif %}
     <p>You will be making a campaign contribution to {{trigger.trigger_type.strings.actors}} or their next opponent. Until the {{trigger.trigger_type.strings.action_noun}} occurs, <span class="site-brand">if.then.fund</span> won't reveal to anyone what action you took. After the {{trigger.trigger_type.strings.action_noun}}, we’ll charge your card and split your contribution based on your instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
     </small>
   </div>
@@ -128,6 +151,7 @@
     
     <input type="hidden" name="trigger" value="{{trigger.id}}"/>
     <input type="hidden" name="campaign" value="{{request.GET.utm_campaign}}"/>
+    <input type="hidden" name="via" value="{% if tcust %}{{tcust.id}}{% else %}0{% endif %}"/>
     <input type="hidden" name="algorithm" value="{{alg.id}}"/>
     <input type="hidden" name="desired_outcome" value="?"/>
     <input type="hidden" name="amount" value="?"/>
@@ -162,21 +186,29 @@
             <div class="panel-body">
 
             <div> {# scopes the text-danger #}
+              {% if tcust.incumb_challgr != -1 %}
               <div class="control-group">
                 <p style="margin-bottom: 0"><strong>Keep &rsquo;em in.</strong></p>
                 <label for="filterIncumbents">
-                  <input id="filterIncumbents" type="checkbox" onchange="update_start_next_state()" checked>
+                  <input id="filterIncumbents" type="checkbox" onchange="update_start_next_state()"
+                    {% if tcust.incumb_challgr != -1 %}checked{% endif %}
+                    {% if tcust.incumb_challgr %}disabled class="hidden"{% endif %}>
                   If a {{trigger.trigger_type.strings.actor}} {{trigger.trigger_type.strings.action_vb_pres_s}} <span class="fill-in"> </span>, then fund their reelection campaign.
                 </label>
               </div>
+              {% endif %}
 
+              {% if tcust.incumb_challgr != 1 %}
               <div class="control-group">
                 <p style="margin-bottom: 0"><strong>Throw &rsquo;em out.</strong></p>
                 <label for="filterChallengers">
-                  <input id="filterChallengers" type="checkbox" onchange="update_start_next_state()" checked>
+                  <input id="filterChallengers" type="checkbox" onchange="update_start_next_state()"
+                    {% if tcust.incumb_challgr != 1 %}checked{% endif %}
+                    {% if tcust.incumb_challgr %}disabled class="hidden"{% endif %}>
                   If a {{trigger.trigger_type.strings.actor}} {{trigger.trigger_type.strings.action_vb_pres_s}} <span class="fill-in"> </span>, then fund their opponent&rsquo;s campaign.
                 </label>
               </div>
+              {% endif %}
 
               <p class="text-danger" style="display: none">You must choose at least one.</p>
             </div>
@@ -184,31 +216,48 @@
             <p style="margin-bottom: 0"><strong>Only make contributions to:</strong></p>
 
             <div id="pledge-party">
+              {% if tcust.filter_party|stringformat:'s' != 'ActorParty.Democratic' %}
               <div class="control-group">
                 <label for="filterPartyR" data-value="R">
-                  <input  id="filterPartyR" type="checkbox" onchange="update_start_next_state()" checked>
+                  <input  id="filterPartyR" type="checkbox" onchange="update_start_next_state()"
+                    {% if tcust.filter_party|stringformat:'s' != 'ActorParty.Democratic' %}checked{% endif %}
+                    {% if tcust.filter_party %}disabled class="hidden"{% endif %}>
                   Republicans
                 </label>
               </div>
+              {% endif %}
 
+              {% if tcust.filter_party|stringformat:'s' != 'ActorParty.Republican' %}
               <div class="control-group">
                 <label for="filterPartyD" data-value="D">
-                  <input id="filterPartyD" type="checkbox" onchange="update_start_next_state()" checked>
+                  <input id="filterPartyD" type="checkbox" onchange="update_start_next_state()"
+                    {% if tcust.filter_party|stringformat:'s' != 'ActorParty.Republican' %}checked{% endif %}
+                    {% if tcust.filter_party %}disabled class="hidden"{% endif %}>
                   Democrats
                 </label>
               </div>
+              {% endif %}
 
               <div class="clearfix"> </div>
 
               <p class="text-danger" style="display: none">You must choose at least one.</p>
             </div>
 
+            {% if tcust.incumb_challgr or tcust.filter_party %}
+            <p style="margin-bottom: 0; font-style: italic; font-size: 88%; color: #666;">Some of these options have been pre-set by {{tcust.owner.name}}.</p>
+            {% endif %}
           </div>
           </div> <!-- /advnaced-filters -->
 
           <p id="filter-summary">
             <span class="text"> </span>
-            <span>[<a href="#" onclick="return show_and_scroll('advanced-filters', this.parentNode);">Advanced Filters</a>]</span>
+
+            {% if not tcust.incumb_challgr or not tcust.filter_party %}
+              <span>[<a href="#" onclick="return show_and_scroll('advanced-filters', this.parentNode);">Advanced Filters</a>]</span>
+            {% else %}
+              {# no need to show the advanced options panel if there is nothing to customize #}
+              <span style="font-style: italic;">(This has been preset by {{tcust.owner.name}}.)</span>
+            {% endif %}
           </p>
 
           <div class="buttons">
@@ -453,6 +502,7 @@ function pledge_init() {
       suggested_pledge = null; // don't record in mixpanel
     }
 
+    {% if not tcust.incumb_challgr %}
     if (the_page.pledge_defaults.incumb_challgr) {
       $('#filterIncumbents, #filterChallengers').prop('checked', false);
       if (the_page.pledge_defaults.incumb_challgr == -1)
@@ -462,9 +512,12 @@ function pledge_init() {
       else if (the_page.pledge_defaults.incumb_challgr == 0)
         $('#filterIncumbents, #filterChallengers').prop('checked', true);
     }
+    {% endif %}
 
+    {% if not tcust.filter_party %}
     $('#filterPartyR').prop('checked', the_page.pledge_defaults.filter_party == 'ActorParty.Republican' || the_page.pledge_defaults.filter_party == null);
     $('#filterPartyD').prop('checked', the_page.pledge_defaults.filter_party == 'ActorParty.Democratic' || the_page.pledge_defaults.filter_party == null);
+    {% endif %}
 
     if (the_page.pledge_defaults.email)
         $('#emailEmail').val(the_page.pledge_defaults.email);
@@ -594,23 +647,26 @@ function pledge_go(outcome_elem) {
   // Fill in the user's choice in the checkbox fields for the filters for
   // who to give to.
 
-  function fill_in(outcome_elem, filter_elem) {
-    var desired_outcome = $(outcome_elem).find('span').text();
-    if ($(outcome_elem).find('small').text())
-      desired_outcome += " (" + $(outcome_elem).find('small').text() + ")";
-    $(filter_elem).parent().find('.fill-in').text(desired_outcome);
+  var trigger_outcomes = [
+    {% for outcome in trigger.outcomes %}
+      "{{outcome.label|escapejs}}{% if outcome.tip %} ({{outcome.tip|escapejs}}){% endif %}"{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+  ];
+
+  function fill_in(filter_elem, opponent) {
+    var outcome_index = $(outcome_elem).attr('data-index');
+    if (opponent) outcome_index = 1 - outcome_index; // assumes two options!
+    var text = trigger_outcomes[outcome_index];
+    $(filter_elem).parent().find('.fill-in').text(text);
   }
 
   // Fill in the incumbents via the user's choice.
-  fill_in(outcome_elem, '#filterIncumbents');
-  fill_in(outcome_elem, '#repeat-desired-outcome');
+  fill_in('#filterIncumbents');
+  fill_in('#repeat-desired-outcome');
 
   // Fill in the challengers via the button that the user didn't choose.
   // If there is more than one option in the future, this will need to be revised.
-  $('#pledge-outcomes button').each(function() {
-    if (this == outcome_elem) return;
-    fill_in(this, '#filterChallengers');
-  })
+  fill_in('#filterChallengers', true);
 
   // Set form field for submission.
   $('#pledge-info input[name="desired_outcome"]').val($(outcome_elem).attr('data-index'))
@@ -761,6 +817,7 @@ function do_pledge_login_next() {
       method: "POST",
       data: {
         trigger: {{trigger.id}},
+        via: {% if tcust %}{{tcust.id}}{% else %}0{% endif %},
         desired_outcome: $('#pledge-info input[name="desired_outcome"]').val(),
         campaign: '{{request.GET.utm_campaign|escapejs}}',
         email: $('#emailEmail').val()
