@@ -1,4 +1,5 @@
 from decimal import Decimal
+from itertools import product
 
 from django.test import TestCase
 
@@ -348,6 +349,7 @@ class ExecutionTestCase(TestCase):
 			self.assertEqual(p.trigger.execution.pledge_count_with_contribs, 0)
 			self.assertEqual(p.trigger.execution.num_contributions, 0)
 			self.assertEqual(p.trigger.execution.total_contributions, 0)
+			self.assertEqual(ContributionAggregate.objects.filter(trigger_execution=p.trigger.execution).count(), 0)
 			return
 
 		# Test more general properties.
@@ -356,11 +358,15 @@ class ExecutionTestCase(TestCase):
 		# Test that every Action lead to a Contribution.
 		expected_contrib_count = 0
 		expected_charge = 0
+		expected_aggregates_counts = dict()
+		expected_aggregates_totals = dict()
 		for action in t.execution.actions.all():
 			contrib = p.execution.contributions.filter(action=action).first()
 			if action.outcome is None:
+				# We expect no contribution in this case.
 				self.assertIsNone(contrib)
 			else:
+				# What Contribution should we expect?
 				if action.outcome == p.desired_outcome:
 					if p.incumb_challgr == -1: continue
 					recipient = Recipient.objects.get(actor=action.actor)
@@ -374,6 +380,17 @@ class ExecutionTestCase(TestCase):
 				self.assertEqual(contrib.amount, expected_contrib_amount)
 				expected_contrib_count += 1
 				expected_charge += expected_contrib_amount
+
+				# What ContributionAggregates should we expect?
+				for fields in product(
+						(None, desired_outcome), # outcome
+						(None, action), # action
+						(None, action.outcome == p.desired_outcome), # incumbent
+						(None, action.party if action.outcome == p.desired_outcome else recipient.party), # party
+						(None,), # district (not set)
+					):
+					expected_aggregates_counts[fields] = expected_aggregates_counts.get(fields, 0) + 1
+					expected_aggregates_totals[fields] = expected_aggregates_totals.get(fields, 0) + expected_contrib_amount
 
 		# Test fees and no extra contributions.
 		expected_fees = (expected_charge * Decimal('.09') + Decimal('.20')).quantize(Decimal('.01'))
@@ -389,3 +406,16 @@ class ExecutionTestCase(TestCase):
 		self.assertEqual(p.trigger.execution.num_contributions, expected_contrib_count)
 		self.assertEqual(p.trigger.execution.total_contributions, p.execution.charged-p.execution.fees)
 
+		# Test contribution aggregates.
+		self.assertEqual(ContributionAggregate.objects.filter(trigger_execution=p.trigger.execution).count(), len(expected_aggregates_counts))
+		for fields in expected_aggregates_counts:
+			key = { 'outcome': fields[0], 'action': fields[1], 'incumbent': fields[2],
+						'party': fields[3], 'district': fields[4] }
+			ca = ContributionAggregate.objects.get(trigger_execution=p.trigger.execution, **key)
+			self.assertEqual(ca.count, expected_aggregates_counts[fields])
+			self.assertEqual(ca.total, expected_aggregates_totals[fields])
+		self.assertEqual(ContributionAggregate.get_slice(trigger_execution=p.trigger.execution)['total'], p.trigger.execution.total_contributions)
+		self.assertEqual(ContributionAggregate.get_slice(trigger_execution=p.trigger.execution)['count'], p.trigger.execution.num_contributions)
+		for a in p.trigger.execution.actions.all():
+			self.assertEqual(ContributionAggregate.get_slice(trigger_execution=p.trigger.execution, action=a, incumbent=True)['total'], a.total_contributions_for)
+			self.assertEqual(ContributionAggregate.get_slice(trigger_execution=p.trigger.execution, action=a, incumbent=False)['total'], a.total_contributions_against)

@@ -212,9 +212,7 @@ class TriggerExecution(models.Model):
 		for i in range(len(outcomes)):
 			outcomes[i]['index'] = i
 			outcomes[i]['contribs'] = 0
-		for rec in ContributionAggregate.objects.filter(trigger_execution=self, district=None)\
-				.exclude(outcome=None)\
-				.values('outcome', 'total'):
+		for rec in ContributionAggregate.get_slices('outcome', trigger_execution=self):
 			outcomes[rec['outcome']]['contribs'] = rec['total']
 		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
 		return outcomes
@@ -762,7 +760,7 @@ class Pledge(models.Model):
 				c.save()
 
 				# Increment the TriggerExecution and Action's total_contributions.
-				c.inc_action_contrib_total()
+				c.update_aggregates()
 
 			# Mark pledge as executed.
 			pledge.status = PledgeStatus.Executed
@@ -965,7 +963,7 @@ class PledgeExecution(models.Model):
 
 		# temporarily decrement all of the contributions from the aggregates
 		for c in self.contributions.all():
-			c.inc_action_contrib_total(factor=-1)
+			c.update_aggregates(factor=-1)
 
 		self.district = district
 		self.extra['geocode'] = other
@@ -973,7 +971,7 @@ class PledgeExecution(models.Model):
 
 		# re-increment now that the district is set
 		for c in self.contributions.all():
-			c.inc_action_contrib_total(factor=1)
+			c.update_aggregates(factor=1)
 
 #####################################################################
 #
@@ -1051,12 +1049,12 @@ class Contribution(models.Model):
 		# Engine side.
 
 		# Decrement the TriggerExecution and Action's total_pledged fields.
-		self.inc_action_contrib_total(factor=-1)
+		self.update_aggregates(factor=-1)
 
 		# Remove record.
 		super(Contribution, self).delete()	
 
-	def inc_action_contrib_total(self, factor=1):
+	def update_aggregates(self, factor=1):
 		# Increment the totals on the Action instance. This excludes fees because
 		# this is based on transaction line items.
 		if not self.recipient.is_challenger:
@@ -1074,19 +1072,26 @@ class Contribution(models.Model):
 		self.action.execution.num_contributions = models.F('num_contributions') + 1*factor
 		self.action.execution.save(update_fields=['total_contributions', 'num_contributions'])
 
-		# Increment the cached ContributionAggregate for the desired outcome.
-		# Note that Pledge.district is None before we've done the look-up,
-		# and we'll just omit those from the aggregates.
-		slices = []
-		for outcome in (None, self.pledge_execution.pledge.desired_outcome):
-			for district in set([None, self.pledge_execution.district]):
-				slices.append({ "outcome": outcome, "district": district })
-		for slce in slices:
-			agg, is_new = ContributionAggregate.objects.get_or_create(
-				trigger_execution=self.action.execution,
-				**slce)
+		# Increment the cached ContributionAggregates that this Contribution
+		# gets aggregated in.
+		self.update_contributionaggregates(factor=factor)
+
+	def update_contributionaggregates(self, factor=1):
+		# Increment the cached ContributionAggregates that this Contribution
+		# gets aggregated in.
+		from itertools import product
+		for fields in product(
+				[self.action.execution], # trigger_execution
+				(None, self.pledge_execution.pledge.desired_outcome), # outcome
+				(None, self.action), # action
+				(None, not self.recipient.is_challenger), # incumbent
+				(None, self.action.party if not self.recipient.is_challenger else self.recipient.party), # party
+				set([None, self.pledge_execution.district]), # district (but excludes the 'None' district)
+			):
+			agg, is_new = ContributionAggregate.objects.get_or_create(**dict(zip(ContributionAggregate.FIELDS, fields)))
+			agg.count = models.F('count') + 1*factor
 			agg.total = models.F('total') + self.amount*factor
-			agg.save(update_fields=['total'])
+			agg.save(update_fields=['count', 'total'])
 
 class ContributionAggregate(models.Model):
 	"""Aggregate totals for various slices of contributions."""
@@ -1095,9 +1100,79 @@ class ContributionAggregate(models.Model):
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
 	outcome = models.IntegerField(blank=True, null=True, help_text="The outcome index that was taken. Null if the slice encompasses all outcomes.")
+	action = models.ForeignKey(Action, blank=True, null=True, on_delete=models.CASCADE, help_text="The Action that the contribution was made about.")
+	incumbent = models.NullBooleanField(blank=True, null=True, help_text="Whether the contribution was to the Actor (True) or the Actor's challenger (False).")
+	party = EnumField(ActorParty, blank=True, null=True, help_text="The party of the Recipient.")
 	district = models.CharField(max_length=4, blank=True, null=True, help_text="The congressional district of the user (at the time of the pledge), in the form of XX00. Null if the slice encompasses all district.")
 
-	total = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of campaign contributions executed, excluding fees.")
+	count = models.IntegerField(default=0, help_text="A cached total count of campaign contributions executed in this slice.")
+	total = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total dollar amount of campaign contributions executed in this slice, excluding fees.")
+
+	FIELDS = ('trigger_execution', 'outcome', 'action', 'incumbent', 'party', 'district')
 
 	class Meta:
-		unique_together = ('trigger_execution', 'outcome', 'district')
+		# not sure how to access FIELDS instance.....
+		unique_together = ('trigger_execution', 'outcome', 'action', 'incumbent', 'party', 'district')
+
+	def __str__(self):
+		return "%d | %s %s %s %s %s" % (self.trigger_execution_id, self.outcome, self.action_id, self.incumbent, self.party, self.district)
+
+	@staticmethod
+	def get_slice(**slce):
+		# Returns a single slice. Whatever fields the caller
+		# hasn't specifically requested get filled in with
+		# None, which represents the aggregate across all
+		# values. Otherwise we'd be requesting multiple
+		# ContributionAggregate instances.
+		#
+		# Return a dict { "count": __, "total": __ } to match
+		# how get_slices returns a list of dicts via .values().
+		for f in slce:
+			if f not in ContributionAggregate.FIELDS:
+				raise ValueError(f)
+		slce = dict(slce)
+		for field in ContributionAggregate.FIELDS:
+			if field not in slce:
+				slce[field] = None
+		try:
+			ca = ContributionAggregate.objects.get(**slce)
+			return { "count": ca.count, "total": ca.total }
+		except ContributionAggregate.DoesNotExist:
+			return { "count": 0, "total": 0 }
+
+	@staticmethod
+	def get_slices(*across, **slce):
+		# Returns a list of ContributionAggregates that match the
+		# slce values. For any field not mentioned in slce or
+		# across, fill it in with None so we get aggregates
+		# across those values. The fields in across are the ones
+		# the caller wants particular aggregates for, and for
+		# those we must *exclude* None because that represents
+		# the aggregate for all of those values.
+		if len(across) == 0: raise ValueError("Must specify at least one 'across' column.")
+		for f in list(slce) + list(across):
+			if f not in ContributionAggregate.FIELDS:
+				raise ValueError(f)
+		slce = dict(slce)
+		for field in ContributionAggregate.FIELDS:
+			if field not in slce and field not in across:
+				slce[field] = None
+		c = ContributionAggregate.objects.filter(**slce)
+		for f in across: # must use separate 'exclude' calls
+			c = c.exclude(**{f: None})
+		return c.values('count', 'total', *across)
+
+	@staticmethod
+	@transaction.atomic
+	def rebuild():
+		try:
+			from tqdm import tqdm
+		except:
+			tqdm = lambda x : x
+
+		# Delete all ContributionAggregate objects.
+		ContributionAggregate.objects.all().delete()
+
+		# Start incrementing new ones.
+		for c in tqdm(Contribution.objects.all()):
+			c.update_contributionaggregates()
