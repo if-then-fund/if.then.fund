@@ -46,14 +46,16 @@ class SimulationTest(StaticLiveServerTestCase):
 			raise ValueError("No email was sent.")
 		return msg
 
-	def test_test(self):
+	def create_test_trigger(self):
 		# Create a Trigger.
 		from contrib.models import Trigger, TriggerStatus, Pledge
 		from contrib.legislative import create_trigger_from_bill
 		t = create_trigger_from_bill("s1-114", "h")
 		t.status = TriggerStatus.Open
 		t.save()
+		return t
 
+	def _test_pledge_simple(self, t):
 		# Open the Trigger page.
 		self.browser.get(self.build_test_url(t.get_absolute_url()))
 		self.assertRegex(self.browser.title, "Keystone XL")
@@ -136,7 +138,13 @@ class SimulationTest(StaticLiveServerTestCase):
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
 			"You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 435 representatives, each getting a part of your contribution if they vote Yes on S. 1, but if they vote No on S. 1 their part of your contribution will go to their next general election opponent.")
 
-		# Check the trigger.
+		return email, pw
+
+	def _test_pledge_simple_execution(self, t):
+		# This function always follows _test_pledge_simple.
+
+		# Check the trigger's current state.
+		from contrib.models import Trigger
 		t = Trigger.objects.get(id=t.id) # refresh
 		self.assertEqual(t.pledge_count, 1)
 		self.assertEqual(t.total_pledged, Decimal('12'))
@@ -150,6 +158,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		send_pledge_emails().handle()
 
 		# Execute pledges.
+		from contrib.models import Pledge
 		Pledge.ENFORCE_EXECUTION_EMAIL_DELAY = False
 		from contrib.management.commands.execute_pledges import Command as execute_pledges
 		execute_pledges().handle()
@@ -165,10 +174,11 @@ class SimulationTest(StaticLiveServerTestCase):
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
 			"You made a campaign contribution of $9.44 for this vote. It was split among 424 representatives, each getting a part of your contribution if they voted Yes on S. 1, but if they voted No on S. 1 their part of your contribution will go to their next general election opponent.")
 
-		#############################################################################
-
+	def _test_pledge_logged_in(self):
 		# Now that we're logged in, try to do another trigger with things pre-filled.
 
+		from contrib.models import Trigger, TriggerStatus
+		from contrib.legislative import create_trigger_from_bill
 		t = create_trigger_from_bill("s1-114", "s")
 		t.status = TriggerStatus.Open
 		t.save()
@@ -209,6 +219,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		send_pledge_emails().handle()
 
 		# Execute pledges.
+		from contrib.management.commands.execute_pledges import Command as execute_pledges
 		execute_pledges().handle()
 
 		# Send pledge post-execution emails.
@@ -221,12 +232,11 @@ class SimulationTest(StaticLiveServerTestCase):
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
 			"You made a campaign contribution of $9.44 for this vote. It was split among 424 senators, each getting a part of your contribution if they voted No on S. 1, but if they voted Yes on S. 1 their part of your contribution will go to their next general election opponent.")
 
-		#############################################################################
+	def _test_pledge_returning_user(self, email, pw):
+		# User is logged out but has an account.
 
-		# Log out and try again with pre-filling fields during the login step.
-
-		self.browser.get(self.build_test_url("/accounts/logout"))
-
+		from contrib.models import TriggerStatus
+		from contrib.legislative import create_trigger_from_bill
 		t = create_trigger_from_bill("hr30-114", "s")
 		t.status = TriggerStatus.Open
 		t.save()
@@ -277,3 +287,20 @@ class SimulationTest(StaticLiveServerTestCase):
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#login-error").text,
 			"You have already scheduled a contribution for this vote. Please log in to see details.")
+
+	def test_maintest(self):
+		# Create the trigger.
+		t = self.create_test_trigger()
+
+		# Test the creation of a Pledge.
+		email, pw = self._test_pledge_simple(t)
+
+		# Test its exeuction.
+		self._test_pledge_simple_execution(t)
+
+		# Now that the user is logged in, try another pledge with fields pre-filled.
+		self._test_pledge_logged_in()
+
+		# Log out and try again with pre-filling fields during the login step.
+		self.browser.get(self.build_test_url("/accounts/logout"))
+		self._test_pledge_returning_user(email, pw)
