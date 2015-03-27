@@ -5,7 +5,9 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.utils import timezone
 
-from contrib.models import Pledge, TriggerStatus, PledgeStatus
+from datetime import timedelta
+
+from contrib.models import Pledge, TriggerStatus, PledgeStatus, IncompletePledge
 from contrib.bizlogic import get_pledge_recipients, compute_charge
 
 from htmlemailer import send_mail
@@ -18,6 +20,7 @@ class Command(BaseCommand):
 		self.send_pledge_emails('pre')
 		self.send_pledge_emails('post')
 		self.send_pledge_emails('emailconfirm')
+		self.send_incomplete_pledge_emails()
 
 	def send_pledge_emails(self, pre_or_post):
 		if pre_or_post == "pre":
@@ -89,3 +92,27 @@ class Command(BaseCommand):
 		field_name = "%s_execution_email_sent_at" % pre_or_post
 		setattr(pledge, field_name, timezone.now())
 		pledge.save(update_fields=[field_name])
+
+	def send_incomplete_pledge_emails(self):
+		# For every IncompletePledge instance that has not yet been
+		# sent a reminder email, send one. Wait at least some hours
+		# after the user left the page.
+		before = timezone.now() - timedelta(hours=3)
+		for ip in IncompletePledge.objects.filter(created__lt=before, sent_followup_at=None):
+			# Send email.
+			send_mail(
+				"contrib/mail/incomplete_pledge",
+				settings.DEFAULT_FROM_EMAIL,
+				[ip.email],
+				{
+					"incomplete_pledge": ip,
+					"url": settings.SITE_ROOT_URL + ip.get_return_url(),
+					"trigger": ip.trigger,
+				},
+				headers={
+					"Reply-To": settings.CONTACT_EMAIL,
+				})
+
+			# Record that it was sent.
+			ip.sent_followup_at = timezone.now()
+			ip.save()

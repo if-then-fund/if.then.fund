@@ -350,6 +350,14 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Start a pledge but stop after entering email.
 		ip = self._test_pledge_simple(t, with_campaign=with_campaign, break_after_email=True)
 
+		# Send the incomplete pledge reminder email.
+		from contrib.management.commands.send_pledge_emails import Command as send_pledge_emails
+		send_pledge_emails().handle()
+
+		# Check that the email has the correct URL.
+		msg = self.pop_email().body
+		self.assertIn(settings.SITE_ROOT_URL + ip.get_return_url(), msg)
+
 		# Start a pledge again
 		self._test_pledge_simple(t, return_from_incomplete_pledge=ip)
 
