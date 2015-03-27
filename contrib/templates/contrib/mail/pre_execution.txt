@@ -11,5 +11,5 @@ If you no longer wish to make these contributions, please head over to the follo
 
 Thanks!
 
-if.then.fund
+if.then.fund (https://if.then.fund)
 {% endautoescape %}

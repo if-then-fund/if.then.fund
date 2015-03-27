@@ -9,5 +9,5 @@ We need to confirm your email address first. Please click the link below to conf
 
 Thanks!
 
-if.then.fund
+if.then.fund (https://if.then.fund)
 {% endautoescape %}
