@@ -474,7 +474,7 @@ function pledge_init() {
   // For testing, pre-fill form fields with demonstration values.
 
   if (window.location.hash == "#demo") {
-    $('#emailEmail').val("my@mycompany.com")
+    $('#emailEmail').val("demo+" + parseInt(1000+Math.random()*5000) + "@if.then.fund")
     $('#contribNameFirst').val('John')
     $('#contribNameLast').val('Doe')
     $('#contribAddress').val('123 Main Street')
