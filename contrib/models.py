@@ -352,9 +352,15 @@ class Pledge(models.Model):
 	email = models.EmailField(max_length=254, blank=True, null=True, help_text="When an anonymous user makes a pledge, their email address is stored here and we send a confirmation email.")
 	trigger = models.ForeignKey(Trigger, related_name="pledges", on_delete=models.PROTECT, help_text="The Trigger that this Pledge is for.")
 
+	campaign = models.CharField(max_length=24, blank=True, null=True, db_index=True, help_text="An optional string indicating a referral campaign that lead the user to take this action.")
+
 	# When a Pledge is cancelled, the object is deleted. The three fields above
-	# are archived, plus the fields listed in this list:
-	cancel_archive_fields = ('created', 'updated', 'algorithm', 'desired_outcome', 'amount', 'cclastfour')
+	# are archived, plus the fields listed in this list. The fields below must
+	# be JSON-serializable.
+	cancel_archive_fields = (
+		'created', 'updated', 'campaign',
+		'algorithm', 'desired_outcome', 'amount', 'cclastfour',
+		)
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True)
@@ -738,6 +744,19 @@ class IncompletePledge(models.Model):
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 	sent_followup_at = models.DateTimeField(blank=True, null=True, db_index=True, help_text="If we've sent a follow-up email, the date and time we sent it.")
 	completed_pledge = models.ForeignKey(Pledge, blank=True, null=True, on_delete=models.CASCADE, help_text="If the user came back and finished a Pledge, that pledge.")
+
+	def get_campaign_string(self):
+		# What campaign string do we attach to the URL?
+		campaign = 'itf_ip_%d' % self.id
+		if self.extra.get('campaign'):
+			campaign += ',' + self.extra.get('campaign')
+		return campaign
+
+	def get_return_url(self):
+		# Construct URL of the trigger with the utm_campaign query string argument.
+		import urllib.parse
+		return self.trigger.get_absolute_url() \
+			+ "?" + urllib.parse.urlencode({ "utm_campaign": self.get_campaign_string() })
 
 @django_enum
 class PledgeExecutionProblem(enum.Enum):

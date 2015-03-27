@@ -240,13 +240,16 @@ def validate_email(request):
 
 	if ret == ValidateEmailResult.Valid and not User.objects.filter(email=email).exists():
 		# Store for later, if this is not a user already with an account.
-		IncompletePledge.objects.create(
+		# Only have at most one of these records per trigger-email address pair.
+		IncompletePledge.objects.get_or_create(
 			trigger=Trigger.objects.get(id=request.POST['trigger']),
 			email=email,
-			extra={
-				"desired_outcome": request.POST['desired_outcome'],
+			defaults={
+				"extra": {
+					"desired_outcome": request.POST['desired_outcome'],
+					"campaign": get_sanitized_campaign(request),
 				}
-			)
+			})
 
 	return HttpResponse(str(ret), content_type="text/plain")
 
@@ -262,12 +265,22 @@ def submit(request):
 	except HumanReadableValidationError as e:
 		return { "status": "error", "message": str(e) }
 
+def get_sanitized_campaign(request):
+	campaign = request.POST['campaign']
+	if campaign is not None:
+		if campaign.strip().lower() in ("", "none"):
+			campaign = None
+	return campaign
+
 @transaction.atomic
 def create_pledge(request):
 	p = Pledge()
 
 	# trigger
 	p.trigger = Trigger.objects.get(id=request.POST['trigger'])
+
+	# campaign
+	p.campaign = get_sanitized_campaign(request)
 
 	# Set user from logged in state.
 	if request.user.is_authenticated():

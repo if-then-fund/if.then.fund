@@ -1,4 +1,6 @@
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.conf import settings
+
 import selenium.webdriver
 import re
 import time
@@ -55,9 +57,28 @@ class SimulationTest(StaticLiveServerTestCase):
 		t.save()
 		return t
 
-	def _test_pledge_simple(self, t):
+	def _test_pledge_simple(self, t,
+			with_campaign=False,
+			break_after_email=False, return_from_incomplete_pledge=None
+			):
+
 		# Open the Trigger page.
-		self.browser.get(self.build_test_url(t.get_absolute_url()))
+
+		# What URL?
+		url = t.get_absolute_url()
+		campaign = None
+		if with_campaign:
+			campaign = "test_campaign_string"
+			url += "?utm_campaign=" + campaign
+
+		# When testing an IncompletePledge, grab the return URL that it gives
+		# which includes a utm_campaign string.
+		if return_from_incomplete_pledge:
+			campaign = return_from_incomplete_pledge.get_campaign_string()
+			url = return_from_incomplete_pledge.get_return_url()
+
+		# Load in browser. Check title.
+		self.browser.get(self.build_test_url(url))
 		self.assertRegex(self.browser.title, "Keystone XL")
 
 		# Click one of the outcome buttons.
@@ -80,7 +101,16 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		# Did we record it?
 		from contrib.models import IncompletePledge
-		self.assertTrue(IncompletePledge.objects.filter(email=email, trigger=t).exists())
+		ip = IncompletePledge.objects.filter(email=email, trigger=t)
+		self.assertEqual(ip.count(), 1) # email/trigger is a unique pair
+		if not return_from_incomplete_pledge:
+			# Don't check the IncompletePledge details when returning from an
+			# IncompletePledge  because the object will hold the information
+			# from the original request  that generated the IncompletePledge.
+			# The campaign may be different.
+			self.assertEqual(ip[0].extra['campaign'], campaign)
+		if break_after_email:
+			return ip[0]
 
 		# Enter contributor information.
 		self.browser.find_element_by_css_selector("#contribNameFirst").send_keys("John")
@@ -106,8 +136,11 @@ class SimulationTest(StaticLiveServerTestCase):
 		# The IncompletePledge should now be gone.
 		self.assertFalse(IncompletePledge.objects.filter(email=email, trigger=t).exists())
 
-		# An email confirmation was sent.
+		# Get the pledge and check its fields.
 		p = t.pledges.get(email=email)
+		self.assertEqual(p.campaign, campaign)
+
+		# An email confirmation was sent.
 		self.assertFalse(p.should_retry_email_confirmation())
 
 		# Get the email confirmation URL that we need to hit to confirm the user.
@@ -117,8 +150,8 @@ class SimulationTest(StaticLiveServerTestCase):
 		conf_url = m.group(1)
 		#from email_confirm_la.models import EmailConfirmation
 		#conf_url = EmailConfirmation.objects.get(email=email, is_verified=False).get_confirmation_url()
-		self.assertTrue(conf_url.startswith("http://127.0.0.1/"))
-		conf_url = conf_url.replace("http://127.0.0.1/", "/")
+		self.assertTrue(conf_url.startswith(settings.SITE_ROOT_URL))
+		conf_url = conf_url.replace(settings.SITE_ROOT_URL + "/", "/")
 		self.browser.get(self.build_test_url(conf_url))
 		time.sleep(1)
 
@@ -304,3 +337,21 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Log out and try again with pre-filling fields during the login step.
 		self.browser.get(self.build_test_url("/accounts/logout"))
 		self._test_pledge_returning_user(email, pw)
+
+	def test_pledge_campaign(self):
+		# Test the creation of a Pledge with a campaign string.
+		t = self.create_test_trigger()
+		email, pw = self._test_pledge_simple(t, with_campaign=True)
+
+	def test_incomplete_pledge(self, with_campaign=False):
+		# Create trigger.
+		t = self.create_test_trigger()
+
+		# Start a pledge but stop after entering email.
+		ip = self._test_pledge_simple(t, with_campaign=with_campaign, break_after_email=True)
+
+		# Start a pledge again
+		self._test_pledge_simple(t, return_from_incomplete_pledge=ip)
+
+	def test_incomplete_pledge_with_campaign(self):
+		self.test_incomplete_pledge(with_campaign=True)
