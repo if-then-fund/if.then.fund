@@ -111,7 +111,7 @@
 </div> <!-- /panel -->
 </div> <!-- negative margin -->
 
-{% if not pledge.execution and recommendations|length > 0 %}
+{% if not pledge.execution and recommendations|length > 0 and pledge.trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
 <h2 style="margin: 2em 0 0 0">You might be interested in...</h2>
 <div class="row">
 	{% for t in recommendations %}
