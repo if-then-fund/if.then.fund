@@ -218,6 +218,9 @@ class TriggerExecution(models.Model):
 		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
 		return outcomes
 
+	def most_recent_pledge_execution(self):
+		return self.pledges.order_by('-created').first()
+
 #####################################################################
 #
 # Actors

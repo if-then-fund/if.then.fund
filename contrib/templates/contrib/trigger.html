@@ -208,8 +208,6 @@
 				<p class="text-danger">Pledges were vacated.</p>
 			{% endif %}
 
-			<p>This action was posted on {{trigger.created|date}}.</p>
-
 		{% else %}
 			<h2>Summary</h2>
 
@@ -245,8 +243,15 @@
 				<div class="num">{{avg_contrib|currency}}</div>
 				<div class="lbl">average contribution to each recipient by each donor</div>
 			</div>
-
 		{% endif %}
+
+		<hr>
+		<small>
+			<p>This page was added to <span class="site-brand">if.then.fund</span> on {{trigger.created|date}}.</p>
+			{% if trigger.execution %}<p>The {{trigger.trigger_type.strings.action_noun}} occurred on {{trigger.execution.action_time|date}}. Contributions began to be processed on {{trigger.execution.created|date}}.</p>{% endif %}
+			{% if execution %}<p>The most recent contribution was processed on {{trigger.execution.most_recent_pledge_execution.created|date}}.</p>{% endif %}
+
+		</small>
 	</div>
 </div>
 
