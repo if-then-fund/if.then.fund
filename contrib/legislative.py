@@ -46,8 +46,12 @@ def create_trigger_from_bill(bill_id, chamber):
 		}})
 
 	# create object
+
 	t = Trigger()
+
 	t.key = "usbill:" + bill_id + ":" + chamber
+	if Trigger.objects.filter(key=t.key).exists(): raise Exception("A trigger for this bill and chamber already exists.")
+
 	t.title = bill['title'][0:200]
 	t.owner = None
 	t.trigger_type = trigger_type
@@ -88,6 +92,10 @@ def execute_trigger_from_vote(trigger, govtrack_url):
 	# Get vote metadata from GovTrack's API, via the undocumented
 	# '.json' extension added to vote pages.
 	vote = requests.get(govtrack_url+'.json').json()
+
+	# Sanity check that the chamber of the vote matches the trigger type.
+	if trigger.trigger_type.key not in ('congress_floorvote_x', 'congress_floorvote_' + vote['chamber'][0]):
+		raise Exception("The trigger type doesn't match the chamber the vote ocurred in.")
 
 	# Parse the date, which is in US Eastern time. Must make it
 	# timezone-aware to store in our database.

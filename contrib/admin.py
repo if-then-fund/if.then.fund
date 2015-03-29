@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db import transaction
 from contrib.models import *
 
 class TriggerAdmin(admin.ModelAdmin):
@@ -27,23 +28,32 @@ class TriggerAdmin(admin.ModelAdmin):
             vote_chamber = forms.ChoiceField(label='Vote in chamber', choices=(('x', 'Whichever Votes First'), ('h', 'House'), ('s', 'Senate')))
             pro_tip = forms.CharField(label='Pro Tip', help_text="e.g. 'Pro-Environment'")
             con_tip = forms.CharField(label='Con Tip', help_text="e.g. 'Pro-Environment'")
+            vote_url = forms.URLField(required=False, label="Vote URL", help_text="Optional. If the vote has already occurred, paste a link to the GovTrack.us page with roll call vote details.")
         
         if request.method == "POST":
             form = NewFromBillForm(request.POST)
             error = None
             if form.is_valid():
-                from contrib.legislative import create_trigger_from_bill
+                from contrib.legislative import create_trigger_from_bill, execute_trigger_from_vote
                 from django.http import HttpResponseRedirect
                 try:
-                    # Create trigger.
-                    bill_id = form.cleaned_data['bill_type'] + str(form.cleaned_data['bill_number']) + "-" + str(form.cleaned_data['congress'])
-                    t = create_trigger_from_bill(bill_id, form.cleaned_data['vote_chamber'])
+                    # If any validation fails, don't create the trigger.
+                    with transaction.atomic():
+                        # Create trigger.
+                        bill_id = form.cleaned_data['bill_type'] + str(form.cleaned_data['bill_number']) + "-" + str(form.cleaned_data['congress'])
+                        t = create_trigger_from_bill(bill_id, form.cleaned_data['vote_chamber'])
 
-                    # Set tips.
-                    for outcome in t.outcomes:
-                        if outcome['vote_key'] == "+": outcome['tip'] = form.cleaned_data['pro_tip']
-                        if outcome['vote_key'] == "-": outcome['tip'] = form.cleaned_data['con_tip']
-                    t.save()
+                        # Set tips.
+                        for outcome in t.outcomes:
+                            if outcome['vote_key'] == "+": outcome['tip'] = form.cleaned_data['pro_tip']
+                            if outcome['vote_key'] == "-": outcome['tip'] = form.cleaned_data['con_tip']
+                        t.save()
+
+                        # If a vote URL is given, execute it immediately.
+                        if form.cleaned_data['vote_url']:
+                            t.status = TriggerStatus.Open # can't execute while draft
+                            t.save()
+                            execute_trigger_from_vote(t, form.cleaned_data['vote_url'])
 
                     # Redirect to admin.
                     return HttpResponseRedirect('/admin/contrib/trigger/%d' % t.id)
@@ -61,7 +71,7 @@ class TriggerStatusUpdateAdmin(admin.ModelAdmin):
 
 class TriggerExecutionAdmin(admin.ModelAdmin):
     list_display = ['id', 'created', 'trigger', 'pledge_count_', 'total_contributions']
-    readonly_fields = ['trigger', 'pledge_count', 'pledge_count_with_contribs', 'total_contributions']
+    readonly_fields = ['trigger', 'pledge_count', 'pledge_count_with_contribs', 'num_contributions', 'total_contributions']
     def pledge_count_(self, obj):
         return "%d/%d" % (obj.pledge_count, obj.pledge_count_with_contribs)
     pledge_count_.short_description = "pledges (exct'd/contrib'd)"

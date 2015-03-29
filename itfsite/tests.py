@@ -248,7 +248,7 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		# Execute the trigger.
 		from contrib.legislative import execute_trigger_from_vote
-		execute_trigger_from_vote(t, "https://www.govtrack.us/congress/votes/114-2015/h14")
+		execute_trigger_from_vote(t, "https://www.govtrack.us/congress/votes/114-2015/s14")
 
 		# Send pledge pre-execution emails.
 		from contrib.management.commands.send_pledge_emails import Command as send_pledge_emails
@@ -266,7 +266,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		time.sleep(1)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You made a campaign contribution of $9.44 for this vote. It was split among 424 senators, each getting a part of your contribution if they voted No on S. 1, but if they voted Yes on S. 1 their part of your contribution will go to their next general election opponent.")
+			"You made a campaign contribution of $10.99 for this vote. It was split among 99 senators, each getting a part of your contribution if they voted No on S. 1, but if they voted Yes on S. 1 their part of your contribution will go to their next general election opponent.")
 
 	def _test_pledge_returning_user(self, email, pw):
 		# User is logged out but has an account.
