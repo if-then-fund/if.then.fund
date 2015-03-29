@@ -4,6 +4,7 @@ from django.conf import settings
 import selenium.webdriver
 import re
 import time
+from datetime import timedelta
 from decimal import Decimal
 
 class SimulationTest(StaticLiveServerTestCase):
@@ -349,6 +350,10 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		# Start a pledge but stop after entering email.
 		ip = self._test_pledge_simple(t, with_campaign=with_campaign, break_after_email=True)
+
+		# Fake the passage of time so the reminder email gets sent.
+		ip.created -= timedelta(days=2)
+		ip.save()
 
 		# Send the incomplete pledge reminder email.
 		from contrib.management.commands.send_pledge_emails import Command as send_pledge_emails
