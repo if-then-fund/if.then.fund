@@ -49,6 +49,7 @@ class PledgeTestCase(TestCase):
 			incumb_challgr=incumb_challgr,
 			filter_party=filter_party,
 		)
+		self.assertEqual(p.made_after_trigger_execution, False)
 		self.assertEqual(p.targets_summary, expected_value)
 
 	def test_pledge_simple(self):
@@ -258,8 +259,13 @@ class ExecutionTestCase(TestCase):
 		self._pledge_execution(desired_outcome=0, amount=decimal.Decimal('.3'), incumb_challgr=0, filter_party=None, expected_contrib_amount=None,
 			expected_problem=PledgeExecutionProblem.TransactionFailed, expected_problem_string="The amount is not enough to divide evenly across 27 recipients.")
 
+	# contrib made after trigger execution
+	def test_pledge_made_after_trigger_execution(self):
+		self._pledge_execution(desired_outcome=0, amount=10, incumb_challgr=0, filter_party=None,
+			expected_contrib_amount=Decimal('0.33'), made_after_trigger_execution=True)
+
 	def _pledge_execution(self, desired_outcome, amount, incumb_challgr, filter_party, expected_contrib_amount,
-		expected_problem=None, expected_problem_string=None):
+		expected_problem=None, expected_problem_string=None, made_after_trigger_execution=False):
 
 		# Create a user.
 		user = User.objects.create(email="test@example.com")
@@ -269,6 +275,7 @@ class ExecutionTestCase(TestCase):
 			user=user,
 			trigger=Trigger.objects.get(key="test"),
 			algorithm=Pledge.current_algorithm()['id'],
+			made_after_trigger_execution=made_after_trigger_execution,
 			desired_outcome=desired_outcome,
 			amount=amount,
 			incumb_challgr=incumb_challgr,
@@ -295,8 +302,13 @@ class ExecutionTestCase(TestCase):
 
 		# Check that the trigger now has a pledge.
 		t = Trigger.objects.get(key="test")
-		self.assertEqual(t.pledge_count, 1)
-		self.assertEqual(t.total_pledged, p.amount)
+		if not made_after_trigger_execution:
+			self.assertEqual(t.pledge_count, 1)
+			self.assertEqual(t.total_pledged, p.amount)
+		else:
+			# these fields are not incremented when a pledge is made after a trigger is executed
+			self.assertEqual(t.pledge_count, 0)
+			self.assertEqual(t.total_pledged, 0)
 
 		# Execute the trigger.
 		self.test_trigger_execution()

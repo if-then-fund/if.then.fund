@@ -1,14 +1,17 @@
 <style>
+{% if not hidemypledge %}
 #make-pledge h2 {
   text-align: center;
 }
 #pledge-outcomes {
-  margin-top: 1em;
+  margin 1em 0 0 1em;
   text-align: center;
 }
+{% endif %}
   #pledge-outcomes button {
     margin: 0 1em 1em 0;
     font-weight: bold;
+    {% if hidemypledge %}font-size: 90%;{% endif %}
   }
   #pledge-outcomes button:first-child {
     margin-left: 0;
@@ -85,13 +88,24 @@
 }
 </style>
 
+{% if not hidemypledge %}
 <div id="my-pledge">
 </div>
+{% endif %}
 
-<div id="make-pledge">
-  <h2>How would you {{trigger.trigger_type.strings.action_vb_inf}}?</h2>
+<div id="make-pledge" {% if hidemypledge %}style="display: none;"{% endif %}>
+  {% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
+    <h2>How would you {{trigger.trigger_type.strings.action_vb_inf}}?</h2>
+  {% elif hidemypledge %}
+    <div style="margin: 1.5em -15px 1.5em -16px">
+    <div class="panel panel-default">
+    <div class="panel-body">
+    <p><em>How would you have {{trigger.trigger_type.strings.action_vb_past}}?</em></p>
+  {% else %}
+    <h2>How would you have {{trigger.trigger_type.strings.action_vb_past}}?</h2>
+  {% endif %}
 
-  <div id="pledge-outcomes" style="margin-left: 1em">
+  <div id="pledge-outcomes" {% if hidemypledge %}style="margin-bottom: -.75em"{% endif %}>
   {% for outcome in trigger.outcomes %}
     <button class="btn btn-lg btn-success" onclick="pledge_go(this)" data-index="{{forloop.counter0}}">
       <span>{{outcome.label}}</span>
@@ -100,6 +114,7 @@
   {% endfor %}
   </div>
 
+  {% if not hidemypledge %}
   <div id="pledge-about-site" style="padding-top: 2em;">
     <small>
     <hr>
@@ -107,6 +122,7 @@
     <p>You will be making a campaign contribution to {{trigger.trigger_type.strings.actors}} or their next opponent. Until the {{trigger.trigger_type.strings.action_noun}} occurs, <span class="site-brand">if.then.fund</span> won't reveal to anyone what action you took. After the {{trigger.trigger_type.strings.action_noun}}, we’ll charge your card and split your contribution based on your instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
     </small>
   </div>
+  {% endif %}
 
   <form id="pledge-info" onsubmit="return false;" style="margin-top: 2em; display: none">
     
@@ -121,12 +137,14 @@
     <input type="hidden" name="billingCCExpYear" value="?"/>
     <input type="hidden" name="billingFromPledge" value=""/>
 
+    {% if not hidemypledge %}
     <div class="panel panel-success">
       <div class="panel-body">
+    {% endif %}
         <div id="pledge-start">
           <h3 style="margin-top: 0">Your position</h3>
 
-          <p>You want {{trigger.trigger_type.strings.actors}} to {{trigger.trigger_type.strings.action_vb_inf}} <span id="repeat-desired-outcome" class="fill-in" style="font-weight: bold"> </span>.</p>
+          <p>You want{% if trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}ed{% endif %} {{trigger.trigger_type.strings.actors}} to {{trigger.trigger_type.strings.action_vb_inf}} <span id="repeat-desired-outcome" class="fill-in" style="font-weight: bold"> </span>.</p>
 
           <h3>
             <label for="pledge-amount-field" style="margin: 0; padding: 0; font-size: inherit">
@@ -359,10 +377,16 @@
             </div>
           </div>
         </div> <!-- /pledge-payment -->
+
+    {% if not hidemypledge %}
       </div> <!-- /panel-body -->
     </div> <!-- /panel -->
+    {% endif %}
   </form>
-</div>
+
+  {% if hidemypledge %}</div></div></div>{% endif %}
+
+</div> <!-- /make-pledge -->
 
 
       
@@ -378,6 +402,7 @@ function pledge_init() {
     $('#make-pledge').hide();
     $('#my-pledge').html(the_page.pledge_made);
 
+    {% if not hidemypledge %}
     // Mobile browsers (iOS and Android) don't seem to scroll
     // to the page top on a reload, which we do after pledge
     // submission to update the page so we end up here. At the
@@ -385,8 +410,14 @@ function pledge_init() {
     // may not be visible if we scroll to the top. So scroll
     // to that.
     smooth_scroll_to($('#my-pledge'));
+    {% endif %}
 
     return;
+  } else {
+    // Usually it's shown from the start, but on executed triggers
+    // we hide it at first to avoid flickr with the user's existing
+    // pledge info.
+    $('#make-pledge').show();
   }
 
   // Set some defaults based on the user's last pledge.
@@ -609,13 +640,13 @@ function update_start_next_state(no_popover) {
     var who;
     var ic = getIncumbentChallengerValue();
     if (ic == 1)
-      who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text();
+      who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text();
     else if (ic == -1)
-      who = "the " + party + " opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = "the " + party + " opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text();
     else if (party == "")
-      who = "up to {{trigger.extra.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.trigger_type.strings.action_vb_inf|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + ", their part of your contribution will go to their next general election opponent"
+      who = "up to {{trigger.extra.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + ", their part of your contribution will go to their next general election opponent"
     else
-      who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + party + " opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.trigger_type.strings.action_vb_inf|escape}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + party + " opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text();
 
     $('#filter-summary span.text').text("We will split your contribution evenly across " + who + ".");
   }

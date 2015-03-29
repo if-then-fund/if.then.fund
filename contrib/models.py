@@ -78,8 +78,8 @@ class Trigger(models.Model):
 
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
-	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges made.")
-	total_pledged = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of pledges, i.e. prior to execution.")
+	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges made *prior* to trigger execution (excludes Pledges with made_after_trigger_execution).")
+	total_pledged = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of pledges made *prior* to trigger execution (excludes Pledges with made_after_trigger_execution).")
 
 	def __str__(self):
 		return "%s [%d]" % (self.key, self.id)
@@ -91,6 +91,16 @@ class Trigger(models.Model):
 		# Used in the ref_code of Democracy Engine transactions, which is provided
 		# to campaigns, as well as in emails to users with links back to the site.
 		return settings.SITE_ROOT_URL + ("/a/%d" % self.id)
+
+	@property
+	def verb(self):
+		if self.status != TriggerStatus.Executed:
+			# If the trigger has not yet been executed, then use the future tense.
+			return self.trigger_type.strings['action_vb_inf']
+		else:
+			# If the trigger has been executed, then use the past tense.
+			return self.trigger_type.strings['action_vb_past']
+
 
 	def get_minimum_pledge(self):
 		alg = Pledge.current_algorithm()
@@ -366,6 +376,7 @@ class Pledge(models.Model):
 	updated = models.DateTimeField(auto_now=True)
 	algorithm = models.IntegerField(default=0, help_text="In case we change our terms & conditions, or our explanation of how things work, an integer indicating the terms and expectations at the time the user made the pledge.")
 	status = EnumField(PledgeStatus, default=PledgeStatus.Open, help_text="The current status of the pledge.")
+	made_after_trigger_execution = models.BooleanField(default=False, help_text="Whether this Pledge was created after the Trigger was executed (i.e. outcomes known).")
 
 	desired_outcome = models.IntegerField(help_text="The outcome index that the user desires.")
 	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The pledge amount in dollars (including fees). The credit card charge may be less in the event that we have to round to the nearest penny-donation.")
@@ -398,8 +409,8 @@ class Pledge(models.Model):
 		super(Pledge, self).save(*args, **kwargs)
 
 		# For a new object, increment the trigger's pledge_count and total_pledged
-		# fields (atomically).
-		if is_new:
+		# fields (atomically) if this Pledge was made prior to trigger execution.
+		if is_new and not self.made_after_trigger_execution:
 			from django.db import models
 			t = self.trigger
 			t.pledge_count = models.F('pledge_count') + 1
@@ -411,10 +422,12 @@ class Pledge(models.Model):
 		if self.status != PledgeStatus.Open:
 			raise ValueError("Cannot cancel a Pledge with status %s." % self.status)
 
-		# Decrement the Trigger's pledge_count and total_pledged.
-		self.trigger.pledge_count = models.F('pledge_count') - 1
-		self.trigger.total_pledged = models.F('total_pledged') - self.amount
-		self.trigger.save(update_fields=['pledge_count', 'total_pledged'])
+		# Decrement the Trigger's pledge_count and total_pledged if the Pledge
+		# was made prior to trigger execution.
+		if not self.made_after_trigger_execution:
+			self.trigger.pledge_count = models.F('pledge_count') - 1
+			self.trigger.total_pledged = models.F('total_pledged') - self.amount
+			self.trigger.save(update_fields=['pledge_count', 'total_pledged'])
 
 		# Archive as a cancelled pledge.
 		cp = CancelledPledge.from_pledge(self)
@@ -587,6 +600,13 @@ class Pledge(models.Model):
 		trigger_execution = self.trigger.execution
 		if self.email_confirmed_at and self.email_confirmed_at >= trigger_execution.created:
 			return False
+
+		# If the pledge itself was created after the trigger was executed,
+		# then we don't send the pre-execution email so we can execute as
+		# quickly as possible.
+		if self.made_after_trigger_execution:
+			return False
+
 		return True
 
 	@transaction.atomic

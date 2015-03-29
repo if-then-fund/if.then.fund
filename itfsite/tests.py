@@ -4,6 +4,7 @@ from django.conf import settings
 import selenium.webdriver
 import re
 import time
+import random
 from datetime import timedelta
 from decimal import Decimal
 
@@ -95,7 +96,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		time.sleep(1)
 
 		# Enter email address.
-		email = "unittest@if.then.fund"
+		email = "unittest+%d@if.then.fund" % (random.randint(10000, 99999))
 		self.browser.execute_script("$('#emailEmail').val('%s')" % email)
 		self.browser.find_element_by_css_selector("#login-next").click()
 		time.sleep(1)
@@ -174,18 +175,18 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		return email, pw
 
-	def _test_pledge_simple_execution(self, t):
-		# This function always follows _test_pledge_simple.
-
+	def _test_trigger_execution(self, t, pledge_count, total_pledged):
 		# Check the trigger's current state.
-		from contrib.models import Trigger
+		from contrib.models import Trigger, TriggerStatus
 		t = Trigger.objects.get(id=t.id) # refresh
-		self.assertEqual(t.pledge_count, 1)
-		self.assertEqual(t.total_pledged, Decimal('12'))
+		self.assertEqual(t.pledge_count, pledge_count)
+		self.assertEqual(t.total_pledged, total_pledged)
 
 		# Execute the trigger.
 		from contrib.legislative import execute_trigger_from_vote
 		execute_trigger_from_vote(t, "https://www.govtrack.us/congress/votes/114-2015/h14")
+		t = Trigger.objects.get(id=t.id) # refresh
+		self.assertEqual(t.status, TriggerStatus.Executed)
 
 		# Send pledge pre-execution emails.
 		from contrib.management.commands.send_pledge_emails import Command as send_pledge_emails
@@ -200,6 +201,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Send pledge post-execution emails.
 		send_pledge_emails().handle()
 
+	def _test_pledge_simple_execution(self, t):
 		# Reload the page.
 		self.browser.get(self.build_test_url(t.get_absolute_url()))
 		time.sleep(1)
@@ -330,6 +332,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		email, pw = self._test_pledge_simple(t)
 
 		# Test its exeuction.
+		self._test_trigger_execution(t, 1, Decimal('12'))
 		self._test_pledge_simple_execution(t)
 
 		# Now that the user is logged in, try another pledge with fields pre-filled.
@@ -368,3 +371,22 @@ class SimulationTest(StaticLiveServerTestCase):
 
 	def test_incomplete_pledge_with_campaign(self):
 		self.test_incomplete_pledge(with_campaign=True)
+
+	def test_post_execution_pledge(self):
+		# Create the trigger, add a plege we don't care about, and execute it.
+		# We include a pledge here because a trigger with no pledges displays
+		# differently.
+		t = self.create_test_trigger()
+		self._test_pledge_simple(t)
+		self._test_trigger_execution(t, 1, Decimal('12'))
+
+		# Test the creation of a Pledge.
+		self.browser.get(self.build_test_url("/accounts/logout"))
+		email, pw = self._test_pledge_simple(t)
+
+		# Execute it.
+		from contrib.management.commands.execute_pledges import Command as execute_pledges
+		execute_pledges().handle()
+
+		# Test that it appears executed on the site.
+		self._test_pledge_simple_execution(t)

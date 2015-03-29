@@ -87,12 +87,15 @@
 			<p>This action has been cancelled. We determined that the event will likely never occur and have vacated all of the pledges.</p>
 
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' and not execution %}
-			<p class="text-danger" style="margin-top: 1.5em">The {{trigger.trigger_type.strings.action_noun}} ocurred, and we are now in the process of making campaign contributions. Check back soon for further details.</p>
+			{# The event ocurred and we are now in the process of making campaign contributions. But we can keep accepting pledges, just as in the Open state #}
 
-			<div id="my-pledge">
-			</div>
+			<p class="text-warning" style="margin-top: 1em">The {{trigger.trigger_type.strings.action_noun}} ocurred, and we are now processing the scheduled contributions made by users. You may still make a contribution:</p>
+
+			{% include "contrib/pledge-form.html" %}
 
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
+			{% include "contrib/pledge-form.html" with hidemypledge=1 %}
+
 			<h2>Contributions</h2>
 
 			{% if trigger.pledge_count > trigger.execution.pledge_count %}
@@ -249,13 +252,8 @@
 <script src="{% static "js/ext/jquery.payment.js" %}"> </script>
 <script>
 	$(function() {
-		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
+		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' or trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
 			pledge_init();
-		{% endif %}
-		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
-		  if (the_page && the_page.pledge_made) {
-		    $('#my-pledge').html(the_page.pledge_made);
-		  }
 		{% endif %}
 	})
 </script>

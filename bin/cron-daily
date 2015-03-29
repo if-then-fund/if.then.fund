@@ -6,6 +6,9 @@ cd $(dirname $(dirname $(readlink $0)))
 # Send emails: pre-execution, post-execution, email confirmations, and incomplete pledge emails.
 python3 manage.py send_pledge_emails
 
+# Execute any pledges ready to be executed.
+python3 manage.py execute_pledges | tee -a /tmp/execute_pledges.log
+
 # Execute daily cleanup scripts.
 python3 manage.py clearsessions
 python3 manage.py clear_expired_email_confirmations > /dev/null

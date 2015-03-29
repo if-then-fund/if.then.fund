@@ -278,6 +278,7 @@ def create_pledge(request):
 
 	# trigger
 	p.trigger = Trigger.objects.get(id=request.POST['trigger'])
+	p.made_after_trigger_execution = (p.trigger.status == TriggerStatus.Executed)
 
 	# campaign
 	p.campaign = get_sanitized_campaign(request)

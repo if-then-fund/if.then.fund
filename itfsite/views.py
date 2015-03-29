@@ -15,7 +15,7 @@ def homepage(request):
 	# Exclude triggers in the process of being executed from the 'recent' list, because
 	# that list shows aggregate stats that are not yet valid
 	recent_executed_triggers = [t for t in recent_executed_triggers
-		if t.pledge_count == t.execution.pledge_count]
+		if t.pledge_count <= t.execution.pledge_count]
 
 	return render(request, "itfsite/homepage.html", {
 		"open_triggers": open_triggers,

@@ -2,7 +2,9 @@
 # -----------------------------------------------
 
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 from django.conf import settings
+from datetime import timedelta
 
 from contrib.models import TriggerStatus, Pledge, PledgeStatus
 from contrib.legislative import execute_trigger_from_vote
@@ -15,7 +17,17 @@ class Command(BaseCommand):
 
 	def handle(self, *args, **options):
 		# Open pledges on executed triggers can be executed.
-		pledges_to_execute = Pledge.objects.filter(status=PledgeStatus.Open, trigger__status=TriggerStatus.Executed)
+		pledges_to_execute = Pledge.objects.filter(status=PledgeStatus.Open, trigger__status=TriggerStatus.Executed)\
+			.select_related('trigger')
+
+		# Skip recent pledges with unconfirmed email addresses to give the user
+		# time to confirm their address. For new trigger executions, this may
+		# delay executing all of the triggers. For pledges on already-executed
+		# triggers, give the pledge sort of a time-out before marking it as
+		# executed with a problem (unconfirmed email).
+		pledges_to_execute = [p for p in pledges_to_execute
+			if p.user
+				or p.created < timezone.now() - timedelta(days=1) ]
 
 		# Loop through them.
 		for p in tqdm.tqdm(pledges_to_execute):
