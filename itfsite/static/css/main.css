@@ -98,7 +98,7 @@ a, a:visited {
 	overflow: hidden;
 	margin-left: 1px;
 }
-	small .site-brand {
+	small .site-brand, footer .site-brand {
 		width: 62px;
 		height: 12px;
 		background-size: 100%;
