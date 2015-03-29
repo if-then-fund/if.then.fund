@@ -89,7 +89,9 @@
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' and not execution %}
 			{# The event ocurred and we are now in the process of making campaign contributions. But we can keep accepting pledges, just as in the Open state #}
 
+			{% if trigger.pledge_count > 0 %}
 			<p class="text-warning" style="margin-top: 1em">The {{trigger.trigger_type.strings.action_noun}} ocurred, and we are now processing the scheduled contributions made by users. You may still make a contribution:</p>
+			{% endif %}
 
 			{% include "contrib/pledge-form.html" %}
 
@@ -198,7 +200,9 @@
 				<div class="lbl">donor{{trigger.pledge_count|pluralize}} {% if trigger.pledge_count == 0 %}&mdash; be the first!{% endif %}</div>
 			</div>
 
+			{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}
 			<p>Contributions will only be made once the {{trigger.trigger_type.strings.action_noun}} occurs.</p>
+			{% endif %}
 
 			{% if trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
 				<p class="text-danger">Pledges were vacated.</p>
