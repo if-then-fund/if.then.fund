@@ -684,7 +684,7 @@ class Pledge(models.Model):
 		try:
 			# Sanity check.
 			if len(recip_contribs) == 0 and problem == PledgeExecutionProblem.NoProblem:
-				raise ValueError("Pledge executing with no recipients but no problem.")
+				raise Exception("Pledge executing with no recipients but no problem.")
 
 			# Create PledgeExecution object.
 			pe = PledgeExecution()
@@ -723,17 +723,17 @@ class Pledge(models.Model):
 				trigger_execution.pledge_count_with_contribs = models.F('pledge_count_with_contribs') + 1
 			trigger_execution.save(update_fields=['pledge_count', 'pledge_count_with_contribs'])
 
-		except:
-			import sys, rtyaml
-			print("Problem during the following transaction:", file=sys.stderr)
-			print("", file=sys.stderr)
-			try:
-				print(rtyaml.dump(de_don))
-			except:
-				print(de_don)
-			print("", file=sys.stderr)
-			print("The database transaction was rolled back so the PledgeExecution instance is gone. Transaction information isn't immediately available, so someone will need to void the transaction manually.", file=sys.stderr)
-			raise
+		except Exception as e:
+			# If a DE transaction was made, include its info in any exception that was raised.
+			if de_don:
+				try:
+					import rtyaml
+					x = rtyaml.dump(de_don)
+				except:
+					x = repr(de_don)
+				raise Exception("Something went wrong saving a pledge execution to the database (%s). The database transaction is about to be rolled back. But the DE transaction was already made.\n\n%s" % (str(e), x))
+			else:
+				raise
 
 
 class CancelledPledge(models.Model):

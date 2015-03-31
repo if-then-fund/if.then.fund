@@ -9,13 +9,17 @@ from datetime import timedelta
 from contrib.models import TriggerStatus, Pledge, PledgeStatus
 from contrib.legislative import execute_trigger_from_vote
 
-import tqdm
+import sys, tqdm
+from taskutils import exclusive_process
 
 class Command(BaseCommand):
 	args = ''
 	help = 'Executes any open pledges on executed triggers.'
 
 	def handle(self, *args, **options):
+		# Ensure this process does not run concurrently.
+		exclusive_process('itf-execute-pledges')
+
 		# Open pledges on executed triggers can be executed.
 		pledges_to_execute = Pledge.objects.filter(status=PledgeStatus.Open, trigger__status=TriggerStatus.Executed)\
 			.select_related('trigger')
@@ -30,7 +34,8 @@ class Command(BaseCommand):
 				or p.created < timezone.now() - timedelta(days=1) ]
 
 		# Loop through them.
-		for p in tqdm.tqdm(pledges_to_execute):
+		if sys.stdout.isatty(): pledges_to_execute = tqdm.tqdm(pledges_to_execute)
+		for p in pledges_to_execute:
 			# Execute the pledge.
 			try:
 				p.execute()
