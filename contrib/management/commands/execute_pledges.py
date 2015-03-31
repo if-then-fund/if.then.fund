@@ -19,7 +19,9 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 		# Ensure this process does not run concurrently.
 		exclusive_process('itf-execute-pledges')
+		self.do_execute_pledges()
 
+	def do_execute_pledges(self):
 		# Open pledges on executed triggers can be executed.
 		pledges_to_execute = Pledge.objects.filter(status=PledgeStatus.Open, trigger__status=TriggerStatus.Executed)\
 			.select_related('trigger')

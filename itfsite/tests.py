@@ -196,7 +196,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		from contrib.models import Pledge
 		Pledge.ENFORCE_EXECUTION_EMAIL_DELAY = False
 		from contrib.management.commands.execute_pledges import Command as execute_pledges
-		execute_pledges().handle()
+		execute_pledges().do_execute_pledges()
 
 		# Send pledge post-execution emails.
 		send_pledge_emails().handle()
@@ -256,7 +256,7 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		# Execute pledges.
 		from contrib.management.commands.execute_pledges import Command as execute_pledges
-		execute_pledges().handle()
+		execute_pledges().do_execute_pledges()
 
 		# Send pledge post-execution emails.
 		send_pledge_emails().handle()
@@ -386,7 +386,7 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		# Execute it.
 		from contrib.management.commands.execute_pledges import Command as execute_pledges
-		execute_pledges().handle()
+		execute_pledges().do_execute_pledges()
 
 		# Test that it appears executed on the site.
 		self._test_pledge_simple_execution(t)
