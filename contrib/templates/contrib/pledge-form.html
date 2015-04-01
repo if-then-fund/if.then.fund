@@ -772,7 +772,8 @@ function do_contributor_next() {
 
   if (!valid) return;
 
-  $('#pledge-contributor input').prop('readonly', true);
+  $('#pledge-contributor input[type=text]').prop('readonly', true);
+  $('#pledge-contributor input[type=checkbox]').prop('disabled', true);
   $('#pledge-contributor .buttons').hide();
   show_and_scroll('pledge-payment');
 
@@ -858,7 +859,8 @@ function pledge_submit() {
 }
 
 function pledge_payment_cancel() {
-  $('#pledge-contributor input').prop('readonly', false);
+  $('#pledge-contributor input[type=text]').prop('readonly', false);
+  $('#pledge-contributor input[type=checkbox]').prop('disabled', false);
   $('#pledge-contributor .buttons').show();
   $('#pledge-payment').hide();
 }
