@@ -781,9 +781,13 @@ function do_contributor_next() {
 
 function do_contributor_cancel() {
   $('#pledge-contributor').hide();
-  $('#pledge-login input').prop('readonly', false);
-  $('#pledge-login .buttons').fadeIn();
-  show_and_scroll('pledge-login');
+  if (!the_user) {
+    $('#pledge-login input').prop('readonly', false);
+    $('#pledge-login .buttons').fadeIn();
+    show_and_scroll('pledge-login');
+  } else {
+    do_pledge_login_cancel();
+  }
 }
 
 function validate_and_set_cc_fields() {
