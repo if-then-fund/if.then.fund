@@ -7,7 +7,7 @@ from django.conf import settings
 
 from twostream.decorators import anonymous_view, user_view_for
 
-from contrib.models import Trigger, TriggerStatus, TriggerExecution, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty, ContributionAggregate, IncompletePledge
+from contrib.models import Trigger, TriggerStatus, TriggerExecution, ContributorInfo, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty, ContributionAggregate, IncompletePledge
 from contrib.utils import json_response
 from contrib.bizlogic import HumanReadableValidationError, run_authorization_test
 
@@ -103,6 +103,15 @@ def trigger(request, id, slug):
 		"avg_contrib": avg_contrib,
 	})
 
+def get_user_pledges(user, request):
+	# Returns the Pledges that a user owns as a QuerySet.
+	if user and user.is_authenticated():
+		return Pledge.objects.filter(user=user)
+	elif request.session.get('anon_pledge_created'):
+		return Pledge.objects.filter(id__in=request.session.get('anon_pledge_created'))
+	else:
+		return Pledge.objects.none() # empty QuerySet
+
 @user_view_for(trigger)
 def trigger_user_view(request, id, slug):
 	trigger = get_object_or_404(Trigger, id=id)
@@ -111,12 +120,8 @@ def trigger_user_view(request, id, slug):
 	# Most recent pledge info so we can fill in defaults on the user's next pledge.
 	ret["pledge_defaults"] = get_recent_pledge_defaults(request.user, request)
 
-	p = None
-	if request.user.is_authenticated():
-		p = Pledge.objects.filter(trigger=trigger, user=request.user).first()
-	elif request.session.get('anon_pledge_created'):
-		p = Pledge.objects.filter(trigger=trigger,
-			id__in=request.session.get('anon_pledge_created')).first()
+	# Get the user's pledge, if any, on this trigger.
+	p = get_user_pledges(request.user, request).filter(trigger=trigger).first()
 
 	if p:
 		# The user already made a pledge on this. Render another template
@@ -179,23 +184,15 @@ def get_recent_pledge_defaults(user, request):
 
 	ret = { }
 
-	# Get the pledge object.
-	if user.is_authenticated():
-		# For a logged in user, fetch by the user.
-		pledge = Pledge.objects.filter(user=user).order_by('-created').first()
-		if not pledge: return ret
-	elif request.session.get('anon_pledge_created'):
-		# For anonymous users, we temporarily store pledges they created
-		# in their session. Use the most recent from the session.
-		most_recent = request.session.get('anon_pledge_created')[-1]
-		try:
-			pledge = Pledge.objects.get(id=most_recent)
-		except Pledge.DoesNotExist:
-			return ret
-	else:
-		# For anonymou users without any pledge in their session, return an
-		# empty dict.
+	# Get the user's most recent Pledge. If the user has no Pledges,
+	# just return the empty dict.
+	pledges = get_user_pledges(user, request)
+	pledge = pledges.order_by('-created').first()
+	if not pledge:
 		return ret
+
+	# How many open pledges does this user already have?
+	ret['open_pledges'] = pledges.filter(status=PledgeStatus.Open).count()
 
 	# Copy Pledge fields.
 	for field in ('email', 'amount', 'incumb_challgr', 'filter_party', 'filter_competitive'):
@@ -205,18 +202,18 @@ def get_recent_pledge_defaults(user, request):
 		elif isinstance(ret[field], ActorParty):
 			ret[field] = str(ret[field])
 
-	# Copy contributor fields from the extra dict.
+	# Copy contributor fields from the profile's extra dict.
 	for field in ('contribNameFirst', 'contribNameLast', 'contribAddress', 'contribCity', 'contribState', 'contribZip',
 		'contribOccupation', 'contribEmployer'):
-		ret[field] = pledge.extra['contributor'][field]
+		ret[field] = pledge.profile.extra['contributor'][field]
 
 	# Return a summary of billing info to show how we would bill.
-	ret['cclastfour'] = pledge.cclastfour
+	ret['cclastfour'] = pledge.profile.cclastfour
 
 	# And indicate which pledge we're sourcing this from so that in
 	# the submit view we can retreive it again without having to
 	# pass it back from the (untrusted) client.
-	ret['cc_from_pledge'] = pledge.id
+	ret['from_pledge'] = pledge.id
 
 	return ret
 
@@ -267,6 +264,30 @@ def get_sanitized_campaign(request):
 		if campaign.strip().lower() in ("", "none"):
 			campaign = None
 	return campaign
+
+@transaction.atomic
+def update_pledge_profiles(pledges, new_profile):
+	# The user is updating their ContributorInfo profile. Set
+	# the profile of any open pledges to the new instance. Delete
+	# any ContributorInfo objects no longer needed.
+
+	# Lock.
+	pledges = pledges.select_for_update()
+
+	# Sanity check that we do not update a pledge that is not open.
+	if pledges.exclude(status=PledgeStatus.Open).exists():
+		raise ValueError('pledges should be a QuerySet of only open pledges')
+
+	# Get existing ContributorInfos on those pledges.
+	prev_profiles = set(p.profile for p in pledges)
+
+	# Update pledges to new profile.
+	pledges.update(profile=new_profile)
+
+	# Delete any of the previous ContributorInfos that are no longer needed.
+	for ci in prev_profiles:
+		if not ci.pledges.exists():
+			ci.delete()
 
 @transaction.atomic
 def create_pledge(request):
@@ -330,16 +351,6 @@ def create_pledge(request):
 		except ValueError:
 			raise Exception("%s is out of range" % field)
 
-	# string fields that go straight into the extras dict.
-	p.extra = {
-		'contributor': { }
-	}
-	for field in (
-		'contribNameFirst', 'contribNameLast',
-		'contribAddress', 'contribCity', 'contribState', 'contribZip',
-		'contribOccupation', 'contribEmployer'):
-		p.extra['contributor'][field] = request.POST[field].strip()
-
 	# normalize the filter_party field
 	if request.POST['filter_party'] in ('DR', 'RD'):
 		p.filter_party = None # no filter
@@ -361,19 +372,42 @@ def create_pledge(request):
 	if p.filter_party == ActorParty.Independent:
 		raise Exception("filter_party is out of range")
 
-	# Save so we get a pledge ID so we can store that in the transaction test.
-	try:
-		p.save()
-	except Exception as e:
-		# Re-wrap into something @json_response will catch.
-		raise ValueError("Something went wrong: " + str(e))
+	# Get a ContributorInfo to assign to the Pledge.
+	if not request.POST["copyFromPledge"]:
+		# Create a new ContributorInfo record from the submitted info.
+		contribdata = { }
 
-	if not request.POST["billingFromPledge"]:
-		# Get and do simple validation on the billing fields.
+		# string fields that go straight into the extras dict.
+		contribdata['contributor'] = { }
+		for field in (
+			'contribNameFirst', 'contribNameLast',
+			'contribAddress', 'contribCity', 'contribState', 'contribZip',
+			'contribOccupation', 'contribEmployer'):
+			contribdata['contributor'][field] = request.POST[field].strip()
+			
+		# Validate & store the billing fields.
+		#
+		# (Including the expiration date so that we can know that a
+		# card has expired prior to using the DE token.)
 		ccnum = request.POST['billingCCNum'].replace(" ", "").strip() # Stripe's javascript inserts spaces
 		ccexpmonth = int(request.POST['billingCCExpMonth'])
 		ccexpyear = int(request.POST['billingCCExpYear'])
 		cccvc = request.POST['billingCCCVC'].strip()
+		contribdata['billing'] = {
+			'cc_num': ccnum, # is hashed before going into database
+			'cc_exp_month': ccexpmonth,
+			'cc_exp_year': ccexpyear,
+		}
+
+		# Create a ContributorInfo instance. We need a saved instance
+		# so we can assign it to the pledge (the profile field is NOT NULL).
+		# It's saved again below.
+		ci = ContributorInfo.objects.create()
+		ci.set_from(contribdata)
+
+		# Save. We need a Pledge ID to form an authorization test.
+		p.profile = ci
+		p.save()
 
 		# For logging:
 		# Add information from the HTTP request in case we need to
@@ -383,7 +417,7 @@ def create_pledge(request):
 		}
 
 		# Perform an authorization test on the credit card and store some CC
-		# details in the pledge object.
+		# details in the ContributorInfo object.
 		#
 		# This may raise all sorts of exceptions, which will cause the database
 		# transaction to roll back. A HumanReadableValidationError will be caught
@@ -392,26 +426,26 @@ def create_pledge(request):
 		#
 		# Note that any exception after this point is okay because the authorization
 		# will expire on its own anyway.
-		run_authorization_test(p, ccnum, ccexpmonth, ccexpyear, cccvc, aux_data)
+		run_authorization_test(p, ccnum, cccvc, aux_data)
+
+		# Re-save the ContributorInfo instance now that it has the CC token.
+		ci.save(override_immutable_check=True)
+
+		# If the user has other open pledges, update their profiles to the new
+		# ContributorInfo instance --- i.e. update their contributor and payment
+		# info.
+		update_pledge_profiles(get_user_pledges(p.user, request).filter(status=PledgeStatus.Open), ci)
 
 	else:
-		# This is a returning user and we are re-using the DE credit card token
-		# from a previous pledge. Validate that the pledge id corresponds to a
-		# pledge previously submitted by this user. Only works for an authenticated
-		# user.
+		# This is a returning user and we are re-using info from a previous pledge.
+		# Validate that the pledge id corresponds to a pledge previously submitted
+		# by this user. Only works for an authenticated user.
+		if not p.user: raise Exception("Can't have copyFromPledge set and not be an authenticated user.")
 		prev_p = Pledge.objects.get(
-			id=request.POST["billingFromPledge"],
+			id=request.POST["copyFromPledge"],
 			user=p.user)
-
-		# Copy all of the billing fields forward.
-		p.extra['billing'] = copy.deepcopy(prev_p.extra['billing'])
-		p.cclastfour = prev_p.cclastfour
-
-		# Record where we got the info from. Also signals that the "authorization"
-		# field was copied from a previous pledge.
-		p.extra['billing']["via_pledge"] = prev_p.id
-
-	p.save()
+		p.profile = prev_p.profile
+		p.save()
 
 	if not p.user:
 		# The pledge needs to get confirmation of the user's email address,

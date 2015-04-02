@@ -352,8 +352,8 @@ class ContributorInfo(models.Model):
 	def __str__(self):
 		return "[%d] %s %s" % (self.id, self.name, self.address)
 
-	def save(self, *args, **kwargs):
-		if self.id:
+	def save(self, *args, override_immutable_check=False, **kwargs):
+		if self.id and not override_immutable_check:
 			raise Exception("This model is immutable.")
 		super(ContributorInfo, self).save(*args, **kwargs)
 

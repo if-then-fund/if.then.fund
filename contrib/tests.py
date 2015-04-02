@@ -40,9 +40,11 @@ class PledgeTestCase(TestCase):
 		self.user = User.objects.create(email="test@example.com")
 
 	def _test_pledge(self, desired_outcome, incumb_challgr, filter_party, expected_value):
+		ci = ContributorInfo.objects.create()
 		p = Pledge.objects.create(
 			user=self.user,
 			trigger=self.trigger,
+			profile=ci,
 			algorithm=Pledge.current_algorithm()['id'],
 			desired_outcome=desired_outcome,
 			amount=1,
@@ -270,35 +272,46 @@ class ExecutionTestCase(TestCase):
 		# Create a user.
 		user = User.objects.create(email="test@example.com")
 
+		# Create a ContributorInfo.
+		cc_num = '4111 1111 1111 1111'
+		cc_cvc = '1234'
+		ci = ContributorInfo()
+		ci.set_from({
+			'contributor': {
+				'contribNameFirst': 'FIRST',
+				'contribNameLast': 'LAST',
+				'contribAddress': 'ADDRESS',
+				'contribCity': 'CITY',
+				'contribState': 'NY',
+				'contribZip': '00000',
+				'contribOccupation': 'OCCUPATION',
+				'contribEmployer': 'EMPLOYER',
+			},
+			'billing': {
+				'cc_num': cc_num,
+				'cc_exp_month': '01',
+				'cc_exp_year': '2020',
+			},
+		})
+		ci.save()
+
 		# Create a pledge.
 		p = Pledge.objects.create(
 			user=user,
 			trigger=Trigger.objects.get(key="test"),
+			profile=ci,
 			algorithm=Pledge.current_algorithm()['id'],
 			made_after_trigger_execution=made_after_trigger_execution,
 			desired_outcome=desired_outcome,
 			amount=amount,
 			incumb_challgr=incumb_challgr,
 			filter_party=filter_party,
-			cclastfour='1111',
-			extra={
-				'contributor': {
-					'contribNameFirst': 'FIRST',
-					'contribNameLast': 'LAST',
-					'contribAddress': 'ADDRESS',
-					'contribCity': 'CITY',
-					'contribState': 'NY',
-					'contribZip': '00000',
-					'contribOccupation': 'OCCUPATION',
-					'contribEmployer': 'EMPLOYER',
-				},
-			}
 		)
 
 		# Set billing info.
 		from contrib.bizlogic import run_authorization_test
-		run_authorization_test(p, "4111 1111 1111 1111", 9, 2021, '999', { "unittest": True } )
-		p.save()
+		run_authorization_test(p, cc_num, cc_cvc, { "unittest": True } )
+		ci.save(override_immutable_check=True)
 
 		# Check that the trigger now has a pledge.
 		t = Trigger.objects.get(key="test")

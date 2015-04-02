@@ -62,11 +62,11 @@ class SimulationTest(StaticLiveServerTestCase):
 			raise ValueError("No email was sent.")
 		return msg
 
-	def create_test_trigger(self):
+	def create_test_trigger(self, bill_num, chamber):
 		# Create a Trigger.
 		from contrib.models import Trigger, TriggerStatus, Pledge
 		from contrib.legislative import create_trigger_from_bill
-		t = create_trigger_from_bill("s1-114", "h")
+		t = create_trigger_from_bill(bill_num, chamber)
 		t.status = TriggerStatus.Open
 		t.save()
 		return t
@@ -187,7 +187,7 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		return email, pw
 
-	def _test_trigger_execution(self, t, pledge_count, total_pledged):
+	def _test_trigger_execution(self, t, pledge_count, total_pledged, vote_url):
 		# Check the trigger's current state.
 		from contrib.models import Trigger, TriggerStatus
 		t.refresh_from_db()
@@ -196,7 +196,7 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		# Execute the trigger.
 		from contrib.legislative import execute_trigger_from_vote
-		execute_trigger_from_vote(t, "https://www.govtrack.us/congress/votes/114-2015/h14")
+		execute_trigger_from_vote(t, vote_url)
 		t.refresh_from_db()
 		self.assertEqual(t.status, TriggerStatus.Executed)
 
@@ -222,72 +222,72 @@ class SimulationTest(StaticLiveServerTestCase):
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
 			"You made a campaign contribution of $9.44 for this vote. It was split among 424 representatives, each getting a part of your contribution if they voted Yes on S. 1, but if they voted No on S. 1 their part of your contribution will go to their next general election opponent.")
 
-	def _test_pledge_logged_in(self):
+	def _test_pledge_logged_in(self, t, title, bill, change_profile=False):
 		# Now that we're logged in, try to do another trigger with things pre-filled.
 
-		from contrib.models import Trigger, TriggerStatus
-		from contrib.legislative import create_trigger_from_bill
-		t = create_trigger_from_bill("s1-114", "s")
-		t.status = TriggerStatus.Open
-		t.save()
+		from contrib.models import Trigger
 
 		# Open the Trigger page.
 		self.browser.get(self.build_test_url(t.get_absolute_url()))
-		self.assertRegex(self.browser.title, "Keystone XL")
+		self.assertRegex(self.browser.title, title)
 
 		# Click one of the outcome buttons.
 		self.browser.execute_script("$('#pledge-outcomes > button[data-index=1]').click()")
 		time.sleep(1) # Wait for form to fade in.
 
-		# Use default pledge amount, contributor, billing info.
+		# Use default pledge amount.
 		self.browser.find_element_by_css_selector("#start-next").click()
 		time.sleep(.5)
-		self.browser.find_element_by_css_selector("#contrib-next").click()
-		time.sleep(.5)
-		self.browser.find_element_by_css_selector("#billing-next").click()
-		time.sleep(1)
+
+		if not change_profile:
+			# Use default contributor, billing info
+			self.browser.find_element_by_css_selector("#contrib-next").click()
+			time.sleep(.5)
+			self.browser.find_element_by_css_selector("#billing-next").click()
+			time.sleep(1)
+		else:
+			# Click 'Update'.
+			self.browser.find_element_by_css_selector("#pledge-contributor-old-update").click()
+
+			# Enter contributor information.
+			self.browser.find_element_by_css_selector("#contribNameFirst").send_keys("James")
+			self.browser.find_element_by_css_selector("#contribNameLast").send_keys("Jones")
+			self.browser.find_element_by_css_selector("#contribAddress").send_keys("2020 West St.")
+			self.browser.find_element_by_css_selector("#contribCity").send_keys("Somewhere")
+			self.browser.find_element_by_css_selector("#contribState").send_keys("XX") # using a fake state requires not using the DE API
+			self.browser.find_element_by_css_selector("#contribZip").send_keys("90000")
+			self.browser.find_element_by_css_selector("#contribOccupation").send_keys("quality assurance engineer")
+			self.browser.find_element_by_css_selector("#contribEmployer").send_keys("unemployed")
+			self.browser.find_element_by_css_selector("#contrib-next").click()
+			time.sleep(1)
+
+			# Enter billing information.
+			# send_keys has some problem with the stripe JS library overriding <input> behavior,
+			# so use Javascript to set values instead.
+			self.browser.execute_script("$('#billingCCNum').val('4111 1111 1111 1111')")
+			self.browser.execute_script("$('#billingCCExp').val('9/2025')")
+			self.browser.execute_script("$('#billingCCCVC').val('123')")
+			self.browser.find_element_by_css_selector("#billing-next").click()
+			time.sleep(1)
 
 		# We're back at the Trigger page, and after the user data is loaded
 		# the user sees an explanation of the pledge.
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote No on S. 1, but if they vote Yes on S. 1 their part of your contribution will go to their next general election opponent.")
+			"You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote No on BILL, but if they vote Yes on BILL their part of your contribution will go to their next general election opponent.".replace("BILL", bill))
 
-		# Check the trigger.
-		t.refresh_from_db()
-		self.assertEqual(t.pledge_count, 1)
-		self.assertEqual(t.total_pledged, Decimal('12'))
-
-		# Execute the trigger.
-		from contrib.legislative import execute_trigger_from_vote
-		execute_trigger_from_vote(t, "https://www.govtrack.us/congress/votes/114-2015/s14")
-
-		# Send pledge pre-execution emails.
-		from contrib.management.commands.send_pledge_emails import Command as send_pledge_emails
-		send_pledge_emails().handle()
-
-		# Execute pledges.
-		from contrib.management.commands.execute_pledges import Command as execute_pledges
-		execute_pledges().do_execute_pledges()
-
-		# Send pledge post-execution emails.
-		send_pledge_emails().handle()
+		# Check the trigger and then execute the trigger & pledges.
+		self._test_trigger_execution(t, 1, Decimal('12'), "https://www.govtrack.us/congress/votes/114-2015/s14")
 
 		# Reload the page.
 		self.browser.get(self.build_test_url(t.get_absolute_url()))
 		time.sleep(1)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You made a campaign contribution of $10.99 for this vote. It was split among 99 senators, each getting a part of your contribution if they voted No on S. 1, but if they voted Yes on S. 1 their part of your contribution will go to their next general election opponent.")
+			"You made a campaign contribution of $10.99 for this vote. It was split among 99 senators, each getting a part of your contribution if they voted No on BILL, but if they voted Yes on BILL their part of your contribution will go to their next general election opponent.".replace("BILL", bill))
 
-	def _test_pledge_returning_user(self, email, pw):
+	def _test_pledge_returning_user(self, t, email, pw):
 		# User is logged out but has an account.
-
-		from contrib.models import TriggerStatus
-		from contrib.legislative import create_trigger_from_bill
-		t = create_trigger_from_bill("hr30-114", "s")
-		t.status = TriggerStatus.Open
-		t.save()
 
 		self.browser.get(self.build_test_url(t.get_absolute_url()))
 
@@ -295,7 +295,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		self.browser.execute_script("$('#pledge-outcomes > button[data-index=1]').click()")
 		time.sleep(1) # Wait for form to fade in.
 		self.browser.find_element_by_css_selector("#start-next").click() # Use default pledge amount
-		time.sleep(.5) # faide in
+		time.sleep(.5) # fade in
 
 		# Try to log in.
 		self.browser.execute_script("$('#emailEmail').val('%s')" % email)
@@ -321,10 +321,11 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Re-start pledge.
 		self.browser.get(self.build_test_url("/accounts/logout"))
 		self.browser.get(self.build_test_url(t.get_absolute_url()))
+		time.sleep(1) # page loading...?
 		self.browser.execute_script("$('#pledge-outcomes > button[data-index=1]').click()")
 		time.sleep(1) # fade in
 		self.browser.find_element_by_css_selector("#start-next").click() # Use default pledge amount.
-		time.sleep(.5) # faide in
+		time.sleep(.5) # fade in
 
 		# Try to log in.
 		self.browser.execute_script("$('#emailEmail').val('%s')" % email)
@@ -337,31 +338,48 @@ class SimulationTest(StaticLiveServerTestCase):
 			"You have already scheduled a contribution for this vote. Please log in to see details.")
 
 	def test_maintest(self):
+		from contrib.models import ContributorInfo
+
 		# Create the trigger.
-		t = self.create_test_trigger()
+		t1 = self.create_test_trigger("s1-114", "h")
 
-		# Test the creation of a Pledge.
-		email, pw = self._test_pledge_simple(t)
-
-		# Test its exeuction.
-		self._test_trigger_execution(t, 1, Decimal('12'))
-		self._test_pledge_simple_execution(t)
+		# Test the creation of a Pledge. (Does not execute the pledge.)
+		email, pw = self._test_pledge_simple(t1)
+		self.assertEqual(ContributorInfo.objects.count(), 1)
 
 		# Now that the user is logged in, try another pledge with fields pre-filled.
-		self._test_pledge_logged_in()
+		# Also tests the execution of that Pledge.
+		t2 = self.create_test_trigger("s1-114", "s")
+		self._test_pledge_logged_in(t2, "Keystone XL", "S. 1")
+		self.assertEqual(ContributorInfo.objects.count(), 1) # should not create 2nd profile
+
+		# Finally make a pledge but change the user's profile. Since we've executed
+		# a pledge already, we should get two ContributorInfos out of this.
+		# The first Pledge's ContributorInfo should be updated.
+		t3 = self.create_test_trigger("s50-114", "s")
+		self._test_pledge_logged_in(t3, "Abortion Non-Discrimination Act", "S. 50", change_profile=True)
+		self.assertEqual(ContributorInfo.objects.count(), 2)
+
+		# Test the exeuction of the first trigger/pledge. We do this last so
+		# we can check that its ContributorInfo object is updated.
+		self._test_trigger_execution(t1, 1, Decimal('12'), "https://www.govtrack.us/congress/votes/114-2015/h14")
+		self._test_pledge_simple_execution(t1)
 
 		# Log out and try again with pre-filling fields during the login step.
+		# This also does it yet another time testing that the user can't make
+		# a second pledge on the same trigger.
 		self.browser.get(self.build_test_url("/accounts/logout"))
-		self._test_pledge_returning_user(email, pw)
+		t4 = self.create_test_trigger("hr30-114", "s")
+		self._test_pledge_returning_user(t4, email, pw)
 
 	def test_pledge_campaign(self):
 		# Test the creation of a Pledge with a campaign string.
-		t = self.create_test_trigger()
+		t = self.create_test_trigger("s1-114", "h")
 		email, pw = self._test_pledge_simple(t, with_campaign=True)
 
 	def test_incomplete_pledge(self, with_campaign=False):
 		# Create trigger.
-		t = self.create_test_trigger()
+		t = self.create_test_trigger("s1-114", "h")
 
 		# Start a pledge but stop after entering email.
 		ip = self._test_pledge_simple(t, with_campaign=with_campaign, break_after_email=True)
@@ -388,9 +406,9 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Create the trigger, add a plege we don't care about, and execute it.
 		# We include a pledge here because a trigger with no pledges displays
 		# differently.
-		t = self.create_test_trigger()
+		t = self.create_test_trigger("s1-114", "h")
 		self._test_pledge_simple(t)
-		self._test_trigger_execution(t, 1, Decimal('12'))
+		self._test_trigger_execution(t, 1, Decimal('12'), "https://www.govtrack.us/congress/votes/114-2015/h14")
 
 		# Test the creation of a Pledge.
 		self.browser.get(self.build_test_url("/accounts/logout"))

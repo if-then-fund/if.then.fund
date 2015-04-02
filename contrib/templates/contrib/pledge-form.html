@@ -135,7 +135,7 @@
     <input type="hidden" name="filter_party" value=""/>
     <input type="hidden" name="billingCCExpMonth" value="?"/>
     <input type="hidden" name="billingCCExpYear" value="?"/>
-    <input type="hidden" name="billingFromPledge" value=""/>
+    <input type="hidden" name="copyFromPledge" value=""/>
 
     {% if not hidemypledge %}
     <div class="panel panel-success">
@@ -273,7 +273,8 @@
               </div>
             </div>
             <div class="col-md-6 col-md-pull-6">
-              <table class="input-table" style="margin-top: .75em">
+              <div id="contributor-new">
+              <table class="input-table" style="margin-top: .75em; margin-bottom: 1em">
                 <tr>
                   <td><label for="contribNameFirst">First Name</label></td>
                   <td><input type="text" id="contribNameFirst" name="contribNameFirst" class="focus-on-shown form-control"></td>
@@ -313,7 +314,28 @@
                   <td><input type="text" id="contribEmployer" name="contribEmployer" class="form-control"></td>
                 </tr>
               </table>
-              <p style="margin-top: -1em">This information will become a part of the public record if the {{trigger.trigger_type.strings.action_noun}} occurs, as required by law.</p>
+              <p class="has-open-pledges" style="display: none;">We&rsquo;ll apply your update to your other scheduled contributions too.</p>
+              </div>
+
+              <div id="contributor-old" style="display: none">
+                <p>Please check your name, address, and employment. Is what you told us last time still true?</p>
+
+                <p style="margin: 1em 2em .25em 2em">
+                  <span class="field-contribNameFirst"> </span> <span class="field-contribNameLast"> </span>
+                  <br><span class="field-contribAddress"> </span>
+                  <br><span class="field-contribCity"> </span>, <span class="field-contribState"> </span> <span class="field-contribZip"> </span>
+                </p>
+                <p style="margin: .25em 2em .5em 2em">
+                  <span class="field-contribOccupation"> </span> <span style="font-size: 95%; font-style: italic">(occupation)</span>
+                  <br><span class="field-contribEmployer"> </span> <span style="font-size: 95%; font-style: italic">(employer)</span>
+                </p>
+
+                <p style="margin: .5em 2em 1.5em 2em">
+                  <a id="pledge-contributor-old-update" href="#" class="btn btn-default btn-sm" onclick="$('#pledge-info input[name=&quot;copyFromPledge&quot;]').val(''); $('#contributor-old, #payment-old').hide(); $('#contributor-new, #payment-new').show(); $('#contributor-new .focus-on-shown').focus(); return false;">Update</a>
+                </p>
+              </div>              
+
+              <p>This information will become a part of the public record if the {{trigger.trigger_type.strings.action_noun}} occurs, as required by law.</p>
               <div class="buttons">
                 <button type="button" class="btn btn-default" onclick="do_contributor_cancel();">&lt; Back</button>        
                 <button id="contrib-next" type="button" class="btn btn-warning" onclick="do_contributor_next()">Next &gt;</button>
@@ -350,11 +372,12 @@
                   </td>
                 </tr>
               </table>
+              <p class="has-open-pledges" style="display: none;">We&rsquo;ll apply this payment information to your other scheduled contributions too.</p>
               </div>
 
               <div id="payment-old" style="display: none">
                 <p>When the {{trigger.trigger_type.strings.action_noun}} occurs, we&rsquo;ll charge your credit card ending in <span class="cc-num"></span>.
-                  <a href="#" onclick="$('#pledge-info input[name=&quot;billingFromPledge&quot;]').val(''); $('#payment-old').hide(); $('#payment-new').show(); $('#payment-new .focus-on-shown').focus(); return false;">Change card?</a>
+                  <a href="#" onclick="$('#pledge-info input[name=&quot;copyFromPledge&quot;]').val(''); $('#payment-old').hide(); $('#payment-new').show(); $('#payment-new .focus-on-shown').focus(); return false;">Change card?</a>
                 </p>
               </div>
 
@@ -494,19 +517,32 @@ function pledge_init() {
 }
 
 function setPledgeDefaults(pledge_defaults) {
+  if (!pledge_defaults.from_pledge)
+    return;
+
+  // pre-populate contributor fields
   var fields = ['contribNameFirst', 'contribNameLast', 'contribAddress', 'contribCity', 'contribState', 'contribZip', 'contribOccupation', 'contribEmployer'];
   for (var i = 0; i < fields.length; i++) {
     var v = pledge_defaults[fields[i]];
-    if (v)
+    if (v) {
+      // the span to preview
+      $('#contributor-old').find('.field-' + fields[i]).text(v);
+
+      // the input field (which is what is actually submitted)
       $('#' + fields[i]).val(v)
+    }
   }
 
-  if (pledge_defaults.cc_from_pledge && pledge_defaults.cclastfour) {
-    $('#payment-new').hide();
-    $('#payment-old').show();
-    $('#payment-old .cc-num').text(pledge_defaults.cclastfour);
-    $('#pledge-info input[name="billingFromPledge"]').val(pledge_defaults.cc_from_pledge);
-  }
+  // populate credit card preview field
+  $('#payment-old .cc-num').text(pledge_defaults.cclastfour);
+
+  // if the user doesn't override, the ID of the pledge this info came from
+  $('#pledge-info input[name="copyFromPledge"]').val(pledge_defaults.from_pledge);
+
+  // show the preview divs rather than the input field divs
+  $('#contributor-new, #payment-new').hide();
+  $('#contributor-old, #payment-old').show();
+  if (pledge_defaults.open_pledges > 0) $('.has-open-pledges').show()
 }
 
 function get_contribution_amount() {
@@ -824,7 +860,7 @@ function pledge_submit() {
   $('#pledge-info input[name="filter_party"]').val(getPartyFilterValue())
 
   // validate credit card information and set form fields, but only if we're not reusing an old pledge token
-  if ($('#pledge-info input[name="billingFromPledge"]').val() == '')
+  if ($('#pledge-info input[name="copyFromPledge"]').val() == '')
     if (!validate_and_set_cc_fields())
       return;
 

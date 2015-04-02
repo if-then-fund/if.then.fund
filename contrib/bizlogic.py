@@ -5,18 +5,19 @@ from django.conf import settings
 
 def create_de_donation_basic_dict(pledge):
 	# Creates basic info for a Democracy Engine API call for creating
-	# a transaction (both authtest and auth+capture calls).
+	# a transaction (both authtest and auth+capture calls) based on a
+	# ContributorInfo instance.
 	return {
-		"donor_first_name": pledge.extra['contributor']['contribNameFirst'],
-		"donor_last_name": pledge.extra['contributor']['contribNameLast'],
-		"donor_address1": pledge.extra['contributor']['contribAddress'],
-		"donor_city": pledge.extra['contributor']['contribCity'],
-		"donor_state": pledge.extra['contributor']['contribState'],
-		"donor_zip": pledge.extra['contributor']['contribZip'],
+		"donor_first_name": pledge.profile.extra['contributor']['contribNameFirst'],
+		"donor_last_name": pledge.profile.extra['contributor']['contribNameLast'],
+		"donor_address1": pledge.profile.extra['contributor']['contribAddress'],
+		"donor_city": pledge.profile.extra['contributor']['contribCity'],
+		"donor_state": pledge.profile.extra['contributor']['contribState'],
+		"donor_zip": pledge.profile.extra['contributor']['contribZip'],
 		"donor_email": pledge.get_email(),
 
-		"compliance_employer": pledge.extra['contributor']['contribEmployer'],
-		"compliance_occupation": pledge.extra['contributor']['contribOccupation'],
+		"compliance_employer": pledge.profile.extra['contributor']['contribEmployer'],
+		"compliance_occupation": pledge.profile.extra['contributor']['contribOccupation'],
 
 		"email_opt_in": False,
 		"is_corporate_contribution": False,
@@ -24,34 +25,16 @@ def create_de_donation_basic_dict(pledge):
 		# use contributor info as billing info in the hopes that it might
 		# reduce DE's merchant fees, and maybe we'll get back CC verification
 		# info that might help us with data quality checks in the future?
-		"cc_first_name": pledge.extra['contributor']['contribNameFirst'],
-		"cc_last_name": pledge.extra['contributor']['contribNameLast'],
-		"cc_zip": pledge.extra['contributor']['contribZip'],
+		"cc_first_name": pledge.profile.extra['contributor']['contribNameFirst'],
+		"cc_last_name": pledge.profile.extra['contributor']['contribNameLast'],
+		"cc_zip": pledge.profile.extra['contributor']['contribZip'],
 	}
 
-def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, aux_data):
+def run_authorization_test(pledge, ccnum, cccvc, aux_data):
 	# Runs an authorization test at the time the user is making a pledge,
 	# which tests the card info and also gets a credit card token that
 	# can be used later to make a real charge without other billing
 	# details.
-
-	# Store the last four digits of the credit card number so we can
-	# quickly locate a Pledge by CC number (approximately).
-	pledge.cclastfour = ccnum[-4:]
-
-	# Store a hashed version of the credit card number so we can
-	# do a verification if the user wants to look up a Pledge by CC
-	# info. Use Django's built-in password hashing functionality to
-	# handle this.
-	#
-	# Also store the expiration date so that we can know that a
-	# card has expired prior to using the DE token.
-	from django.contrib.auth.hashers import make_password
-	pledge.extra['billing'] = {
-		'cc_num_hashed': make_password(ccnum),
-		'cc_exp_month': ccexpmonth,
-		'cc_exp_year': ccexpyear,
-	}
 
 	# Logging.
 	aux_data.update({
@@ -69,8 +52,8 @@ def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, aux_data
 
 		# billing details
 		"cc_number": ccnum,
-		"cc_month": ccexpmonth,
-		"cc_year": ccexpyear,
+		"cc_month": pledge.profile.extra['billing']['cc_exp_month'],
+		"cc_year": pledge.profile.extra['billing']['cc_exp_year'],
 		"cc_verification_value": cccvc,
 
 		# no line items are necessary for an authorization test
@@ -91,8 +74,8 @@ def run_authorization_test(pledge, ccnum, ccexpmonth, ccexpyear, cccvc, aux_data
 
 	# Store the transaction authorization, which contains the credit card token,
 	# into the pledge.
-	pledge.extra['billing']['authorization'] = de_txn
-	pledge.extra['billing']['de_cc_token'] = de_txn['token']
+	pledge.profile.extra['billing']['authorization'] = de_txn
+	pledge.profile.extra['billing']['de_cc_token'] = de_txn['token']
 
 def get_pledge_recipients(trigger, pledge):
 	# For pledge execution, figure out how to split the contribution
@@ -263,7 +246,7 @@ def create_pledge_donation(pledge, recipients):
 	de_don_req = create_de_donation_basic_dict(pledge)
 	de_don_req.update({
 		# billing info
-		"token": pledge.extra['billing']['de_cc_token'],
+		"token": pledge.profile.extra['billing']['de_cc_token'],
 
 		# line items
 		"line_items": line_items,

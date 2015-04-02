@@ -1,7 +1,7 @@
 {% extends "email_template.html" %}
 
 {% block body %}
-<p>{{pledge.extra.contributor.contribNameFirst}},</p>
+<p>{{pledge.profile.extra.contributor.contribNameFirst}},</p>
 
 {% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
 
