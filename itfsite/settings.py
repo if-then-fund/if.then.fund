@@ -129,6 +129,7 @@ LOGIN_REDIRECT_URL = '/home'
 
 ADMINS = (("Joshua Tauberer", "josh@if.then.fund"),)
 SERVER_EMAIL = 'if.then.fund error <errors@mail.if.then.fund>'
+EMAIL_SUBJECT_PREFIX = '[' + environment['host'] + '] '
 DEFAULT_FROM_EMAIL = 'if.then.fund <no.reply@mail.if.then.fund>'
 CONTACT_EMAIL = 'if.then.fund <hello@if.then.fund>'
 
