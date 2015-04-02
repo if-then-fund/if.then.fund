@@ -341,6 +341,63 @@ class Action(models.Model):
 #
 #####################################################################
 
+class ContributorInfo(models.Model):
+	"""Contributor and billing information used for a Pledge. Stored schema-less in the extra field. May be shared across Pledges of the same user. Instances are immutable."""
+
+	created = models.DateTimeField(auto_now_add=True, db_index=True)
+
+	cclastfour = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The last four digits of the user's credit card number, stored & indexed for fast look-up in case we need to find a pledge from a credit card number.")
+	extra = JSONField(blank=True, help_text="Schemaless data stored with this object.")
+
+	def __str__(self):
+		return "[%d] %s %s" % (self.id, self.name, self.address)
+
+	def save(self, *args, **kwargs):
+		if self.id:
+			raise Exception("This model is immutable.")
+		super(ContributorInfo, self).save(*args, **kwargs)
+
+	@property
+	def name(self):
+		return ' '.join(self.extra['contributor'][k] for k in ('contribNameFirst', 'contribNameLast'))
+
+	@property
+	def address(self):
+		return ', '.join(self.extra['contributor'][k] for k in ('contribCity', 'contribState'))
+
+	def set_from(self, data):
+		# Initialize from a dictionary.
+
+		# Store the last four digits of the credit card number so we can
+		# quickly locate a Pledge by CC number (approximately).
+		self.cclastfour = data['billing']['cc_num'][-4:]
+
+		# Store a hashed version of the credit card number so we can
+		# do a verification if the user wants to look up a Pledge by CC
+		# info. Use Django's built-in password hashing functionality to
+		# handle this. Then clear the cc_num field.
+		from django.contrib.auth.hashers import make_password
+		data['billing']['cc_num_hashed'] = make_password(data['billing']['cc_num'])
+		del data['billing']['cc_num']
+
+		# Store the rest in extra.
+		self.extra = data
+
+	def same_as(self, other):
+		import json
+		def normalize(data): return json.dumps(data, sort_keys=True)
+		return (self.cclastfour == other.cclastfour) and (normalize(self.extra) == normalize(other.extra))
+
+	@staticmethod
+	def find_from_cc(cc_number):
+		# Returns an interator that yields matchinig Pledge instances.
+		# Must be in parallel to how the view function creates the pledge.
+		from django.contrib.auth.hashers import check_password
+		cc_number = cc_number.replace(' ', '')
+		for p in ContributorInfo.objects.filter(cclastfour=cc_number[-4:]):
+			if check_password(cc_number, p.extra['billing']['cc_num_hashed']):
+				yield p
+
 @django_enum
 class PledgeStatus(enum.Enum):
 	Open = 1
@@ -365,6 +422,7 @@ class Pledge(models.Model):
 	user = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT, help_text="The user making the pledge. When an anonymous user makes a pledge, this is null, the user's email address is stored, and the pledge should be considered unconfirmed/provisional and will not be executed.")
 	email = models.EmailField(max_length=254, blank=True, null=True, help_text="When an anonymous user makes a pledge, their email address is stored here and we send a confirmation email.")
 	trigger = models.ForeignKey(Trigger, related_name="pledges", on_delete=models.PROTECT, help_text="The Trigger that this Pledge is for.")
+	profile = models.ForeignKey(ContributorInfo, related_name="pledges", on_delete=models.PROTECT, help_text="The contributor information (name, address, etc.) and billing information used for this Pledge. Immutable and cannot be changed after execution.")
 
 	campaign = models.CharField(max_length=24, blank=True, null=True, db_index=True, help_text="An optional string indicating a referral campaign that lead the user to take this action.")
 
@@ -373,7 +431,7 @@ class Pledge(models.Model):
 	# be JSON-serializable.
 	cancel_archive_fields = (
 		'created', 'updated', 'campaign',
-		'algorithm', 'desired_outcome', 'amount', 'cclastfour',
+		'algorithm', 'desired_outcome', 'amount',
 		)
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -584,16 +642,6 @@ class Pledge(models.Model):
 
 		return True
 
-	@staticmethod
-	def find_from_billing(cc_number):
-		# Returns an interator that yields matchinig Pledge instances.
-		# Must be in parallel to how the view function creates the pledge.
-		from django.contrib.auth.hashers import check_password
-		cc_number = cc_number.replace(' ', '')
-		for p in Pledge.objects.filter(cclastfour=cc_number[-4:]):
-			if check_password(cc_number, p.extra['billing']['cc_num_hashed']):
-				yield p
-
 	def needs_pre_execution_email(self):
 		# If the user confirmed their email address after the trigger
 		# was executed, then the pre-execution emails already went out
@@ -758,6 +806,7 @@ class CancelledPledge(models.Model):
 		cp.pledge['amount'] = float(cp.pledge['amount']) # can't JSON-serialize a Decimal
 		cp.pledge['created'] = cp.pledge['created'].isoformat() # can't JSON-serialize a DateTime
 		cp.pledge['updated'] = cp.pledge['updated'].isoformat() # can't JSON-serialize a DateTime
+		cp.pledge.update(pledge.profile.extra)
 		cp.save()
 
 class IncompletePledge(models.Model):

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.db import transaction
+
 from contrib.models import *
 
 class TriggerAdmin(admin.ModelAdmin):
@@ -94,9 +95,21 @@ class ActionAdmin(admin.ModelAdmin):
         return obj.outcome_label()
     outcome_.short_description = "Outcome"
 
+class ContributorInfoAdmin(admin.ModelAdmin):
+    list_display = ['name', 'address', 'cclastfour', 'created', 'pledge_count']
+    readonly_fields = ['cclastfour', 'extra_']
+    fields = readonly_fields
+    def pledge_count(self, obj):
+        return obj.pledges.count()
+    def extra_(self, obj):
+        import json
+        from django.utils.safestring import mark_safe, mark_for_escaping
+        return mark_safe("<pre style='font-family: sans-serif;'>" + mark_for_escaping(json.dumps(obj.extra, sort_keys=True, indent=True)) + "</pre>")
+    extra_.name = "Extra"
+
 class PledgeAdmin(admin.ModelAdmin):
     list_display = ['id', 'status', 'trigger', 'user_or_email', 'amount', 'created']
-    readonly_fields = ['user', 'trigger', 'amount', 'algorithm'] # amount is read-only because a total is cached in the Trigger
+    readonly_fields = ['user', 'trigger', 'profile', 'amount', 'algorithm'] # amount is read-only because a total is cached in the Trigger
     def user_or_email(self, obj):
         return obj.user if obj.user else (obj.email + " (?)")
     user_or_email.short_description = 'User or Unverified Email'
@@ -142,6 +155,7 @@ admin.site.register(TriggerStatusUpdate, TriggerStatusUpdateAdmin)
 admin.site.register(TriggerExecution, TriggerExecutionAdmin)
 admin.site.register(Actor, ActorAdmin)
 admin.site.register(Action, ActionAdmin)
+admin.site.register(ContributorInfo, ContributorInfoAdmin)
 admin.site.register(Pledge, PledgeAdmin)
 admin.site.register(CancelledPledge, CancelledPledgeAdmin)
 admin.site.register(PledgeExecution, PledgeExecutionAdmin)
