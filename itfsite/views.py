@@ -48,7 +48,7 @@ def user_home(request):
 	else:
 		total_contribs = total_contribs.aggregate(total_contribs=Sum('execution__charged'))['total_contribs']
 
-	return render(request, "itfsite/home.html", {
+	return render(request, "itfsite/user_home.html", {
 		'pledges': pledges,
 		'total_pledged': total_pledged,
 		'total_contribs': total_contribs,
