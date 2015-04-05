@@ -35,11 +35,11 @@ def user_home(request):
 	
 	# Get the user's total amount of open pledges, i.e. their total possible
 	# future credit card charges / campaign contributions.
-	total_pledged = pledges.filter(status=PledgeStatus.Open)
-	if len(total_pledged) == 0:
+	open_pledges = pledges.filter(status=PledgeStatus.Open)
+	if len(open_pledges) == 0:
 		total_pledged = 0.0
 	else:
-		total_pledged = total_pledged.aggregate(total_pledged=Sum('amount'))['total_pledged']
+		total_pledged = open_pledges.aggregate(total_pledged=Sum('amount'))['total_pledged']
 
 	# Get the user's total amount of executed campaign contributions.
 	total_contribs = pledges.filter(status=PledgeStatus.Executed)
@@ -48,8 +48,16 @@ def user_home(request):
 	else:
 		total_contribs = total_contribs.aggregate(total_contribs=Sum('execution__charged'))['total_contribs']
 
+	# Get the user's distinct ContributorInfo objects on *open* Pledges,
+	# indicating future submitted info.
+	if len(open_pledges) == 0:
+		profiles = []
+	else:
+		profiles = set(p.profile for p in open_pledges)
+
 	return render(request, "itfsite/user_home.html", {
 		'pledges': pledges,
+		'profiles': profiles,
 		'total_pledged': total_pledged,
 		'total_contribs': total_contribs,
 		})

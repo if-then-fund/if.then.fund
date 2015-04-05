@@ -4,6 +4,8 @@
 
 {% block head %}
 <style>
+.profile { margin: 0 0 1em 2em; }
+.profile p { margin-bottom: .33em ;}
 #action-summary { width: auto; }
 #action-summary td { border: none; padding-bottom: 0; }
 </style>
@@ -17,6 +19,27 @@
 	|
 	<a href="{% url 'password_change' %}">Change Password</a>
 </p>
+
+{% if profiles|length > 0 %}
+<h2>Profile</h2>
+{% for p in profiles %}
+	<p>You provided the following information to use for {{p.open_pledge_count}} scheduled contribution{{p.open_pledge_count|pluralize}}:</p>
+	<div class="profile">
+        <p>
+          {{p.extra.contributor.contribNameFirst}} {{p.extra.contributor.contribNameLast}}
+          <br>{{p.extra.contributor.contribAddress}}
+          <br>{{p.extra.contributor.contribCity}}, {{p.extra.contributor.contribState}} {{p.extra.contributor.contribZip}}
+        </p>
+        <p>
+          {{p.extra.contributor.contribOccupation}} <span style="font-size: 95%; font-style: italic">(occupation)</span>
+          <br>{{p.extra.contributor.contribEmployer}} <span style="font-size: 95%; font-style: italic">(employer)</span>
+        </p>
+        <p>
+        	Credit card ending in {{p.cclastfour}} and expiring in {{p.extra.billing.cc_exp_month}}/{{p.extra.billing.cc_exp_year}}.</p>
+        </p>
+	</div>
+{% endfor %}
+{% endif %}
 
 <h2>Your Contributions</h2>
 

@@ -388,6 +388,9 @@ class ContributorInfo(models.Model):
 		def normalize(data): return json.dumps(data, sort_keys=True)
 		return (self.cclastfour == other.cclastfour) and (normalize(self.extra) == normalize(other.extra))
 
+	def open_pledge_count(self):
+		return self.pledges.filter(status=PledgeStatus.Open).count()
+
 	@staticmethod
 	def find_from_cc(cc_number):
 		# Returns an interator that yields matchinig Pledge instances.
