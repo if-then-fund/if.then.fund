@@ -11,7 +11,10 @@ from decimal import Decimal
 class SimulationTest(StaticLiveServerTestCase):
 	fixtures = ['fixtures/actor.yaml', 'fixtures/recipient.yaml']
 
-	def setUp(self):
+	@classmethod
+	def setUpClass(cls):
+		super(cls, SimulationTest).setUpClass()
+
 		# Override the suggested pledge amount so we have a known value
 		# to test against.
 		import contrib.views
@@ -31,12 +34,21 @@ class SimulationTest(StaticLiveServerTestCase):
 		contrib.bizlogic.DemocracyEngineAPI = contrib.bizlogic.DummyDemocracyEngineAPI()
 
 		# Start a headless browser.
-		self.browser = selenium.webdriver.Firefox()
+		cls.browser = selenium.webdriver.Firefox()
 
-	def tearDown(self):
+	@classmethod
+	def tearDownClass(cls):
+		super(cls, SimulationTest).tearDownClass()
+
 		# Terminate the debug server.
-		print("Shutting down debug server.")
-		self.browser.quit()
+		cls.browser.quit()
+
+	def setUp(self):
+		# make it easier to access the browser instance by aliasing to self.browser
+		self.browser = SimulationTest.browser
+
+		# clear the browser's cookies before each test
+		self.browser.delete_all_cookies()
 
 	def build_test_url(self, path):
 		from urllib.parse import urljoin
