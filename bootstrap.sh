@@ -106,7 +106,7 @@ fi
 # Install dependencies.
 $PIP install --upgrade \
 	"rtyaml" \
-	"django>=1.7.1" \
+	"django>=1.8" \
 	"python3-memcached" \
 	"requests" \
 	"markdown2" \

@@ -2,12 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
-from django.dispatch import receiver
-from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.conf import settings
-
-from email_confirm_la.signals import post_email_confirm
 
 from twostream.decorators import anonymous_view, user_view_for
 
@@ -441,51 +437,6 @@ def create_pledge(request):
 
 	# Client will reload the page.
 	return { "status": "ok" }
-
-# A user confirms an email address on an anonymous pledge.
-@receiver(post_email_confirm)
-def post_email_confirm_callback(sender, confirmation, request=None, **kwargs):
-	from itfsite.accounts import first_time_confirmed_user
-
-	# The user making the request confirms that he owns an email address
-	# tied to a pledge.
-
-	pledge = confirmation.content_object
-	email = confirmation.email
-
-	# Get or create the user account.
-
-	from itfsite.accounts import User
-	user = User.get_or_create(email)
-
-	# The pledge might have already been cancelled! Well, create an
-	# account for the user, but when we redirect go to the homepage
-	# and say the pledge was cancelled.
-	if pledge is None:
-		messages.add_message(request, messages.ERROR, 'It looks like you canceled the contribution already, sorry.')
-		return first_time_confirmed_user(request, user, '/')
-
-	# The user may have anonymously created a second Pledge for the same
-	# trigger. We can't tell them before they confirm their email that
-	# they already made a pledge. We can't confirm both --- warn the user
-	# and go on.
-	# (Note: When checking, be sure to exclude the pledge itself from the
-	# test, since it may have already been confirmed.)
-	if pledge.trigger.pledges.filter(user=user)\
-		  .exclude(id=pledge.id if pledge is not None else None).exists():
-		messages.add_message(request, messages.ERROR, 'You had a previous contribution already scheduled for the same thing. Your more recent contribution will be ignored.')
-		return first_time_confirmed_user(request, user, pledge.trigger.get_absolute_url())
-
-	# Confirm the pledge. This signal may be called more than once, and
-	# confirm_email is okay with that. It returns True just on the first
-	# time (when the pledge is actually confirmed).
-	if pledge.confirm_email(user):
-		messages.add_message(request, messages.SUCCESS, 'Your contribution for %s has been confirmed.'
-			% pledge.trigger.title)
-
-	# The user may be new, so take them to a welcome page.
-	# pledge.user may not be set because confirm_email uses a clone for locking.
-	return first_time_confirmed_user(request, user, pledge.trigger.get_absolute_url())
 
 @json_response
 def cancel_pledge(request):

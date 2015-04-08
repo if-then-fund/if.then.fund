@@ -190,14 +190,14 @@ class SimulationTest(StaticLiveServerTestCase):
 	def _test_trigger_execution(self, t, pledge_count, total_pledged):
 		# Check the trigger's current state.
 		from contrib.models import Trigger, TriggerStatus
-		t = Trigger.objects.get(id=t.id) # refresh
+		t.refresh_from_db()
 		self.assertEqual(t.pledge_count, pledge_count)
 		self.assertEqual(t.total_pledged, total_pledged)
 
 		# Execute the trigger.
 		from contrib.legislative import execute_trigger_from_vote
 		execute_trigger_from_vote(t, "https://www.govtrack.us/congress/votes/114-2015/h14")
-		t = Trigger.objects.get(id=t.id) # refresh
+		t.refresh_from_db()
 		self.assertEqual(t.status, TriggerStatus.Executed)
 
 		# Send pledge pre-execution emails.
@@ -254,7 +254,7 @@ class SimulationTest(StaticLiveServerTestCase):
 			"You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote No on S. 1, but if they vote Yes on S. 1 their part of your contribution will go to their next general election opponent.")
 
 		# Check the trigger.
-		t = Trigger.objects.get(id=t.id) # refresh
+		t.refresh_from_db()
 		self.assertEqual(t.pledge_count, 1)
 		self.assertEqual(t.total_pledged, Decimal('12'))
 
