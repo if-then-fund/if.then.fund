@@ -367,7 +367,7 @@ class ExecutionTestCase(TestCase):
 					if p.filter_party and action.party != filter_party: continue
 				else:
 					if p.incumb_challgr == +1: continue
-					recipient = action.challenger
+					recipient = action.actor.challenger
 					if p.filter_party and recipient.party != filter_party: continue
 				self.assertIsNotNone(contrib)
 				self.assertEqual(contrib.recipient, recipient)

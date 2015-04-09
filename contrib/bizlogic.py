@@ -92,6 +92,15 @@ def get_pledge_recipients(trigger, pledge):
 		if action.outcome is None:
 			continue
 
+		# Skip Actions where the Actor is no longer able to receive contributions.
+		# Although we normally null-out the outcome field in corresponding Actions
+		# (and so we would skip per the statement above), when a pledge is made on
+		# a trigger that was executed a long time ago, circumstances may have changed.
+		# If the incumbent can't take contributions, we don't give to an opponent
+		# either.
+		if action.actor.inactive_reason:
+			continue
+
 		# Get a recipient object.
 
 		if action.outcome == pledge.desired_outcome:
@@ -113,19 +122,21 @@ def get_pledge_recipients(trigger, pledge):
 		else:
 			# The incumbent did something other than what the user wanted, so the
 			# challenger of the opposite party is the recipient.
+			#
+			# Use the Actor's current challenger at the time this function is called.
+			# That might be different from the challenger at the time the Trigger was
+			# executed.
 
 			# Filter if the pledge is for incumbents only.
 			if pledge.incumb_challgr == 1:
 				continue
 
-			if action.challenger is None:
-				# We don't have a challenger Recipient associated. There should always
-				# be a challenger. If there is not, create a Recipient and set its
-				# active field to false.
-				raise ValueError("Action has no challenger: %s" % action)
-
 			# Get the Recipient object.
-			r = action.challenger
+			r = action.actor.challenger
+			if r is None:
+				# We don't have a challenger Recipient associated. There should always
+				# be a challenger Recipient assigned.
+				raise ValueError("Actor has no challenger: %s" % action)
 
 			# Party filtering is based on the party on the recipient object.
 			party = r.party
