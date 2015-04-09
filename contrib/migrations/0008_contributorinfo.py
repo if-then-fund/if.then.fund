@@ -22,6 +22,7 @@ class Migration(migrations.Migration):
                 ('extra', contrib.models.JSONField(help_text='Schemaless data stored with this object.', blank=True)),
             ],
         ),
+        migrations.RunSQL("INSERT INTO contrib_contributorinfo (id, created, cclastfour, extra) VALUES (-1, now(), '0000', 'TEMPORARY');"),
         migrations.AddField(
             model_name='pledge',
             name='profile',
