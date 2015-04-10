@@ -5,6 +5,8 @@ from django.db import models, migrations
 import django.db.models.deletion
 import contrib.models
 
+import django.conf
+is_sqlite = django.conf.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3'
 
 class Migration(migrations.Migration):
 
@@ -22,7 +24,7 @@ class Migration(migrations.Migration):
                 ('extra', contrib.models.JSONField(help_text='Schemaless data stored with this object.', blank=True)),
             ],
         ),
-        migrations.RunSQL("INSERT INTO contrib_contributorinfo (id, created, cclastfour, extra) VALUES (-1, now(), '0000', 'TEMPORARY');"),
+        migrations.RunSQL("INSERT INTO contrib_contributorinfo (id, created, cclastfour, extra) VALUES (-1, now(), '0000', 'TEMPORARY');") if not is_sqlite else migrations.RunPython(migrations.RunPython.noop),
         migrations.AddField(
             model_name='pledge',
             name='profile',
