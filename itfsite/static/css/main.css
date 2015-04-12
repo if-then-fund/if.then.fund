@@ -89,20 +89,24 @@ a, a:visited {
 	}
 }
 
+@media screen {
 .site-brand {
 	display: inline-block;
 	background: url('/static/branding/content-title.png') no-repeat;
-	width: 73px;
-	height: 15px;
+	background-size: 100%;
+	width: 4.866666667em;
+	height: 1em;
 	text-indent: -99999em;
 	overflow: hidden;
 	margin-left: 1px;
 }
-	small .site-brand, footer .site-brand {
-		width: 62px;
-		height: 12px;
-		background-size: 100%;
+}
+@media print {
+	.site-brand {
+		font-family: 'Times New Roman', serif;
+		font-weight: bold;
 	}
+}
 
 .overline {
 	margin-bottom: .33em;
