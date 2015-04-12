@@ -64,13 +64,13 @@ class PledgeTestCase(TestCase):
 		self._test_pledge(0, -1, None, "the opponents in the next general election of ACTORS who ACT No")
 
 	def test_pledge_partyfilter(self):
-		self._test_pledge(0, 0, ActorParty.Democratic, "Democratic ACTORS who ACT Yes and the Democratic opponents in the next general election of ACTORS who ACT No")
+		self._test_pledge(0, 0, ActorParty.Democratic, "Democratic ACTORS who ACT Yes and the opponents in the next general election of ACTORS who ACT No if the opponent is in the Democratic party")
 
 	def test_pledge_keepemin_partyfilter(self):
 		self._test_pledge(0, 1, ActorParty.Democratic, "Democratic ACTORS who ACT Yes")
 
 	def test_pledge_throwemout_partyfilter(self):
-		self._test_pledge(0, -1, ActorParty.Democratic, "the Democratic opponents in the next general election of ACTORS who ACT No")
+		self._test_pledge(0, -1, ActorParty.Democratic, "the opponents in the next general election of ACTORS who ACT No if the opponent is in the Democratic party")
 
 
 class ExecutionTestCase(TestCase):

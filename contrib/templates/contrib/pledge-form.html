@@ -678,11 +678,11 @@ function update_start_next_state(no_popover) {
     if (ic == 1)
       who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text();
     else if (ic == -1)
-      who = "the " + party + " opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = "the opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + (party ? (" if the opponent is in the " + party + "party") : "");
     else if (party == "")
       who = "up to {{trigger.extra.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + ", their part of your contribution will go to their next general election opponent"
     else
-      who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + party + " opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text();
+      who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + (party ? (" if the opponent is in the " + party + "party") : "");
 
     $('#filter-summary span.text').text("We will split your contribution evenly across " + who + ".");
   }

@@ -560,8 +560,8 @@ class Pledge(models.Model):
 				% (party_filter, noun, verb, desired_outcome_label)
 		elif self.incumb_challgr == -1:
 			# "throw em out"
-			return "the %sopponents in the next general election of %s who %s %s" \
-				% (party_filter, noun, verb, antidesired_outcome_label)
+			return "the opponents in the next general election of %s who %s %s%s" \
+				% (noun, verb, antidesired_outcome_label, ((" if the opponent is in the %sparty" % party_filter) if party_filter else ""))
 		elif party_filter == "":
 			# goes to incumbents and challengers, no party filter
 			if self.status != PledgeStatus.Executed:
@@ -573,9 +573,9 @@ class Pledge(models.Model):
 				   verb, antidesired_outcome_label)
 		else:
 			# goes to incumbents and challengers, with a party filter
-			return "%s%s who %s %s and the %sopponents in the next general election of %s who %s %s" \
+			return "%s%s who %s %s and the opponents in the next general election of %s who %s %s%s" \
 				% (party_filter, noun, verb, desired_outcome_label,
-				   party_filter, noun, verb, antidesired_outcome_label)
+				                 noun, verb, antidesired_outcome_label, ((" if the opponent is in the %sparty" % party_filter) if party_filter else ""))
 
 
 	def send_email_confirmation(self, first_try):
