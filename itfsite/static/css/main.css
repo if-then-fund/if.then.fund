@@ -176,7 +176,10 @@ h3.invert {
 			border: none;
 		}
 	#page-sections-nav-xs {
-		margin: 1em;
+		margin-top: 1em;
+		padding-bottom: .5em;
+		border-bottom: 1px solid #DDD;
+		margin-bottom: -.5em;
 		font-size: 90%;
 	}
 		#page-sections-nav-xs li a {
