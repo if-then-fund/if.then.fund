@@ -59,6 +59,9 @@ function build_page_sections_nav() {
 	});
 
 	// Set required attributes.
+	function set_width() { $('#page-sections-nav').css('width', $('#page-sections-nav').parent().width()); }
+	set_width();
+	$(window).resize(set_width);
 	$('#page-sections-nav').attr('data-offset-top', $('header').height());
 	$('#page-sections-nav').attr('data-offset-bottom', $('#page-sections-nav').height());
 
