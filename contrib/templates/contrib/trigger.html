@@ -123,7 +123,7 @@
 			{% include "contrib/pledge-form.html" %}
 
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
-			{% include "contrib/pledge-form.html" with paneiliz=1 %}
+			{% include "contrib/pledge-form.html" with hidemypledge=1 %}
 
 			<h2>Contributions</h2>
 
