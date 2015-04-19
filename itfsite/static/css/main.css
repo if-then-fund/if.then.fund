@@ -35,12 +35,12 @@ small, .small {
 	line-height: 125%;
 }
 
-a, a:visited {
+a, a:hover, a:link, a:visited, a:active {
 	color: #0f640f; /* accessibility requires high contrast */
+	text-decoration: none; /* border-bottom looks better than underline */
 	border-bottom: 1px solid #0f640f; /* accessibility requires a line */
 }
 	a:hover, a:active {
-		text-decoration: none;
 		color: #0A0;
 		border-color: #0B0;
 	}
