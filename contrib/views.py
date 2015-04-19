@@ -68,7 +68,6 @@ def trigger(request, id, trigger_customization_id):
 	avg_contrib = 0
 
 	num_recips = 0
-	num_actors = 0
 	by_incumb_chlngr = []
 
 	try:
@@ -114,13 +113,11 @@ def trigger(request, id, trigger_customization_id):
 
 		# Compute a few other aggregates.
 		num_recips = 0
-		num_actors = 0
 		by_incumb_chlngr = [["Incumbent", 0, "text-success"], ["Opponent", 0, "text-danger"]]
 		for a in actions:
 			# counts of actors/recipients
 			if a['total_for'] > 0: num_recips += 1
 			if a['total_against'] > 0: num_recips += 1
-			if a['total_for'] > 0 or a['total_against'] > 0: num_actors += 1
 
 			# totals by incumbent/challenger
 			by_incumb_chlngr[0][1] += a['total_for']
@@ -165,7 +162,6 @@ def trigger(request, id, trigger_customization_id):
 		"total_contribs": total_contribs,
 		"num_contribs": num_contribs,
 		"num_recips": num_recips,
-		"num_actors": num_actors,
 		"avg_contrib": avg_contrib,
 	})
 
