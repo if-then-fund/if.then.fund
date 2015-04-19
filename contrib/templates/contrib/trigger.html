@@ -117,7 +117,7 @@
 			{# The event ocurred and we are now in the process of making campaign contributions. But we can keep accepting pledges, just as in the Open state #}
 
 			{% if trigger.pledge_count > 0 %}
-			<p class="text-warning" style="margin-top: 1em">The {{trigger.trigger_type.strings.action_noun}} ocurred, and we are now processing the scheduled contributions made by users. You may still make a contribution:</p>
+			<p class="text-success" style="margin-top: 1em">We are processing the scheduled contributions made by <span class='site-brand'>if.then.fund</span> users. Check back soon to see the full breakdown of what happened.</p>
 			{% endif %}
 
 			{% include "contrib/pledge-form.html" %}
