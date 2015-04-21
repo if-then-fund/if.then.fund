@@ -27,16 +27,13 @@
 	{% else %}
 		${{execution.charged|floatformat:2}}
 	{% endif %}
-	for this {{trigger.trigger_type.strings.action_noun}}.
+	for this {{trigger.trigger_type.strings.action_noun}}{% if execution %}
+		on {{execution.created|date}}{% endif %}.
 	It
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}was{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}will be{% else %}would have been{% endif %}
 	split among
 	{{pledge.targets_summary}}.
 	</p>
-
-	{% if execution and execution.charged < pledge.amount %}
-		<p class="small text-muted">Your credit card was charged less than your intended contribution of ${{pledge.amount|floatformat:2}}. We can only make whole-penny contributions to the recipients of your contribution, so we had to round down.</p>
-	{% endif %}
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
 		{% if pledge.trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
@@ -46,6 +43,8 @@
 		{% endif %}
 	{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Vacated' %}
 		<p>The event that this contribution was for is no longer expected to occur. Your contribution has been cancelled. Your credit card was not charged.</dd>
+	{% elif execution and execution.charged < pledge.amount %}
+		<p class="small text-muted">Your credit card was charged less than your intended contribution of ${{pledge.amount|floatformat:2}}. We can only make whole-penny contributions to the recipients of your contribution, so we had to round down.</p>
 	{% endif %}
 
 	{% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
@@ -95,7 +94,7 @@
 				{{pledge.profile.extra.contributor.contribCity}}, {{pledge.profile.extra.contributor.contribState}} {{pledge.profile.extra.contributor.contribZip}}<br>
 				{{pledge.profile.extra.contributor.contribOccupation}} / {{pledge.profile.extra.contributor.contribEmployer}}
 			</p>
-			<p class="expl">Your name, address, employment, and contribution amounts to each recipient become a part of the public record as required by law.</p>
+			<p class="expl">Your name, address, employment, and contribution amounts to each recipient may become a part of the public record as required by law.</p>
 		</dd>
 		</dl>
 	</div>
