@@ -112,6 +112,7 @@ $PIP install --upgrade \
 	"markdown2" \
 	"jsonfield" \
 	"tqdm==1.0" \
+	"email_validator==0.1.0-rc1" \
 	"enum3field"
 
 $PIP install --upgrade -r \

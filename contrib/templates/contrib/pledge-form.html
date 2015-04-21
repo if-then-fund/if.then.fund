@@ -823,8 +823,8 @@ function do_pledge_login_next() {
         email: $('#emailEmail').val()
       },
       success: function(response) {
-        if (response == "ValidateEmailResult.Invalid") {
-            $('#emailEmail').popover({ content: "That is not a valid email address." }).popover('show');
+        if (response != "OK") {
+            $('#emailEmail').popover({ content: response }).popover('show');
             return;
         }
 

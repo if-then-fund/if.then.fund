@@ -280,20 +280,28 @@ def get_recent_pledge_defaults(user, request):
 	return ret
 
 # Validates the email address a new user is providing during
-# the pledge (user says they have no password). Returns a
-# ValidateEmailResult as text, e.g. "ValidateEmailResult.Valid".
+# the pledge (user says they have no password). Returns "OK"
+# or a human-readable error message about the email address
+# not being valid.
+#
 # Also record every email address users enter so we can follow-up
 # if the user did not finish the pledge form.
 @csrf_exempt # for testing via curl
 @require_http_methods(["POST"])
 def validate_email(request):
 	from itfsite.models import User
-	from itfsite.betteruser import validate_email, ValidateEmailResult
+	from email_validator import validate_email, EmailNotValidError
 
 	email = request.POST['email'].strip()
-	ret = validate_email(email)
 
-	if ret == ValidateEmailResult.Valid and not User.objects.filter(email=email).exists():
+	# Validate the email address. If it is invalid, return the
+	# error message.
+	try:
+		validate_email(email, allow_smtputf8=False) # DE does not accept internationalized addresses
+	except EmailNotValidError as e:
+		return HttpResponse(str(e), content_type="text/plain")
+
+	if not User.objects.filter(email=email).exists():
 		# Store for later, if this is not a user already with an account.
 		# Only have at most one of these records per trigger-email address pair.
 		IncompletePledge.objects.get_or_create(
@@ -307,8 +315,7 @@ def validate_email(request):
 				}
 			})
 
-	return HttpResponse(str(ret), content_type="text/plain")
-
+	return HttpResponse("OK", content_type="text/plain")
 
 @require_http_methods(['POST'])
 @json_response
@@ -386,12 +393,17 @@ def create_pledge(request):
 			pass
 
 	# Anonymous user and/or authentication failed.
-	# Will do email verification below.
+	# Will do email verification below, but at least not validate it
+	# (should have already been validated client side).
 	if not p.user:
 		p.email = request.POST.get('email').strip()
-		from itfsite.betteruser import validate_email, ValidateEmailResult
-		if validate_email(p.email, simple=True) != ValidateEmailResult.Valid:
-			raise Exception("email is out of range")
+
+		from email_validator import validate_email, EmailNotValidError
+		try:
+			validate_email(p.email, allow_smtputf8=False)
+		except EmailNotValidError as e:
+			raise HumanReadableValidationError(str(e))
+
 		exists_filters = { 'email': p.email }
 
 	# If the user has already made this pledge, it is probably a
