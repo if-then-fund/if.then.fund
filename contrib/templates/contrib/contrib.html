@@ -27,8 +27,7 @@
 	{% else %}
 		${{execution.charged|floatformat:2}}
 	{% endif %}
-	for this {{trigger.trigger_type.strings.action_noun}}{% if execution %}
-		on {{execution.created|date}}{% endif %}.
+	for this {{trigger.trigger_type.strings.action_noun}}.
 	It
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}was{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}will be{% else %}would have been{% endif %}
 	split among
@@ -43,8 +42,11 @@
 		{% endif %}
 	{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Vacated' %}
 		<p>The event that this contribution was for is no longer expected to occur. Your contribution has been cancelled. Your credit card was not charged.</dd>
-	{% elif execution and execution.charged < pledge.amount %}
-		<p class="small text-muted">Your credit card was charged less than your intended contribution of ${{pledge.amount|floatformat:2}}. We can only make whole-penny contributions to the recipients of your contribution, so we had to round down.</p>
+	{% elif execution %}
+		<p class="small text-muted">
+			Your credit card was charged on {{execution.created|date}}.
+			{% if execution.charged < pledge.amount %}It was charged less than your intended contribution of ${{pledge.amount|floatformat:2}}. We can only make whole-penny contributions to the recipients of your contribution, so we had to round down.{% endif %}
+		</p>
 	{% endif %}
 
 	{% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
