@@ -108,7 +108,7 @@ $PIP install --upgrade \
 	"rtyaml" \
 	"django>=1.8" \
 	"python3-memcached" \
-	"requests" \
+	"requests==2.6.0" \
 	"markdown2" \
 	"jsonfield" \
 	"tqdm==1.0" \
