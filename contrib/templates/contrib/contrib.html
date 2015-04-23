@@ -129,7 +129,7 @@
 function cancel_pledge(desire) {
 	show_modal_confirm(
 		"Cancel contribution?",
-		"Are you sure you want to cancel this contribution?",
+		$("<p>Are you sure you want to cancel this contribution?</p>"),
 		["Cancel Contribution", "Nevermind"],
 		function() {
 			ajax_with_indicator({
