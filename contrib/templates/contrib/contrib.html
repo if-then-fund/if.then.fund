@@ -5,7 +5,7 @@
 <div class="panel-body">
 
 {% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
-	<p style="float: right; margin-bottom: 0"><a href="#" onclick="return cancel_pledge()" class="btn btn-default btn-sm">Cancel Contribution</a></p>
+	<p style="float: right; margin-bottom: 0"><button onclick="return cancel_pledge()" class="btn btn-default btn-sm">Cancel Contribution</button></p>
 {% endif %}
 
 <h2 style="margin-top: 0">Your contribution</h2>
