@@ -1042,7 +1042,7 @@ class Recipient(models.Model):
 	de_id = models.CharField(max_length=64, unique=True, help_text="The Democracy Engine ID that we have assigned to this recipient.")
 	active = models.BooleanField(default=True, help_text="Whether this Recipient can currently receive funds.")
 
-	actor = models.ForeignKey(Actor, blank=True, null=True, unique=True, help_text="The Actor that this recipient corresponds to (i.e. this Recipient is an incumbent).")
+	actor = models.OneToOneField(Actor, blank=True, null=True, help_text="The Actor that this recipient corresponds to (i.e. this Recipient is an incumbent).")
 
 	office_sought = models.CharField(max_length=7, blank=True, null=True, help_text="For challengers, a code specifying the office sought in the form of 'S-NY-I' (New York class 1 senate seat) or 'H-TX-30' (Texas 30th congressional district). Unique with party.")
 	party = EnumField(ActorParty, blank=True, null=True, help_text="The party of the challenger, or null if this Recipient is for an incumbent. Unique with office_sought.")
