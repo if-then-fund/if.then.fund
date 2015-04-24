@@ -1145,10 +1145,14 @@ class Contribution(models.Model):
 				(None, self.action.party if not self.recipient.is_challenger else self.recipient.party), # party
 				set([None, self.pledge_execution.district]), # district (but excludes the 'None' district)
 			):
-			agg, is_new = ContributionAggregate.objects.get_or_create(**dict(zip(CONTRIBUTION_AGGREGATE_FIELDS, fields)))
-			agg.count = models.F('count') + 1*factor
-			agg.total = models.F('total') + self.amount*factor
-			agg.save(update_fields=['count', 'total'])
+			if len([x for x in fields[2:] if x is not None]) > 2: continue # we won't allow slicing at arbirary depth because making all of these slices ahead of time is exponentially expensive
+			agg, is_new = ContributionAggregate.objects.get_or_create(
+				defaults={ 'count': 1*factor, 'total': self.amount*factor },
+				**dict(zip(CONTRIBUTION_AGGREGATE_FIELDS, fields)))
+			if not is_new:
+				agg.count = models.F('count') + 1*factor
+				agg.total = models.F('total') + self.amount*factor
+				agg.save(update_fields=['count', 'total'])
 
 CONTRIBUTION_AGGREGATE_FIELDS = (
 	'trigger_execution',
@@ -1259,5 +1263,6 @@ class ContributionAggregate(models.Model):
 		ContributionAggregate.objects.all().delete()
 
 		# Start incrementing new ones.
-		for c in tqdm(Contribution.objects.all()):
+		iter = Contribution.objects.all().select_related('action__execution', 'pledge_execution__pledge__via', 'pledge_execution__pledge', 'action', 'action__actor', 'recipient', 'pledge_execution')
+		for c in tqdm(iter.iterator(), total=Contribution.objects.count()):
 			c.update_contributionaggregates()
