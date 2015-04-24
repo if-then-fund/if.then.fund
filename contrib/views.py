@@ -563,67 +563,55 @@ def cancel_pledge(request):
 	return { "status": "ok" }
 
 @anonymous_view
-@json_response
-def trigger_execution_report(request, id):
-	# get the object & validate that there is data
-	trigger = get_object_or_404(Trigger, id=id)
-	try:
-		te = trigger.execution
-	except TriggerExecution.DoesNotExist:
-		raise Http404("This trigger is not executed.")
-	if te.pledge_count_with_contribs == 0:
-		raise Http404("This trigger did not have any contributions.")
-	if te.pledge_count != trigger.pledge_count:
-		raise Http404("This trigger is still being executed.")
+def report(request):
+	context = {
+
+	}
+	context.update(report_fetch_data(request))
+	return render(request, "contrib/totals.html", context)
+
+def report_fetch_data(request):
+	slice_fields = { }
+
+	if "trigger" in request.GET:
+		# get the object & validate that there is data
+		trigger = get_object_or_404(Trigger, id=request.GET['trigger'])
+		try:
+			te = trigger.execution
+		except TriggerExecution.DoesNotExist:
+			raise Http404("This trigger is not executed.")
+		if te.pledge_count_with_contribs == 0:
+			raise Http404("This trigger did not have any contributions.")
+		if te.pledge_count < .75 * trigger.pledge_count:
+			raise Http404("This trigger is still being executed.")
+		slice_fields["trigger_execution"] = te
 
 	# form response
 	ret = { }
 
-	# Aggregates by outcome.
-	ret['outcomes'] = te.get_outcomes()
+	ret["total"] = ContributionAggregate.get_slice(**slice_fields)
+	ret["users"] = PledgeExecution.objects.filter(**slice_fields).values("pledge__user").distinct().count()
+	ret["num_triggers"] = PledgeExecution.objects.filter(**slice_fields).values("trigger_execution").distinct().count()
+	ret["first_contrib_date"] = PledgeExecution.objects.filter(**slice_fields).order_by('created').first().created
+	ret["last_contrib_date"] = PledgeExecution.objects.filter(**slice_fields).order_by('created').last().created
+
+	if "trigger_execution" in slice_fields:
+		# Aggregates by outcome.
+		ret['outcomes'] = ContributionAggregate.get_slices('outcome', **slice_fields)
 
 	# Aggregates by actor.
-	actions = list(te.actions.all().select_related('actor'))
-	actions.sort(key = lambda a : ((a.total_contributions_for + a.total_contributions_against) == 0, -(a.total_contributions_for - a.total_contributions_against), a.actor.name_sort))
-	def build_actor_info(action):
-		ret = {
-			"name": action.name_long,
-			"action": action.outcome_label(),
-			"contribs": action.total_contributions_for,
-			"contribs_to_opponent": action.total_contributions_against,
-			"actor_id": action.actor.id,
-		}
-		for idscheme in ('bioguide', 'govtrack', 'opensecrets'):
-			if idscheme in action.extra['legislators-current']['id']:
-				ret[idscheme+"_id"] = action.extra['legislators-current']['id'][idscheme]
-		for key in ('state', 'district', 'url', 'end'):
-			v = action.extra['legislators-current']['term'].get(key)
-			if key == 'url': key = 'homepage'
-			if key == 'end': key = 'term_end'
-			if v:
-				ret[key] = v
-		return ret
-	ret['actors'] = [build_actor_info(a) for a in actions]
+	from collections import defaultdict
+	ret['actors'] = defaultdict(lambda : defaultdict( lambda : decimal.Decimal(0) ))
+	for rec in ContributionAggregate.get_slices('actor', 'incumbent', **slice_fields):
+		ret['actors'][rec['actor']]['actor'] = rec['actor']
+		ret['actors'][rec['actor']][str(rec['incumbent'])] += rec['total']
+	ret['actors'] = sorted(ret['actors'].values(), key = lambda x : (-(x['True'] + x['False']), -x['True'], x['actor'].name_sort))
 
-	# All donors.
-	from contrib.models import PledgeExecutionProblem, Contribution
-	ret['donors'] = [{
-		"desired_outcome": pe.pledge.desired_outcome_label,
-		"contribs": pe.charged-pe.fees,
-		"congressional_district": pe.district,
-		"date": pe.pledge.created,
-	} for pe in te.pledges.filter(problem=PledgeExecutionProblem.NoProblem).select_related('pledge', 'pledge__trigger')]
+	# Aggregates by incumbent/chalenger.
+	ret['by_incumb_chlngr'] = ContributionAggregate.get_slices('incumbent', **slice_fields)
 
-	# All contributions.
-	ret['contributions'] = [{
-		'amount': c.amount,
-		'donor_congressional_district': c.pledge_execution.district,
-		'donor_desired_outcome': c.pledge_execution.pledge.desired_outcome_label,
-		'recipient_name': c.recipient.name,
-		'recipient_actor_id' if not c.recipient.is_challenger else "incumbent_actor_id":
-			c.recipient.actor_id,
-	} for c in Contribution.objects.filter(pledge_execution__pledge__trigger=trigger)
-		.select_related('pledge_execution', 'pledge_execution__pledge', 'pledge_execution__pledge_trigger', 'recipient')]
+	# Aggregates by party.
+	ret['by_party'] = ContributionAggregate.get_slices('party', **slice_fields)
 
 	# report
 	return ret

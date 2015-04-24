@@ -1133,31 +1133,43 @@ class Contribution(models.Model):
 
 	def update_contributionaggregates(self, factor=1):
 		# Increment the cached ContributionAggregates that this Contribution
-		# gets aggregated in.
+		# gets aggregated in, in the order of the CONTRIBUTION_AGGREGATE_FIELDS array.
 		from itertools import product
 		for fields in product(
-				[self.action.execution], # trigger_execution
+				[None, self.action.execution], # trigger_execution
 				set([None, self.pledge_execution.pledge.via]), # via (but exclude the 'None' via)
 				(None, self.pledge_execution.pledge.desired_outcome), # outcome
 				(None, self.action), # action
+				(None, self.action.actor), # actor
 				(None, not self.recipient.is_challenger), # incumbent
 				(None, self.action.party if not self.recipient.is_challenger else self.recipient.party), # party
 				set([None, self.pledge_execution.district]), # district (but excludes the 'None' district)
 			):
-			agg, is_new = ContributionAggregate.objects.get_or_create(**dict(zip(ContributionAggregate.FIELDS, fields)))
+			agg, is_new = ContributionAggregate.objects.get_or_create(**dict(zip(CONTRIBUTION_AGGREGATE_FIELDS, fields)))
 			agg.count = models.F('count') + 1*factor
 			agg.total = models.F('total') + self.amount*factor
 			agg.save(update_fields=['count', 'total'])
 
+CONTRIBUTION_AGGREGATE_FIELDS = (
+	'trigger_execution',
+	'via',
+	'outcome',
+	'action',
+	'actor',
+	'incumbent',
+	'party',
+	'district',
+	)
 class ContributionAggregate(models.Model):
 	"""Aggregate totals for various slices of contributions."""
 
-	trigger_execution = models.ForeignKey(TriggerExecution, related_name='contribution_aggregates', on_delete=models.CASCADE, help_text="The TriggerExecution that these cached statistics are about.")
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
+	trigger_execution = models.ForeignKey(TriggerExecution, blank=True, null=True, related_name='contribution_aggregates', on_delete=models.CASCADE, help_text="The TriggerExecution that these cached statistics are about.")
 	via = models.ForeignKey(TriggerCustomization, blank=True, null=True, on_delete=models.CASCADE, help_text="The TriggerCustomization that the Pledges were made via.")
 	outcome = models.IntegerField(blank=True, null=True, help_text="The outcome index that was taken. Null if the slice encompasses all outcomes.")
 	action = models.ForeignKey(Action, blank=True, null=True, on_delete=models.CASCADE, help_text="The Action that the contribution was made about.")
+	actor = models.ForeignKey(Actor, blank=True, null=True, on_delete=models.CASCADE, help_text="The Actor who caused the Action that the contribution was made about. The contribution may have gone to an opponent.")
 	incumbent = models.NullBooleanField(blank=True, null=True, help_text="Whether the contribution was to the Actor (True) or the Actor's challenger (False).")
 	party = EnumField(ActorParty, blank=True, null=True, help_text="The party of the Recipient.")
 	district = models.CharField(max_length=4, blank=True, null=True, help_text="The congressional district of the user (at the time of the pledge), in the form of XX00. Null if the slice encompasses all district.")
@@ -1165,11 +1177,8 @@ class ContributionAggregate(models.Model):
 	count = models.IntegerField(default=0, help_text="A cached total count of campaign contributions executed in this slice.")
 	total = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total dollar amount of campaign contributions executed in this slice, excluding fees.")
 
-	FIELDS = ('trigger_execution', 'via', 'outcome', 'action', 'incumbent', 'party', 'district')
-
 	class Meta:
-		# not sure how to access FIELDS instance.....
-		unique_together = ('trigger_execution', 'via', 'outcome', 'action', 'incumbent', 'party', 'district')
+		unique_together = [CONTRIBUTION_AGGREGATE_FIELDS]
 
 	def __str__(self):
 		return "%d | %s %s %s %s %s %s" % (self.trigger_execution_id, self.via, self.outcome, self.action_id, self.incumbent, self.party, self.district)
@@ -1185,10 +1194,10 @@ class ContributionAggregate(models.Model):
 		# Return a dict { "count": __, "total": __ } to match
 		# how get_slices returns a list of dicts via .values().
 		for f in slce:
-			if f not in ContributionAggregate.FIELDS:
+			if f not in CONTRIBUTION_AGGREGATE_FIELDS:
 				raise ValueError(f)
 		slce = dict(slce)
-		for field in ContributionAggregate.FIELDS:
+		for field in CONTRIBUTION_AGGREGATE_FIELDS:
 			if field not in slce:
 				slce[field] = None
 		try:
@@ -1206,18 +1215,37 @@ class ContributionAggregate(models.Model):
 		# the caller wants particular aggregates for, and for
 		# those we must *exclude* None because that represents
 		# the aggregate for all of those values.
+
+		# sanity check
 		if len(across) == 0: raise ValueError("Must specify at least one 'across' column.")
 		for f in list(slce) + list(across):
-			if f not in ContributionAggregate.FIELDS:
+			if f not in CONTRIBUTION_AGGREGATE_FIELDS:
 				raise ValueError(f)
+
+		# build the filters
 		slce = dict(slce)
-		for field in ContributionAggregate.FIELDS:
+		for field in CONTRIBUTION_AGGREGATE_FIELDS:
 			if field not in slce and field not in across:
 				slce[field] = None
 		c = ContributionAggregate.objects.filter(**slce)
 		for f in across: # must use separate 'exclude' calls
 			c = c.exclude(**{f: None})
-		return c.values('count', 'total', *across)
+
+		# sort descending by total
+		c = c.order_by('-total')
+
+		# fetch all
+		ret = list(c.values('count', 'total', *across))
+
+		# if actors were requested, pre-fetch objects
+		actors = Actor.objects.in_bulk(rec['actor'] for rec in ret if 'actor' in rec)
+
+		# turn integers from .values() back into objects
+		for rec in ret:
+			if 'actor' in rec: rec['actor'] = actors[rec['actor']]
+			if 'party' in rec: rec['party'] = ActorParty(rec['party'])
+		
+		return ret
 
 	@staticmethod
 	@transaction.atomic

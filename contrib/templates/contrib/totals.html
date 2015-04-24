@@ -1,0 +1,92 @@
+{% extends "master.html" %}
+{% load itfsite_utils %}
+{% load static from staticfiles %}
+
+{% block title %}if.then.fund&rsquo;s Aggregate Contributions{% endblock %}
+
+{% block head %}
+<meta property="og:title" content="if.then.fund&rsquo;s Aggregate Contributions" />
+<meta property="og:description" content="All campaign contributions made through if.then.fund.">
+<meta property="og:image" content="{{ROOT_URL}}static/branding/icons/favicon-192x192.png" /> {# for Twitter summary card, min size 120x120 and < 1MB #}
+<meta name="twitter:card" content="summary" />
+
+<style>
+h3 + table { margin-top: 1em; }
+</style>
+{% endblock %}
+
+{% block body %}
+<h1>Totals</h1>
+
+<p><span class='site-brand'>if.then.fund</span> has processed {{total.total|currency}} in campaign contributions between {{first_contrib_date|date}} and {{last_contrib_date|date}}.</p>
+
+<div class="row">
+	<div class="col-sm-5">
+		<h2>Overall</h2>
+		<table class="table table-bordered">
+		<tr><td>Aggregate Contributions</td> <td>{{total.total|currency}}</td></tr>
+		<tr><td>Count of Contributions</td> <td>{{total.count}}</td></tr>
+		<tr><td>Contributors (Unique)</td> <td>{{users}}</td></tr>
+		<tr><td>Total Number of Votes</td> <td>{{num_triggers}}</td></tr>
+		</table>
+	</div>
+</div>
+
+<h2>Recipients</h2>
+<p>The following tables break down the contributions by recipient.</p>
+<div class="row">
+	<div class="col-sm-5">
+		<h3>Keep &rsquo;em in or throw &rsquo;em out?</h3>
+		<table class="table table-bordered">
+		<thead><tr><th>Recipient Type</th> <th>Total</th></thead>
+		<tbody>
+		{% for rec in by_incumb_chlngr %}
+			<tr>
+				<td>{% if rec.incumbent %}Incumbent{% else %}Opponent{% endif %}</td>
+				<td>{{rec.total|currency}}</td>
+			</tr>
+		{% endfor %}
+		</tbody>
+		</table>
+		<p class="small">Users choose whether contributions will go to incumbents or their next general election opponents.</p>
+	</div>
+
+	<div class="col-sm-5 col-sm-offset-1">
+		<h3>By Party</h3>
+		<table class="table table-bordered">
+		<thead><tr><th>Party</th> <th>Total</th></thead>
+		<tbody>
+		{% for rec in by_party %}
+			<tr>
+				<td>{{rec.party.name}}</td>
+				<td>{{rec.total|currency}}</td>
+			</tr>
+		{% endfor %}
+		</tbody>
+		</table>
+	</div>
+</div>
+
+<div>
+	<h3>All Recipients</h3>
+
+	<table class="table table-condensed">
+	<thead>
+		<th>Candidate</th>
+		<th>Contributions<br>To Them</th>
+		<th>Contributions<br>To Opponent</th>
+	</thead>
+	<tbody>
+	{% for rec in actors %}
+		<tr>
+			<td>{{rec.actor.name_long}}</td>
+			<td class="{% if rec.True %}text-success{% else %}text-muted{% endif %}">{{rec.True|currency}}</td>
+			<td class="{% if rec.False %}text-danger{% else %}text-muted{% endif %}">{{rec.False|currency}}</td>
+		</tr>
+	{% endfor %}
+	</tbody>
+	</table>
+</div>
+
+{% endblock %}
+
