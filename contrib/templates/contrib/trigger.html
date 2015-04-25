@@ -78,8 +78,10 @@
 
 		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' or not trigger.execution.description %}
 			{{T.description|render_text:T.description_format}}
+			{% comment %}
 			<hr style="margin: .5em 0; border-color: #DDD;">
 			{{trigger.execution_note|render_text:trigger.execution_note_format}}
+			{% endcomment %}
 		{% else %}
 			{{trigger.execution.description|render_text:trigger.execution.description_format}}
 		{% endif %}
