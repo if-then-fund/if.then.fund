@@ -1,5 +1,5 @@
 {% extends "master.html" %}
-{% load itfsite_utils %}
+{% load itfsite_utils humanize %}
 {% load static from staticfiles %}
 
 {% block title %}if.then.fund&rsquo;s Aggregate Contributions{% endblock %}
@@ -25,9 +25,9 @@ h3 + table { margin-top: 1em; }
 		<h2>Overall</h2>
 		<table class="table table-bordered">
 		<tr><td>Aggregate Contributions</td> <td>{{total.total|currency}}</td></tr>
-		<tr><td>Count of Contributions</td> <td>{{total.count}}</td></tr>
-		<tr><td>Contributors (Unique)</td> <td>{{users}}</td></tr>
-		<tr><td>Total Number of Votes</td> <td>{{num_triggers}}</td></tr>
+		<tr><td>Count of Contributions</td> <td>{{total.count|intcomma}}</td></tr>
+		<tr><td>Contributors (Unique)</td> <td>{{users|intcomma}}</td></tr>
+		<tr><td>Total Number of Votes</td> <td>{{num_triggers|intcomma}}</td></tr>
 		</table>
 	</div>
 </div>

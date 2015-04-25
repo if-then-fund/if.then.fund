@@ -1,5 +1,5 @@
 {% extends "master.html" %}
-{% load itfsite_utils %}
+{% load itfsite_utils humanize %}
 {% load static from staticfiles %}
 
 {% block title %}{{T.title}}{% endblock %}
@@ -240,7 +240,7 @@
 			</div>
 
 			<div class="meta-stat">
-				<div class="num">{{T_pre.pledge_count}}</div>
+				<div class="num">{{T_pre.pledge_count|intcomma}}</div>
 				<div class="lbl">donor{{T_pre.pledge_count|pluralize}} {% if T_pre.pledge_count == 0 %}&mdash; be the first!{% endif %}</div>
 			</div>
 
@@ -269,7 +269,7 @@
 			</div>
 
 			<div class="meta-stat">
-				<div class="num">{{total_pledges}}</div>
+				<div class="num">{{total_pledges|intcomma}}</div>
 				<div class="lbl">donor{{total_pledges|pluralize}}</div>
 			</div>
 
@@ -283,7 +283,7 @@
 			<hr>
 
 			<div class="meta-stat lesser">
-				<div class="num">{{num_recips}}</div>
+				<div class="num">{{num_recips|intcomma}}</div>
 				<div class="lbl">recipient{{num_recips|pluralize}}</div>
 			</div>
 
