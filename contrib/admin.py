@@ -24,7 +24,7 @@ class TriggerAdmin(admin.ModelAdmin):
 
         class NewFromBillForm(forms.Form):
             congress = forms.ChoiceField(label='Congress', choices=((114, '114th Congress'),))
-            bill_type = forms.ChoiceField(label='Bill Type', choices=(('hr', 'H.R.'),('s', 'S.')))
+            bill_type = forms.ChoiceField(label='Bill Type', choices=(('hr', 'H.R.'),('s', 'S.'),('hjres', 'H.J.Res.')))
             bill_number = forms.IntegerField(label='Bill Number', min_value=1, max_value=9999)
             vote_chamber = forms.ChoiceField(label='Vote in chamber', choices=(('x', 'Whichever Votes First'), ('h', 'House'), ('s', 'Senate')))
             pro_tip = forms.CharField(label='Pro Tip', help_text="e.g. 'Pro-Environment'")
