@@ -99,6 +99,7 @@ class SimulationTest(StaticLiveServerTestCase):
 			pledge_summary="You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 435 representatives, each getting a part of your contribution if they vote Yes on S. 1, but if they vote No on S. 1 their part of your contribution will go to their next general election opponent.",
 			with_campaign=False,
 			break_after_email=False, return_from_incomplete_pledge=None,
+			break_before_confirmation=False,
 			via=None,
 			):
 
@@ -187,6 +188,9 @@ class SimulationTest(StaticLiveServerTestCase):
 		# An email confirmation was sent.
 		self.assertFalse(p.should_retry_email_confirmation())
 
+		if break_before_confirmation:
+			return
+
 		# Get the email confirmation URL that we need to hit to confirm the user.
 		msg = self.pop_email().body
 		m = re.search(r"We need to confirm your email address first. .*(http:\S*/ev/key/\S*/)", msg, re.S)
@@ -252,7 +256,7 @@ class SimulationTest(StaticLiveServerTestCase):
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
 			pledge_summary)
 
-	def _test_pledge_logged_in(self, t, title, bill, change_profile=False):
+	def _test_pledge_with_defaults(self, t, title, bill, logged_in=None, change_profile=False):
 		# Now that we're logged in, try to do another trigger with things pre-filled.
 
 		from contrib.models import Trigger
@@ -268,6 +272,14 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Use default pledge amount.
 		self.browser.find_element_by_css_selector("#start-next").click()
 		time.sleep(.5)
+
+		# If the user is logged in, the login form is hidden. Otherwise enter
+		# an email address.
+		if not logged_in:
+			email = "unittest+%d@if.then.fund" % (random.randint(10000, 99999))
+			self.browser.execute_script("$('#emailEmail').val('%s')" % email)
+			self.browser.find_element_by_css_selector("#login-next").click()
+			time.sleep(1)
 
 		if not change_profile:
 			# Use default contributor, billing info
@@ -305,6 +317,11 @@ class SimulationTest(StaticLiveServerTestCase):
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
 			"You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote No on BILL, but if they vote Yes on BILL their part of your contribution will go to their next general election opponent.".replace("BILL", bill))
+
+		if not logged_in:
+			# If the user wasn't logged in, and since we didn't log them in here,
+			# the pledge was unconfirmed and we can't test trigger execution.
+			return
 
 		# Check the trigger and then execute the trigger & pledges.
 		self._test_trigger_execution(t, 1, Decimal('12'), "https://www.govtrack.us/congress/votes/114-2015/s14")
@@ -380,14 +397,14 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Now that the user is logged in, try another pledge with fields pre-filled.
 		# Also tests the execution of that Pledge.
 		t2 = self.create_test_trigger("s1-114", "s")
-		self._test_pledge_logged_in(t2, "Keystone XL", "S. 1")
+		self._test_pledge_with_defaults(t2, "Keystone XL", "S. 1", logged_in=True)
 		self.assertEqual(ContributorInfo.objects.count(), 1) # should not create 2nd profile
 
 		# Finally make a pledge but change the user's profile. Since we've executed
 		# a pledge already, we should get two ContributorInfos out of this.
 		# The first Pledge's ContributorInfo should be updated.
 		t3 = self.create_test_trigger("s50-114", "s")
-		self._test_pledge_logged_in(t3, "Abortion Non-Discrimination Act", "S. 50", change_profile=True)
+		self._test_pledge_with_defaults(t3, "Abortion Non-Discrimination Act", "S. 50", logged_in=True, change_profile=True)
 		self.assertEqual(ContributorInfo.objects.count(), 2)
 
 		# Test the exeuction of the first trigger/pledge. We do this last so
@@ -401,6 +418,22 @@ class SimulationTest(StaticLiveServerTestCase):
 		self.browser.get(self.build_test_url("/accounts/logout"))
 		t4 = self.create_test_trigger("hr30-114", "s")
 		self._test_pledge_returning_user(t4, email, pw)
+
+	def test_returning_without_confirmation(self):
+		from contrib.models import ContributorInfo
+
+		# Create the trigger.
+		t1 = self.create_test_trigger("s1-114", "h")
+
+		# Test the creation of a Pledge but don't do email verification.
+		self._test_pledge_simple(t1, break_before_confirmation=True)
+		self.assertEqual(ContributorInfo.objects.count(), 1)
+
+		# Try another pledge with fields pre-filled from the last pledge that is
+		# still stored in the user's session object.
+		t2 = self.create_test_trigger("s1-114", "s")
+		self._test_pledge_with_defaults(t2, "Keystone XL", "S. 1", logged_in=False)
+		self.assertEqual(ContributorInfo.objects.count(), 1) # should not create 2nd profile
 
 	def test_pledge_campaign(self):
 		# Test the creation of a Pledge with a campaign string.

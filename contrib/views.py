@@ -167,12 +167,12 @@ def trigger(request, id, trigger_customization_id):
 
 def get_user_pledges(user, request):
 	# Returns the Pledges that a user owns as a QuerySet.
+	ret = Pledge.objects.none() # empty QuerySet
 	if user and user.is_authenticated():
-		return Pledge.objects.filter(user=user)
-	elif request.session.get('anon_pledge_created'):
-		return Pledge.objects.filter(id__in=request.session.get('anon_pledge_created'))
-	else:
-		return Pledge.objects.none() # empty QuerySet
+		ret |= Pledge.objects.filter(user=user)
+	if request.session.get('anon_pledge_created'):
+		ret |= Pledge.objects.filter(id__in=request.session.get('anon_pledge_created'))
+	return ret.distinct()
 
 @user_view_for(trigger)
 def trigger_user_view(request, id, trigger_customization_id):
@@ -519,12 +519,13 @@ def create_pledge(request):
 
 	else:
 		# This is a returning user and we are re-using info from a previous pledge.
-		# Validate that the pledge id corresponds to a pledge previously submitted
-		# by this user. Only works for an authenticated user.
-		if not p.user: raise Exception("Can't have copyFromPledge set and not be an authenticated user.")
-		prev_p = Pledge.objects.get(
-			id=request.POST["copyFromPledge"],
-			user=p.user)
+		# That pledge might be one that hasn't had its email address confirmed yet,
+		# or if it has the user might not be logged in, but the user's session cookie
+		# may grant the user access to it. Or if the user is logged in, it might be
+		# a pledge tied to the account.
+		prev_p = Pledge.objects.get(id=request.POST["copyFromPledge"])
+		if not get_user_pledges(p.user, request).filter(id=prev_p.id).exists():
+			raise Exception("copyFromPledge is set to a pledge ID that the user did not create or is no longer stored in their session.")
 		p.profile = prev_p.profile
 		p.save()
 
