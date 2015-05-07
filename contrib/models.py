@@ -715,7 +715,7 @@ class Pledge(models.Model):
 		return True
 
 	@transaction.atomic
-	def execute(self):
+	def execute(self, ca_updater=None):
 		# Lock the Pledge and the Trigger to prevent race conditions.
 		pledge = Pledge.objects.select_for_update().filter(id=self.id).first()
 		trigger = Trigger.objects.select_for_update().filter(id=pledge.trigger.id).first()
@@ -737,6 +737,11 @@ class Pledge(models.Model):
 		total_charge = 0
 		de_don = None
 
+		# Buffer updates to the ContributionAggregate table.
+		ca_updater_sync_at_end = False
+		if ca_updater is None:
+			ca_updater = ContributionAggregate.Updater()
+			ca_updater_sync_at_end = True
 
 		if pledge.user is None:
 			# We do not make contributions for pledges from unconfirmed email
@@ -812,7 +817,7 @@ class Pledge(models.Model):
 				c.save()
 
 				# Increment the TriggerExecution and Action's total_contributions.
-				c.update_aggregates()
+				c.update_aggregates(updater=ca_updater)
 
 			# Mark pledge as executed.
 			pledge.status = PledgeStatus.Executed
@@ -824,6 +829,10 @@ class Pledge(models.Model):
 			if len(recip_contribs) > 0:
 				trigger_execution.pledge_count_with_contribs = models.F('pledge_count_with_contribs') + 1
 			trigger_execution.save(update_fields=['pledge_count', 'pledge_count_with_contribs'])
+
+			# If the ContributionAggregate updater is local to this call, sync changes now.
+			if ca_updater_sync_at_end:
+				ca_updater.sync()
 
 		except Exception as e:
 			# If a DE transaction was made, include its info in any exception that was raised.
@@ -1109,7 +1118,7 @@ class Contribution(models.Model):
 		# Remove record.
 		super(Contribution, self).delete()	
 
-	def update_aggregates(self, factor=1):
+	def update_aggregates(self, factor=1, updater=None):
 		# Increment the totals on the Action instance. This excludes fees because
 		# this is based on transaction line items.
 		if not self.recipient.is_challenger:
@@ -1129,11 +1138,12 @@ class Contribution(models.Model):
 
 		# Increment the cached ContributionAggregates that this Contribution
 		# gets aggregated in.
-		self.update_contributionaggregates(factor=factor)
+		self.update_contributionaggregates(factor=factor, updater=updater)
 
-	def update_contributionaggregates(self, factor=1):
+	def update_contributionaggregates(self, factor=1, updater=None):
 		# Increment the cached ContributionAggregates that this Contribution
 		# gets aggregated in, in the order of the CONTRIBUTION_AGGREGATE_FIELDS array.
+		if updater is None: updater = ContributionAggregate.Updater(buffered=False)
 		from itertools import product
 		for fields in product(
 				[None, self.action.execution], # trigger_execution
@@ -1146,13 +1156,7 @@ class Contribution(models.Model):
 				set([None, self.pledge_execution.district]), # district (but excludes the 'None' district)
 			):
 			if len([x for x in fields[2:] if x is not None]) > 2: continue # we won't allow slicing at arbirary depth because making all of these slices ahead of time is exponentially expensive --- see the tests too
-			agg, is_new = ContributionAggregate.objects.get_or_create(
-				defaults={ 'count': 1*factor, 'total': self.amount*factor },
-				**dict(zip(CONTRIBUTION_AGGREGATE_FIELDS, fields)))
-			if not is_new:
-				agg.count = models.F('count') + 1*factor
-				agg.total = models.F('total') + self.amount*factor
-				agg.save(update_fields=['count', 'total'])
+			updater.add(fields, 1*factor, self.amount*factor)
 
 CONTRIBUTION_AGGREGATE_FIELDS = (
 	'trigger_execution',
@@ -1186,6 +1190,30 @@ class ContributionAggregate(models.Model):
 
 	def __str__(self):
 		return "%d | %s %s %s %s %s %s" % (self.trigger_execution_id, self.via, self.outcome, self.action_id, self.incumbent, self.party, self.district)
+
+	class Updater(object):
+		def __init__(self, buffered=True):
+			self.buffered = buffered
+			self.buffer = { }
+		def add(self, fields, count, total):
+			if fields not in self.buffer:
+				self.buffer[fields] = { 'count': 0, 'total': decimal.Decimal(0) }
+			self.buffer[fields]['count'] += count
+			self.buffer[fields]['total'] += total
+			if not self.buffered or len(self.buffer) > 10000:
+				self.sync()
+		def sync(self):
+			for fields, values in self.buffer.items():
+				self.sync_item(fields, values['count'], values['total'])
+			self.buffer.clear()
+		def sync_item(self, fields, count, total):
+			agg, is_new = ContributionAggregate.objects.get_or_create(
+				defaults={ 'count': count, 'total': total },
+				**dict(zip(CONTRIBUTION_AGGREGATE_FIELDS, fields)))
+			if not is_new:
+				agg.count = models.F('count') + count
+				agg.total = models.F('total') + total
+				agg.save(update_fields=['count', 'total'])
 
 	@staticmethod
 	def get_slice(**slce):
@@ -1263,6 +1291,11 @@ class ContributionAggregate(models.Model):
 		ContributionAggregate.objects.all().delete()
 
 		# Start incrementing new ones.
+		updater = ContributionAggregate.Updater()
+
 		iter = Contribution.objects.all().select_related('action__execution', 'pledge_execution__pledge__via', 'pledge_execution__pledge', 'action', 'action__actor', 'recipient', 'pledge_execution')
 		for c in tqdm(iter.iterator(), total=Contribution.objects.count()):
-			c.update_contributionaggregates()
+			c.update_contributionaggregates(updater=updater)
+
+		updater.sync()
+
