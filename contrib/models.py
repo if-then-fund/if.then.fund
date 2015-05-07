@@ -1145,7 +1145,7 @@ class Contribution(models.Model):
 				(None, self.action.party if not self.recipient.is_challenger else self.recipient.party), # party
 				set([None, self.pledge_execution.district]), # district (but excludes the 'None' district)
 			):
-			if len([x for x in fields[2:] if x is not None]) > 2: continue # we won't allow slicing at arbirary depth because making all of these slices ahead of time is exponentially expensive
+			if len([x for x in fields[2:] if x is not None]) > 2: continue # we won't allow slicing at arbirary depth because making all of these slices ahead of time is exponentially expensive --- see the tests too
 			agg, is_new = ContributionAggregate.objects.get_or_create(
 				defaults={ 'count': 1*factor, 'total': self.amount*factor },
 				**dict(zip(CONTRIBUTION_AGGREGATE_FIELDS, fields)))
