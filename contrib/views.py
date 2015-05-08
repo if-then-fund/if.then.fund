@@ -7,7 +7,7 @@ from django.conf import settings
 
 from twostream.decorators import anonymous_view, user_view_for
 
-from contrib.models import Trigger, TriggerStatus, TriggerExecution, ContributorInfo, Pledge, PledgeStatus, PledgeExecution, Contribution, ActorParty, ContributionAggregate, IncompletePledge, TriggerCustomization
+from contrib.models import Trigger, TriggerStatus, TriggerExecution, ContributorInfo, Pledge, PledgeStatus, PledgeExecution, PledgeExecutionProblem, Contribution, ActorParty, ContributionAggregate, IncompletePledge, TriggerCustomization
 from contrib.utils import json_response
 from contrib.bizlogic import HumanReadableValidationError, run_authorization_test
 
@@ -572,11 +572,13 @@ def report(request):
 	return render(request, "contrib/totals.html", context)
 
 def report_fetch_data(request):
+	pledge_slice_fields = { }
 	slice_fields = { }
 
 	if "trigger" in request.GET:
 		# get the object & validate that there is data
 		trigger = get_object_or_404(Trigger, id=request.GET['trigger'])
+		pledge_slice_fields["trigger"] = trigger
 		try:
 			te = trigger.execution
 		except TriggerExecution.DoesNotExist:
@@ -590,11 +592,24 @@ def report_fetch_data(request):
 	# form response
 	ret = { }
 
+	# number of pledges & users making pledges
+	pledges = Pledge.objects.filter(**pledge_slice_fields)
+	ret["users_pledging"] = pledges.values("user").distinct().count()
+	ret["pledges"] = pledges.count()
+	from django.db.models import Sum
+	ret["pledge_aggregate"] = pledges.aggregate(amount=Sum('amount'))["amount"]
+
+	# number of executed pledges and users with executed pledges
+	pledge_executions = PledgeExecution.objects.filter(problem=PledgeExecutionProblem.NoProblem, **slice_fields)
+	ret["users"] = pledge_executions.values("pledge__user").distinct().count()
+	ret["num_triggers"] = pledge_executions.values("trigger_execution").distinct().count()
+	ret["first_contrib_date"] = pledge_executions.order_by('created').first().created
+	ret["last_contrib_date"] = pledge_executions.order_by('created').last().created
+
+	# aggregate count and amount of campaign contributions
 	ret["total"] = ContributionAggregate.get_slice(**slice_fields)
-	ret["users"] = PledgeExecution.objects.filter(**slice_fields).values("pledge__user").distinct().count()
-	ret["num_triggers"] = PledgeExecution.objects.filter(**slice_fields).values("trigger_execution").distinct().count()
-	ret["first_contrib_date"] = PledgeExecution.objects.filter(**slice_fields).order_by('created').first().created
-	ret["last_contrib_date"] = PledgeExecution.objects.filter(**slice_fields).order_by('created').last().created
+	if ret["total"]["count"] > 0:
+		ret["total"]["average"] = ret["total"]["total"] / ret["total"]["count"]
 
 	if "trigger_execution" in slice_fields:
 		# Aggregates by outcome.

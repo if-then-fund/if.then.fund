@@ -12,6 +12,11 @@
 
 <style>
 h3 + table { margin-top: 1em; }
+.table>tbody>tr.merge-up td { padding-top: 0; }
+.table>tbody>tr.merge-down td { padding-bottom: 2px; }
+.table-bordered>tbody>tr.merge-up td { border-top: none;  }
+.table-bordered>tbody>tr.merge-down td { border-bottom: none;  }
+#aggregates td:nth-child(2) { text-align: right; }
 </style>
 {% endblock %}
 
@@ -23,11 +28,17 @@ h3 + table { margin-top: 1em; }
 <div class="row">
 	<div class="col-sm-5">
 		<h2>Overall</h2>
-		<table class="table table-bordered">
-		<tr><td>Aggregate Contributions</td> <td>{{total.total|currency}}</td></tr>
-		<tr><td>Count of Contributions</td> <td>{{total.count|intcomma}}</td></tr>
-		<tr><td>Contributors (Unique)</td> <td>{{users|intcomma}}</td></tr>
-		<tr><td>Total Number of Votes</td> <td>{{num_triggers|intcomma}}</td></tr>
+		<table id="aggregates" class="table table-bordered">
+		<tr><td>Contributions</td> <td>{{total.total|currency}}</td></tr>
+		<tr><td>Contributors <br><small>users with executed contributions</small></td> <td>{{users|intcomma}}</td></tr>
+		<tr class="merge-down"><td>Number of Contributions</td> <td>{{total.count|intcomma}}</td></tr>
+		<tr class="merge-up"><td>Average Contribution<br><small>i.e. an issued check</small></td> <td>{{total.average|currency}}</td></tr>
+		{% if num_triggers > 1 %}
+		<tr><td>Events Leading to Contributions</td> <td>{{num_triggers|intcomma}}</td></tr>
+		{% endif %}
+		<tr class="merge-down"><td>Pledged</td> <td>{{pledge_aggregate|currency}}</td></tr>
+		<tr class="merge-down merge-up"><td>Users</td> <td>{{users_pledging|intcomma}}</td></tr>
+		<tr class="merge-up"><td>Number of Pledges<br><small>includes pledges that have been executed</td> <td>{{pledges|intcomma}}</td></tr>
 		</table>
 	</div>
 </div>
