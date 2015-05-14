@@ -113,11 +113,14 @@ class ContributorInfoAdmin(admin.ModelAdmin):
     extra_.name = "Extra"
 
 class PledgeAdmin(admin.ModelAdmin):
-    list_display = ['id', 'status', 'trigger', 'user_or_email', 'amount', 'created']
+    list_display = ['id', 'status', 'trigger', 'user_or_email', 'amount', 'created', 'via_ext']
     readonly_fields = ['user', 'trigger', 'profile', 'amount', 'algorithm'] # amount is read-only because a total is cached in the Trigger
     def user_or_email(self, obj):
         return obj.user if obj.user else (obj.email + " (?)")
     user_or_email.short_description = 'User or Unverified Email'
+    def via_ext(self, obj):
+        return "/".join(str(x) for x in [obj.via, obj.campaign] if x)
+    via_ext.short_description = "Campaign"
 
 class CancelledPledgeAdmin(admin.ModelAdmin):
     list_display = ['created', 'user_or_email', 'trigger']
