@@ -211,7 +211,7 @@ def trigger_user_view(request, id, trigger_customization_id):
 			"execution": pe,
 			"contribs": contribs,
 			"recommendations": recs,
-			"url": request.build_absolute_uri(trigger.get_absolute_url()),
+			"share_url": request.build_absolute_uri(trigger.get_short_url()),
 		}))
 
 	return ret
