@@ -67,7 +67,7 @@
 
 	<tr>
 		<td>
-			<a href="{{pledge.get_absolute_url}}" style="border: none">{{pledge.trigger.title}}</a>
+			<a href="{{pledge.get_absolute_url}}" style="border: none">{% firstof pledge.via.title pledge.trigger.title %}</a>
 			<p class="text-muted" style="margin: .1em 0 0 0; font-size: 90%">
 				Entered on {{pledge.created|date}}.
 				{% if pledge.status|stringformat:'s' == 'PledgeStatus.Executed' %}
