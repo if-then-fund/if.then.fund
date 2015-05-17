@@ -1,8 +1,5 @@
 /* Global styles */
 
-@import url(https://fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic);
-@import url(https://fonts.googleapis.com/css?family=Roboto+Slab:400,300,700);
-
 body {
 	background-color: #FAFAFA;
 	font-family: 'Noto Serif', serif;

@@ -24,6 +24,7 @@ INSTALLED_APPS = (
 
 	'itfsite',
 	'contrib',
+	'itf_vendor_static_resources',
 
 	'twostream',
 
