@@ -105,6 +105,7 @@ fi
 
 # Install dependencies.
 $PIP install --upgrade \
+	"pytz" \
 	"rtyaml" \
 	"django>=1.8" \
 	"python3-memcached" \
