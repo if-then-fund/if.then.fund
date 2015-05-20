@@ -945,10 +945,16 @@ function pledge_submit() {
     }
   })
 
-  // Might not execute if the AJAX request above is quick and
-  // the reload begins before the mixpanel AJAX request is
-  // sent.
+  // Conversion Tracking.
+
+  // These might not execute if the AJAX request above is quick and
+  // the reload begins before the mixpanel AJAX request is sent...
+
+  // Mixpanel.
   mixpanel.track("Pledge Submitted", { 'trigger': {{trigger.id}} });
+
+  // Facebook "Pledge Made" conversion.
+  window._fbq.push(['track', '6023688411930', {'value': get_contribution_amount(), 'currency':'USD'}]);
 }
 
 function pledge_payment_cancel() {
