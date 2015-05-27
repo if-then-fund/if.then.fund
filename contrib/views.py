@@ -179,7 +179,7 @@ def get_user_pledges(user, request):
 	return Pledge.objects.filter(filters)
 
 @user_view_for(trigger)
-def trigger_user_view(request, id, trigger_customization_id):
+def trigger_user_view(request, id, trigger_customization_id=None):
 	trigger = get_object_or_404(Trigger, id=id)
 	ret = { }
 
