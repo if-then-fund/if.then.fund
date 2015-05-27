@@ -23,15 +23,17 @@ SUGGESTED_PLEDGE_AMOUNT = None
 @anonymous_view
 def trigger(request, id, trigger_customization_id=None):
 	# get the object / redirect to canonical URL if slug does not match
+	# (pass along any query string variables like utm_campaign)
 	trigger = get_object_or_404(Trigger, id=id)
+	qs = (("?"+request.META['QUERY_STRING']) if request.META['QUERY_STRING'] else "")
 	if not trigger_customization_id:
 		if request.path != trigger.get_absolute_url():
-			return redirect(trigger.get_absolute_url())
+			return redirect(trigger.get_absolute_url()+qs)
 		tcust = None
 	else:
 		tcust = get_object_or_404(TriggerCustomization, id=trigger_customization_id)
 		if request.path != tcust.get_absolute_url():
-			return redirect(tcust.get_absolute_url())
+			return redirect(tcust.get_absolute_url()+qs)
 		if not tcust.visible: raise Http404()
 
 	# Related TriggerCustomization campaigns the user can take action on.
