@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.conf import settings
 
@@ -167,12 +168,15 @@ def trigger(request, id, trigger_customization_id):
 
 def get_user_pledges(user, request):
 	# Returns the Pledges that a user owns as a QuerySet.
-	ret = Pledge.objects.none() # empty QuerySet
+	# (A simple "|" of QuerySets is easier to construct but it creates a UNION
+	# that then requires a DISTINCT which in Postgres is incompatible with
+	# SELECT FOR UPDATE. So we form a proper 'WHERE x OR y' clause.)
+	filters = Q(id=-99999) # a dummy filter that excludes everything, in case no other filters apply
 	if user and user.is_authenticated():
-		ret |= Pledge.objects.filter(user=user)
+		filters |= Q(user=user)
 	if request.session.get('anon_pledge_created'):
-		ret |= Pledge.objects.filter(id__in=request.session.get('anon_pledge_created'))
-	return ret.distinct()
+		filters |= Q(id__in=request.session.get('anon_pledge_created'))
+	return Pledge.objects.filter(filters)
 
 @user_view_for(trigger)
 def trigger_user_view(request, id, trigger_customization_id):
