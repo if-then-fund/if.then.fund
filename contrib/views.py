@@ -21,7 +21,7 @@ import decimal
 SUGGESTED_PLEDGE_AMOUNT = None
 
 @anonymous_view
-def trigger(request, id, trigger_customization_id):
+def trigger(request, id, trigger_customization_id=None):
 	# get the object / redirect to canonical URL if slug does not match
 	trigger = get_object_or_404(Trigger, id=id)
 	if not trigger_customization_id:
