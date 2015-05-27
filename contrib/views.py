@@ -220,6 +220,9 @@ def trigger_user_view(request, id, trigger_customization_id=None):
 			"share_url": request.build_absolute_uri(trigger.get_short_url()),
 		}))
 
+	# Other stuff.
+	ret["show_utm_tool"] = (request.user.is_authenticated() and request.user.is_staff)
+
 	return ret
 
 @require_http_methods(['POST'])

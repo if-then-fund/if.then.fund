@@ -299,6 +299,19 @@
 			{% if trigger.execution %}<p>The {{trigger.trigger_type.strings.action_noun}} occurred on {{trigger.execution.action_time|date}}. Contributions began to be processed on {{trigger.execution.created|date}}.</p>{% endif %}
 			{% if execution %}<p>The most recent contribution was processed on {{trigger.execution.most_recent_pledge_execution.created|date}}.</p>{% endif %}
 
+			<p id="show_utm_tool" style="display: none;"><a href="#" onclick="$('#utm_tool').slideToggle(); utm_tool(); return false;" style="border: none">Create a link...</a></p>
+			<div id="utm_tool" style="display: none">
+				<div class="row">
+					<div class="col-xs-6">
+						<div><label for="utm_tool_campaign">Campaign code:</label></div>
+						<div><input id="utm_tool_campaign" type="text" onkeyup="utm_tool()" onchange="utm_tool()" style="width: 100%"></div>
+					</div>
+					<div class="col-xs-6">
+						<div><label for="utm_tool_short"><input id="utm_tool_short" type="checkbox" checked onchange="utm_tool()"> Short URL</label></div>
+					</div>
+				</div>
+				<div style="margin-top: .5em"><input id="utm_tool_link" type="text" value="" style="width: 100%" readonly></div>
+			</div>
 		</small>
 	</div>
 </div>
@@ -312,6 +325,18 @@
 		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' or trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
 			pledge_init();
 		{% endif %}
+
+		if (the_page && the_page.show_utm_tool)
+			$('#show_utm_tool').show();
 	})
+
+	function utm_tool() {
+		var url = ($('#utm_tool_short').prop('checked') ? "{{T.get_short_url|escapejs}}" : "{{ROOT_URL}}{{T.get_absolute_url|escapejs}}")
+		var campaign_code = $('#utm_tool_campaign').val();
+		campaign_code = campaign_code.replace(/^\s+|\s+$/g, '');
+		if (campaign_code)
+			url += "?utm_campaign=" + encodeURIComponent(campaign_code);
+		$('#utm_tool_link').val(url)
+	}
 </script>
 {% endblock %}

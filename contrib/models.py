@@ -222,6 +222,8 @@ class TriggerCustomization(models.Model):
 
 	def get_absolute_url(self):
 		return "/a/%d-%d/%s/%s" % (self.trigger.id, self.id, self.owner.slug, self.slug)
+	def get_short_url(self):
+		return settings.SITE_ROOT_URL + ("/a/%d-%d" % (self.trigger.id, self.id))
 
 	def has_fixed_outcome(self):
 		return self.outcome is not None
