@@ -15,18 +15,18 @@ class JSONField(_JSONField):
 @django_enum
 class OrganizationType(enum.Enum):
 	User = 1 # any user can create an 'organization'
-	C3 = 2 # a 501c3
+	C4 = 2 # a 501c4
 	Company = 3 # a corporation/LLC
 
 	def slug(self):
 		if self == OrganizationType.User: return "user"
-		if self == OrganizationType.C3: return "org"
+		if self == OrganizationType.C4: return "org"
 		if self == OrganizationType.Company: return "org"
 		raise ValueError()
 
 	def display(self):
 		if self == OrganizationType.User: return "User"
-		if self == OrganizationType.C3: return "Nonprofit Organization"
+		if self == OrganizationType.C4: return "Nonprofit Organization"
 		if self == OrganizationType.Company: return "Company"
 		raise ValueError()
 

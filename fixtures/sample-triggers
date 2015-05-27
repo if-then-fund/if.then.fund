@@ -18,7 +18,7 @@ for bill in ("hconres1-114", "hr22-114", "s30-114"):
 org = Organization.objects.create(
 	name="Test Organization",
 	slug="test-organization",
-	orgtype=OrganizationType.C3,
+	orgtype=OrganizationType.C4,
 	description="This is a test organization.",
 	description_format=0,
 	)

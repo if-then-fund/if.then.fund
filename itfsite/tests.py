@@ -76,7 +76,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		org = Organization.objects.create(
 			name="Test Organization",
 			slug="test-organization",
-			orgtype=OrganizationType.C3,
+			orgtype=OrganizationType.C4,
 			description="This is a test organization.",
 			description_format=0,
 			)

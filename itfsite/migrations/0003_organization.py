@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(serialize=False, auto_created=True, verbose_name='ID', primary_key=True)),
                 ('name', models.CharField(max_length=200, help_text='The name of the Organization.')),
                 ('slug', models.SlugField(max_length=200, help_text='The unique URL slug for this Organization.')),
-                ('orgtype', enum3field.EnumField(itfsite.models.OrganizationType, help_text='The type of the organization.', choices=[(itfsite.models.OrganizationType(1), 'User'), (itfsite.models.OrganizationType(2), 'C3'), (itfsite.models.OrganizationType(3), 'Company')])),
+                ('orgtype', enum3field.EnumField(itfsite.models.OrganizationType, help_text='The type of the organization.', choices=[(itfsite.models.OrganizationType(1), 'User'), (itfsite.models.OrganizationType(2), 'C4'), (itfsite.models.OrganizationType(3), 'Company')])),
                 ('created', models.DateTimeField(db_index=True, auto_now_add=True)),
                 ('updated', models.DateTimeField(db_index=True, auto_now=True)),
                 ('description', models.TextField(help_text='Description text in the format given by description_format.')),
