@@ -155,7 +155,7 @@
           fjs.parentNode.insertBefore(js, fjs);
         }(document, 'script', 'facebook-jssdk'));</script>
 
-        {# facebook conversion tracking #}
+        {# facebook pixel/conversion tracking #}
         <script>(function() {
           var _fbq = window._fbq || (window._fbq = []);
           if (!_fbq.loaded) {
@@ -166,8 +166,12 @@
             s.parentNode.insertBefore(fbds, s);
             _fbq.loaded = true;
           }
+          _fbq.push(['addPixelId', '355339127997737']); {# pixel tracking #}
         })();
-        window._fbq = window._fbq || [];</script>
+        window._fbq = window._fbq || [];
+        window._fbq.push(['track', 'PixelInitialized', {}]); {# pixel tracking #}
+        </script>
+        <noscript><img height="1" width="1" alt="" style="display:none" src="https://www.facebook.com/tr?id=355339127997737&amp;ev=PixelInitialized" /></noscript> {# pixel tracking #}
 
         <script src="{% static "js/bootstrap-helpers.js" %}"></script>
         <script src="{% static "js/main.js" %}"></script>
