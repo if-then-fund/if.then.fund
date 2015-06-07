@@ -90,14 +90,14 @@
             | <a href="{% url 'simplepage' 'terms' %}">Terms of Service</a>
             | <a href="{% url 'simplepage' 'open' %}">Open</a>
           </p>
-          <p>Email <script>
-              var addr = "olleh".split("").reverse().join("") + String.fromCharCode(2*0x20) + "if.then.fund";
-              document.write("\x3ca class='email' href='mailto:" + addr + "'\x3e" + addr + "\x3c/a\x3e");
-              </script> or tweet us <a href="https://twitter.com/IfThenFund">@IfThenFund</a> to reach us.</p>
           <p>Join the <a href="https://docs.google.com/forms/d/1xR81Bfxw96_VeVhAvn2EvaM8j0VhB2Lt_z9ulWEGS2I/viewform"><span class="site-brand">if.then.fund</span> announcements</a> mail list to be alerted to new features as we launch them.</p>
         </div>
         <div class="col-sm-3 col-md-2 hidden-print">
           <ul id="footer-social">
+              <li title="Email"><script>
+              var addr = "olleh".split("").reverse().join("") + String.fromCharCode(2*0x20) + "if.then.fund";
+              document.write("\x3ca class='email' href='mailto:" + addr + "'\x3e\x3ci class='fa fa-envelope fa-fw'\x3e\x3c/i\x3e " + addr + "\x3c/a\x3e");
+              </script></li>
               <li title="Twitter"><a href="https://twitter.com/IfThenFund"><i class="fa fa-twitter fa-fw"></i> @IfThenFund</a></li>
               <li title="Facebook"><a href="https://www.facebook.com/if.then.fund"><i class="fa fa-facebook fa-fw"></i> if.then.fund</a></li>
               <li title="Github"><a href="https://github.com/if-then-fund"><i class="fa fa-github fa-fw"></i> if-then-fund</a></li>
