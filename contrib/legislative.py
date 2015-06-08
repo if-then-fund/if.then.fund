@@ -59,6 +59,8 @@ def create_trigger_from_bill(bill_id, chamber):
 	from django.template.defaultfilters import slugify
 	t.slug = slugify(t.title)[0:200]
 
+	t.subhead = "The %s will soon vote on %s." % (chamber_name, bill["title"])
+	t.subhead_format = TextFormat.Markdown
 	t.description = "The %s will soon vote on %s." % (chamber_name, bill["title"])
 	t.description_format = TextFormat.Markdown
 	t.execution_note = "Contributions will be made when the %s votes on the bill." % chamber_name

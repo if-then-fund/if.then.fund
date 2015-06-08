@@ -13,29 +13,47 @@
 <style>
 @media screen and (min-width: 768px) {
 	#trigger-metadata {
-		padding-top: 86px;
+		padding-top: .5em;
 		background-color: #F7F7F7;
 		font-size: 90%;
 		line-height: 133%;
 	}
 }
 
-.meta-stat {
-  margin: 0 0 2em 0;
-  font-family: 'Roboto Slab', serif;
-  font-weight: bold;
+#stats {
+	margin-top: 1.5em;
 }
-  .meta-stat .num {
-  	margin-bottom: 8px;
-	font-size: 36px;
-  	color: #444;
+
+.meta-stat {
+  margin: 0 0 1em 0;
+  font-family: 'Roboto Slab', serif;
+}
+  #stats .meta-stat {
+  	padding: 5px 7px;
+  	border-top: 1px solid #ddd;
+  	border-bottom: 1px solid #ddd;
+  	line-height: 130%;
   }
+  #trigger-metadata .meta-stat {
+  	font-size: 150%;
+  }
+  .meta-stat .num {
+  	color: #444;
+	font-weight: bold;
+  }
+	  #trigger-metadata .meta-stat .num {
+	  	margin-bottom: .33em;
+	  }
   .meta-stat .lbl {
 	color: #444;
+	font-size: 88%;
   }
   .meta-stat.lesser .num {
-	font-size: 30px;
   }
+
+h1 {
+	margin: .75em 0;
+}
 
 #my-pledge {
 	margin: 1.5em 0 2em 0;
@@ -51,9 +69,9 @@
 {% block body %}
 
 {% if tcust %}
-<div class="visible-xs-block row">
+<div class="row">
 	<a href="{{tcust.owner.get_absolute_url}}">
-		<div class="organization-banner" style="background-image: url({{tcust.owner.get_absolute_url}}/_banner?width=768); margin: -20px 0 2em 0">
+		<div class="organization-banner" style="background-image: url({{tcust.owner.get_absolute_url}}/_banner?width=768); margin: -20px 0 0 0">
 			<div>
 				{{tcust.owner.name}}
 			</div>
@@ -68,61 +86,82 @@
 
 <div class="row">
 	<div class="col-sm-8">
-		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}
-			<div class="overline">Take Action</div>
-		{% else %}
-			<div class="overline">What Happened</div>
-		{% endif %}
-
+		<div class="overline">{{T.trigger_type.title}}</div>
 		<h1>{{T.title}}</h1>
 
 		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' or not trigger.execution.description %}
-			{{T.description|render_text:T.description_format}}
-			{% comment %}
-			<hr style="margin: .5em 0; border-color: #DDD;">
-			{{trigger.execution_note|render_text:trigger.execution_note_format}}
-			{% endcomment %}
+			{{T.subhead|render_text:T.subhead_format}}
 		{% else %}
 			{{trigger.execution.description|render_text:trigger.execution.description_format}}
 		{% endif %}
 
-		{% if trigger.extra.type == "usbill" and trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}
-			<p class="text-muted small">More info on this {{trigger.extra.bill_info.noun}} can be found on <a href="{{trigger.extra.bill_info.link}}">GovTrack</a>.</p>
-		{% endif %}
-
-
 		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Draft' %}
 			<p>This page is in draft status. That means it is currently being prepared. Contributions may be accepted soon.</p>
 
-		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
-			{% include "contrib/pledge-form.html" %}
+		{% elif not execution %}
 
-			{% if campaigns|length > 0 %}
-				<hr>
-				<h3>{% if tcust %}Other c{% else %}C{% endif %}ampaigns around this {{trigger.trigger_type.strings.action_noun}}</h3>
-				<ul>
-				{% for triggercustomization in campaigns %}
-					<li style="margin-top: .5em"><a href="{{triggercustomization.get_absolute_url}}">{{triggercustomization.owner.name}}: {{triggercustomization.title}}</a></li>
-				{% endfor %}
-				</ul>
+			{% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
+				{% include "contrib/pledge-form.html" %}
+
+				{% if campaigns|length > 0 %}
+					<hr>
+					<h3>{% if tcust %}Other c{% else %}C{% endif %}ampaigns around this {{trigger.trigger_type.strings.action_noun}}</h3>
+					<ul>
+					{% for triggercustomization in campaigns %}
+						<li style="margin-top: .5em"><a href="{{triggercustomization.get_absolute_url}}">{{triggercustomization.owner.name}}: {{triggercustomization.title}}</a></li>
+					{% endfor %}
+					</ul>
+				{% endif %}
+
+			{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Paused' %}
+				<h2>Take action</h2>
+				<p>This action is paused. We may be about to convert the pledges into campaign contributions or we may be researching whether the {{trigger.trigger_type.strings.action_noun}} occurred.</p>
+
+			{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
+				<h2>Closed</h2>
+				<p>This action has been cancelled. We determined that the {{trigger.trigger_type.strings.action_noun}} will likely never occur and have vacated all of the pledges.</p>
+
+			{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' and not execution %}
+				{# The event ocurred and we are now in the process of making campaign contributions. But we can keep accepting pledges, just as in the Open state #}
+
+				{% if trigger.pledge_count > 0 %}
+				<p class="text-success" style="margin-top: 1em">We are processing the scheduled contributions made by <span class='site-brand'>if.then.fund</span> users. Check back soon to see the full breakdown of what happened.</p>
+				{% endif %}
+
+				{% include "contrib/pledge-form.html" %}
+
 			{% endif %}
 
-		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Paused' %}
-			<h2>Take action</h2>
-			<p>This action is paused. We may be about to convert the pledges into campaign contributions or we may be researching whether the {{trigger.trigger_type.strings.action_noun}} occurred.</p>
-
-		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
-			<h2>Closed</h2>
-			<p>This action has been cancelled. We determined that the {{trigger.trigger_type.strings.action_noun}} will likely never occur and have vacated all of the pledges.</p>
-
-		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' and not execution %}
-			{# The event ocurred and we are now in the process of making campaign contributions. But we can keep accepting pledges, just as in the Open state #}
-
-			{% if trigger.pledge_count > 0 %}
-			<p class="text-success" style="margin-top: 1em">We are processing the scheduled contributions made by <span class='site-brand'>if.then.fund</span> users. Check back soon to see the full breakdown of what happened.</p>
+			{% if T_pre == T %}
+			<div id="stats" class="row">
+				<div class="col-xs-4 col-sm-4 col-lg-3">
+					<div class="meta-stat">
+						<div class="num">{{T.total_pledged|currency}}</div>
+						<div class="lbl">committed so far</div>
+					</div>
+				</div>
+	
+				<div class="col-xs-4 col-sm-4 col-lg-3">
+					<div class="meta-stat">
+						<div class="num">{{T.pledge_count|intcomma}}</div>
+						<div class="lbl">donor{{T.pledge_count|pluralize}} {% if T.pledge_count == 0 %}&mdash; be the first!{% endif %}</div>
+					</div>
+				</div>
+			</div>
 			{% endif %}
 
-			{% include "contrib/pledge-form.html" %}
+			<div id="pledge-about-site" style="padding-top: 2em;">
+			    <small>
+			    <hr>
+			    {% if not tcust %} {# the 'we' is confusing on a customized page #}
+			    <p>We aim to shift the balance of power to shape Congress away from concentrated wealth and toward small-dollar donors like you.</p>
+			    {% endif %}
+			    <p>You will be making a campaign contribution to {{trigger.trigger_type.strings.actors}} or their next opponent. Until the 
+				{{trigger.trigger_type.strings.action_noun}} occurs, <span class="site-brand">if.then.fund</span> won't reveal to anyone what action you
+				took. After the {{trigger.trigger_type.strings.action_noun}}, we’ll charge your card and split your contribution based on your
+				instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
+			    </small>
+			  </div>
 
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
 			{% include "contrib/pledge-form.html" with hidemypledge=1 %}
@@ -209,51 +248,46 @@
 			{% endif %}
 
 		{% endif %}
+
 	</div>
 
 	<div id="trigger-metadata" class="col-sm-4">
-		{% if tcust %}
-			<div class="hidden-xs">
-			<p>This page was created by...</p>
-			<a href="{{tcust.owner.get_absolute_url}}">
-				<div class="organization-banner" style="background-image: url({{tcust.owner.get_absolute_url}}/_banner?width=350); margin-bottom: 1em">
-					<div>
-						{{tcust.owner.name}}
-					</div>
-				</div>
-			</a>
-			</div>
+		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' or not trigger.execution.description %}
+			<h2>About this {{trigger.trigger_type.strings.action_noun}}</h2>
+			{{T.description|render_text:T.description_format}}
+			{% if trigger.extra.type == "usbill" and trigger.status|stringformat:'s' != 'TriggerStatus.Executed' and 0 %}
+				<p class="text-muted small">More info on this {{trigger.extra.bill_info.noun}} can be found on <a href="{{trigger.extra.bill_info.link}}">GovTrack</a>.</p>
+			{% endif %}
+
+			<hr style="margin: .5em 0; border-color: #DDD;">
+			{% if trigger.execution_note %}
+				{{trigger.execution_note|render_text:trigger.execution_note_format}}
+			{% else %}
+				<p>Contributions will only be made once the {{trigger.trigger_type.strings.action_noun}} occurs.</p>
+			{% endif %}
+		{% endif %}
+
+		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
+			<p class="text-danger">Pledges were vacated.</p>
 		{% endif %}
 
 		{% if not execution %}
-			{% if T_pre == T %}
-				<h2>So far...</h2>
-			{% else %}
+			{% if T_pre != T %}
 				<hr>
 				<h2>{{T_pre.title}}</h2>
 				<p style="margin-bottom: 2em;">Here is how all <span class="site-brand">if.then.fund</span> users have acted on <a href="{{T_pre.get_absolute_url}}">this {{trigger.trigger_type.strings.action_noun}}</a> so far:</p>
-			{% endif %}
 
-			<div class="meta-stat">
-				<div class="num">{{T_pre.total_pledged|currency}}</div>
-				<div class="lbl">committed</div>
-			</div>
+				<div class="meta-stat">
+					<div class="num">{{T_pre.total_pledged|currency}}</div>
+					<div class="lbl">committed</div>
+				</div>
 
-			<div class="meta-stat">
-				<div class="num">{{T_pre.pledge_count|intcomma}}</div>
-				<div class="lbl">donor{{T_pre.pledge_count|pluralize}} {% if T_pre.pledge_count == 0 %}&mdash; be the first!{% endif %}</div>
-			</div>
+				<div class="meta-stat">
+					<div class="num">{{T_pre.pledge_count|intcomma}}</div>
+					<div class="lbl">donor{{T_pre.pledge_count|pluralize}} {% if T_pre.pledge_count == 0 %}&mdash; be the first!{% endif %}</div>
+				</div>
 
-			{% if T_pre != T %}
-			<p>Federal law prevents us from showing what {{T.owner.name}}&rsquo;s totals are prior to the {{trigger.trigger_type.strings.action_noun}}.</p>
-			{% endif %}
-
-			{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}
-			<p>Contributions will only be made once the {{trigger.trigger_type.strings.action_noun}} occurs.</p>
-			{% endif %}
-
-			{% if trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
-				<p class="text-danger">Pledges were vacated.</p>
+				<p>Federal law prevents us from showing what {{T.owner.name}}&rsquo;s totals are prior to the {{trigger.trigger_type.strings.action_noun}}.</p>
 			{% endif %}
 
 		{% else %}

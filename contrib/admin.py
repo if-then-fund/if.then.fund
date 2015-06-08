@@ -158,6 +158,7 @@ class ContributionAdmin(admin.ModelAdmin):
     def trigger(self, obj):
         return obj.pledge_execution.pledge.trigger
 
+admin.site.register(TriggerType)
 admin.site.register(Trigger, TriggerAdmin)
 admin.site.register(TriggerStatusUpdate, TriggerStatusUpdateAdmin)
 admin.site.register(TriggerCustomization, TriggerCustomizationAdmin)

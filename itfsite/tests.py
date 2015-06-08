@@ -88,6 +88,8 @@ class SimulationTest(StaticLiveServerTestCase):
 			title="Customized-" + trigger.title,
 			slug="customized-" + trigger.slug,
 			visible=True,
+			subhead="We think this bill should pass.",
+			subhead_format=0,
 			description="We think this bill should pass.",
 			description_format=0,
 			incumb_challgr=-1,
