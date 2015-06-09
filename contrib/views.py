@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.conf import settings
 
@@ -603,8 +603,10 @@ def report_fetch_data(request):
 
 	# number of pledges & users making pledges
 	pledges = Pledge.objects.filter(**pledge_slice_fields)
-	ret["users_pledging"] = pledges.values("user").distinct().count()
+	ret["users_pledging"] = pledges.exclude(user=None).values("user").distinct().count()
+	ret["users_pledging_twice"] = pledges.exclude(user=None).values("user").annotate(count=Count('id')).filter(count__gt=1).count()
 	ret["pledges"] = pledges.count()
+	ret["pledges_confirmed"] = pledges.exclude(user=None).count()
 	from django.db.models import Sum
 	ret["pledge_aggregate"] = pledges.aggregate(amount=Sum('amount'))["amount"]
 
