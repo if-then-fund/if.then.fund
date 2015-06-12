@@ -387,20 +387,27 @@ class SimulationTest(StaticLiveServerTestCase):
 			"You have already scheduled a contribution for this vote. Please log in to see details.")
 
 	def test_maintest(self):
-		from contrib.models import ContributorInfo
+		from contrib.models import ContributorInfo, TriggerRecommendation
+		from itfsite.models import Notification, NotificationType
 
-		# Create the trigger.
+		# Create the triggers and a TriggerRecommendation.
 		t1 = self.create_test_trigger("s1-114", "h")
+		t2 = self.create_test_trigger("s1-114", "s")
+		TriggerRecommendation.objects.create(trigger1=t1, trigger2=t2)\
+			.create_initial_notifications()
 
 		# Test the creation of a Pledge. (Does not execute the pledge.)
 		email, pw = self._test_pledge_simple(t1)
 		self.assertEqual(ContributorInfo.objects.count(), 1)
 
+		# The user should now have a Notification.
+		self.assertEqual(Notification.objects.filter(notif_type=NotificationType.TriggerRecommendation).count(), 1)
+
 		# Now that the user is logged in, try another pledge with fields pre-filled.
 		# Also tests the execution of that Pledge.
-		t2 = self.create_test_trigger("s1-114", "s")
 		self._test_pledge_with_defaults(t2, "Keystone XL", "S. 1", logged_in=True)
 		self.assertEqual(ContributorInfo.objects.count(), 1) # should not create 2nd profile
+		self.assertEqual(Notification.objects.filter(notif_type=NotificationType.TriggerRecommendation).count(), 0) # since the Notification was not seen, it should now be deleted now that the user took action
 
 		# Finally make a pledge but change the user's profile. Since we've executed
 		# a pledge already, we should get two ContributorInfos out of this.

@@ -70,6 +70,15 @@ class TriggerAdmin(admin.ModelAdmin):
 class TriggerStatusUpdateAdmin(admin.ModelAdmin):
     readonly_fields = ['trigger']
 
+class TriggerRecommendationAdmin(admin.ModelAdmin):
+    raw_id_fields = ['trigger1', 'trigger2']
+    readonly_fields = ['notifications_created']
+    list_display = ['id', 'trigger1', 'trigger2', 'symmetric', 'notifications_created']
+    actions = ['create_initial_notifications']
+    def create_initial_notifications(modeladmin, request, queryset):
+        for tr in queryset.filter(notifications_created=False):
+            tr.create_initial_notifications()
+
 class TriggerCustomizationAdmin(admin.ModelAdmin):
     list_display = ['owner', 'trigger', 'title']
     raw_id_fields = ['trigger', 'owner']
@@ -161,6 +170,7 @@ class ContributionAdmin(admin.ModelAdmin):
 admin.site.register(TriggerType)
 admin.site.register(Trigger, TriggerAdmin)
 admin.site.register(TriggerStatusUpdate, TriggerStatusUpdateAdmin)
+admin.site.register(TriggerRecommendation, TriggerRecommendationAdmin)
 admin.site.register(TriggerCustomization, TriggerCustomizationAdmin)
 admin.site.register(TriggerExecution, TriggerExecutionAdmin)
 admin.site.register(Actor, ActorAdmin)

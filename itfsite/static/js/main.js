@@ -25,6 +25,14 @@ function set_login_state() {
 					$(this).attr('href', $(this).attr('href') + '?next=' + encodeURIComponent(window.location.pathname));
 				});
 		}
+
+		$('.notifications-link a').click(show_notifications);
+		if (the_user && the_user.notifications) {
+			the_user.notifications.forEach(function(item) {
+				if (item.new)
+					$('.notifications-link').addClass('has-new-notifications');
+			});
+		}
 	}
 }
 
@@ -102,4 +110,54 @@ function set_css_to_maximum(elems, property) {
 		if (v > max_value) max_value = v;
 	});
 	elems.css(property, max_value + "px");
+}
+
+function show_notifications() {
+	// Create the element that contains the notifications popup.
+	var node = $('<div id="notifications-popup"> </div>');
+
+	// Build the contents of the popup.
+	function push_notification(alert) {
+		var n = $('<div class="notification-alert"></div>');
+		if (alert.new) n.addClass('new');
+		n.append($("<div>" + alert.body_html + "</div>"));
+		var d = $("<div class='date'/>")
+		n.append(d);
+		if (alert.date) d.text(moment(alert.date).calendar());
+
+		node.append(n)
+	}
+	node.text('');
+	if (!the_user || !the_user.notifications || !the_user.notifications.length) {
+		push_notification({ body_html: "No notifications."})
+	} else {
+		var ids = Array();
+		for (var i = 0; i < the_user.notifications.length; i++) {
+			var n = the_user.notifications[i];
+			push_notification(n)
+			ids = ids.concat(n.ids)
+		}
+
+		// Mark all of the notifications shown as dismissed.
+		$.ajax({
+			url: '/accounts/_dismiss-notifications',
+			method: 'POST',
+			data: {
+				ids: ids.join(',')
+			}
+		})
+		$('.notifications-link').removeClass('has-new-notifications');
+	}
+
+	// Display it.
+	node.find(">div").width(Math.max(300, $(window).width()/3))
+	$('.navbar .notifications-link').popover({
+		placement: 'bottom',
+		title: 'Notifications',
+		container: 'body',
+		html: true,
+		content: function() {
+			return "<div class='notifications-popup'>" + $(node).html() + "</div>";
+		}	
+	})
 }

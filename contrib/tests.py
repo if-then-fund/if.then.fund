@@ -6,6 +6,29 @@ from django.test import TestCase
 from itfsite.models import User
 from contrib.models import *
 
+def create_trigger(trigger_type, key, title):
+	from django.template.defaultfilters import slugify
+	return Trigger.objects.create(
+		key=key,
+		title=title,
+		owner=None,
+		trigger_type=trigger_type,
+		slug=slugify(title),
+		subhead="This is a test trigger.",
+		subhead_format=TextFormat.Markdown,
+		description="This is a test trigger.",
+		description_format=TextFormat.Markdown,
+		execution_note="The trigger will be executed during the test.",
+		execution_note_format=TextFormat.Markdown,
+		outcomes=[
+			{ "label": "Yes", "tip": "YesTip" },
+			{ "label": "No", "tip": "NoTip" },
+		],
+		extra={
+			"max_split": 100,
+		}
+		)
+
 class PledgeTestCase(TestCase):
 	def setUp(self):
 		self.trigger_type = TriggerType.objects.create(
@@ -19,27 +42,7 @@ class PledgeTestCase(TestCase):
 				"action_vb_past": "ACTED",
 			})
 
-		from django.template.defaultfilters import slugify
-		self.trigger = Trigger.objects.create(
-			key="test",
-			title="Test Trigger",
-			owner=None,
-			trigger_type=self.trigger_type,
-			slug=slugify("Test Trigger"),
-			subhead="This is a test trigger.",
-			subhead_format=TextFormat.Markdown,
-			description="This is a test trigger.",
-			description_format=TextFormat.Markdown,
-			execution_note="The trigger will be executed during the test.",
-			execution_note_format=TextFormat.Markdown,
-			outcomes=[
-				{ "label": "Yes", "tip": "YesTip" },
-				{ "label": "No", "tip": "NoTip" },
-			],
-			extra={
-				"max_split": 100,
-			}
-			)
+		self.trigger = create_trigger(self.trigger_type, 'test', 'Test Trigger')
 
 		# Create a user.
 		self.user = User.objects.create(email="test@example.com")
@@ -56,6 +59,7 @@ class PledgeTestCase(TestCase):
 			incumb_challgr=incumb_challgr,
 			filter_party=filter_party,
 		)
+		p.run_post_confirm_steps()
 		self.assertEqual(p.made_after_trigger_execution, False)
 		self.assertEqual(p.targets_summary, expected_value)
 
@@ -76,6 +80,25 @@ class PledgeTestCase(TestCase):
 
 	def test_pledge_throwemout_partyfilter(self):
 		self._test_pledge(0, -1, ActorParty.Democratic, "the opponents in the next general election of ACTORS who ACT No if the opponent is in the Democratic party")
+
+	def test_recommendation(self):
+		# Set up a recommendation.
+		t1 = self.trigger
+		t2 = create_trigger(self.trigger_type, 'test2', 'Another Trigger')
+		TriggerRecommendation.objects.create(trigger1=t1, trigger2=t2)
+
+		# Create a pledge.
+		self.test_pledge_simple()
+
+		# Was a notification created?
+		from itfsite.models import Notification, NotificationType
+		def notifs(): return Notification.objects.filter(user=self.user, notif_type=NotificationType.TriggerRecommendation)
+		self.assertEqual(notifs().count(), 1)
+
+		# Create another notification on the trigger the user already took action on.
+		t3 = create_trigger(self.trigger_type, 'test3', 'Yet Another Trigger')
+		TriggerRecommendation.objects.create(trigger1=t1, trigger2=t3).create_initial_notifications()
+		self.assertEqual(notifs().count(), 2)
 
 
 class ExecutionTestCase(TestCase):

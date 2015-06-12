@@ -4,6 +4,7 @@ from django.db import models, transaction, IntegrityError
 from django.conf import settings
 from django.utils import timezone
 from django.dispatch import receiver
+from django.contrib.contenttypes.models import ContentType
 
 from contrib.bizlogic import get_pledge_recipients, create_pledge_donation, void_pledge_transaction, HumanReadableValidationError
 
@@ -193,6 +194,136 @@ class TriggerStatusUpdate(models.Model):
 	updated = models.DateTimeField(auto_now=True)
 	text = models.TextField(help_text="Status update text in the format given by text_format.")
 	text_format = EnumField(TextFormat, help_text="The format of the text.")
+
+class TriggerRecommendation(models.Model):
+	trigger1 = models.ForeignKey(Trigger, related_name="recommends", on_delete=models.CASCADE, help_text="If a user has taken action on this Trigger, then we send them a notification.")
+	trigger2 = models.ForeignKey(Trigger, related_name="recommended_by", on_delete=models.CASCADE, help_text="This is the trigger that we recommend the user take action on.")
+	symmetric = models.BooleanField(default=False, help_text="If true, the recommendation goes both ways.")
+	created = models.DateTimeField(auto_now_add=True, db_index=True)
+	notifications_created = models.BooleanField(default=False, db_index=True, help_text="Set to true once notifications have been generated for users for any past actions the users took before this recommendation was added.")
+
+	def __str__(self):
+		return " ".join([
+			str(self.trigger1),
+			"=>" if not self.symmetric else "<=>",
+			str(self.trigger2),
+		])
+
+	def save(self, *args, override_immutable_check=False, **kwargs):
+		# Prevent the instance from being modified. Then save.
+		if not override_immutable_check and self.id: raise Exception("This model is immutable.")
+		super(TriggerRecommendation, self).save(*args, **kwargs)
+
+	@staticmethod
+	def create_notifications(user, trigger):
+		from itfsite.models import Notification, NotificationType
+
+		ct = ContentType.objects.get_for_model(TriggerRecommendation)
+
+		# The user just took action on trigger. Create relevant further
+		# suggestions as notifications by looking at the trigger2 of
+		# TriggerRecommendation instances where trigger1 is the trigger,
+		# and conversely for symmetric TriggerRecommendations.
+		recs = \
+		    [(rec, rec.trigger2, False) for rec in TriggerRecommendation.objects.filter(trigger1=trigger)] \
+		  + [(rec, rec.trigger1, True) for rec in TriggerRecommendation.objects.filter(symmetric=True, trigger2=trigger)]
+
+		# Filter out triggers that the user has already taken action on.
+		t_acted = Trigger.objects.filter(
+			id__in=set(r[1].id for r in recs),
+			pledges__user=user) 
+
+		for rec, t, converse in recs:
+			# Skip if the user already took this action.
+			if t in t_acted: continue
+
+			# Create Notification. See create_initial_notifications for another
+			# version of this.
+			rec.create_notification(user.id, converse, ct)
+
+		# Also delete any pre-existing unseen notifications for the trigger
+		# the user just took action on. No need to notify the user about this
+		# anymore.
+		recs = TriggerRecommendation.objects.filter(trigger2=trigger) \
+		  | TriggerRecommendation.objects.filter(symmetric=True, trigger1=trigger)
+		Notification.objects.filter(
+			user=user,
+			notif_type=NotificationType.TriggerRecommendation,
+			source_content_type=ct,
+			source_object_id__in=set(rec.id for rec in recs),
+			dismissed_at=None,
+			mailed_at=None).delete()
+
+	@transaction.atomic
+	def create_initial_notifications(self):
+		if self.notifications_created: raise ValueError("Notifications were already created.")
+
+		ct = ContentType.objects.get_for_model(TriggerRecommendation)
+
+		# Wrapper function to do the hard work.
+		def go(t1, t2, converse):
+			# Get users who have taken action on t1 but not on t2.
+			users1 = set(Pledge.objects.filter(trigger=t1).exclude(user=None).values_list('user', flat=True))
+			users2 = set(Pledge.objects.filter(trigger=t2).exclude(user=None).values_list('user', flat=True))
+			users = users1 - users2
+
+			# Create notifications to take action on t2.
+			for u in users:
+				self.create_notification(u, converse, ct)
+
+		# Create the notifications.
+		go(self.trigger1, self.trigger2, False)
+		if self.symmetric:
+			go(self.trigger2, self.trigger1, True)
+
+		# Mark this as having now created the initial notifications.
+		self.notifications_created = True
+		self.save(update_fields=['notifications_created'], override_immutable_check=True)
+
+	def create_notification(self, user_id, converse, ct):
+		from itfsite.models import Notification, NotificationType
+		Notification.objects.get_or_create(
+			user_id=user_id,
+			notif_type=NotificationType.TriggerRecommendation,
+			source_content_type=ct,
+			source_object_id=self.id,
+			extra={
+				"converse": converse,
+			})
+
+	def get_source_target(self, notification):
+		if not notification.extra['converse']:
+			return self.trigger1, self.trigger2
+		else:
+			return self.trigger2, self.trigger1
+
+	@staticmethod
+	def render_notifications(notifications):
+		# Split up the notifications by the target bill. Map
+		# each target bill to a list of notifications recommending it.
+		# Skip triggers whose current status does not allow for
+		# users to take action --- maybe this should be done
+		# at the time of adding notifications? (but then how to
+		# handle the status of a trigger changing?)
+		alerts = { }
+		for n in notifications:
+			t1, t2 = n.source.get_source_target(n)
+			if t2.status in (TriggerStatus.Open, TriggerStatus.Executed):
+				alerts.setdefault(t2, []).append(n)
+
+		# Render each target bill separately.
+		alerts = [{
+				"body_html": "We have a recommendation for you! <a href='{{link}}'>{{title}}</a> is a new {{noun}} you might be interested in.",
+				"body_text": "We have a recommendation for you! {{title}} ({{link}}) is a new {{noun}} you might be interested in.",
+				"body_context": {
+					"title": target.title,
+					"link": settings.SITE_ROOT_URL + target.get_absolute_url(),
+					"noun": target.trigger_type.strings['action_noun'],
+				},
+				"notifications": notificationlist,
+			} for target, notificationlist in alerts.items()]
+
+		return alerts
 
 class TriggerCustomization(models.Model):
 	"""The specialization of a trigger for an Organization."""
@@ -714,7 +845,16 @@ class Pledge(models.Model):
 		pledge.email_confirmed_at = timezone.now()
 		pledge.save()
 
+		# Run steps that happen after a pledge is confirmed.
+		pledge.run_post_confirm_steps()
+
 		return True
+
+	def run_post_confirm_steps(self):
+		# Create new notifications for this user based on any recommendations
+		# for further action that the user may now take. Also clear any
+		# pre-existing notifications for the trigger the user just took action on.
+		TriggerRecommendation.create_notifications(self.user, self.trigger)
 
 	def needs_pre_execution_email(self):
 		# If the user confirmed their email address after the trigger

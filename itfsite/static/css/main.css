@@ -80,12 +80,24 @@ a, a:hover, a:link, a:visited, a:active {
 
 	.navbar a {
 		border: none;
+		text-decoration: none;
 		color: #E7E7E7;
 		font-size: 14px;
 	}
 		.navbar .nav a:hover {
 			background-color: #555;
 		}
+
+		.navbar .notifications-link a {
+			color: #AAA;
+		}
+		.navbar .notifications-link.has-new-notifications a {
+			color: #BC3;
+		}
+	.nav>li>a:hover, .nav>li>a:focus {
+		/* overriding default bootstrap theme */
+		background-color: inherit;
+	}
 
 @media screen and (min-width: 768px) {
 	#body-content {
@@ -226,4 +238,31 @@ h3.invert {
 	text-shadow: 0 1px 4px rgba(0, 0, 0, .8);
 	font-size: 24px;
 	font-weight: bold;
+}
+
+.notifications-popup {
+}
+	.notifications-popup > div.notification-alert {
+		margin: -9px -14px;
+		padding: 9px 14px;
+	}
+	.notifications-popup > div.notification-alert.new {
+		background-color: #FFFFF3;
+	}
+	.notifications-popup > div.notification-alert.new a {
+		font-weight: bold;
+	}
+		.notifications-popup > div.notification-alert:last-child {
+			border: none;
+		}
+		.notifications-popup > div.notification-alert a {
+			text-decoration: none;
+		}
+		.notifications-popup > div.notification-alert .date {
+			font-size: 90%;
+			font-style: italic;
+			color: #555;
+		}
+.popover {
+	max-width: 600px;
 }

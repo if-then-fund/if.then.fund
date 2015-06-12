@@ -3,8 +3,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
+from django.utils import timezone
 
-from itfsite.models import Organization
+from itfsite.models import Organization, Notification
 from contrib.models import Pledge, PledgeExecution, PledgeStatus
 
 from twostream.decorators import anonymous_view, user_view_for
@@ -190,3 +191,16 @@ def org_resource(request, path, id, slug, resource_type):
 			content_type="image/png")
 
 	raise Http404()
+
+@login_required
+def dismiss_notifications(request):
+	# Mark all of the supplied notification IDs as dismissed.
+	Notification.objects.filter(
+		user=request.user,
+		id__in=request.POST.get('ids', '0').split(','),
+		dismissed_at=None,
+		)\
+		.update(dismissed_at=timezone.now())
+		
+	# Return something, but this is ignored.
+	return HttpResponse('OK', content_type='text/plain')
