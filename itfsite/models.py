@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.template import Template, Context
 
-from itfsite.accounts import User
+from itfsite.accounts import User, NotificationsFrequency
 from contrib.models import TextFormat
 
 import enum
@@ -15,12 +15,6 @@ class JSONField(_JSONField):
 	# turns on sort_keys
     def __init__(self, *args, **kwargs):
         super(_JSONField, self).__init__(*args, dump_kwargs={"sort_keys": True}, **kwargs)
-
-def load_user_twostream_data(user):
-	return {
-		"notifications": Notification.prepare_for_client(user),
-	}
-User.twostream_data = load_user_twostream_data
 
 @django_enum
 class OrganizationType(enum.Enum):
@@ -99,9 +93,9 @@ class Notification(models.Model):
 		self.save()
 
 	@staticmethod
-	def prepare_for_client(user):
+	def render(qs, for_client=True):
 		# Get JSON-able data so the client can render the user's notifications.
-		notifications = list(Notification.objects.filter(user=user).order_by('-created')[0:30])
+		notifications = list(qs)
 
 		# Get a unique set of classes that manage these notifications.
 		classes = set(n.source_content_type.model_class() for n in notifications)
@@ -118,10 +112,10 @@ class Notification(models.Model):
 
 			# Add common properties derived from the notifications that underlie the alerts.
 			alert["date"] = max(n.created for n in alert['notifications']) # most recent notification
-			alert["date"] = alert["date"].isoformat()
+			if for_client: alert["date"] = alert["date"].isoformat()
 			alert["ids"] = [n.id for n in alert['notifications']]
 			alert["new"] = any(n.dismissed_at is None for n in alert['notifications'])
-			del alert["notifications"] # not JSON-serializable
+			if for_client: del alert["notifications"] # not JSON-serializable
 
 		# Sort the alerts.
 		alerts.sort(key = lambda a : a['date'], reverse=True)

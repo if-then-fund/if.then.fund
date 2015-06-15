@@ -17,6 +17,7 @@ urlpatterns = patterns('',
 	url(r'^accounts/logout$', auth_views.logout, { 'next_page': '/' } ),
 	url(r'^accounts/password-change$', auth_views.password_change, { 'post_change_redirect': '/home', 'template_name': 'registration/password_change.html' }, name='password_change' ),
 	url(r'^accounts/_dismiss-notifications$', 'itfsite.views.dismiss_notifications'),
+	url(r'^accounts/_email_settings$', 'itfsite.views.set_email_settings'),
 
 	url(r'^admin/', include(admin.site.urls)),
 

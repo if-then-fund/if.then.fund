@@ -312,12 +312,15 @@ class TriggerRecommendation(models.Model):
 				alerts.setdefault(t2, []).append(n)
 
 		# Render each target bill separately.
+		from urllib.parse import quote
 		alerts = [{
+				"title": target.title, # short title / may go in email subject
 				"body_html": "We have a recommendation for you! <a href='{{link}}'>{{title}}</a> is a new {{noun}} you might be interested in.",
 				"body_text": "We have a recommendation for you! {{title}} ({{link}}) is a new {{noun}} you might be interested in.",
 				"body_context": {
 					"title": target.title,
-					"link": settings.SITE_ROOT_URL + target.get_absolute_url(),
+					"link": settings.SITE_ROOT_URL + target.get_absolute_url() \
+						+ "?utm_campaign=" + quote('itf-tr'),
 					"noun": target.trigger_type.strings['action_noun'],
 				},
 				"notifications": notificationlist,

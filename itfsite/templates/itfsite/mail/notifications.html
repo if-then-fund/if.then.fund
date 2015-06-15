@@ -1,0 +1,15 @@
+{% extends "email_template.html" %}
+{% block body %}
+<p>{% if profile %}Hi {{profile.extra.contributor.contribNameFirst}},{% else %}Hello!{% endif %}</p>
+
+<p>You have {{count}} new alert{{count|pluralize}} from if.then.fund.</p>
+
+{% for alert in notifs %}
+<div style="margin-bottom: 1em">
+	{{alert.body_html}}
+	{# <div style="font-style: italic; font-size: 90%">{{alert.date|date:"DATETIME_FORMAT"}}</div> #}
+</div>
+{% endfor %}
+
+<p><a href="https://if.then.fund/">if.then.fund</a></p>
+{% endblock %}

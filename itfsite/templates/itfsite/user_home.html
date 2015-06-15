@@ -18,7 +18,52 @@
 	{{request.user.email}}
 	|
 	<a href="{% url 'password_change' %}">Change Password</a>
+	|
+	<a href="#" onclick="return show_change_email_settings();">Change Email Settings</a>
 </p>
+
+{# change email settings #}
+<div id="change-email-settings" class="modal fade" role="dialog" aria-labelledby="change-email-settings-title">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 id="change-email-settings-title" class="modal-title">Email Settings</h4>
+      </div>
+      <div class="modal-body">
+      	<p>We would like to send you notifications about new actions on <span class="site-brand">if.then.fund</span> that we think you might be interested in. May we send you these notifications?</p>
+        <p style="margin-bottom: 1.5em"><select class="form-control">
+        	<option value="DailyNotifications">Yes, send me notifications.</option>
+        	<option value="WeeklyNotifications">Yes, but at most once a week.</option>
+        	<option value="NoNotifications">No, only send required/transactional notifications.</option>
+        	</select></p>
+        <p><span class="site-brand">if.then.fund</span> will also send you important notifications about contributions you have scheduled. You cannot opt out of these emails.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="save_email_settings()" data-dismiss="modal">Save</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<script>
+var notifs_freq = "{{notifs_freq|escapejs}}";
+function show_change_email_settings() {
+	$('#change-email-settings select').val(notifs_freq);
+	$('#change-email-settings').modal();
+	return false; // cancel link
+}
+function save_email_settings() {
+	notifs_freq = $('#change-email-settings select').val();
+	$.ajax({
+		url: '/accounts/_email_settings',
+		method: 'POST',
+		data: {
+			notifs_freq: notifs_freq
+		}
+	})
+}
+</script>
 
 {% if profiles|length > 0 %}
 <h2>Profile</h2>

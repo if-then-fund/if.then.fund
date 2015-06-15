@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.utils import timezone
 
-from itfsite.models import Organization, Notification
+from itfsite.models import Organization, Notification, NotificationsFrequency
 from contrib.models import Pledge, PledgeExecution, PledgeStatus
 
 from twostream.decorators import anonymous_view, user_view_for
@@ -66,6 +66,7 @@ def user_home(request):
 		'profiles': profiles,
 		'total_pledged': total_pledged,
 		'total_contribs': total_contribs,
+		'notifs_freq': request.user.notifs_freq.name,
 		})
 
 @login_required
@@ -202,5 +203,16 @@ def dismiss_notifications(request):
 		)\
 		.update(dismissed_at=timezone.now())
 		
+	# Return something, but this is ignored.
+	return HttpResponse('OK', content_type='text/plain')
+
+@login_required
+def set_email_settings(request):
+	user = request.user
+	try:
+		user.notifs_freq = NotificationsFrequency[request.POST['notifs_freq']]
+		user.save()
+	except (KeyError, ValueError) as e:
+		return HttpResponse(repr(e), content_type='text/plain', status=400)
 	# Return something, but this is ignored.
 	return HttpResponse('OK', content_type='text/plain')

@@ -1,0 +1,10 @@
+{% autoescape off %}
+{% if profile %}Hi {{profile.extra.contributor.contribNameFirst}},{% else %}Hello!{% endif %}
+
+You have {{count}} new alert{{count|pluralize}} from if.then.fund.
+{% for alert in notifs %}
+{{alert.body_text}}
+{% endfor %}
+
+if.then.fund (https://if.then.fund)
+{% endautoescape %}
