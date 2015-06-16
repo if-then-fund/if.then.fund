@@ -393,6 +393,8 @@ class ContributorInfo(models.Model):
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 
 	cclastfour = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The last four digits of the user's credit card number, stored & indexed for fast look-up in case we need to find a pledge from a credit card number.")
+	is_geocoded = models.BooleanField(default=False, db_index=True, help_text="Whether this record has been geocoded.")
+
 	extra = JSONField(blank=True, help_text="Schemaless data stored with this object.")
 
 	def __str__(self):
@@ -436,6 +438,19 @@ class ContributorInfo(models.Model):
 
 	def open_pledge_count(self):
 		return self.pledges.filter(status=PledgeStatus.Open).count()
+
+	def geocode(self):
+		# Updates this record with geocoder information, especially congressional district
+		# and timezone.
+		from contrib.legislative import geocode
+		info = geocode([
+			self.extra['contributor']['contribAddress'],
+			self.extra['contributor']['contribCity'],
+			self.extra['contributor']['contribState'],
+			self.extra['contributor']['contribZip']])
+		self.extra['geocode'] = info
+		self.is_geocoded = True
+		self.save(update_fields=['is_geocoded', 'extra'], override_immutable_check=True)
 
 	@staticmethod
 	def find_from_cc(cc_number):

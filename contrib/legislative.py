@@ -169,12 +169,8 @@ def execute_trigger_from_vote(trigger, govtrack_url):
 		})
 
 def geocode(address):
-	# Geocodes an address, returning a tuple of (DISTRICT, { metadata }).
-	# DISTRICT is in the form of XX00, or UNKN for a geocoder failure.
-	# Metadata is other arbitrary info so we have more details about
-	# the API calls we're making for later.
-
-	# Use the CDYNE Postal Address Verification API.
+	# Geocodes an address using the CDYNE Postal Address Verification API.
+	# address should be a tuple of of the street, city, state and zip code.
 
 	import requests, urllib.parse, lxml.etree, json
 	from django.conf import settings
@@ -203,15 +199,33 @@ def geocode(address):
 	if retcode in (1, 2):
 		raise Exception("CDYNE returned error code %d. See http://wiki.cdyne.com/index.php/PAV_VerifyAddressAdvanced_Output." % retcode)
 
+	from django.utils.timezone import now
+	ret = {
+		'timestamp': now().isoformat(), # Add a timestamp to the response in case we need to know later when we performed the geocode.
+		'cdyne': r,
+	}	
+
 	if retcode in (10,):
 		# Input Address is Not Found.
-		return (None, r)
+		return ret
 
-	# Add a timestamp to the response in case we need to know later.
-	from django.utils.timezone import now
-	r['timestamp'] = now().isoformat()
+	# Store the congressional district as of the 114th Congress as XX##.
+	ret["cd114"] = r['StateAbbreviation'] + r['LegislativeInfo']['CongressionalDistrictNumber']
 
-	# Return the Congressional district and the whole CDYNE response
-	# in case we want to re-parse it later.
-	return (r['StateAbbreviation'] + r['LegislativeInfo']['CongressionalDistrictNumber'], r)
+	# Store the user's time zone. Convert from the CDYNE time zone
+	# code to a standard Unix time zone name.
+	# http://wiki.cdyne.com/index.php/Postal_Address_Verification
+	tz = r['GeoLocationInfo']['TimeZone'].strip()
+	tz = {
+			"EST": "US/Eastern", # aka America/New_York
+			"CST": "US/Central", # aka America/Chicago
+			"MST": "US/Mountain", # aka America/Denver
+			"PST": "US/Pacific", # aka America/Los_Angeles
+			"PST-1": "US/Alaska", # aka America/Anchorage
+			"PST-2": "US/Hawaii", # aka Pacific/Honolulu
+			"EST+1": "America/Puerto_Rico",
+		}.get(tz)
+	if tz:
+		ret['tz'] = tz
 
+	return ret

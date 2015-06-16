@@ -4,28 +4,16 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
-from contrib.models import PledgeExecution, PledgeExecutionProblem
-from contrib.via_govtrack import geocode
+from contrib.models import ContributorInfo
 
 class Command(BaseCommand):
 	args = ''
-	help = 'Geocodes executed pledges.'
+	help = 'Geocodes ContributorInfos.'
 
 	def handle(self, *args, **options):
-		pledgexecs = PledgeExecution.objects.filter(
-			problem=PledgeExecutionProblem.NoProblem,
-			district=None,
-			).select_related("pledge")
-
-		for pe in pledgexecs:
-			district, metadata = geocode([
-				pe.pledge.extra['contribAddress'],
-				pe.pledge.extra['contribCity'],
-				pe.pledge.extra['contribState'],
-				pe.pledge.extra['contribZip']])
-			if district == None:
-				# Could not geocode. But mark that we tried so we don't
-				# try again.
-				district = "UNKN"
-			pe.update_district(district, metadata)
-			print(district, pe)
+		profiles = ContributorInfo.objects.filter(is_geocoded=False)
+		for profile in profiles:
+			try:
+				profile.geocode()
+			except OSError as e:
+				print(profile.id, profile, e)
