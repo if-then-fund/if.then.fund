@@ -1,8 +1,6 @@
 {% extends "email_template.html" %}
 
-{% block body %}
-<p>{{pledge.profile.extra.contributor.contribNameFirst}},</p>
-
+{% block content %}
 {% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
 
 <p>Your campaign contributions totalling ${{pledge.execution.charged|floatformat:2}} were made to {{pledge.targets_summary}}.</p>
@@ -25,6 +23,4 @@
 {% endif %}
 
 <p>Thanks!</p>
-
-<p><a href="https://if.then.fund/">if.then.fund</a></p>
 {% endblock %}

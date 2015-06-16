@@ -1,0 +1,8 @@
+{% autoescape off %}{% if profile %}Hi {{profile.extra.contributor.contribNameFirst}},{% else %}Hello!{% endif %}
+{% block content %}
+{% endblock %}
+Josh & Jonathan
+if.then.fund (https://if.then.fund)
+{% block footer %}
+{% endblock %}
+{% endautoescape %}

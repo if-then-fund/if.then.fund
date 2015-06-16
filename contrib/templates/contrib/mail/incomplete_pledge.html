@@ -1,6 +1,6 @@
 {% extends "email_template.html" %}
 
-{% block body %}
+{% block content %}
 <p>Thanks for visiting if.then.fund. It looks like you started to make a contribution but stopped mid-way through.</p>
 
 <p>We&rsquo;d be glad to answer any question you have about the site &mdash; just reply to this email. Our <a href="https://if.then.fund/about/how-it-works">How It Works</a> page may also answer any questions you have.</p>
@@ -8,8 +8,8 @@
 <p>Or if you want to finish your contribution related to {{trigger.title}}, just click <a href="{{url}}">this link</a>.</p>
 
 <p>Thanks,</p>
+{% endblock %}
 
-<p><a href="https://if.then.fund/">if.then.fund</a></p>
-
+{% block footer %}
 <p><small>(If you take no action, this will be the last you hear from us.)</small></p>
 {% endblock %}

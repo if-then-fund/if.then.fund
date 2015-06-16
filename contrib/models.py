@@ -793,6 +793,7 @@ class Pledge(models.Model):
 				settings.DEFAULT_FROM_EMAIL,
 				[context['email']],
 				{
+					"profile": self.profile, # used in salutation in email_template
 					"confirmation_url": context['confirmation_url'],
 					"pledge": self,
 					"first_try": first_try,

@@ -11,3 +11,15 @@ a {
 </style>
 {% endblock %}
 
+{% block body %}
+<p>{% if profile %}Hi {{profile.extra.contributor.contribNameFirst}},{% else %}Hello!{% endif %}</p>
+
+{% block content %}
+{% endblock %}
+
+<p>Josh &amp; Jonathan<br>
+<a href="https://if.then.fund/">if.then.fund</a></p>
+
+{% block footer %}
+{% endblock %}
+{% endblock %}

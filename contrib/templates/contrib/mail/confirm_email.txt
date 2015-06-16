@@ -1,6 +1,5 @@
-{% autoescape off %}
-{{pledge.extra.contributor.contribNameFirst}},
-
+{% extends "email_template.txt" %}
+{% block content %}
 Thank you for using if.then.fund to schedule a contribution depending on the outcome of {{pledge.trigger.title}}.
 
 We need to confirm your email address first. Please click the link below to confirm. You may need to copy the address into your web browser.
@@ -8,6 +7,4 @@ We need to confirm your email address first. Please click the link below to conf
 {{ confirmation_url }}
 
 Thanks!
-
-if.then.fund (https://if.then.fund)
-{% endautoescape %}
+{% endblock %}

@@ -83,6 +83,7 @@ class Command(BaseCommand):
 			settings.DEFAULT_FROM_EMAIL,
 			[pledge.user.email],
 			{
+				"profile": pledge.profile, # used in salutation in email_template
 				"pledge": pledge,
 				"until": Pledge.current_algorithm()['pre_execution_warn_time'][1],
 				"total_charge": total_charge,
