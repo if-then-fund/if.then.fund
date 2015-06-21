@@ -128,6 +128,12 @@ def execute_trigger_from_vote(trigger, govtrack_url):
 		try:
 			actor = Actor.objects.get(govtrack_id=voter.get('id'))
 		except Actor.DoesNotExist:
+			# We don't have an Actor object for this person. If we're loading
+			# in an old vote to do a post-vote trigger with, some voters may
+			# no longer be serving and that's ok.
+			if when.year < 2015:
+				continue
+
 			if settings.DEBUG:
 				print("No Actor instance exists here for Member of Congress with GovTrack ID %d." % int(voter.get('id')))
 				continue
