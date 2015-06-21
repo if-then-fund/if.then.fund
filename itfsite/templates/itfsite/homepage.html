@@ -162,7 +162,7 @@
 							<div class="trigger-bubble">
 								<div class="trigger-title"><a href="{{t.get_absolute_url}}">{{t.title}}</a></div>
 								<div class="trigger-description">
-									{{t.description|render_text:t.description_format|truncatewords_html:15}}
+									{{t.subhead|render_text:t.subhead_format|truncatewords_html:30}}
 									<p>{{t.total_pledged|currency}} committed so far.</p>
 								</div>
 								<div class="trigger-take-action">
