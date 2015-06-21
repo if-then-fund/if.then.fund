@@ -451,7 +451,7 @@ class DummyDemocracyEngineAPI(object):
 				"token": token,
 			}
 		else:
-			if info['token'] not in self.issued_tokens:
+			if not info['token'].startswith('_made_up_') and info['token'] not in self.issued_tokens:
 				raise Exception("Charge on an invalid token.")
 			return {
 				"dummy_response": True,

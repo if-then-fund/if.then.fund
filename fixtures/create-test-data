@@ -1,0 +1,38 @@
+# When starting with a fresh database, create the tables.
+./manage.py migrate
+
+# Must load actor and recipient files at once because they have
+# a circular dependency
+./manage.py loaddata fixtures/actor.yaml fixtures/recipient.yaml
+
+# Create some sample triggers.
+fixtures/sample-triggers 
+
+# Create a bunch of random pledges on triggers 1 and 2.
+fixtures/create-random-pledge 1
+fixtures/create-random-pledge 1
+fixtures/create-random-pledge 1
+fixtures/create-random-pledge 1
+fixtures/create-random-pledge 1
+fixtures/create-random-pledge 1
+fixtures/create-random-pledge 1
+fixtures/create-random-pledge 1
+fixtures/create-random-pledge 2
+fixtures/create-random-pledge 2
+fixtures/create-random-pledge 2
+fixtures/create-random-pledge 2
+fixtures/create-random-pledge 2
+fixtures/create-random-pledge 2
+fixtures/create-random-pledge 2
+fixtures/create-random-pledge 2
+
+# Execute triggers 2 and 3.
+fixtures/execute-trigger 2
+fixtures/execute-trigger 3
+
+# Do what we need to do before we can execute pledges.
+./manage.py send_pledge_emails
+
+# Execute pledges. Since we made up billing tokens we
+# disable Democracy Engine here.
+NO_DE=1 ./manage.py execute_pledges

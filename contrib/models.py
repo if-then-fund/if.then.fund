@@ -596,6 +596,26 @@ class ContributorInfo(models.Model):
 			if check_password(cc_number, p.extra['billing']['cc_num_hashed']):
 				yield p
 
+	@staticmethod
+	def createRandom():
+		# For testing!
+		import random
+		return ContributorInfo.objects.create(extra={
+			"contributor": {
+				"contribNameFirst": random.choice(["Jeanie", "Lucrecia", "Marvin", "Jasper", "Carlo", "Millicent", "Zack", "Raul", "Johnny", "Margarette"]),
+				"contribNameLast": random.choice(["Ramm", "Berns", "Wannamaker", "McCarroll", "Bumbrey", "Caudle", "Bridwell", "Pacelli", "Crowley", "Montejano"]),
+				"contribAddress": "%d %s %s" % (random.randint(10, 200), random.choice(["Fir", "Maple", "Cedar", "Dogwood", "Persimmon", "Beech"]), random.choice([ "St", "Ave", "Ct"])),
+				"contribCity": random.choice(["Rudy", "Hookerton", "La Ward", "Marenisco", "Nara Visa"]),
+				"contribState": random.choice(["NQ", "BL", "PS"]),
+				"contribZip": random.randint(10000, 88888),
+				"contribEmployer": "self",
+				"contribOccupation": "unspecified",
+			},
+			"billing": {
+				"de_cc_token": "_made_up_%d" % random.randint(1, 100000),
+			},
+		})
+
 @django_enum
 class PledgeStatus(enum.Enum):
 	Open = 1

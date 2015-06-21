@@ -131,9 +131,8 @@ if [ "$1" == "--local" ]; then
 	./manage.py createsuperuser --email=ops@if.then.fund --noinput
 	# gain access with: ./manage.py changepassword ops@if.then.fund
 
-	# Load fixtures. Only for testing. Must load actor and recipient files
-	# at once because they have a circular dependency.
-	./manage.py loaddata fixtures/actor.yaml fixtures/recipient.yaml
+	# Load some test data --- for testing only!
+	fixtures/create-test-data
 
 	# For testing only.
 	pip install selenium
