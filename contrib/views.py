@@ -116,7 +116,7 @@ def trigger(request, id, trigger_customization_id=None):
 
 		# Compute a few other aggregates.
 		num_recips = 0
-		by_incumb_chlngr = [["Incumbent", 0, "text-success"], ["Opponent", 0, "text-danger"]]
+		by_incumb_chlngr = [[trigger.trigger_type.strings['actor'], 0, 0], ["opponent in the next general election", 0, 0]]
 		for a in actions:
 			# counts of actors/recipients
 			if a['total_for'] > 0: num_recips += 1
@@ -125,6 +125,9 @@ def trigger(request, id, trigger_customization_id=None):
 			# totals by incumbent/challenger
 			by_incumb_chlngr[0][1] += a['total_for']
 			by_incumb_chlngr[1][1] += a['total_against']
+			if a['total_for'] > 0: by_incumb_chlngr[0][2] += 1
+			if a['total_against'] > 0: by_incumb_chlngr[1][2] += 1
+		by_incumb_chlngr = filter(lambda x : x[2] > 0, by_incumb_chlngr)
 
 		# Compute other summary stats.
 		ag = ContributionAggregate.get_slice(trigger_execution=te, via=tcust)

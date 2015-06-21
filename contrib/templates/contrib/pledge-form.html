@@ -1,5 +1,4 @@
 <style>
-{% if not hidemypledge %}
 #make-pledge h2 {
   text-align: center;
   font-size: 19px;
@@ -8,11 +7,9 @@
   margin 1em 0 0 1em;
   text-align: center;
 }
-{% endif %}
   #pledge-outcomes button {
     margin: 0 1em 1em 0;
     font-weight: bold;
-    {% if hidemypledge %}font-size: 90%;{% endif %}
   }
   #pledge-outcomes button:first-child {
     margin-left: 0;
@@ -89,21 +86,11 @@
 }
 </style>
 
-{% if not hidemypledge %}
 <div id="my-pledge">
 </div>
-{% endif %}
 
-<div id="make-pledge" {% if hidemypledge %}style="display: none;"{% endif %}>
-  {% if not hidemypledge %}
-    <h2>
-  {% else %}
-    <div style="margin: 1.5em -15px 1.5em -16px">
-    <div class="panel panel-default">
-    <div class="panel-body">
-    <p><em>
-  {% endif %}
-
+<div id="make-pledge">
+  <h2>
   {% if tcust.has_fixed_outcome %}
     Take Action
   {% elif trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
@@ -111,14 +98,9 @@
   {% else %}
     How would you have {{trigger.trigger_type.strings.action_vb_past}}?
   {% endif %}
+  </h2>
 
-  {% if not hidemypledge %}
-    </h2>
-  {% else %}
-    </em></p>
-  {% endif %}
-
-  <div id="pledge-outcomes" {% if hidemypledge %}style="margin-bottom: -.75em"{% endif %}>
+  <div id="pledge-outcomes">
   {% if not tcust.has_fixed_outcome %}
     {% for outcome in trigger.outcomes %}
       <button class="btn btn-lg btn-success" onclick="pledge_go(this)" data-index="{{forloop.counter0}}">
@@ -150,10 +132,8 @@
     <input type="hidden" name="billingCCExpYear" value="?"/>
     <input type="hidden" name="copyFromPledge" value=""/>
 
-    {% if not hidemypledge %}
     <div class="panel panel-success">
       <div class="panel-body">
-    {% endif %}
         <div id="pledge-start">
           <h3 style="margin-top: 0">Your position</h3>
 
@@ -439,13 +419,9 @@
           </div>
         </div> <!-- /pledge-payment -->
 
-    {% if not hidemypledge %}
       </div> <!-- /panel-body -->
     </div> <!-- /panel -->
-    {% endif %}
   </form>
-
-  {% if hidemypledge %}</div></div></div>{% endif %}
 
 </div> <!-- /make-pledge -->
 
@@ -463,7 +439,6 @@ function pledge_init() {
     $('#make-pledge').hide();
     $('#my-pledge').html(the_page.pledge_made);
 
-    {% if not hidemypledge %}
     // Mobile browsers (iOS and Android) don't seem to scroll
     // to the page top on a reload, which we do after pledge
     // submission to update the page so we end up here. At the
@@ -471,7 +446,6 @@ function pledge_init() {
     // may not be visible if we scroll to the top. So scroll
     // to that.
     smooth_scroll_to($('#my-pledge'));
-    {% endif %}
 
     return;
   } else {
@@ -662,7 +636,7 @@ function pledge_go(outcome_elem) {
 
   // Validation and show modal.
   update_start_next_state(true);
-  $('#stats, #pledge-about-site').hide();
+  $('.hide-during-pledge').hide();
   show_and_scroll('pledge-info')
 
   mixpanel.track("Pledge Begin", { 'trigger': {{trigger.id}}, 'outcome_index': $(outcome_elem).attr('data-index') });
@@ -752,7 +726,7 @@ function do_pledge_start_next() {
 
 function do_pledge_start_cancel() {
   $('#pledge-info').fadeOut(function() {
-    $('#stats, #pledge-about-site').show();
+    $('.hide-during-pledge').show();
   });
   smooth_scroll_to($('body'));
 }

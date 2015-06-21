@@ -63,6 +63,10 @@ h1 {
 	line-height: 130%;
 	font-size: 88%;
 }
+
+#contribs-by-recipient table th, #contribs-by-recipient table td {
+	font-size: 90%;
+}
 </style>
 {% endblock %}
 
@@ -132,25 +136,34 @@ h1 {
 
 			{% endif %}
 
-			{% if T_pre == T %}
-			<div id="stats" class="row">
+			<div id="stats" class="row hide-during-pledge">
+				{% if T_pre != T %}
+					<div class="col-xs-12">
+						<hr>
+						<p style="margin-bottom: 2em;">Here is how all <span class="site-brand">if.then.fund</span> users have acted on this {{trigger.trigger_type.strings.action_noun}}, <a href="{{T_pre.get_absolute_url}}">{{T_pre.title}}</a>, so far:</p>
+					</div>
+				{% endif %}
 				<div class="col-xs-4 col-sm-4 col-lg-3">
 					<div class="meta-stat">
-						<div class="num">{{T.total_pledged|currency}}</div>
+						<div class="num">{{T_pre.total_pledged|currency}}</div>
 						<div class="lbl">committed so far</div>
 					</div>
 				</div>
 	
 				<div class="col-xs-4 col-sm-4 col-lg-3">
 					<div class="meta-stat">
-						<div class="num">{{T.pledge_count|intcomma}}</div>
-						<div class="lbl">donor{{T.pledge_count|pluralize}} {% if T.pledge_count == 0 %}&mdash; be the first!{% endif %}</div>
+						<div class="num">{{T_pre.pledge_count|intcomma}}</div>
+						<div class="lbl">donor{{T_pre.pledge_count|pluralize}} {% if T_pre.pledge_count == 0 %}&mdash; be the first!{% endif %}</div>
 					</div>
 				</div>
+				{% if T_pre != T %}
+					<div class="col-xs-12">
+						<p>Federal law prevents us from showing what {{T.owner.name}}&rsquo;s totals are prior to the {{trigger.trigger_type.strings.action_noun}}.</p>
+					</div>
+				{% endif %}
 			</div>
-			{% endif %}
 
-			<div id="pledge-about-site" style="padding-top: 2em;">
+			<div class="hide-during-pledge" style="padding-top: 2em;">
 			    <small>
 			    <hr>
 			    {% if not tcust %} {# the 'we' is confusing on a customized page #}
@@ -161,64 +174,81 @@ h1 {
 				took. After the {{trigger.trigger_type.strings.action_noun}}, we’ll charge your card and split your contribution based on your
 				instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 			    </small>
-			  </div>
+			</div>
 
 		{% elif trigger.status|stringformat:'s' == 'TriggerStatus.Executed' %}
-			{% include "contrib/pledge-form.html" with hidemypledge=1 %}
-
-			<h2>Contributions</h2>
 
 			{% if trigger.pledge_count > trigger.execution.pledge_count %}
 				<p class="text-danger">The {{trigger.trigger_type.strings.action_noun}} ocurred, and we are still in the process of making campaign contributions. The counts below are preliminary.</p>
 			{% endif %}
-			
-			<p>{{total_pledges}} donor{{total_pledges|pluralize}} made contributions totalling {{total_contribs|currency}}.</p>
 
-			<div id="my-pledge">
+			<div id="stats" class="row">
+				{% for outcome in outcome_totals %}
+					<div class="col-xs-4 col-sm-4 col-lg-3">
+						<div class="meta-stat">
+							<div class="num">{{outcome.contribs|currency}}</div>
+							<div class="lbl">{{outcome.label}}</div>
+						</div>
+					</div>
+				{% endfor %}
+				<div class="col-xs-4 col-sm-4 col-lg-3">
+					<div class="meta-stat">
+						<div class="num">{{total_contribs|currency}}</div>
+						<div class="lbl">Total Contributed</div>
+					</div>
+				</div>
+
+				<div class="col-xs-4 col-sm-4 col-lg-3">
+					<div class="meta-stat">
+						<div class="num">{{total_pledges|intcomma}}</div>
+						<div class="lbl">Donor{{total_pledges|pluralize}}</div>
+					</div>
+				</div>
+
+				{% comment %}
+				<div class="col-xs-4 col-sm-4 col-lg-3">
+
+					<div class="meta-stat lesser">
+						<div class="num">{{avg_pledge|currency}}</div>
+						<div class="lbl">average contribution per donor</div>
+					</div>
+
+				</div>
+				<div class="col-xs-4 col-sm-4 col-lg-3">
+
+					<div class="meta-stat lesser">
+						<div class="num">{{avg_contrib|currency}}</div>
+						<div class="lbl">average contribution to each recipient by each donor</div>
+					</div>
+				</div>
+				{% endcomment %}
 			</div>
+			
 
+			{% include "contrib/pledge-form.html" %}
+
+			<div class="hide-during-pledge" style="margin: 1em 0 2em 0;">
+			    <p>You will be making a campaign contribution to {{trigger.trigger_type.strings.actors}} or their next opponent based on the outcome of the 
+				{{trigger.trigger_type.strings.action_noun}}. We will split your contribution based on your instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
+			    <hr/>
+			  </div>
+			
 			{% if total_pledges > 0 %}
 
-			<h3>Totals</h3>
+			<p class="hide-during-pledge">{{total_pledges}} donor{{total_pledges|pluralize}} made contributions totalling {{total_contribs|currency}}, with {% for row in by_incumb_chlngr %}{% if forloop.first %} {% elif forloop.last %} and {% else %}, {% endif %}{{row.1|currency}} going to {{row.2}} {{row.0}}{{row.2|pluralize}}{% endfor %}. <a href="#" onclick="$('#contribs-by-recipient').modal(); return false;">Show Details</a>.
 
-			<div class="row">
-				<div class="col-sm-6">
-					<table class="table" style="width: auto">
-					<thead><tr><th colspan="2">By Desired {{trigger.trigger_type.strings.action_vb_inf|capfirst}}</th></tr></thead>
-					{% for outcome in outcome_totals %}
-						<tr>
-							<th>{{outcome.label}}:</th>
-							<td>{{outcome.contribs|currency}}</td>
-						</tr>
-					{% endfor %}
-					<tr style="color: #333; background-color: #F5F5F5">
-						<th>Total</th>
-						<td style="font-weight: bold">{{total_contribs|currency}}</td>
-					</tr>
-					</table>
-				</div>
-				<div class="col-sm-6">
-					<table class="table" style="width: auto">
-					<thead><tr><th colspan="2">By Recipient Type</th></tr></thead>
-					{% for row in by_incumb_chlngr %}
-						<tr class="{{row.2}}">
-							<th>{{row.0}}:</th>
-							<td>{{row.1|currency}}</td>
-						</tr>
-					{% endfor %}
-					<tr style="color: #333; background-color: #F5F5F5">
-						<th>Total</th>
-						<td style="font-weight: bold">{{total_contribs|currency}}</td>
-					</tr>
-					</table>
-				</div>
-			</div>
+			<div id="contribs-by-recipient" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="contribs-by-recipient-title" aria-hidden="true">
+			  <div class="modal-dialog modal-lg">
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			        <h4 class="modal-title" id="contribs-by-recipient-title">Contributions by {{trigger.trigger_type.strings.actors|capfirst}}</h4>
+			      </div>
+			      <div class="modal-body">
 
-			<div id="contribs-by-recipient">
-				<h3>{{trigger.trigger_type.strings.actors|capfirst}}</h3>
+				<p style="margin-top: 1em">The table below shows how each {{trigger.trigger_type.strings.actor}} {{trigger.trigger_type.strings.action_vb_past}} and the amount of contributions that went to them or their next general election opponent. There were {{num_recips|intcomma}} recipient{{num_recips|pluralize}} of contributions, counting both {{trigger.trigger_type.strings.actors}} and their opponents.</p>
 
-				<p style="margin-top: 1em">The table below shows how each {{trigger.trigger_type.strings.actor}} {{trigger.trigger_type.strings.action_vb_past}} and the amount of contributions that went to them or their next general election opponent.</p>
-
+				<div class="table-responsive" style="max-height: 375px; overflow-y: auto;">
 				<table class="table" style="width: auto">
 				<thead>
 					<tr>
@@ -243,6 +273,13 @@ h1 {
 				{% endfor %}
 				</tbody>
 				</table>
+				</div>
+			      </div>
+			      <div class="modal-footer">
+			        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			      </div>
+			    </div>
+			  </div>
 			</div>
 
 			{% endif %}
@@ -252,13 +289,13 @@ h1 {
 	</div>
 
 	<div id="trigger-metadata" class="col-sm-4">
-		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' or not trigger.execution.description %}
-			<h2>About this {{trigger.trigger_type.strings.action_noun}}</h2>
-			{{T.description|render_text:T.description_format}}
-			{% if trigger.extra.type == "usbill" and trigger.status|stringformat:'s' != 'TriggerStatus.Executed' and 0 %}
-				<p class="text-muted small">More info on this {{trigger.extra.bill_info.noun}} can be found on <a href="{{trigger.extra.bill_info.link}}">GovTrack</a>.</p>
-			{% endif %}
+		<h2>About this {{trigger.trigger_type.strings.action_noun}}</h2>
+		{{T.description|render_text:T.description_format}}
+		{% if trigger.extra.type == "usbill" and trigger.status|stringformat:'s' != 'TriggerStatus.Executed' and 0 %}
+			<p class="text-muted small">More info on this {{trigger.extra.bill_info.noun}} can be found on <a href="{{trigger.extra.bill_info.link}}">GovTrack</a>.</p>
+		{% endif %}
 
+		{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' or not trigger.execution.description %}
 			<hr style="margin: .5em 0; border-color: #DDD;">
 			{% if trigger.execution_note %}
 				{{trigger.execution_note|render_text:trigger.execution_note_format}}
@@ -269,62 +306,6 @@ h1 {
 
 		{% if trigger.status|stringformat:'s' == 'TriggerStatus.Vacated' %}
 			<p class="text-danger">Pledges were vacated.</p>
-		{% endif %}
-
-		{% if not execution %}
-			{% if T_pre != T %}
-				<hr>
-				<h2>{{T_pre.title}}</h2>
-				<p style="margin-bottom: 2em;">Here is how all <span class="site-brand">if.then.fund</span> users have acted on <a href="{{T_pre.get_absolute_url}}">this {{trigger.trigger_type.strings.action_noun}}</a> so far:</p>
-
-				<div class="meta-stat">
-					<div class="num">{{T_pre.total_pledged|currency}}</div>
-					<div class="lbl">committed</div>
-				</div>
-
-				<div class="meta-stat">
-					<div class="num">{{T_pre.pledge_count|intcomma}}</div>
-					<div class="lbl">donor{{T_pre.pledge_count|pluralize}} {% if T_pre.pledge_count == 0 %}&mdash; be the first!{% endif %}</div>
-				</div>
-
-				<p>Federal law prevents us from showing what {{T.owner.name}}&rsquo;s totals are prior to the {{trigger.trigger_type.strings.action_noun}}.</p>
-			{% endif %}
-
-		{% else %}
-			<h2>Summary</h2>
-
-			{% if trigger.pledge_count > trigger.execution.pledge_count %}
-				<p class="text-danger">The counts below are preliminary.</p>
-			{% endif %}
-
-			<div class="meta-stat">
-				<div class="num">{{total_contribs|currency}}</div>
-				<div class="lbl">total contributed</div>
-			</div>
-
-			<div class="meta-stat">
-				<div class="num">{{total_pledges|intcomma}}</div>
-				<div class="lbl">donor{{total_pledges|pluralize}}</div>
-			</div>
-
-			<hr>
-
-			<div class="meta-stat lesser">
-				<div class="num">{{avg_pledge|currency}}</div>
-				<div class="lbl">average contribution per donor</div>
-			</div>
-
-			<hr>
-
-			<div class="meta-stat lesser">
-				<div class="num">{{num_recips|intcomma}}</div>
-				<div class="lbl">recipient{{num_recips|pluralize}}</div>
-			</div>
-
-			<div class="meta-stat lesser">
-				<div class="num">{{avg_contrib|currency}}</div>
-				<div class="lbl">average contribution to each recipient by each donor</div>
-			</div>
 		{% endif %}
 
 		<hr>
@@ -362,6 +343,8 @@ h1 {
 
 		if (the_page && the_page.show_utm_tool)
 			$('#show_utm_tool').show();
+
+		$('#contribs-by-recipient .table-responsive').css({ maxHeight: ($(window).height()-250) * .75 })
 	})
 
 	function utm_tool() {
