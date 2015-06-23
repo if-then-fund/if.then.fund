@@ -7,7 +7,6 @@ from django.conf import settings
 from datetime import timedelta
 
 from contrib.models import TriggerStatus, Pledge, PledgeStatus, ContributionAggregate
-from contrib.legislative import execute_trigger_from_vote
 
 import sys, os, tqdm
 from taskutils import exclusive_process

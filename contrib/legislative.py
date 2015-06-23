@@ -85,13 +85,22 @@ def create_trigger_from_bill(bill_id, chamber):
 	t.save()
 	return t
 
-def execute_trigger_from_vote(trigger, govtrack_url):
+def execute_trigger_from_vote(trigger, govtrack_url, flip=False):
 	import requests, lxml.etree
 
 	# Map vote keys '+' and '-' to outcome indexes.
 	outcome_index = { }
 	for i, outcome in enumerate(trigger.outcomes):
-		outcome_index[outcome['vote_key']] = i
+		k = outcome['vote_key']
+
+		# If the valence of the vote outcomes are opposite to how they
+		# are structured in the trigger, we have to flip them.
+		if flip:
+			if len(trigger.outcomes) != 2:
+				raise ValueError("Can't flip a vote on a trigger with not two outcomes.")
+			k = { "+": "-", "-": "+" }[k]
+
+		outcome_index[k] = i
 
 	# Get vote metadata from GovTrack's API, via the undocumented
 	# '.json' extension added to vote pages.
