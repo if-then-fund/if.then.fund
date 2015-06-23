@@ -398,6 +398,14 @@ class TriggerExecution(models.Model):
 	def __str__(self):
 		return "%s [exec %s]" % (self.trigger, self.created.strftime("%x"))
 
+	def delete(self, *args, **kwargs):
+		# After deleting a TriggerExecution, reset the status of the trigger
+		# to Paused. Leaving it as Executed would leave it in an inconsistent
+		# state and makes debugging harder.
+		super(TriggerExecution, self).delete(*args, **kwargs)
+		self.trigger.status = TriggerStatus.Paused
+		self.trigger.save(update_fields=['status'])
+
 	def get_outcomes(self, via=None):
 		# Get the contribution aggregates by outcome
 		# and sort by total amount of contributions.
