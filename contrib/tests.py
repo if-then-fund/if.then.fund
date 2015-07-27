@@ -5,6 +5,19 @@ from django.test import TestCase
 
 from itfsite.models import User
 from contrib.models import *
+from contrib.de import DemocracyEngineAPIClient
+
+class DEAPITestCase(TestCase):
+	def test_format_decimal(self):
+		from decimal import Decimal
+		f = DemocracyEngineAPIClient.format_decimal
+		self.assertEqual(f(Decimal('0')), '$0.00')
+		self.assertEqual(f(Decimal('.1')), '$0.10')
+		self.assertEqual(f(Decimal('.01')), '$0.01')
+		self.assertEqual(f(Decimal('.001')), '$0.00') # rounds
+		self.assertEqual(f(Decimal('.006')), '$0.01') # rounds
+		self.assertEqual(f(Decimal('123')), '$123.00')
+		self.assertEqual(f(Decimal('1234')), '$1234.00')
 
 def create_trigger(trigger_type, key, title):
 	from django.template.defaultfilters import slugify
