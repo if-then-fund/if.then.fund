@@ -88,6 +88,9 @@ class DemocracyEngineAPIClient(object):
 				pass # fall through to next
 
 			import sys
+			print(urlopen.__name__.upper(), url)
+			if payload: print(payload)
+			print()
 			print(r.content, file=sys.stderr)
 			raise IOError("DemocrayEngine API failed: %d %s" % (r.status_code, url))
 
