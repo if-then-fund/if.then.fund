@@ -1142,6 +1142,7 @@ class PledgeExecutionProblem(enum.Enum):
 	EmailUnconfirmed = 1 # email address on the pledge was not confirmed
 	FiltersExcludedAll = 2 # no recipient matched filters
 	TransactionFailed = 3 # problems making the donation in the DE api
+	Voided = 4 # after a successful transaction, user asked us to void it
 
 class PledgeExecution(models.Model):
 	"""How a user's pledge was executed. Each pledge has a single PledgeExecution when the Trigger is executed, and immediately many Contribution objects are created."""
@@ -1164,9 +1165,15 @@ class PledgeExecution(models.Model):
 		return str(self.pledge)
 
 	@transaction.atomic
-	def delete(self, allow_credit=False):
-		# Delete the contributions explicitly so that .delete() gets called (by our manager).
-		self.contributions.all().delete()
+	def delete(self, really=False):
+		# We don't delete PledgeExecutions because they are transactional
+		# records. And open Pledges will get executed again automatically,
+		# so we can't simply void an execution by deleting this record.
+		if not really:
+			raise ValueError("Can't delete a PledgeExecution. (Set the 'really' flag internally.)")
+
+		# But maybe in debugging/testing we want to be able to delete
+		# a pledge execution, so....
 
 		# Return the Pledge to the open state so we can try to execute again.
 		self.pledge.status = PledgeStatus.Open
@@ -1175,24 +1182,10 @@ class PledgeExecution(models.Model):
 		# Decrement the TriggerExecution's pledge_count.
 		te = self.pledge.trigger.execution
 		te.pledge_count = models.F('pledge_count') - 1
-		if self.problem == PledgeExecutionProblem.NoProblem:
-			te.pledge_count_with_contribs = models.F('pledge_count_with_contribs') - 1
-		te.save(update_fields=['pledge_count', 'pledge_count_with_contribs'])
+		te.save(update_fields=['pledge_count'])
 
 		# Delete record.
 		super(PledgeExecution, self).delete()	
-
-		# Void or refund the transaction. There should be only one, but
-		# just in case get a list of all mentioned transactions for the
-		# donation. Do this last so that if the void succeeds no other
-		# error can follow. The execution may not have resulted in a
-		# transaction, so of course only do this if there was a donation
-		# record.
-		if self.extra['donation']:
-			txns = set(item['transaction_guid'] for item in self.extra['donation']['line_items'])
-			for txn in txns:
-				# Raises an exception on failure.
-				void_pledge_transaction(txn, allow_credit=allow_credit)
 
 	def show_txn(self):
 		import rtyaml
@@ -1212,6 +1205,54 @@ class PledgeExecution(models.Model):
 		if self.problem == PledgeExecutionProblem.FiltersExcludedAll:
 			return "Your contribution was not made because there were no %s that met your criteria of %s." \
 				% (self.pledge.trigger.trigger_type.strings['actors'], self.pledge.targets_summary)
+		if self.problem == PledgeExecutionProblem.Voided:
+			return "We cancelled your contribution per your request."
+
+	@transaction.atomic
+	def void(self):
+		# A user has asked us to void a transaction.
+
+		# Is there anything to void?
+		if self.problem != PledgeExecutionProblem.NoProblem:
+			raise ValueError("Can't void a pledge in state %s." % str(self.problem))
+		if not self.extra["donation"]: # sanity check
+			raise ValueError("Can't void a pledge that doesn't have an actual donation.")
+		
+		# Take care of database things first. Let any of these
+		# things fail before we call out to DE.
+
+		# Delete the contributions explicitly so that .delete() gets called (by our manager).
+		self.contributions.all().delete()
+
+		# Decrement the TriggerExecution's count of successful pledge executions
+		# (incremented only for NoProblem executions).
+		te = self.pledge.trigger.execution
+		te.pledge_count_with_contribs = models.F('pledge_count_with_contribs') - 1
+		te.save(update_fields=['pledge_count_with_contribs'])
+
+		# Change the status of this PledgeExecution.
+		de_don = self.extra['donation']
+		self.extra['voided_donation'] = self.extra['donation']
+		del self.extra['donation']
+		self.problem = PledgeExecutionProblem.Voided
+		self.save()
+
+		# Void or refund the transaction. There should be only one, but
+		# just in case get a list of all mentioned transactions for the
+		# donation. Do this last so that if the void succeeds no other
+		# error can follow.
+		void = []
+		txns = set(item['transaction_guid'] for item in de_don['line_items'])
+		for txn in txns:
+			# Raises an exception on failure.
+			ret = void_pledge_transaction(txn, allow_credit=True)
+			void.append(ret)
+
+		# Store void result.
+		self.extra['void'] = void
+		self.save()
+
+		return void
 
 	@transaction.atomic
 	def update_district(self, district, other):

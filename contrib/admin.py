@@ -3,6 +3,22 @@ from django.db import transaction
 
 from contrib.models import *
 
+def json_response(data):
+    from django.http import HttpResponse
+    import rtyaml
+    response = HttpResponse(content_type="application/json")
+    rtyaml.dump(data, response)
+    return response
+
+def no_delete_action(admin):
+    class MyClass(admin):
+        def get_actions(self, request):
+            actions = super(admin, self).get_actions(request)
+            if 'delete_selected' in actions:
+                del actions['delete_selected']
+            return actions
+    return MyClass
+
 class TriggerAdmin(admin.ModelAdmin):
     list_display = ['title', 'status', 'id', 'pledge_count', 'total_pledged', 'created']
     raw_id_fields = ['owner']
@@ -140,6 +156,7 @@ class PledgeAdmin(admin.ModelAdmin):
         return "/".join(str(x) for x in [obj.via, obj.campaign] if x)
     via_ext.short_description = "Campaign"
 
+@no_delete_action
 class CancelledPledgeAdmin(admin.ModelAdmin):
     list_display = ['created', 'user_or_email', 'trigger']
     readonly_fields = ['user', 'trigger']
@@ -148,16 +165,29 @@ class CancelledPledgeAdmin(admin.ModelAdmin):
         return obj.user if obj.user else obj.email
     user_or_email.short_description = 'User or Unverified Email'
 
+@no_delete_action
 class PledgeExecutionAdmin(admin.ModelAdmin):
     list_display = ['id', 'trigger', 'user_or_email', 'charged', 'created']
     readonly_fields = ['pledge', 'charged', 'fees']
     search_fields = ['id'] + ['pledge__'+f for f in PledgeAdmin.search_fields]
     def user_or_email(self, obj):
         p = obj.pledge
-        return p.user if p.user else p.email
+        return p.user if p.user else (p.email + " (?)")
     user_or_email.short_description = 'User/Email'
     def trigger(self, obj):
         return obj.pledge.trigger
+
+    actions = ['void']
+    def void(modeladmin, request, queryset):
+        # Void selected pledge executions. Collect return
+        # values and exceptions.
+        voids = []
+        for pe in queryset:
+            try:
+                voids.append([pe.id, str(pe), pe.void()])
+            except Exception as e:
+                voids.append([pe.id, str(pe), e])
+        return json_response(voids)
 
 class RecipientAdmin(admin.ModelAdmin):
     list_display = ['name', 'de_id', 'actor', 'office_sought', 'party']
@@ -167,6 +197,7 @@ class RecipientAdmin(admin.ModelAdmin):
     def name(self, obj):
         return str(obj)
 
+@no_delete_action
 class ContributionAdmin(admin.ModelAdmin):
     list_display = ['id', 'created', 'amount', 'recipient', 'user_or_email', 'trigger']
     readonly_fields = ['pledge_execution', 'action', 'recipient', 'amount'] # amount it readonly because a total is cached in the Action

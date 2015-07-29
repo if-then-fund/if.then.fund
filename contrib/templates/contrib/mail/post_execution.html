@@ -19,6 +19,10 @@
 <p>There was a problem charging your credit card.</p>
 {% endif %}
 
+{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.Voided' %}
+<p>You asked us to void this transaction.</p>
+{% endif %}
+
 <p>For more information, please head over to <a href="{{pledge.trigger.get_short_url}}">your contribution</a> for further details.</p>
 {% endif %}
 

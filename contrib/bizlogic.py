@@ -2,6 +2,7 @@ import decimal
 import rtyaml
 
 from django.conf import settings
+from django.utils.timezone import now
 
 from contrib.de import DemocracyEngineAPIClient, HumanReadableValidationError
 
@@ -288,28 +289,43 @@ def void_pledge_transaction(txn_guid, allow_credit=False):
 	# yet available.
 	txn = DemocracyEngineAPI.get_transaction(txn_guid)
 
+	# Prepare some return status information.
+	ret = {
+		"txn": txn,
+		"timestamp": now().isoformat(),
+	}
+
 	if txn['status'] in ("voided", "credited"):
 		# We are good.
-		return
+		return ret
 
 	if txn['status'] not in ("authorized", "captured"):
 		raise ValueError("Not sure what to do with a transaction with status %s." % txn['status'])
 
 	# Attempt void.
 	try:
-		DemocracyEngineAPI.void_transaction(txn_guid)
+		resp = DemocracyEngineAPI.void_transaction(txn_guid)
+		ret["action"] = "void"
 	except HumanReadableValidationError as e:
-		# Void failed. Try credit.
+		# Void failed.
+
+		# The transaction exists but is not captured yet, so
+		# we can't do anything.
+		if str(e) == "please wait until the transaction has captured before voiding or crediting":
+			raise
+
+		# Try credit.
+		ret["void_error"] = str(e)
 		try:
 			if not allow_credit:
 				raise
-			print(e) # Can we detect when we shouldn't attempt a credit.
-			DemocracyEngineAPI.credit_transaction(txn_guid)
-		except:
-			import sys, json
-			print(json.dumps(txn, indent=2), file=sys.stderr)
-			print("Tried first:", e, file=sys.stderr)
-			raise
+			resp = DemocracyEngineAPI.credit_transaction(txn_guid)
+			ret["action"] = "credit"
+		except Exception as e1:
+			raise ValueError("Could not void & credit transaction. Void: %s | Credit: %s"
+				% (str(e), str(e1)))
+
+	return ret
 
 class DummyDemocracyEngineAPI(object):
 	"""A stand-in for the DE API for unit tests."""
