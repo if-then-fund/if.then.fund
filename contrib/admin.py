@@ -4,10 +4,10 @@ from django.db import transaction
 from contrib.models import *
 
 class TriggerAdmin(admin.ModelAdmin):
-    list_display = ['id', 'created', 'status', 'slug', 'title', 'pledge_count', 'total_pledged']
+    list_display = ['title', 'status', 'id', 'pledge_count', 'total_pledged', 'created']
     raw_id_fields = ['owner']
     readonly_fields = ['pledge_count', 'total_pledged']
-    search_fields = ['title', 'description']
+    search_fields = ['id', 'title', 'description']
 
     def get_urls(self):
         from django.conf.urls import patterns
@@ -69,36 +69,41 @@ class TriggerAdmin(admin.ModelAdmin):
 
 class TriggerStatusUpdateAdmin(admin.ModelAdmin):
     readonly_fields = ['trigger']
+    search_fields = ['id', 'trigger__id']
 
 class TriggerRecommendationAdmin(admin.ModelAdmin):
     raw_id_fields = ['trigger1', 'trigger2']
     readonly_fields = ['notifications_created']
     list_display = ['id', 'trigger1', 'trigger2', 'symmetric', 'notifications_created']
     actions = ['create_initial_notifications']
+    search_fields = ['id', 'trigger1__id', 'trigger2__id']
     def create_initial_notifications(modeladmin, request, queryset):
         for tr in queryset.filter(notifications_created=False):
             tr.create_initial_notifications()
 
 class TriggerCustomizationAdmin(admin.ModelAdmin):
-    list_display = ['owner', 'trigger', 'title']
+    list_display = ['id', 'owner', 'trigger', 'title', 'created']
     raw_id_fields = ['trigger', 'owner']
     readonly_fields = ['pledge_count', 'total_pledged']
+    search_fields = ['id', 'owner__id', 'owner__name', 'title'] + ['trigger__'+f for f in TriggerAdmin.search_fields]
 
 class TriggerExecutionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'created', 'trigger', 'pledge_count_', 'total_contributions']
+    list_display = ['id', 'trigger', 'pledge_count_', 'total_contributions', 'created']
     readonly_fields = ['trigger', 'pledge_count', 'pledge_count_with_contribs', 'num_contributions', 'total_contributions']
+    search_fields = ['id'] + ['trigger__'+f for f in TriggerAdmin.search_fields]
     def pledge_count_(self, obj):
         return "%d/%d" % (obj.pledge_count, obj.pledge_count_with_contribs)
     pledge_count_.short_description = "pledges (exct'd/contrib'd)"
 
 class ActorAdmin(admin.ModelAdmin):
-    list_display = ['name_long', 'party', 'govtrack_id', 'challenger']
+    list_display = ['name_long', 'party', 'govtrack_id', 'challenger', 'id']
     raw_id_fields = ['challenger']
-    search_fields = ['name_long', 'govtrack_id']
+    search_fields = ['id', 'name_long', 'govtrack_id', 'challenger__id', 'challenger__office_sought']
 
 class ActionAdmin(admin.ModelAdmin):
     list_display = ['id', 'created', 'trigger', 'name', 'outcome_', 'total_contributions_for', 'total_contributions_against']
     readonly_fields = ['execution', 'actor', 'challenger', 'total_contributions_for', 'total_contributions_against']
+    search_fields = ['id'] + ['execution__trigger__'+f for f in TriggerAdmin.search_fields] + ['actor__'+f for f in ActorAdmin.search_fields]
     def created(self, obj):
         return obj.execution.created
     def trigger(self, obj):
@@ -110,9 +115,10 @@ class ActionAdmin(admin.ModelAdmin):
     outcome_.short_description = "Outcome"
 
 class ContributorInfoAdmin(admin.ModelAdmin):
-    list_display = ['name', 'address', 'cclastfour', 'created', 'pledge_count']
+    list_display = ['name', 'address', 'cclastfour', 'pledge_count', 'id', 'created']
     readonly_fields = ['cclastfour', 'extra_']
     fields = readonly_fields
+    search_fields = ['id', 'extra', 'cclastfour']
     def pledge_count(self, obj):
         return obj.pledges.count()
     def extra_(self, obj):
@@ -122,8 +128,11 @@ class ContributorInfoAdmin(admin.ModelAdmin):
     extra_.name = "Extra"
 
 class PledgeAdmin(admin.ModelAdmin):
-    list_display = ['id', 'status', 'trigger', 'user_or_email', 'amount', 'created', 'via_ext']
-    readonly_fields = ['user', 'trigger', 'profile', 'amount', 'algorithm'] # amount is read-only because a total is cached in the Trigger
+    list_display = ['id', 'status', 'trigger', 'user_or_email', 'amount', 'via_ext', 'created']
+    readonly_fields = ['user', 'email', 'trigger', 'profile', 'amount', 'algorithm'] # amount is read-only because a total is cached in the Trigger
+    search_fields = ['id', 'user__email', 'email'] \
+      + ['trigger__'+f for f in TriggerAdmin.search_fields] \
+      + ['profile__'+f for f in ContributorInfoAdmin.search_fields]
     def user_or_email(self, obj):
         return obj.user if obj.user else (obj.email + " (?)")
     user_or_email.short_description = 'User or Unverified Email'
@@ -134,13 +143,15 @@ class PledgeAdmin(admin.ModelAdmin):
 class CancelledPledgeAdmin(admin.ModelAdmin):
     list_display = ['created', 'user_or_email', 'trigger']
     readonly_fields = ['user', 'trigger']
+    search_fields = ['user__email', 'email'] + ['trigger__'+f for f in TriggerAdmin.search_fields]
     def user_or_email(self, obj):
         return obj.user if obj.user else obj.email
     user_or_email.short_description = 'User or Unverified Email'
 
 class PledgeExecutionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'created', 'trigger', 'user_or_email', 'charged']
+    list_display = ['id', 'trigger', 'user_or_email', 'charged', 'created']
     readonly_fields = ['pledge', 'charged', 'fees']
+    search_fields = ['id'] + ['pledge__'+f for f in PledgeAdmin.search_fields]
     def user_or_email(self, obj):
         p = obj.pledge
         return p.user if p.user else p.email
@@ -151,6 +162,8 @@ class PledgeExecutionAdmin(admin.ModelAdmin):
 class RecipientAdmin(admin.ModelAdmin):
     list_display = ['name', 'de_id', 'actor', 'office_sought', 'party']
     raw_id_fields = ['actor']
+    search_fields = ['id', 'de_id', 'office_sought'] \
+        + ['actor__'+f for f in ActorAdmin.search_fields]
     def name(self, obj):
         return str(obj)
 
@@ -158,6 +171,9 @@ class ContributionAdmin(admin.ModelAdmin):
     list_display = ['id', 'created', 'amount', 'recipient', 'user_or_email', 'trigger']
     readonly_fields = ['pledge_execution', 'action', 'recipient', 'amount'] # amount it readonly because a total is cached in the Action
     exclude = ['refunded_time']
+    search_fields = ['id'] \
+        + ['pledge_execution__'+f for f in PledgeExecutionAdmin.search_fields] \
+        + ['recipient__'+f for f in RecipientAdmin.search_fields]
     def created(self, obj):
         return obj.pledge_execution.created
     def user_or_email(self, obj):
