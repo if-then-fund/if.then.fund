@@ -72,7 +72,7 @@ DATABASES = {
 }
 if environment.get('db'):
 	DATABASES['default'].update(environment['db'])
-	CONN_MAX_AGE = 60
+	DATABASES['default']['CONN_MAX_AGE'] = 60
 
 CACHES = {
     'default': {
