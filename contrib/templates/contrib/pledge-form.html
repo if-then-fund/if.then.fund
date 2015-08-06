@@ -111,7 +111,7 @@
 
   {% else %}
     {# This is on a customized trigger page with a restricted outcome. #}
-    <p style="margin-bottom: 1em">Schedule a campaign contribution to {{trigger.trigger_type.strings.actors}} who {{trigger.trigger_type.strings.action_vb_inf}} {{tcust.get_outcome_description}}?</p>
+    <p style="margin-bottom: 1em">Schedule a campaign contribution to {{trigger.trigger_type.strings.actors}} who {{trigger.trigger_type.strings.action_vb_inf}} {% firstof tcust.get_outcome.object tcust.get_outcome.label %}?</p>
     <button class="btn btn-lg btn-success" onclick="pledge_go(this)" data-index="{{tcust.outcome}}">
       <span>Begin &raquo;</span>
     </button>
@@ -612,7 +612,7 @@ function pledge_go(outcome_elem) {
 
   var trigger_outcomes = [
     {% for outcome in trigger.outcomes %}
-      "{{outcome.label|escapejs}}{% if outcome.tip %} ({{outcome.tip|escapejs}}){% endif %}"{% if not forloop.last %}, {% endif %}
+      "{% if outcome.object %}{{outcome.object|escapejs}}{% else %}{{outcome.label|escapejs}}{% endif %}"{% if not forloop.last %}, {% endif %}
     {% endfor %}
   ];
 

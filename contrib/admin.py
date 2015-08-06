@@ -44,8 +44,10 @@ class TriggerAdmin(admin.ModelAdmin):
             bill_type = forms.ChoiceField(label='Bill Type', choices=(('hr', 'H.R.'),('s', 'S.'),('hjres', 'H.J.Res.')))
             bill_number = forms.IntegerField(label='Bill Number', min_value=1, max_value=9999)
             vote_chamber = forms.ChoiceField(label='Vote in chamber', choices=(('x', 'Whichever Votes First'), ('h', 'House'), ('s', 'Senate')))
-            pro_tip = forms.CharField(label='Pro Tip', help_text="e.g. 'Pro-Environment'")
-            con_tip = forms.CharField(label='Con Tip', help_text="e.g. 'Pro-Environment'")
+            pro_label = forms.CharField(label='Pro Label', help_text="e.g. 'Pro-Environment'")
+            pro_object = forms.CharField(label='Pro Description', help_text="e.g. 'to defend the environment'")
+            con_label = forms.CharField(label='Con Label', help_text="e.g. 'Pro-Environment'")
+            con_object = forms.CharField(label='Con Description', help_text="e.g. 'to defend the environment'")
             vote_url = forms.URLField(required=False, label="Vote URL", help_text="Optional. If the vote has already occurred, paste a link to the GovTrack.us page with roll call vote details.")
         
         if request.method == "POST":
@@ -63,8 +65,12 @@ class TriggerAdmin(admin.ModelAdmin):
 
                         # Set tips.
                         for outcome in t.outcomes:
-                            if outcome['vote_key'] == "+": outcome['tip'] = form.cleaned_data['pro_tip']
-                            if outcome['vote_key'] == "-": outcome['tip'] = form.cleaned_data['con_tip']
+                            # move our default label to the tip
+                            outcome['tip'] = outcome['label']
+
+                            # bring in user values
+                            outcome['label'] = form.cleaned_data[('pro' if outcome['vote_key'] == "+" else 'con') + '_label']
+                            outcome['object'] = form.cleaned_data[('pro' if outcome['vote_key'] == "+" else 'con') + '_object']
                         t.save()
 
                         # If a vote URL is given, execute it immediately.

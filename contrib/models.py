@@ -366,13 +366,9 @@ class TriggerCustomization(models.Model):
 	def has_fixed_outcome(self):
 		return self.outcome is not None
 
-	def get_outcome_description(self):
+	def get_outcome(self):
 		if self.outcome is None: raise ValueError()
-		outcome = self.trigger.outcomes[self.outcome]
-		descr = outcome['label']
-		if 'tip' in outcome:
-			descr += " (%s)" % outcome['tip']
-		return descr
+		return self.trigger.outcomes[self.outcome]
 
 class TriggerExecution(models.Model):
 	"""How a Trigger was executed."""
@@ -755,16 +751,6 @@ class Pledge(models.Model):
 			return self.email
 
 	@property
-	def desired_outcome_label(self):
-		return self.trigger.outcomes[self.desired_outcome]["label"]
-
-	@property
-	def antidesired_outcome_label(self):
-		if len(self.trigger.outcomes) != 2:
-			raise ValueError("Trigger has more than two options.")
-		return self.trigger.outcomes[1 - self.desired_outcome]["label"]
-
-	@property
 	def get_nice_status(self):
 		if self.status != PledgeStatus.Executed:
 			return self.status.name
@@ -777,8 +763,13 @@ class Pledge(models.Model):
 	def targets_summary(self):
 		# This is mirrored in pledge_form.html.
 
-		desired_outcome_label = self.desired_outcome_label
-		antidesired_outcome_label = self.antidesired_outcome_label
+		def outcome_label(outcome):
+			x = self.trigger.outcomes[outcome]
+			return x.get("object", x["label"])
+		desired_outcome_label = outcome_label(self.desired_outcome)
+		if len(self.trigger.outcomes) != 2:
+			raise ValueError("Trigger has more than two options.")
+		antidesired_outcome_label = outcome_label(1 - self.desired_outcome)
 
 		party_filter = ""
 		if self.filter_party is not None:
