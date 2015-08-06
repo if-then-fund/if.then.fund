@@ -310,7 +310,7 @@ h1 {
 
 		<hr>
 		<small>
-			<p>This page was added to <span class="site-brand">if.then.fund</span> on {{T.created|date}}.</p>
+			<p>This page was added to <span class="site-brand">if.then.fund</span> {% if tcust %}by <a href="{{tcust.owner.get_absolute_url}}">{{tcust.owner.name}}</a>{% endif %} on {{T.created|date}}.</p>
 			{% if trigger.execution %}<p>The {{trigger.trigger_type.strings.action_noun}} occurred on {{trigger.execution.action_time|date}}. Contributions began to be processed on {{trigger.execution.created|date}}.</p>{% endif %}
 			{% if execution %}<p>The most recent contribution was processed on {{trigger.execution.most_recent_pledge_execution.created|date}}.</p>{% endif %}
 
