@@ -102,7 +102,7 @@
 
   <div id="pledge-outcomes">
   {% if not tcust.has_fixed_outcome %}
-    {% for outcome in trigger.outcomes %}
+    {% for outcome in T.outcome_strings %}
       <button class="btn btn-lg btn-success" onclick="pledge_go(this)" data-index="{{forloop.counter0}}">
         <span>{{outcome.label}}</span>
         {% if outcome.tip %}<small>{{outcome.tip}}</small>{% endif %}
@@ -113,7 +113,7 @@
     {# This is on a customized trigger page with a restricted outcome. #}
     <p style="margin-bottom: 1em">Schedule a campaign contribution to {{trigger.trigger_type.strings.actors}} who {{trigger.trigger_type.strings.action_vb_inf}} {% firstof tcust.get_outcome.object tcust.get_outcome.label %}?</p>
     <button class="btn btn-lg btn-success" onclick="pledge_go(this)" data-index="{{tcust.outcome}}">
-      <span>Begin &raquo;</span>
+      <span>{% firstof tcust.get_outcome.cta tcust.get_outcome.label %} &raquo;</span>
     </button>
   {% endif %}
   </div>
@@ -611,7 +611,7 @@ function pledge_go(outcome_elem) {
   // who to give to.
 
   var trigger_outcomes = [
-    {% for outcome in trigger.outcomes %}
+    {% for outcome in T.outcome_strings %}
       "{% if outcome.object %}{{outcome.object|escapejs}}{% else %}{{outcome.label|escapejs}}{% endif %}"{% if not forloop.last %}, {% endif %}
     {% endfor %}
   ];

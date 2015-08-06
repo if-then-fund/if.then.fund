@@ -117,6 +117,9 @@ class Trigger(models.Model):
 			# If the trigger has been executed, then use the past tense.
 			return self.trigger_type.strings['action_vb_past']
 
+	def outcome_strings(self):
+		# "overridden" by TriggerCustomizations
+		return self.outcomes
 
 	def get_minimum_pledge(self):
 		alg = Pledge.current_algorithm()
@@ -366,9 +369,15 @@ class TriggerCustomization(models.Model):
 	def has_fixed_outcome(self):
 		return self.outcome is not None
 
+	def outcome_strings(self):
+		if self.extra and self.extra.get('outcome_strings'):
+			return self.extra['outcome_strings']
+		else:
+			return self.trigger.outcome_strings
+
 	def get_outcome(self):
 		if self.outcome is None: raise ValueError()
-		return self.trigger.outcomes[self.outcome]
+		return self.outcome_strings()[self.outcome]
 
 class TriggerExecution(models.Model):
 	"""How a Trigger was executed."""
