@@ -16,3 +16,6 @@
 [submodule "lib/itf_vendor_static_resources"]
 	path = lib/itf_vendor_static_resources
 	url = https://github.com/if-then-fund/itf-vendor-static-resources
+[submodule "ext/django-good-settings"]
+	path = ext/django-good-settings
+	url = https://github.com/if-then-fund/django-good-settings
