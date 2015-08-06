@@ -1539,7 +1539,7 @@ class ContributionAggregate(models.Model):
 			import gc
 			pk = 0
 			last_pk = qs.order_by('-pk')[0].pk
-			queryset = qs.order_by('pk')
+			qs = qs.order_by('pk')
 			while pk < last_pk:
 				for row in qs.filter(pk__gt=pk)[:chunksize].iterator():
 					pk = row.pk
