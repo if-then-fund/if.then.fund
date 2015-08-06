@@ -41,7 +41,8 @@ function apt_install {
 	fi
 }
 
-apt_install python3 python-virtualenv python3-pip python3-dnspython python3-yaml python3-lxml python3-dateutil
+apt_install python3 python-virtualenv python3-pip \
+	python3-dnspython python3-yaml python3-lxml python3-dateutil python3-pillow
 
 # DEPLOYED TO WEB ONLY
 if [ "$1" == "--deployed" ]; then
