@@ -373,7 +373,7 @@ class TriggerCustomization(models.Model):
 		if self.extra and self.extra.get('outcome_strings'):
 			return self.extra['outcome_strings']
 		else:
-			return self.trigger.outcome_strings
+			return self.trigger.outcome_strings()
 
 	def get_outcome(self):
 		if self.outcome is None: raise ValueError()
