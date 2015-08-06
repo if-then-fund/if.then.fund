@@ -62,9 +62,10 @@ class Organization(models.Model):
 		return "/%s/%d/%s" % (self.orgtype.slug(), self.id, self.slug)
 
 	def banner_image_url(self):
-		if self.banner_image is not None:
+		try:
 			return self.banner_image.url
-		else:
+		except ValueError:
+			# FieldFields raise a ValueError if the field isn't associated with a file
 			return self.get_absolute_url() + '/_banner'
 
 @django_enum
