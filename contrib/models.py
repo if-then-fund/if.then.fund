@@ -1528,10 +1528,23 @@ class ContributionAggregate(models.Model):
 	@staticmethod
 	@transaction.atomic
 	def rebuild():
+		# import tqdm if we have it for a nice console progress bar
 		try:
 			from tqdm import tqdm
 		except:
 			tqdm = lambda x : x
+
+		# utility function to page through objects
+		def iterate(qs, chunksize=5000):
+			import gc
+			pk = 0
+			last_pk = qs.order_by('-pk')[0].pk
+			queryset = qs.order_by('pk')
+			while pk < last_pk:
+				for row in qs.filter(pk__gt=pk)[:chunksize].iterator():
+					pk = row.pk
+					yield row
+				gc.collect()
 
 		# Delete all ContributionAggregate objects.
 		ContributionAggregate.objects.all().delete()
@@ -1540,7 +1553,7 @@ class ContributionAggregate(models.Model):
 		updater = ContributionAggregate.Updater()
 
 		iter = Contribution.objects.all().select_related('action__execution', 'pledge_execution__pledge__via', 'pledge_execution__pledge', 'action', 'action__actor', 'recipient', 'pledge_execution')
-		for c in tqdm(iter.iterator(), total=Contribution.objects.count()):
+		for c in tqdm(iterate(iter), total=Contribution.objects.count()):
 			c.update_contributionaggregates(updater=updater)
 
 		updater.sync()
