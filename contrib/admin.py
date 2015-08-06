@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.db import transaction
+from django.conf import settings
 
 from contrib.models import *
 
@@ -177,7 +178,8 @@ class PledgeExecutionAdmin(admin.ModelAdmin):
     def trigger(self, obj):
         return obj.pledge.trigger
 
-    actions = ['void']
+    # remove the Delete action
+    actions = ['void'] + (['expunge_record'] if settings.DEBUG else [])
     def void(modeladmin, request, queryset):
         # Void selected pledge executions. Collect return
         # values and exceptions.
@@ -188,6 +190,10 @@ class PledgeExecutionAdmin(admin.ModelAdmin):
             except Exception as e:
                 voids.append([pe.id, str(pe), e])
         return json_response(voids)
+    def expunge_record(modeladmin, request, queryset):
+        # For debugging only, actually delete records.
+        for pe in queryset:
+            pe.delete(really=True, with_void=False)
 
 class RecipientAdmin(admin.ModelAdmin):
     list_display = ['name', 'de_id', 'actor', 'office_sought', 'party']

@@ -1165,7 +1165,7 @@ class PledgeExecution(models.Model):
 		return str(self.pledge)
 
 	@transaction.atomic
-	def delete(self, really=False):
+	def delete(self, really=False, with_void=True):
 		# We don't delete PledgeExecutions because they are transactional
 		# records. And open Pledges will get executed again automatically,
 		# so we can't simply void an execution by deleting this record.
@@ -1174,6 +1174,10 @@ class PledgeExecution(models.Model):
 
 		# But maybe in debugging/testing we want to be able to delete
 		# a pledge execution, so....
+
+		# Void this PledgeExecution, if needed.
+		if self.problem == PledgeExecutionProblem.NoProblem:
+			self.void(with_void=with_void)
 
 		# Return the Pledge to the open state so we can try to execute again.
 		self.pledge.status = PledgeStatus.Open
@@ -1209,7 +1213,7 @@ class PledgeExecution(models.Model):
 			return "We cancelled your contribution per your request."
 
 	@transaction.atomic
-	def void(self):
+	def void(self, with_void=True):
 		# A user has asked us to void a transaction.
 
 		# Is there anything to void?
@@ -1236,6 +1240,11 @@ class PledgeExecution(models.Model):
 		del self.extra['donation']
 		self.problem = PledgeExecutionProblem.Voided
 		self.save()
+
+		# In debugging, we don't bother calling Democracy Engine to void
+		# the transaction. It might fail if the record is very old.
+		if not with_void:
+			return
 
 		# Void or refund the transaction. There should be only one, but
 		# just in case get a list of all mentioned transactions for the
