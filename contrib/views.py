@@ -84,7 +84,7 @@ def trigger(request, id, trigger_customization_id=None):
 
 		# Get the Actions/Actors and the total disbursed for each action
 		# to the incumbent or challenger.
-		actions = { a.id:
+		actions = { a.actor:
 			{
 				"action": a,
 				"actor": a.actor,
@@ -96,8 +96,8 @@ def trigger(request, id, trigger_customization_id=None):
 			for a in te.actions.all().select_related('actor') }
 
 		# Pull in aggregates.
-		for agg in ContributionAggregate.get_slices('action', 'incumbent', trigger_execution=te, via=tcust):
-			actions[agg['action']]["total_for" if agg['incumbent'] else "total_against"] = agg['total']
+		for agg in ContributionAggregate.get_slices('actor', 'incumbent', trigger_execution=te, via=tcust):
+			actions[agg['actor']]["total_for" if agg['incumbent'] else "total_against"] = agg['total']
 
 		# Sort with actors that received no contributions either for or against at
 		# the end of the list, since they're sort of no-data rows. After that, sort by the sum of

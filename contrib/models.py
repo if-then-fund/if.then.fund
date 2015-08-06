@@ -1378,25 +1378,29 @@ class Contribution(models.Model):
 		# Increment the cached ContributionAggregates that this Contribution
 		# gets aggregated in, in the order of the CONTRIBUTION_AGGREGATE_FIELDS array.
 		if updater is None: updater = ContributionAggregate.Updater(buffered=False)
-		from itertools import product
-		for fields in product(
-				[None, self.action.execution], # trigger_execution
-				set([None, self.pledge_execution.pledge.via]), # via (but exclude the 'None' via)
-				(None, self.pledge_execution.pledge.desired_outcome), # outcome
-				(None, self.action), # action
-				(None, self.action.actor), # actor
-				(None, not self.recipient.is_challenger), # incumbent
-				(None, self.action.party if not self.recipient.is_challenger else self.recipient.party), # party
-				set([None, self.pledge_execution.district]), # district (but excludes the 'None' district)
-			):
-			if len([x for x in fields[2:] if x is not None]) > 2: continue # we won't allow slicing at arbirary depth because making all of these slices ahead of time is exponentially expensive --- see the tests too
-			updater.add(fields, 1*factor, self.amount*factor)
+
+		def update(**fields):
+			d = tuple([ fields.get(k) for k in CONTRIBUTION_AGGREGATE_FIELDS ])
+			updater.add(d, 1*factor, self.amount*factor)
+
+		for kw in [
+			{},
+			{ "trigger_execution": self.action.execution },
+			{ "trigger_execution": self.action.execution, "via": self.pledge_execution.pledge.via },
+		]:
+			if None in kw.values(): continue # no 'via', don't duplicate
+			update(**kw)
+			update(outcome=self.pledge_execution.pledge.desired_outcome, **kw)
+			update(actor=self.action.actor, incumbent=not self.recipient.is_challenger, **kw)
+			update(incumbent=not self.recipient.is_challenger, **kw)
+			update(party=self.action.party if not self.recipient.is_challenger else self.recipient.party, **kw)
+
+
 
 CONTRIBUTION_AGGREGATE_FIELDS = (
 	'trigger_execution',
 	'via',
 	'outcome',
-	'action',
 	'actor',
 	'incumbent',
 	'party',
@@ -1410,7 +1414,6 @@ class ContributionAggregate(models.Model):
 	trigger_execution = models.ForeignKey(TriggerExecution, blank=True, null=True, related_name='contribution_aggregates', on_delete=models.CASCADE, help_text="The TriggerExecution that these cached statistics are about.")
 	via = models.ForeignKey(TriggerCustomization, blank=True, null=True, on_delete=models.CASCADE, help_text="The TriggerCustomization that the Pledges were made via.")
 	outcome = models.IntegerField(blank=True, null=True, help_text="The outcome index that was taken. Null if the slice encompasses all outcomes.")
-	action = models.ForeignKey(Action, blank=True, null=True, on_delete=models.CASCADE, help_text="The Action that the contribution was made about.")
 	actor = models.ForeignKey(Actor, blank=True, null=True, on_delete=models.CASCADE, help_text="The Actor who caused the Action that the contribution was made about. The contribution may have gone to an opponent.")
 	incumbent = models.NullBooleanField(blank=True, null=True, help_text="Whether the contribution was to the Actor (True) or the Actor's challenger (False).")
 	party = EnumField(ActorParty, blank=True, null=True, help_text="The party of the Recipient.")
