@@ -14,6 +14,7 @@ INSTALLED_APPS += [
 	'email_confirm_la',
 	'bootstrapform',
 	'htmlemailer',
+	'dbstorage',
 ]
 
 TEMPLATE_CONTEXT_PROCESSORS += [
@@ -21,6 +22,8 @@ TEMPLATE_CONTEXT_PROCESSORS += [
 ]
 
 AUTHENTICATION_BACKENDS += ['itfsite.betteruser.DirectLoginBackend']
+
+DEFAULT_FILE_STORAGE = 'dbstorage.storage.DatabaseStorage'
 
 # Local site settings.
 

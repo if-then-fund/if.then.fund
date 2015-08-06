@@ -75,10 +75,8 @@ h1 {
 {% if tcust %}
 <div class="row">
 	<a href="{{tcust.owner.get_absolute_url}}">
-		<div class="organization-banner" style="background-image: url({{tcust.owner.get_absolute_url}}/_banner?width=768); margin: -20px 0 0 0">
-			<div>
-				{{tcust.owner.name}}
-			</div>
+		<div class="organization-banner" style="background-image: url({{tcust.owner.banner_image_url}}?width=768); margin: -20px 0 25px 0; padding: 70px 15px 30px 15px;">
+			{{tcust.owner.name}}
 		</div>
 	</a>
 </div>

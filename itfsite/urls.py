@@ -19,6 +19,8 @@ urlpatterns = patterns('',
 	url(r'^accounts/_dismiss-notifications$', 'itfsite.views.dismiss_notifications'),
 	url(r'^accounts/_email_settings$', 'itfsite.views.set_email_settings'),
 
+	url(r'^user-media', include('dbstorage.urls')),
+
 	url(r'^admin/', include(admin.site.urls)),
 
 	url(r'^_twostream', include('twostream.urls')),

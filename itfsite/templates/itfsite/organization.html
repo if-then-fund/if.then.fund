@@ -12,7 +12,8 @@
 #page-banner {
 	position: relative; /* allow abs positioning of the h1 */
 	height: 300px;
-	background-image: url({{org.get_absolute_url}}/_banner?width=1200);
+	background-image: url({{org.banner_image_url}}?width=1200);
+	margin-bottom: 25px;
 }
 
 #page-banner > div {
@@ -24,14 +25,19 @@ h1 {
 	margin: 0;
 }
 
+
+#main-part h2:first-child {
+	margin-top: 0;
+}
+
 @media screen and (max-width: 768px) {
 	#page-banner {
-		background-image: url({{org.get_absolute_url}}/_banner?width=768);
+		background-image: url({{org.banner_image_url}}?width=768);
 	}
 }
 @media screen and (max-width: 640px) {
 	#page-banner {
-		background-image: url({{org.get_absolute_url}}/_banner?width=640);
+		background-image: url({{org.banner_image_url}}?width=640);
 		height: 200px;
 	}
 	h1 {
@@ -67,7 +73,7 @@ h1 {
 		  </div>
 		</div>
 	</div>
-	<div class="col-sm-9">
+	<div id="main-part" class="col-sm-9">
 		{% for tc in triggers %}
 			<h2><a href="{{tc.get_absolute_url}}">{{tc.title}}</a></h2>
 			{{tc.description|render_text:tc.description_format}}

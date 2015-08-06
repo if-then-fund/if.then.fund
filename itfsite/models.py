@@ -47,6 +47,8 @@ class Organization(models.Model):
 	description = models.TextField(help_text="Description text in the format given by description_format.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
+	banner_image = models.ImageField(upload_to='org-banner-image', blank=True, null=True, help_text="A raw image to display for this organization's banner image.")
+
 	website_url = models.URLField(max_length=256, blank=True, null=True, help_text="The URL to this organization's website.")
 	facebook_url = models.URLField(max_length=256, blank=True, null=True, help_text="The URL to this organization's Facebook Page.")
 	twitter_handle = models.CharField(max_length=64, blank=True, null=True, help_text="The organization's Twitter handle (omit the @-sign).")
@@ -58,6 +60,12 @@ class Organization(models.Model):
 
 	def get_absolute_url(self):
 		return "/%s/%d/%s" % (self.orgtype.slug(), self.id, self.slug)
+
+	def banner_image_url(self):
+		if self.banner_image is not None:
+			return self.banner_image.url
+		else:
+			return self.get_absolute_url() + '/_banner'
 
 @django_enum
 class NotificationType(enum.Enum):

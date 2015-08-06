@@ -19,3 +19,6 @@
 [submodule "ext/django-good-settings"]
 	path = ext/django-good-settings
 	url = https://github.com/if-then-fund/django-good-settings
+[submodule "ext/django-database-storage"]
+	path = ext/django-database-storage
+	url = https://github.com/if-then-fund/django-database-storage
