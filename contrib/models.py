@@ -776,7 +776,7 @@ class Pledge(models.Model):
 			party_filter = self.filter_party.name + " "
 
 		noun = self.trigger.trigger_type.strings['actors']
-		verb = self.trigger.trigger_type.strings['action_vb_inf' if self.status != PledgeStatus.Executed else "action_vb_past"]
+		verb = self.trigger.verb
 
 		if self.incumb_challgr == 1:
 			# "keep em in"
