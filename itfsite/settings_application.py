@@ -17,7 +17,9 @@ INSTALLED_APPS += [
 	'dbstorage',
 ]
 
-TEMPLATE_CONTEXT_PROCESSORS += [
+MIDDLEWARE_CLASSES += ['twostream.middleware.CacheLogic',]
+
+TEMPLATES[0]['OPTIONS']['context_processors'] += [
 	"itfsite.middleware.itfsite_template_context_processor",
 ]
 
