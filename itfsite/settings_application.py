@@ -44,7 +44,6 @@ EMAIL_CONFIRM_LA_CONFIRM_EXPIRE_SEC = 60 * 60 * 24 * 7  # 7 days (once it expire
 # Other local settings.
 
 SITE_MODE = environment.get("mode")
-SITE_ROOT_URL = EMAIL_CONFIRM_LA_HTTP_PROTOCOL + "://" + environment['host']
 DE_API = environment['democracyengine']
 CDYNE_API_KEY = environment['cdyne_key']
 FACEBOOK_ACCESS_TOKEN = environment['facebook_access_token']
