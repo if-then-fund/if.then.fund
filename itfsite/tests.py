@@ -98,7 +98,8 @@ class SimulationTest(StaticLiveServerTestCase):
 		return tcust
 
 	def _test_pledge_simple(self, t,
-			pledge_summary="You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 435 representatives, each getting a part of your contribution if they vote Yes on S. 1, but if they vote No on S. 1 their part of your contribution will go to their next general election opponent.",
+			verb="vote",
+			pledge_summary="You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 435 representatives, each getting a part of your contribution if they VERB in favor of S. 1, but if they VERB against S. 1 their part of your contribution will go to their next general election opponent.",
 			with_campaign=False,
 			break_after_email=False, return_from_incomplete_pledge=None,
 			break_before_confirmation=False,
@@ -198,8 +199,6 @@ class SimulationTest(StaticLiveServerTestCase):
 		m = re.search(r"We need to confirm your email address first. .*(http:\S*/ev/key/\S*/)", msg, re.S)
 		self.assertTrue(m)
 		conf_url = m.group(1)
-		#from email_confirm_la.models import EmailConfirmation
-		#conf_url = EmailConfirmation.objects.get(email=email, is_verified=False).get_confirmation_url()
 		self.assertTrue(conf_url.startswith(settings.SITE_ROOT_URL))
 		conf_url = conf_url.replace(settings.SITE_ROOT_URL + "/", "/")
 		self.browser.get(self.build_test_url(conf_url))
@@ -219,7 +218,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		# the user sees an explanation of the pledge.
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			pledge_summary)
+			pledge_summary.replace("VERB", verb))
 
 		return email, pw
 
@@ -250,7 +249,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		send_pledge_emails().handle()
 
 	def _test_pledge_simple_execution(self, t,
-		pledge_summary="You made a campaign contribution of $9.44 for this vote. It was split among 424 representatives, each getting a part of your contribution if they voted Yes on S. 1, but if they voted No on S. 1 their part of your contribution will go to their next general election opponent."):
+		pledge_summary="You made a campaign contribution of $9.44 for this vote. It was split among 424 representatives, each getting a part of your contribution if they voted in favor of S. 1, but if they voted against S. 1 their part of your contribution will go to their next general election opponent."):
 		# Reload the page.
 		self.browser.get(self.build_test_url(t.get_absolute_url()))
 		time.sleep(1)
@@ -318,7 +317,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		# the user sees an explanation of the pledge.
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote No on BILL, but if they vote Yes on BILL their part of your contribution will go to their next general election opponent.".replace("BILL", bill))
+			"You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote against BILL, but if they vote in favor of BILL their part of your contribution will go to their next general election opponent.".replace("BILL", bill))
 
 		if not logged_in:
 			# If the user wasn't logged in, and since we didn't log them in here,
@@ -333,7 +332,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		time.sleep(1)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You made a campaign contribution of $10.99 for this vote. It was split among 99 senators, each getting a part of your contribution if they voted No on BILL, but if they voted Yes on BILL their part of your contribution will go to their next general election opponent.".replace("BILL", bill))
+			"You made a campaign contribution of $10.99 for this vote. It was split among 99 senators, each getting a part of your contribution if they voted against BILL, but if they voted in favor of BILL their part of your contribution will go to their next general election opponent.".replace("BILL", bill))
 
 	def _test_pledge_returning_user(self, t, email, pw):
 		# User is logged out but has an account.
@@ -363,7 +362,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		# the user sees an explanation of the pledge.
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You have scheduled a campaign contribution of $5.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote No on H.R. 30, but if they vote Yes on H.R. 30 their part of your contribution will go to their next general election opponent.")
+			"You have scheduled a campaign contribution of $5.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote against H.R. 30, but if they vote in favor of H.R. 30 their part of your contribution will go to their next general election opponent.")
 
 		# Log out and try again --- this time it should report that a pledge has already been made.
 
@@ -484,7 +483,7 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		# Test the creation of a Pledge.
 		self.browser.get(self.build_test_url("/accounts/logout"))
-		email, pw = self._test_pledge_simple(t)
+		email, pw = self._test_pledge_simple(t, verb="voted")
 
 		# Execute it.
 		from contrib.management.commands.execute_pledges import Command as execute_pledges
@@ -497,7 +496,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Create a customized trigger.
 		t = self.create_test_trigger("s1-114", "h")
 		tcust = self.create_test_triggercustomization(t)
-		self._test_pledge_simple(t, via=tcust, pledge_summary="You have scheduled a campaign contribution of $12.00 for this vote. It will be split among the opponents in the next general election of representatives who vote No on S. 1.")
+		self._test_pledge_simple(t, via=tcust, pledge_summary="You have scheduled a campaign contribution of $12.00 for this vote. It will be split among the opponents in the next general election of representatives who vote against S. 1.")
 
 		# Execute it.
 		self._test_trigger_execution(t, 1, Decimal('12'), "https://www.govtrack.us/congress/votes/114-2015/h14")
@@ -505,4 +504,4 @@ class SimulationTest(StaticLiveServerTestCase):
 		execute_pledges().do_execute_pledges()
 
 		# Test that it appears executed on the site.
-		self._test_pledge_simple_execution(tcust, pledge_summary="You made a campaign contribution of $11.45 for this vote. It was split among the opponents in the next general election of representatives who voted No on S. 1.")
+		self._test_pledge_simple_execution(tcust, pledge_summary="You made a campaign contribution of $11.45 for this vote. It was split among the opponents in the next general election of representatives who voted against S. 1.")

@@ -69,7 +69,7 @@ def create_trigger_from_bill(bill_id, chamber):
 	short_title = bill["display_number"]
 	t.outcomes = [
 		{ "vote_key": "+", "label": "Yes on %s" % short_title, "object": "in favor of %s" % short_title },
-		{ "vote_key": "-", "label": "No on %s" % short_title, "object": "against of %s" % short_title },
+		{ "vote_key": "-", "label": "No on %s" % short_title, "object": "against %s" % short_title },
 	]
 
 	t.extra = {
