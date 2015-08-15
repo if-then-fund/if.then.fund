@@ -36,9 +36,6 @@ CONTACT_EMAIL = 'if.then.fund <hello@if.then.fund>'
 
 # 3rd party app settings.
 
-EMAIL_CONFIRM_LA_HTTP_PROTOCOL = 'https' if environment["https"] else 'http'
-EMAIL_CONFIRM_LA_DOMAIN = environment['host']
-EMAIL_CONFIRM_LA_SAVE_EMAIL_TO_INSTANCE = False
 EMAIL_CONFIRM_LA_CONFIRM_EXPIRE_SEC = 60 * 60 * 24 * 7  # 7 days (once it expires we can't retry)
 
 # Other local settings.

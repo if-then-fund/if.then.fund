@@ -829,58 +829,68 @@ class Pledge(models.Model):
 
 		from email_confirm_la.models import EmailConfirmation
 		if first_try:
-			# Make an EmailConfirmation object and send out the email.
-			ec = EmailConfirmation.objects.set_email_for_object(
-				email=self.email,
-				content_object=self,
-				mailer=mailer,
-			)
+			# Make an EmailConfirmation object.
+			ec = EmailConfirmation.create(self)
 		else:
-			# Get an existing EmailConfirmation object and re-send the email.
-			ec = EmailConfirmation.objects.get_for_object(
-				email=self.email,
-				content_object=self
-			)
-			ec.send(None, mailer=mailer)			
+			# Get an existing EmailConfirmation object.
+			ec = EmailConfirmation.get_for(self)
+		ec.send(mailer=mailer)			
 
 	def should_retry_email_confirmation(self):
 		from datetime import timedelta
 		from django.utils import timezone
 		from email_confirm_la.models import EmailConfirmation
 		try:
-			ec = EmailConfirmation.objects.get_for_object(
-				email=self.email,
-				content_object=self
-			)
+			ec = EmailConfirmation.get_for(self)
 		except EmailConfirmation.DoesNotExist as e:
 			# The record expired. No need to send again.
 			return False
 		if ec.send_count >= 3:
 			# Already sent three emails, stop.
 			return False
-		if ec.send_at < timezone.now() - timedelta(days=1):
+		if ec.sent_at < timezone.now() - timedelta(days=1):
 			# More than a day has passed since the last email, so send again.
 			return True
 		return False
 
+	# A user confirms an email address on an anonymous pledge.
 	@transaction.atomic
-	def confirm_email(self, user):
-		# Can't confirm twice, but this might be called twice. In order
-		# to prevent a race condition, use select_for_update which locks
-		# the row until the transaction ends.
-		pledge = Pledge.objects.select_for_update().filter(id=self.id).first()
-		if pledge.user: return False
+	def email_confirmation_confirmed(self, confirmation, request):
+		from django.contrib import messages
+
+		# Sanity check - has this pledge already been confirmed?
+		if self.user:
+			return
+
+		# Get or create a user account for this person.
+		from itfsite.accounts import User
+		user = User.get_or_create(confirmation.email)
+
+		# The user may have anonymously created a second Pledge for the same
+		# trigger. We can't tell them before they confirm their email that
+		# they already made a pledge. We can't confirm both --- warn the user
+		# and go on.
+		if self.trigger.pledges.filter(user=user).exists():
+			messages.add_message(request, messages.ERROR, 'You had a previous contribution already scheduled for the same thing. Your more recent contribution will be ignored.')
+			return
 
 		# Move the anonymous pledge to the user's account.
-		pledge.user = user
-		pledge.email = None
-		pledge.email_confirmed_at = timezone.now()
-		pledge.save()
+		self.user = user
+		self.email = None
+		self.email_confirmed_at = timezone.now()
+		self.save(update_fields=['user', 'email', 'email_confirmed_at'])
 
 		# Run steps that happen after a pledge is confirmed.
-		pledge.run_post_confirm_steps()
+		self.run_post_confirm_steps()
 
-		return True
+		# Let the user know what happened.
+		messages.add_message(request, messages.SUCCESS, 'Your contribution regarding %s has been confirmed.'
+			% self.trigger.title)
+
+	def email_confirmation_response_view(self, request):
+		# The user may be new, so take them to a welcome page.
+		from itfsite.accounts import first_time_confirmed_user
+		return first_time_confirmed_user(request, self.user, self.get_absolute_url())
 
 	def run_post_confirm_steps(self):
 		# Create new notifications for this user based on any recommendations
@@ -1040,6 +1050,7 @@ class Pledge(models.Model):
 				raise
 
 
+
 class CancelledPledge(models.Model):
 	"""Records when a user cancels a Pledge."""
 
@@ -1088,53 +1099,6 @@ class IncompletePledge(models.Model):
 		import urllib.parse
 		return self.trigger.get_absolute_url() \
 			+ "?" + urllib.parse.urlencode({ "utm_campaign": self.get_campaign_string() })
-
-# A user confirms an email address on an anonymous pledge.
-from email_confirm_la.signals import post_email_confirm
-@receiver(post_email_confirm)
-def post_email_confirm_callback(sender, confirmation, request=None, **kwargs):
-	from django.contrib import messages
-	from itfsite.accounts import first_time_confirmed_user
-
-	# The user making the request confirms that he owns an email address
-	# tied to a pledge.
-
-	pledge = confirmation.content_object
-	email = confirmation.email
-
-	# Get or create the user account.
-
-	from itfsite.accounts import User
-	user = User.get_or_create(email)
-
-	# The pledge might have already been cancelled! Well, create an
-	# account for the user, but when we redirect go to the homepage
-	# and say the pledge was cancelled.
-	if pledge is None:
-		messages.add_message(request, messages.ERROR, 'It looks like you canceled the contribution already, sorry.')
-		return first_time_confirmed_user(request, user, '/')
-
-	# The user may have anonymously created a second Pledge for the same
-	# trigger. We can't tell them before they confirm their email that
-	# they already made a pledge. We can't confirm both --- warn the user
-	# and go on.
-	# (Note: When checking, be sure to exclude the pledge itself from the
-	# test, since it may have already been confirmed.)
-	if pledge.trigger.pledges.filter(user=user)\
-		  .exclude(id=pledge.id if pledge is not None else None).exists():
-		messages.add_message(request, messages.ERROR, 'You had a previous contribution already scheduled for the same thing. Your more recent contribution will be ignored.')
-		return first_time_confirmed_user(request, user, pledge.trigger.get_absolute_url())
-
-	# Confirm the pledge. This signal may be called more than once, and
-	# confirm_email is okay with that. It returns True just on the first
-	# time (when the pledge is actually confirmed).
-	if pledge.confirm_email(user):
-		messages.add_message(request, messages.SUCCESS, 'Your contribution for %s has been confirmed.'
-			% pledge.trigger.title)
-
-	# The user may be new, so take them to a welcome page.
-	# pledge.user may not be set because confirm_email uses a clone for locking.
-	return first_time_confirmed_user(request, user, pledge.get_absolute_url())
 
 @django_enum
 class PledgeExecutionProblem(enum.Enum):
