@@ -121,7 +121,7 @@
   <form id="pledge-info" onsubmit="return false;" style="margin-top: 2em; display: none">
     
     <input type="hidden" name="trigger" value="{{trigger.id}}"/>
-    <input type="hidden" name="campaign" value="{{request.GET.utm_campaign}}"/>
+    <input type="hidden" name="ref_code" value="{{request.GET.utm_campaign}}"/>
     <input type="hidden" name="via" value="{% if tcust %}{{tcust.id}}{% else %}0{% endif %}"/>
     <input type="hidden" name="algorithm" value="{{alg.id}}"/>
     <input type="hidden" name="desired_outcome" value="?"/>
@@ -782,7 +782,7 @@ function do_pledge_login_next() {
         trigger: {{trigger.id}},
         via: {% if tcust %}{{tcust.id}}{% else %}0{% endif %},
         desired_outcome: $('#pledge-info input[name="desired_outcome"]').val(),
-        campaign: '{{request.GET.utm_campaign|escapejs}}',
+        ref_code: '{{request.GET.utm_campaign|escapejs}}',
         email: $('#emailEmail').val()
       },
       success: function(response) {

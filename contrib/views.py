@@ -323,7 +323,7 @@ def validate_email(request):
 			defaults={
 				"extra": {
 					"desired_outcome": request.POST['desired_outcome'],
-					"campaign": get_sanitized_campaign(request),
+					"ref_code": get_sanitized_ref_code(request),
 				}
 			})
 
@@ -340,12 +340,12 @@ def submit(request):
 	except HumanReadableValidationError as e:
 		return { "status": "error", "message": str(e) }
 
-def get_sanitized_campaign(request):
-	campaign = request.POST['campaign']
-	if campaign is not None:
-		if campaign.strip().lower() in ("", "none"):
-			campaign = None
-	return campaign
+def get_sanitized_ref_code(request):
+	ref_code = request.POST['ref_code']
+	if ref_code is not None:
+		if ref_code.strip().lower() in ("", "none"):
+			ref_code = None
+	return ref_code
 
 @transaction.atomic
 def update_pledge_profiles(pledges, new_profile):
@@ -379,8 +379,8 @@ def create_pledge(request):
 	p.trigger = Trigger.objects.get(id=request.POST['trigger'])
 	p.made_after_trigger_execution = (p.trigger.status == TriggerStatus.Executed)
 
-	# campaign (i.e. utf_campaigm) and TriggerCustomization ('via')
-	p.campaign = get_sanitized_campaign(request)
+	# ref_code (i.e. utm_campaign code) and TriggerCustomization ('via')
+	p.ref_code = get_sanitized_ref_code(request)
 	if request.POST['via'] != '0':
 		p.via = TriggerCustomization.objects.get(id=request.POST['via'])
 

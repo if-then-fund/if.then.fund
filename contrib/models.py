@@ -655,14 +655,14 @@ class Pledge(models.Model):
 	trigger = models.ForeignKey(Trigger, related_name="pledges", on_delete=models.PROTECT, help_text="The Trigger that this Pledge is for.")
 	profile = models.ForeignKey(ContributorInfo, related_name="pledges", on_delete=models.PROTECT, help_text="The contributor information (name, address, etc.) and billing information used for this Pledge. Immutable and cannot be changed after execution.")
 
-	campaign = models.CharField(max_length=24, blank=True, null=True, db_index=True, help_text="An optional string indicating a referral campaign that lead the user to take this action.")
+	ref_code = models.CharField(max_length=24, blank=True, null=True, db_index=True, help_text="An optional referral code that lead the user to take this action.")
 	via = models.ForeignKey(TriggerCustomization, blank=True, null=True, related_name="pledges", on_delete=models.PROTECT, help_text="The TriggerCustomization that this Pledge was made via.")
 
-	# When a Pledge is cancelled, the object is deleted. The three fields above
+	# When a Pledge is cancelled, the object is deleted. The trigger/via/user/email fields
 	# are archived, plus the fields listed in this list. The fields below must
 	# be JSON-serializable.
 	cancel_archive_fields = (
-		'created', 'updated', 'campaign',
+		'created', 'updated', 'ref_code',
 		'algorithm', 'desired_outcome', 'amount',
 		)
 
@@ -1087,18 +1087,18 @@ class IncompletePledge(models.Model):
 	sent_followup_at = models.DateTimeField(blank=True, null=True, db_index=True, help_text="If we've sent a follow-up email, the date and time we sent it.")
 	completed_pledge = models.ForeignKey(Pledge, blank=True, null=True, on_delete=models.CASCADE, help_text="If the user came back and finished a Pledge, that pledge.")
 
-	def get_campaign_string(self):
+	def get_utm_campaign_string(self):
 		# What campaign string do we attach to the URL?
 		campaign = 'itf_ip_%d' % self.id
-		if self.extra.get('campaign'):
-			campaign += ',' + self.extra.get('campaign')
+		if self.extra.get('ref_code'):
+			campaign += ',' + self.extra.get('ref_code')
 		return campaign
 
 	def get_return_url(self):
 		# Construct URL of the trigger with the utm_campaign query string argument.
 		import urllib.parse
 		return self.trigger.get_absolute_url() \
-			+ "?" + urllib.parse.urlencode({ "utm_campaign": self.get_campaign_string() })
+			+ "?" + urllib.parse.urlencode({ "utm_campaign": self.get_utm_campaign_string() })
 
 @django_enum
 class PledgeExecutionProblem(enum.Enum):

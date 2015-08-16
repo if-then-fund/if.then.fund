@@ -100,7 +100,7 @@ class SimulationTest(StaticLiveServerTestCase):
 	def _test_pledge_simple(self, t,
 			verb="vote",
 			pledge_summary="You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 435 representatives, each getting a part of your contribution if they VERB in favor of S. 1, but if they VERB against S. 1 their part of your contribution will go to their next general election opponent.",
-			with_campaign=False,
+			with_utm_campaign=False,
 			break_after_email=False, return_from_incomplete_pledge=None,
 			break_before_confirmation=False,
 			via=None,
@@ -112,15 +112,15 @@ class SimulationTest(StaticLiveServerTestCase):
 		url = t.get_absolute_url()
 		if via:
 			url = via.get_absolute_url()
-		campaign = None
-		if with_campaign:
-			campaign = "test_campaign_string"
-			url += "?utm_campaign=" + campaign
+		utm_campaign = None
+		if with_utm_campaign:
+			utm_campaign = "test_campaign_string"
+			url += "?utm_campaign=" + utm_campaign
 
 		# When testing an IncompletePledge, grab the return URL that it gives
 		# which includes a utm_campaign string.
 		if return_from_incomplete_pledge:
-			campaign = return_from_incomplete_pledge.get_campaign_string()
+			utm_campaign = return_from_incomplete_pledge.get_utm_campaign_string()
 			url = return_from_incomplete_pledge.get_return_url()
 			if via: raise ValueError()
 
@@ -154,8 +154,8 @@ class SimulationTest(StaticLiveServerTestCase):
 			# Don't check the IncompletePledge details when returning from an
 			# IncompletePledge  because the object will hold the information
 			# from the original request  that generated the IncompletePledge.
-			# The campaign may be different.
-			self.assertEqual(ip[0].extra['campaign'], campaign)
+			# The ref_code may be different.
+			self.assertEqual(ip[0].extra['ref_code'], utm_campaign)
 		if break_after_email:
 			return ip[0]
 
@@ -185,7 +185,7 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		# Get the pledge and check its fields.
 		p = t.pledges.get(email=email)
-		self.assertEqual(p.campaign, campaign)
+		self.assertEqual(p.ref_code, utm_campaign)
 		self.assertEqual(p.via, via)
 
 		# An email confirmation was sent.
@@ -443,17 +443,17 @@ class SimulationTest(StaticLiveServerTestCase):
 		self._test_pledge_with_defaults(t2, "Keystone XL", "S. 1", logged_in=False)
 		self.assertEqual(ContributorInfo.objects.count(), 1) # should not create 2nd profile
 
-	def test_pledge_campaign(self):
-		# Test the creation of a Pledge with a campaign string.
+	def test_pledge_with_utm_campaign(self):
+		# Test the creation of a Pledge with a utm_campaign string.
 		t = self.create_test_trigger("s1-114", "h")
-		email, pw = self._test_pledge_simple(t, with_campaign=True)
+		email, pw = self._test_pledge_simple(t, with_utm_campaign=True)
 
-	def test_incomplete_pledge(self, with_campaign=False):
+	def test_incomplete_pledge(self, with_utm_campaign=False):
 		# Create trigger.
 		t = self.create_test_trigger("s1-114", "h")
 
 		# Start a pledge but stop after entering email.
-		ip = self._test_pledge_simple(t, with_campaign=with_campaign, break_after_email=True)
+		ip = self._test_pledge_simple(t, with_utm_campaign=with_utm_campaign, break_after_email=True)
 
 		# Fake the passage of time so the reminder email gets sent.
 		ip.created -= timedelta(days=2)
@@ -470,8 +470,8 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Start a pledge again
 		self._test_pledge_simple(t, return_from_incomplete_pledge=ip)
 
-	def test_incomplete_pledge_with_campaign(self):
-		self.test_incomplete_pledge(with_campaign=True)
+	def test_incomplete_pledge_with_utm_campaign(self):
+		self.test_incomplete_pledge(with_utm_campaign=True)
 
 	def test_post_execution_pledge(self):
 		# Create the trigger, add a plege we don't care about, and execute it.

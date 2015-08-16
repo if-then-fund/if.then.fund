@@ -160,7 +160,7 @@ class PledgeAdmin(admin.ModelAdmin):
         return obj.user if obj.user else (obj.email + " (?)")
     user_or_email.short_description = 'User or Unverified Email'
     def via_ext(self, obj):
-        return "/".join(str(x) for x in [obj.via, obj.campaign] if x)
+        return "/".join(str(x) for x in [obj.via, obj.ref_code] if x)
     via_ext.short_description = "Campaign"
 
 @no_delete_action
