@@ -575,10 +575,14 @@ def create_pledge(request):
 def cancel_pledge(request):
 	# Get the pledge. Check authorization.
 	p = Pledge.objects.get(id=request.POST['pledge'])
-	if not (p.user == request.user or p.id in request.session.get('anon_pledge_created', [])):
-		raise Exception()
-	p.delete()
-	return { "status": "ok" }
+	if get_user_pledges(request.user, request).filter(id=p.id).exists():
+		try:
+			p.delete()
+		except Exception as e:
+			return { "status": "error", "message": "Could not cancel pledge: " + str(e) }
+		return { "status": "ok" }
+	else:
+		return { "status": "error", "message": "You don't own that pledge." }
 
 @anonymous_view
 def report(request):
