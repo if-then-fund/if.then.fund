@@ -99,38 +99,38 @@
 	margin-bottom: 1em;
 }
 
-.trigger-bubble {
+.campaign-bubble {
 	border-radius: 10px;
 	border: 2px solid rgba(30,30,30,.4);
 	background: white;
 	padding: 10px;
 	margin-bottom: 1em;
 }
-	.trigger-bubble a {
+	.campaign-bubble a {
 		color: #126712; /* meets contrast requirement on white bg */
 	}
-	.trigger-title {
+	.campaign-title {
 		padding-bottom: 6px;
 		border-bottom: 1px solid #494;
 		margin-bottom: 8px;
 		line-height: 132%;
 	}
-		.trigger-title a {
+		.campaign-title a {
 			font-size: 120%;
 			font-weight: bold;
 			border: none;
 		}
-	.trigger-description {
+	.campaign-description {
 		font-size: 90%;
 	}
-		.trigger-description p {
+		.campaign-description p {
 			line-height: 130%;
 		}
-	.trigger-take-action {
+	.campaign-take-action {
 		margin-top: .75em;
 		text-align: right;
 	}
-		.trigger-take-action a {
+		.campaign-take-action a {
 			font-weight: bold;
 			border: none;
 		}
@@ -152,21 +152,20 @@
 
 		<div id="homepage-body" class="container">
 			<div class="col-xs-12">
-				{% if open_triggers|length > 0 %}
-				<h2>In Congress now...</h2>
+				{% if open_campaigns|length > 0 %}
 				<div class="row">
-					{% for t in open_triggers %}
+					{% for c in open_campaigns %}
 						{% if forloop.counter0|divisibleby:2 %}<div class="clearfix visible-sm-block"></div>{% endif %}
 						{% if forloop.counter0|divisibleby:3 %}<div class="clearfix visible-md-block"></div><div class="clearfix visible-lg-block"></div>{% endif %}
 						<div class="col-sm-6 col-md-4">
-							<div class="trigger-bubble">
-								<div class="trigger-title"><a href="{{t.get_absolute_url}}">{{t.title}}</a></div>
-								<div class="trigger-description">
-									{{t.subhead|render_text:t.subhead_format|truncatewords_html:30}}
-									<p>{{t.total_pledged|currency}} committed so far.</p>
+							<div class="campaign-bubble">
+								<div class="campaign-title"><a href="{{c.get_absolute_url}}">{{c.title}}</a></div>
+								<div class="campaign-description">
+									<p>{% if c.owner %}{{c.owner.name}}{% endif %}</p>
+									{{c.subhead|render_text_plain:c.subhead_format|truncatewords:30}}
 								</div>
-								<div class="trigger-take-action">
-									<a href="{{t.get_absolute_url}}">Take Action &raquo;</a>
+								<div class="campaign-take-action">
+									<a href="{{c.get_absolute_url}}">Take Action &raquo;</a>
 								</div>
 							</div>
 						</div>
@@ -174,28 +173,6 @@
 				</div>
 				{% endif %}
 
-				{% if recent_executed_triggers|length > 0 %}
-				<hr>
-				<h2>Recently</h2>
-				<div class="row">
-					{% for t in recent_executed_triggers %}
-						<div class="col-sm-4 col-md-3">
-							<div class="trigger-bubble">
-								<div class="trigger-title"><a href="{{t.get_absolute_url}}">{{t.title}}</a></div>
-								<div class="trigger-description">
-									{{t.execution.description|render_text:t.execution.description_format|truncatewords_html:15}}
-									{% for outcome in t.execution.get_outcomes %}
-										<p>{{outcome.label}}: {{outcome.contribs|currency}}</p>
-									{% endfor %}</span>
-								</div>
-								<div class="trigger-take-action">
-									<a href="{{t.get_absolute_url}}">See Details &raquo;</a>
-								</div>
-							</div>
-						</div>
-					{% endfor %}
-				</div>
-				{% endif %}
 			</div>
 		</div>
 	</div>
@@ -209,7 +186,8 @@
 
 	</div>
 
-	{# outer div is closed in master.html #}
+	{# we leave two div's open in body-wide templates #}
+	<div>
 
 {% endblock %}
 

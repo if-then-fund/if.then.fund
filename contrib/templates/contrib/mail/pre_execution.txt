@@ -6,7 +6,7 @@ Your credit card will be charged ${{total_charge|floatformat:2}}.{% if total_cha
 
 If you no longer wish to make these contributions, please head over to the following address and cancel your pledge. You can cancel your contributions any time before {{until}}.
 
-{{pledge.trigger.get_short_url}}
+{{pledge.via_campaign.get_short_url}}
 
 Thanks!
 {% endblock %}

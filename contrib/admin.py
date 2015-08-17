@@ -105,9 +105,8 @@ class TriggerRecommendationAdmin(admin.ModelAdmin):
             tr.create_initial_notifications()
 
 class TriggerCustomizationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'owner', 'trigger', 'title', 'created']
+    list_display = ['id', 'owner', 'trigger', 'created']
     raw_id_fields = ['trigger', 'owner']
-    readonly_fields = ['pledge_count', 'total_pledged']
     search_fields = ['id', 'owner__id', 'owner__name', 'title'] + ['trigger__'+f for f in TriggerAdmin.search_fields]
 
 class TriggerExecutionAdmin(admin.ModelAdmin):
@@ -151,7 +150,7 @@ class ContributorInfoAdmin(admin.ModelAdmin):
     extra_.name = "Extra"
 
 class PledgeAdmin(admin.ModelAdmin):
-    list_display = ['id', 'status', 'trigger', 'user_or_email', 'amount', 'via_ext', 'created']
+    list_display = ['id', 'status', 'trigger', 'user_or_email', 'amount', 'campaign', 'created']
     readonly_fields = ['user', 'email', 'trigger', 'profile', 'amount', 'algorithm'] # amount is read-only because a total is cached in the Trigger
     search_fields = ['id', 'user__email', 'email'] \
       + ['trigger__'+f for f in TriggerAdmin.search_fields] \
@@ -159,9 +158,8 @@ class PledgeAdmin(admin.ModelAdmin):
     def user_or_email(self, obj):
         return obj.user if obj.user else (obj.email + " (?)")
     user_or_email.short_description = 'User or Unverified Email'
-    def via_ext(self, obj):
-        return "/".join(str(x) for x in [obj.via, obj.ref_code] if x)
-    via_ext.short_description = "Campaign"
+    def campaign(self, obj):
+        return "/".join(str(x) for x in [obj.via_campaign, obj.ref_code] if x)
 
 @no_delete_action
 class CancelledPledgeAdmin(admin.ModelAdmin):

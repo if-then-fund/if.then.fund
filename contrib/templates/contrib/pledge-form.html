@@ -70,17 +70,6 @@
   .input-table td input {
   }
 
-#pledge-info .panel-info .panel-heading {
-  font-size: 14px;
-}
-  #pledge-info .panel-info p {
-    font-size: 13px;
-    line-height: 130%;
-  }
-  #pledge-info .panel-info p:last-child {
-    margin:0;
-  }
-
 #make-pledge .buttons {
   margin-top: 1.5em;
 }
@@ -102,7 +91,7 @@
 
   <div id="pledge-outcomes">
   {% if not tcust.has_fixed_outcome %}
-    {% for outcome in T.outcome_strings %}
+    {% for outcome in trigger_outcome_strings %}
       <button class="btn btn-lg btn-success" onclick="pledge_go(this)" data-index="{{forloop.counter0}}">
         <span>{{outcome.label}}</span>
         {% if outcome.tip %}<small>{{outcome.tip}}</small>{% endif %}
@@ -122,7 +111,7 @@
     
     <input type="hidden" name="trigger" value="{{trigger.id}}"/>
     <input type="hidden" name="ref_code" value="{{request.GET.utm_campaign}}"/>
-    <input type="hidden" name="via" value="{% if tcust %}{{tcust.id}}{% else %}0{% endif %}"/>
+    <input type="hidden" name="via_campaign" value="{{campaign.id}}"/>
     <input type="hidden" name="algorithm" value="{{alg.id}}"/>
     <input type="hidden" name="desired_outcome" value="?"/>
     <input type="hidden" name="amount" value="?"/>
@@ -132,8 +121,8 @@
     <input type="hidden" name="billingCCExpYear" value="?"/>
     <input type="hidden" name="copyFromPledge" value=""/>
 
-    <div class="panel panel-success">
-      <div class="panel-body">
+    <div>
+      <div>
         <div id="pledge-start">
           <h3 style="margin-top: 0">Your position</h3>
 
@@ -419,8 +408,8 @@
           </div>
         </div> <!-- /pledge-payment -->
 
-      </div> <!-- /panel-body -->
-    </div> <!-- /panel -->
+      </div> <!-- nothing -->
+    </div> <!-- nothing -->
   </form>
 
 </div> <!-- /make-pledge -->
@@ -435,24 +424,21 @@ function pledge_init() {
   // logged in because we may have placed the pledge id into
   // the user's session. Replace the form and return since
   // everything else is about form validation.
-  if (the_page && the_page.pledge_made) {
-    $('#make-pledge').hide();
-    $('#my-pledge').html(the_page.pledge_made);
+  for (var i = 0; i < (the_page ? the_page.pledges.length : 0); i++) {
+    var p = the_page.pledges[i];
+    if (p.trigger == {{trigger.id}}) {
+      // The user already made a pledge on this.
+      $('#make-pledge input, #make-pledge select, #make-pledge button').prop('disabled', true);
 
-    // Mobile browsers (iOS and Android) don't seem to scroll
-    // to the page top on a reload, which we do after pledge
-    // submission to update the page so we end up here. At the
-    // least we should scroll up, but also the user's pledge
-    // may not be visible if we scroll to the top. So scroll
-    // to that.
-    smooth_scroll_to($('#my-pledge'));
-
-    return;
-  } else {
-    // Usually it's shown from the start, but on executed triggers
-    // we hide it at first to avoid flickr with the user's existing
-    // pledge info.
-    $('#make-pledge').show();
+      // Mobile browsers (iOS and Android) don't seem to scroll
+      // to the page top on a reload, which we do after pledge
+      // submission to update the page so we end up here. At the
+      // least we should scroll up, but also the user's pledge
+      // may not be visible if we scroll to the top. So scroll
+      // to that.
+      smooth_scroll_to($('#my-pledge'));
+      return;
+    }
   }
 
   // Set some defaults based on the user's last pledge.
@@ -582,7 +568,7 @@ function get_contribution_amount() {
   amt = Math.round(amt*100)/100;
 
   // Check bounds.
-  if (amt < {{min_contrib}} || amt > {{alg.max_contrib}})
+  if (amt < {{trigger.get_minimum_pledge}} || amt > {{alg.max_contrib}})
     return null;
 
   return amt;
@@ -611,7 +597,7 @@ function pledge_go(outcome_elem) {
   // who to give to.
 
   var trigger_outcomes = [
-    {% for outcome in T.outcome_strings %}
+    {% for outcome in trigger_outcome_strings %}
       "{% if outcome.object %}{{outcome.object|escapejs}}{% else %}{{outcome.label|escapejs}}{% endif %}"{% if not forloop.last %}, {% endif %}
     {% endfor %}
   ];
@@ -780,7 +766,7 @@ function do_pledge_login_next() {
       method: "POST",
       data: {
         trigger: {{trigger.id}},
-        via: {% if tcust %}{{tcust.id}}{% else %}0{% endif %},
+        via_campaign: {{campaign.id}},
         desired_outcome: $('#pledge-info input[name="desired_outcome"]').val(),
         ref_code: '{{request.GET.utm_campaign|escapejs}}',
         email: $('#emailEmail').val()

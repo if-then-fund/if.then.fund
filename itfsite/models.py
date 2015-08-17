@@ -3,18 +3,20 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.template import Template, Context
+from django.conf import settings
 
 from itfsite.accounts import User, NotificationsFrequency
 from contrib.models import TextFormat
 
 import enum
 from enum3field import EnumField, django_enum
+from itfsite.utils import JSONField
 
-from jsonfield import JSONField as _JSONField
-class JSONField(_JSONField):
-	# turns on sort_keys
-    def __init__(self, *args, **kwargs):
-        super(_JSONField, self).__init__(*args, dump_kwargs={"sort_keys": True}, **kwargs)
+#####################################################################
+#
+# Organizations and Campaigns
+#
+#####################################################################
 
 @django_enum
 class OrganizationType(enum.Enum):
@@ -61,12 +63,60 @@ class Organization(models.Model):
 	def get_absolute_url(self):
 		return "/%s/%d/%s" % (self.orgtype.slug(), self.id, self.slug)
 
-	def banner_image_url(self):
-		try:
-			return self.banner_image.url
-		except ValueError:
-			# FieldFields raise a ValueError if the field isn't associated with a file
-			return self.get_absolute_url() + '/_banner'
+	def open_campaigns(self):
+		return self.campaigns.filter(status=CampaignStatus.Open)
+
+@django_enum
+class CampaignStatus(enum.Enum):
+	Draft = 0
+	Open = 1
+	Paused = 2
+	Closed = 3
+
+class Campaign(models.Model):
+	"""A call to action."""
+
+	# Metadata
+	title = models.CharField(max_length=200, help_text="The title for the campaign.")
+	slug = models.SlugField(max_length=200, help_text="The URL slug for this campaign.")
+	subhead = models.TextField(help_text="Short sub-heading text for use in list pages and the meta description tag, in the format given by subhead_format.")
+	subhead_format = EnumField(TextFormat, help_text="The format of the subhead text.")
+	status = EnumField(CampaignStatus, default=CampaignStatus.Draft, help_text="The current status of the campaign.")
+	owner = models.ForeignKey(Organization, blank=True, null=True, on_delete=models.PROTECT, related_name="campaigns", help_text="The user/organization which owns the campaign. Null if the campaign is created by us.")
+
+	# Content
+	headline = models.CharField(max_length=256, help_text="Headline text for the page.")
+	og_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The og:image to display for the site.")
+	splash_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The big image to display behind the main call to action.")
+	body_text = models.TextField(help_text="Body text, in the format given by body_format.")
+	body_format = EnumField(TextFormat, help_text="The format of the body_text field.")
+
+	# Actions.
+	contrib_triggers = models.ManyToManyField('contrib.Trigger', blank=True, related_name="campaigns", help_text="Triggers to offer the user to take action on (or to show past actions).")
+
+	# Additional data.
+	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
+	created = models.DateTimeField(auto_now_add=True, db_index=True)
+	updated = models.DateTimeField(auto_now=True, db_index=True)
+
+	# METHODS
+
+	def __str__(self):
+		return "Campaign(%d, %s)" % (self.id, repr(self.title))
+
+	def get_absolute_url(self):
+		return "/a/%d/%s" % (self.id, self.slug)
+
+	def get_short_url(self):
+		return settings.SITE_ROOT_URL + ("/a/%d" % self.id)
+
+#####################################################################
+#
+# Notifications
+#
+# Alerts for users.
+#
+#####################################################################
 
 @django_enum
 class NotificationType(enum.Enum):

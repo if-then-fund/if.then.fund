@@ -1,0 +1,344 @@
+{% extends "master.html" %}
+{% load static %}
+{% load itfsite_utils %}
+
+{% block title %}{{campaign.title}}{% endblock %}
+
+{% block head %}
+<style>
+{% if campaign.splash_image.name %}
+#splash {
+	background-image: url('{{campaign.splash_image.url}}?size=lg');
+	background-size: cover;
+	background-position: 50% 50%;
+}
+	@media screen and (max-width: 1100px) {
+		#splash { background-image: url('{{campaign.splash_image.url}}?size=md'); }
+	}
+	@media screen and (max-width: 1024px) {
+		#splash { background-image: url('{{campaign.splash_image.url}}?size=sm'); }
+	}
+	@media screen and (max-width: 768px) {
+		#splash { background-image: url('{{campaign.splash_image.url}}?size=xs'); }
+	}
+
+#nav-wrap {
+	background-color: rgba(0,0,0,.5);
+}
+	@media screen and (min-width: 769px) {
+		#nav-wrap a {
+			color: rgba(255,255,255,.5);
+		}
+	}
+{% endif %}
+
+#splash-cta {
+	max-width: 40em;
+	padding-top: 1em;
+	padding-bottom: 75px;
+	font-family: Droid Sans;
+	font-size: 20px;
+	font-weight: bold;
+	-webkit-font-smoothing: antialiased;
+	text-shadow: 2px 4px 4px rgba(255, 255, 255, .8);
+}
+	@media screen and (min-width: 769px) {
+		#splash-cta { padding-top: 75px; }
+	}
+	#splash-cta h1 {
+		margin-top: 0;
+		font-family: Yanone Kaffeesatz;
+		font-size: 56px;
+	}
+	#splash-cta.invert-text {
+		color: white;
+		text-shadow: 2px 4px 4px rgba(0, 0, 0, .8);
+	}
+
+
+#story {
+	background-color: rgb(190, 80, 90);
+	padding: 3em 0;
+	color: #FFF;
+}
+
+	#story dl {
+		margin-top: -.5em;
+	}
+	#story dl dt {
+		font-size: 130%;
+	}
+	#story dl dd {
+		margin-bottom: 1em;
+	}
+
+#write-a-letter {
+	background-color: #BDA;
+	padding: 3em 0;
+	color: #010;
+}
+
+#letter-preview {
+	margin: -1.5em 0 1em 0;
+	border: 1px solid #363;
+	border-radius: 6px;
+	background-color: #FEFEFE;
+	padding: 1em;
+	font-family: sans-serif;
+	font-weight: 300;
+}
+
+form span.required:after {
+	content: '*';
+	color: #484;
+	font-size: 75%;
+	vertical-align: super;
+}
+
+	form label .tip {
+		padding-left: 1em;
+		font-size: 90%;
+		font-weight: normal;
+	}
+
+#make-a-contribution {
+	background-color: #EEB;
+	padding: 3em 0;
+	color: #110;
+}
+
+#footer-container {
+	background-color: #EEE;
+	padding-top: 2em;
+}
+</style>
+{% endblock %}
+
+{% block body-wide %}
+<div id="splash">
+  <div id="nav-wrap">
+  	<div class="container">
+	  <div class="row">
+	      {% include "navbar.html" %}
+	  </div>
+	</div>
+  </div>
+
+  <div class="container">
+
+  	{% if campaign.owner %}
+	<div id="campaign-owner" style="float: right">
+		<a href="{{campaign.owner.get_absolute_url}}" title="{{campaign.owner.name}}">
+			{% if campaign.owner.banner_image.name %}
+			<div style="margin: 0 1em 0 0; border: 1px solid rgba(0,0,0,.5); width: 120px; height: 120px; background-image: url({{campaign.owner.banner_image.url}}?size=xs); background-size: cover; background-position: 50% 50%;">
+		    </div>
+		    {% else %}
+		    	{{campaign.owner.name}}
+		    {% endif %}
+		</a>
+	</div>
+	<div class="clearfix visible-xs"> </div>
+	{% endif %}
+
+	<div id="splash-cta" class="{{campaign.extra.style.splash.class}}">
+		<h1>{{campaign.headline}}</h1>
+
+		<div class="subhead">
+			{{campaign.subhead|render_text:campaign.subhead_format}}
+		</div>
+	</div>
+  </div>
+</div>
+
+<div id="story">
+	<div class="container">
+		<div class="col-sm-8">
+			{{campaign.body_text|render_text:campaign.body_format}}
+
+			<p style="margin-top: 2em"><button class="btn btn-primary" onclick="smooth_scroll_to($('#write-a-letter'));">Get Started!</button></p>
+		</div>
+		<div class="col-sm-4">
+			<dl>
+				{% if letters_campaign %}
+				<dt>###</dt>
+				<dd>letters written</dd>
+				{% endif %}
+
+				{% if pledged_total %}
+					<dt>{{pledged_total}}</dt>
+					<dd>committed so far</dd>
+				{% endif %}
+			</dl>
+		</div>
+	</div>
+</div>
+
+<div id="my-actions" class="hidden">
+	<div class="container">
+		<div class="actions-container" style="padding: 2em 0">
+			
+		</div>
+	</div>
+</div>
+
+{% if letters_campaign %}
+<div id="write-a-letter">
+	<div class="container">
+		<h2>Write a letter</h2>
+
+		<div class="row">
+			<div class="col-sm-7 col-md-6">
+		
+				<p style="margin-bottom: 1em">Tell your representative and senators to take action.</p>
+
+				<form id="write-letter-form" onsubmit="return write_letter_submit();">
+				  <div class="form-group">
+				    <label for="email">Your Email Address</label>
+				    <input type="email" class="form-control" id="email" placeholder="email address">
+				  </div>
+				  <div class="row">
+				  	<div class="col-md-3 col-lg-2">
+				      <div class="form-group">
+				        <label for="namePrefix">Title</label>
+				        <select class="form-control" id="namePrefix" style="padding-left: 2px; padding-right: 0;">
+				        	<option></option>
+				        	{% for value in prefix_options %}<option>{{value}}</option>{% endfor %}
+				        </select>
+				      </div>
+				    </div>
+				  	<div class="col-md-4 col-lg-5">
+				      <div class="form-group">
+				        <label for="nameFirst">First Name</label>
+				        <input type="text" class="form-control" id="nameFirst" placeholder="first name">
+				      </div>
+				    </div>
+				  	<div class="col-md-5">
+				      <div class="form-group">
+				        <label for="nameLast">Last Name</label>
+				        <input type="text" class="form-control" id="nameLast" placeholder="last name">
+				      </div>
+				    </div>
+				  </div>
+				  <div class="form-group">
+				    <label for="addrAddress">Home Address  <span class="tip">(where you vote)</span></label>
+				    <input type="text" class="form-control" id="addrAddress" placeholder="123 Your Location St.">
+				  </div>
+				  <div class="row">
+				  	<div class="col-sm-5 col-md-6">
+				      <div class="form-group">
+				        <label for="addrCity">City</label>
+				        <input type="text" class="form-control" id="addrCity" placeholder="Everytown">
+				      </div>
+				    </div>
+				  	<div class="col-sm-3 col-md-2">
+				      <div class="form-group">
+				        <label for="addrState">State</label>
+				        <select class="form-control" id="addrState" size="1" style="padding-left: 2px; padding-right: 0;">
+				        	<option></option>
+				        	{% for state in state_abbrs %}<option>{{state}}</option>{% endfor %}
+				        </select>
+				      </div>
+				    </div>
+				  	<div class="col-sm-4">
+				      <div class="form-group">
+				        <label for="addrZip">ZIP</label>
+				        <input type="text" class="form-control" id="addrZip" placeholder="12345" maxlength="10">
+				      </div>
+				    </div>
+				  </div>
+				  <div class="row hidden">
+				  	<div class="col-xs-12">
+				      <div class="form-group">
+				        <label for="phone">Phone Number <span class="tip">(required by some congressional offices)</span></label>
+				        <input type="tel" class="form-control" id="phone" placeholder="555-555-1234">
+				      </div>
+				    </div>
+				  </div>
+	
+				  <button id="write-letter-next" type="submit" class="btn btn-primary">Next &raquo;</button>
+
+				  <small>
+				  	<p style="margin-top: 1.5em">All fields are required by the congressional office receiving your letter. You must have a mailing address within a United States congressional district to participate.</p>
+				  </small>
+				</form>
+
+			</div>
+			<div class="col-sm-5 col-md-6">
+				<div id="letter-preview">
+					<p>Dear representative,</p>
+					<p>Reptiles are the best pets ever, and turtles are cute. Please take action on this very important issue.</p>
+					<p>Sincerely,</p>
+					<p>[your name]
+				</div>
+			</div>
+		</div>			
+		
+	</div>
+</div>
+{% endif %}
+
+<div id="make-a-contribution">
+	<div class="container">
+		{% include "contrib/pledge-form.html" %}
+	</div>
+</div>
+
+<div id="footer-container">
+<div class="container">
+
+<small>
+{% if not campaign.owner %} {# the 'we' doesn't make sense if the page wasn't created by if.then.fund #}
+<p>We aim to shift the balance of power to shape Congress away from concentrated wealth and toward small-dollar donors like you.</p>
+{% endif %}
+<p>You will be making a campaign contribution to {{trigger.trigger_type.strings.actors}} or their next opponent. Until the 
+{{trigger.trigger_type.strings.action_noun}} occurs, <span class="site-brand">if.then.fund</span> won't reveal to anyone what action you
+took. After the {{trigger.trigger_type.strings.action_noun}}, we’ll charge your card and split your contribution based on your
+instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
+</small>
+
+<p id="show_utm_tool" style="display: none;"><a href="#" onclick="$('#utm_tool').slideToggle(); utm_tool(); return false;" style="border: none">Create a link...</a></p>
+<div id="utm_tool" style="display: none; max-width: 320px; font-size: 90%;">
+	<div class="row">
+		<div class="col-xs-6">
+			<div><label for="utm_tool_campaign">Campaign code:</label></div>
+			<div><input id="utm_tool_campaign" type="text" onkeyup="utm_tool()" onchange="utm_tool()" style="width: 100%"></div>
+		</div>
+		<div class="col-xs-6">
+			<div><label for="utm_tool_short"><input id="utm_tool_short" type="checkbox" checked onchange="utm_tool()"> Short URL</label></div>
+		</div>
+	</div>
+	<div style="margin-top: .5em"><input id="utm_tool_link" type="text" value="" style="width: 100%" readonly></div>
+</div>
+
+
+{# with body-wide, we leave open two divs: an unstyled dive and a .container #}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static "js/ext/jquery.payment.js" %}"> </script>
+<script>
+	$(function() {
+		if (the_page && the_page.show_utm_tool)
+			$('#show_utm_tool').show();
+
+		// Show any actions the user already performed.
+		for (var i = 0; i < (the_page ? the_page.pledges.length : 0); i++) {
+		    var p = the_page.pledges[i];
+		    $('#my-actions').removeClass('hidden');
+	        $('#my-actions div.actions-container').append($(p.rendered));
+		}
+
+		pledge_init();
+	})
+
+	function utm_tool() {
+		var url = ($('#utm_tool_short').prop('checked') ? "{{campaign.get_short_url|escapejs}}" : "{{ROOT_URL}}{{campaign.get_absolute_url|escapejs}}")
+		var campaign_code = $('#utm_tool_campaign').val();
+		campaign_code = campaign_code.replace(/^\s+|\s+$/g, '');
+		if (campaign_code)
+			url += "?utm_campaign=" + encodeURIComponent(campaign_code);
+		$('#utm_tool_link').val(url)
+	}
+    </script>
+{% endblock %}

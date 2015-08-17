@@ -5,7 +5,7 @@
 
 <p>Your credit card will be charged ${{total_charge|floatformat:2}}.{% if total_charge < pledge.amount %} This is less than the ${{pledge.amount|floatformat:2}} you scheduled. We can only make whole-penny contributions to the recipients of your contribution, so we had to round down.{% endif %}</p>
 
-<p>If you no longer wish to make these contributions, please head over to <a href="{{pledge.trigger.get_short_url}}">your contribution</a> and cancel the contributions. You can cancel your contributions any time before {{until}}.</p>
+<p>If you no longer wish to make these contributions, please head over to <a href="{{pledge.via_campaign.get_short_url}}">your contribution</a> and cancel the contributions. You can cancel your contributions any time before {{until}}.</p>
 
 <p>Thanks!</p>
 {% endblock %}

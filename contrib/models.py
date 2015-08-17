@@ -8,7 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from contrib.bizlogic import get_pledge_recipients, create_pledge_donation, void_pledge_transaction, HumanReadableValidationError
 
-from jsonfield import JSONField as _JSONField
+from itfsite.utils import JSONField, TextFormat
 from enum3field import EnumField, django_enum
 from datetime import timedelta
 
@@ -17,16 +17,6 @@ from datetime import timedelta
 # Utilities / Enums
 #
 #####################################################################
-
-@django_enum
-class TextFormat(enum.Enum):
-	HTML = 0
-	Markdown = 1
-
-class JSONField(_JSONField):
-	# turns on sort_keys
-    def __init__(self, *args, **kwargs):
-        super(_JSONField, self).__init__(*args, dump_kwargs={"sort_keys": True}, **kwargs)
 
 @django_enum
 class ActorParty(enum.Enum):
@@ -99,14 +89,6 @@ class Trigger(models.Model):
 
 	def __str__(self):
 		return "%s [%d]" % (self.key, self.id)
-
-	def get_absolute_url(self):
-		return "/a/%d/%s" % (self.id, self.slug)
-
-	def get_short_url(self):
-		# Used in the ref_code of Democracy Engine transactions, which is provided
-		# to campaigns, as well as in emails to users with links back to the site.
-		return settings.SITE_ROOT_URL + ("/a/%d" % self.id)
 
 	@property
 	def verb(self):
@@ -314,6 +296,8 @@ class TriggerRecommendation(models.Model):
 			if t2.status in (TriggerStatus.Open, TriggerStatus.Executed):
 				alerts.setdefault(t2, []).append(n)
 
+		return []
+
 		# Render each target bill separately.
 		from urllib.parse import quote
 		alerts = [{
@@ -336,17 +320,9 @@ class TriggerCustomization(models.Model):
 
 	owner = models.ForeignKey('itfsite.Organization', related_name="triggers", on_delete=models.CASCADE, help_text="The user/organization which created the TriggerCustomization.")
 	trigger = models.ForeignKey(Trigger, related_name="customizations", on_delete=models.CASCADE, help_text="The Trigger that this TriggerCustomization customizes.")
-	title = models.CharField(max_length=200, help_text="The customized title for the trigger.")
-	slug = models.SlugField(max_length=200, help_text="The customized URL slug for this trigger.")
-	visible = models.BooleanField(default=False, help_text="Whether this TriggerCustomization can be seen by non-admins.")
 
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True, db_index=True)
-
-	subhead = models.TextField(help_text="Short sub-heading text in the format given by description_format.")
-	subhead_format = EnumField(TextFormat, help_text="The format of the subhead text.")
-	description = models.TextField(help_text="Description text in the format given by description_format.")
-	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
 	outcome = models.IntegerField(blank=True, null=True, help_text="Restrict Pledges to this outcome index.")
 	incumb_challgr = models.FloatField(blank=True, null=True, help_text="Restrict Pledges to this incumb_challgr value.")
@@ -355,16 +331,11 @@ class TriggerCustomization(models.Model):
 
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
-	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges made.")
-	total_pledged = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of pledges, i.e. prior to execution.")
+	class Meta:
+		unique_together = ('trigger', 'owner')
 
 	def __str__(self):
 		return "%s / %s: %s" % (self.owner, self.trigger, self.title)
-
-	def get_absolute_url(self):
-		return "/a/%d-%d/%s/%s" % (self.trigger.id, self.id, self.owner.slug, self.slug)
-	def get_short_url(self):
-		return settings.SITE_ROOT_URL + ("/a/%d-%d" % (self.trigger.id, self.id))
 
 	def has_fixed_outcome(self):
 		return self.outcome is not None
@@ -411,14 +382,14 @@ class TriggerExecution(models.Model):
 		self.trigger.status = TriggerStatus.Paused
 		self.trigger.save(update_fields=['status'])
 
-	def get_outcomes(self, via=None):
+	def get_outcomes(self, via_campaign=None):
 		# Get the contribution aggregates by outcome
 		# and sort by total amount of contributions.
 		outcomes = copy.deepcopy(self.trigger.outcomes)
 		for i in range(len(outcomes)):
 			outcomes[i]['index'] = i
 			outcomes[i]['contribs'] = 0
-		for rec in ContributionAggregate.get_slices('outcome', trigger_execution=self, via=via):
+		for rec in ContributionAggregate.get_slices('outcome', trigger_execution=self, via_campaign=via_campaign):
 			outcomes[rec['outcome']]['contribs'] = rec['total']
 		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
 		return outcomes
@@ -652,13 +623,14 @@ class Pledge(models.Model):
 
 	user = models.ForeignKey('itfsite.User', blank=True, null=True, on_delete=models.PROTECT, help_text="The user making the pledge. When an anonymous user makes a pledge, this is null, the user's email address is stored, and the pledge should be considered unconfirmed/provisional and will not be executed.")
 	email = models.EmailField(max_length=254, blank=True, null=True, help_text="When an anonymous user makes a pledge, their email address is stored here and we send a confirmation email.")
-	trigger = models.ForeignKey(Trigger, related_name="pledges", on_delete=models.PROTECT, help_text="The Trigger that this Pledge is for.")
 	profile = models.ForeignKey(ContributorInfo, related_name="pledges", on_delete=models.PROTECT, help_text="The contributor information (name, address, etc.) and billing information used for this Pledge. Immutable and cannot be changed after execution.")
 
-	ref_code = models.CharField(max_length=24, blank=True, null=True, db_index=True, help_text="An optional referral code that lead the user to take this action.")
-	via = models.ForeignKey(TriggerCustomization, blank=True, null=True, related_name="pledges", on_delete=models.PROTECT, help_text="The TriggerCustomization that this Pledge was made via.")
+	trigger = models.ForeignKey(Trigger, related_name="pledges", on_delete=models.PROTECT, help_text="The Trigger that this Pledge is for.")
+	via_campaign = models.ForeignKey('itfsite.Campaign', blank=True, null=True, related_name="pledges", on_delete=models.PROTECT, help_text="The Campaign that this Pledge was made via.")
 
-	# When a Pledge is cancelled, the object is deleted. The trigger/via/user/email fields
+	ref_code = models.CharField(max_length=24, blank=True, null=True, db_index=True, help_text="An optional referral code that lead the user to take this action.")
+
+	# When a Pledge is cancelled, the object is deleted. The trigger/via_campaign/user/email fields
 	# are archived, plus the fields listed in this list. The fields below must
 	# be JSON-serializable.
 	cancel_archive_fields = (
@@ -688,6 +660,7 @@ class Pledge(models.Model):
 
 	class Meta:
 		unique_together = [('trigger', 'user'), ('trigger', 'email')]
+		index_together = [('trigger', 'via_campaign')]
 
 	objects = NoMassDeleteManager()
 
@@ -706,11 +679,9 @@ class Pledge(models.Model):
 		# fields (atomically) if this Pledge was made prior to trigger execution.
 		if is_new and not self.made_after_trigger_execution:
 			from django.db import models
-			for t in [self.trigger, self.via]:
-				if t is not None: # self.via may be None
-					t.pledge_count = models.F('pledge_count') + 1
-					t.total_pledged = models.F('total_pledged') + self.amount
-					t.save(update_fields=['pledge_count', 'total_pledged'])
+			self.trigger.pledge_count = models.F('pledge_count') + 1
+			self.trigger.total_pledged = models.F('total_pledged') + self.amount
+			self.trigger.save(update_fields=['pledge_count', 'total_pledged'])
 
 	@transaction.atomic
 	def delete(self):
@@ -720,11 +691,9 @@ class Pledge(models.Model):
 		# Decrement the Trigger's pledge_count and total_pledged if the Pledge
 		# was made prior to trigger execution.
 		if not self.made_after_trigger_execution:
-			for t in [self.trigger, self.via]:
-				if t is not None: # self.via may be None
-					t.pledge_count = models.F('pledge_count') - 1
-					t.total_pledged = models.F('total_pledged') - self.amount
-					t.save(update_fields=['pledge_count', 'total_pledged'])
+			self.trigger.pledge_count = models.F('pledge_count') - 1
+			self.trigger.total_pledged = models.F('total_pledged') - self.amount
+			self.trigger.save(update_fields=['pledge_count', 'total_pledged'])
 
 		# Archive as a cancelled pledge.
 		cp = CancelledPledge.from_pledge(self)
@@ -734,10 +703,7 @@ class Pledge(models.Model):
 		super(Pledge, self).delete()	
 
 	def get_absolute_url(self):
-		if self.via:
-			return self.via.get_absolute_url()
-		else:
-			return self.trigger.get_absolute_url()
+		return self.via_campaign.get_absolute_url()
 
 	@staticmethod
 	def current_algorithm():
@@ -1057,7 +1023,7 @@ class CancelledPledge(models.Model):
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 
 	trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE, help_text="The Trigger that the pledge was for.")
-	via = models.ForeignKey(TriggerCustomization, blank=True, null=True, on_delete=models.CASCADE, help_text="The TriggerCustomization that this Pledge was made via.")
+	via_campaign = models.ForeignKey('itfsite.Campaign', blank=True, null=True, on_delete=models.CASCADE, help_text="The Campaign that this Pledge was made via.")
 	user = models.ForeignKey('itfsite.User', blank=True, null=True, on_delete=models.CASCADE, help_text="The user who made the pledge, if not anonymous.")
 	email = models.EmailField(max_length=254, blank=True, null=True, help_text="The email address of an unconfirmed pledge.")
 
@@ -1067,7 +1033,7 @@ class CancelledPledge(models.Model):
 	def from_pledge(pledge):
 		cp = CancelledPledge()
 		cp.trigger = pledge.trigger
-		cp.via = pledge.via
+		cp.via_campaign = pledge.via_campaign
 		cp.user = pledge.user
 		cp.email = pledge.email
 		cp.pledge = { k: getattr(pledge, k) for k in Pledge.cancel_archive_fields }
@@ -1081,7 +1047,7 @@ class IncompletePledge(models.Model):
 	"""Records email addresses users enter. Deleted when they finish a Pledge."""
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE, help_text="The Trigger that the pledge was for.")
-	via = models.ForeignKey(TriggerCustomization, blank=True, null=True, on_delete=models.CASCADE, help_text="The TriggerCustomization that this Pledge was made via.")
+	via_campaign = models.ForeignKey('itfsite.Campaign', blank=True, null=True, on_delete=models.CASCADE, help_text="The Campaign that this Pledge was made via.")
 	email = models.EmailField(max_length=254, db_index=True, help_text="An email address.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 	sent_followup_at = models.DateTimeField(blank=True, null=True, db_index=True, help_text="If we've sent a follow-up email, the date and time we sent it.")
@@ -1097,7 +1063,7 @@ class IncompletePledge(models.Model):
 	def get_return_url(self):
 		# Construct URL of the trigger with the utm_campaign query string argument.
 		import urllib.parse
-		return self.trigger.get_absolute_url() \
+		return self.via_campaign.get_absolute_url() \
 			+ "?" + urllib.parse.urlencode({ "utm_campaign": self.get_utm_campaign_string() })
 
 @django_enum
@@ -1359,9 +1325,8 @@ class Contribution(models.Model):
 		for kw in [
 			{},
 			{ "trigger_execution": self.action.execution },
-			{ "trigger_execution": self.action.execution, "via": self.pledge_execution.pledge.via },
+			{ "trigger_execution": self.action.execution, "via_campaign": self.pledge_execution.pledge.via_campaign },
 		]:
-			if None in kw.values(): continue # no 'via', don't duplicate
 			update(**kw)
 			update(outcome=self.pledge_execution.pledge.desired_outcome, **kw)
 			update(actor=self.action.actor, incumbent=not self.recipient.is_challenger, **kw)
@@ -1372,7 +1337,7 @@ class Contribution(models.Model):
 
 CONTRIBUTION_AGGREGATE_FIELDS = (
 	'trigger_execution',
-	'via',
+	'via_campaign',
 	'outcome',
 	'actor',
 	'incumbent',
@@ -1385,7 +1350,7 @@ class ContributionAggregate(models.Model):
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
 	trigger_execution = models.ForeignKey(TriggerExecution, blank=True, null=True, related_name='contribution_aggregates', on_delete=models.CASCADE, help_text="The TriggerExecution that these cached statistics are about.")
-	via = models.ForeignKey(TriggerCustomization, blank=True, null=True, on_delete=models.CASCADE, help_text="The TriggerCustomization that the Pledges were made via.")
+	via_campaign = models.ForeignKey('itfsite.Campaign', blank=True, null=True, on_delete=models.CASCADE, help_text="The Campaign that the Pledges were made via.")
 	outcome = models.IntegerField(blank=True, null=True, help_text="The outcome index that was taken. Null if the slice encompasses all outcomes.")
 	actor = models.ForeignKey(Actor, blank=True, null=True, on_delete=models.CASCADE, help_text="The Actor who caused the Action that the contribution was made about. The contribution may have gone to an opponent.")
 	incumbent = models.NullBooleanField(blank=True, null=True, help_text="Whether the contribution was to the Actor (True) or the Actor's challenger (False).")
@@ -1516,7 +1481,7 @@ class ContributionAggregate(models.Model):
 		# Start incrementing new ones.
 		updater = ContributionAggregate.Updater()
 
-		iter = Contribution.objects.all().select_related('action__execution', 'pledge_execution__pledge__via', 'pledge_execution__pledge', 'action', 'action__actor', 'recipient', 'pledge_execution')
+		iter = Contribution.objects.all().select_related('action__execution', 'pledge_execution__pledge__via_campaign', 'pledge_execution__pledge', 'action', 'action__actor', 'recipient', 'pledge_execution')
 		for c in tqdm(iterate(iter), total=Contribution.objects.count()):
 			c.update_contributionaggregates(updater=updater)
 

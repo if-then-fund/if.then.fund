@@ -1,6 +1,6 @@
 from django import template
 from django.utils import safestring
-from django.template.defaultfilters import stringfilter
+from django.template.defaultfilters import stringfilter, strip_tags
 import markdown2
 import json as jsonlib
 
@@ -12,6 +12,13 @@ def render_text(value, format):
 	if str(format) in 'TextFormat.Markdown':
 		return safestring.mark_safe(markdown2.markdown(value, safe_mode=True))
 	return safestring.mark_safe(value)
+
+@register.filter
+@stringfilter
+def render_text_plain(value, format):
+	if str(format) in 'TextFormat.Markdown':
+		return value
+	return strip_tags(value)
 
 @register.filter(is_safe=True)
 @stringfilter

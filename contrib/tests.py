@@ -3,7 +3,7 @@ from itertools import product
 
 from django.test import TestCase
 
-from itfsite.models import User
+from itfsite.models import User, Campaign
 from contrib.models import *
 from contrib.de import DemocracyEngineAPIClient
 
@@ -21,7 +21,7 @@ class DEAPITestCase(TestCase):
 
 def create_trigger(trigger_type, key, title):
 	from django.template.defaultfilters import slugify
-	return Trigger.objects.create(
+	trigger = Trigger.objects.create(
 		key=key,
 		title=title,
 		owner=None,
@@ -41,6 +41,14 @@ def create_trigger(trigger_type, key, title):
 			"max_split": 100,
 		}
 		)
+	campaign = Campaign.objects.create(
+		subhead="This is a test campaign.",
+		subhead_format=TextFormat.Markdown,
+		body_text="This is a test campaign.",
+		body_format=TextFormat.Markdown,
+		)
+	campaign.contrib_triggers.add(trigger)
+	return campaign, trigger
 
 class PledgeTestCase(TestCase):
 	def setUp(self):
@@ -55,7 +63,7 @@ class PledgeTestCase(TestCase):
 				"action_vb_past": "ACTED",
 			})
 
-		self.trigger = create_trigger(self.trigger_type, 'test', 'Test Trigger')
+		self.campaign, self.trigger = create_trigger(self.trigger_type, 'test', 'Test Trigger')
 
 		# Create a user.
 		self.user = User.objects.create(email="test@example.com")
@@ -65,6 +73,7 @@ class PledgeTestCase(TestCase):
 		p = Pledge.objects.create(
 			user=self.user,
 			trigger=self.trigger,
+			via_campaign=self.campaign,
 			profile=ci,
 			algorithm=Pledge.current_algorithm()['id'],
 			desired_outcome=desired_outcome,
@@ -97,7 +106,7 @@ class PledgeTestCase(TestCase):
 	def test_recommendation(self):
 		# Set up a recommendation.
 		t1 = self.trigger
-		t2 = create_trigger(self.trigger_type, 'test2', 'Another Trigger')
+		c, t2 = create_trigger(self.trigger_type, 'test2', 'Another Trigger')
 		TriggerRecommendation.objects.create(trigger1=t1, trigger2=t2)
 
 		# Create a pledge.
@@ -109,7 +118,7 @@ class PledgeTestCase(TestCase):
 		self.assertEqual(notifs().count(), 1)
 
 		# Create another notification on the trigger the user already took action on.
-		t3 = create_trigger(self.trigger_type, 'test3', 'Yet Another Trigger')
+		c, t3 = create_trigger(self.trigger_type, 'test3', 'Yet Another Trigger')
 		TriggerRecommendation.objects.create(trigger1=t1, trigger2=t3).create_initial_notifications()
 		self.assertEqual(notifs().count(), 2)
 
@@ -162,6 +171,16 @@ class ExecutionTestCase(TestCase):
 			)
 		t.status = TriggerStatus.Open
 		t.save()
+
+		# Campaign
+
+		self.campaign = Campaign.objects.create(
+			subhead="This is a test campaign.",
+			subhead_format=TextFormat.Markdown,
+			body_text="This is a test campaign.",
+			body_format=TextFormat.Markdown,
+			)
+		self.campaign.contrib_triggers.add(t)
 
 		# Actors
 
@@ -344,6 +363,7 @@ class ExecutionTestCase(TestCase):
 		p = Pledge.objects.create(
 			user=user,
 			trigger=Trigger.objects.get(key="test"),
+			via_campaign=self.campaign,
 			profile=ci,
 			algorithm=Pledge.current_algorithm()['id'],
 			made_after_trigger_execution=made_after_trigger_execution,

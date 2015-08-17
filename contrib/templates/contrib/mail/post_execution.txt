@@ -10,7 +10,7 @@ To see who your contributions were made to, please head over to the following ad
 
 For more information, please head over to the following address:
 {% endif %}
-{{pledge.trigger.get_short_url}}
+{{pledge.via_campaign.get_short_url}}
 
 Thanks!
 {% endblock %}

@@ -11,7 +11,7 @@ urlpatterns = patterns('',
 
 	url(r'^', include('contrib.urls')),
 	url(r'^(user|org)/(\d+)/([^/]+)$', 'itfsite.views.org_landing_page'),
-	url(r'^(user|org)/(\d+)/([^/]+)/_(banner)$', 'itfsite.views.org_resource'),
+	url(r'a/(?P<id>\d+)(?:/[a-z0-9_-]+)?$', 'itfsite.views.campaign'),
 
 	url(r'^accounts/login$', auth_views.login),
 	url(r'^accounts/logout$', auth_views.logout, { 'next_page': '/' } ),

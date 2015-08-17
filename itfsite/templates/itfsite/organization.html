@@ -12,7 +12,7 @@
 #page-banner {
 	position: relative; /* allow abs positioning of the h1 */
 	height: 300px;
-	background-image: url({{org.banner_image_url}}?width=1200);
+	background-image: url({{org.banner_image.url}}?size=lg);
 	margin-bottom: 25px;
 }
 
@@ -32,12 +32,12 @@ h1 {
 
 @media screen and (max-width: 768px) {
 	#page-banner {
-		background-image: url({{org.banner_image_url}}?width=768);
+		background-image: url({{org.banner_image_url}}?width=xs);
 	}
 }
 @media screen and (max-width: 640px) {
 	#page-banner {
-		background-image: url({{org.banner_image_url}}?width=640);
+		background-image: url({{org.banner_image_url}}?width=xs);
 		height: 200px;
 	}
 	h1 {
@@ -74,10 +74,9 @@ h1 {
 		</div>
 	</div>
 	<div id="main-part" class="col-sm-9">
-		{% for tc in triggers %}
-			<h2><a href="{{tc.get_absolute_url}}">{{tc.title}}</a></h2>
-			{{tc.description|render_text:tc.description_format}}
-			<p>{{tc.total_pledged|currency}} committed so far.</p>
+		{% for c in campaigns %}
+			<h2><a href="{{c.get_absolute_url}}">{{c.title}}</a></h2>
+			{{c.subhead|render_text:c.subhead_format}}
 		{% endfor %}
 	</div>
 </div>

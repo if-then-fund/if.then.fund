@@ -50,7 +50,7 @@ def run_authorization_test(pledge, ccnum, cccvc, aux_data):
 	# Logging.
 	aux_data.update({
 		"trigger": pledge.trigger.id,
-		"via": pledge.via.id if pledge.via else None,
+		"via": pledge.via_campaign.id,
 		"pledge": pledge.id,
 	})
 
@@ -265,7 +265,7 @@ def create_pledge_donation(pledge, recipients):
 		# tracking info for internal use
 		"aux_data": rtyaml.dump({ # DE will gives this back to us encoded as YAML, but the dict encoding is ruby-ish so to be sure we can parse it, we'll encode it first
 			"trigger": pledge.trigger.id,
-			"via": pledge.via.id if pledge.via else None,
+			"via": pledge.via_campaign.id,
 			"pledge": pledge.id,
 			"user": pledge.user.id,
 			"email": pledge.user.email,

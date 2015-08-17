@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.utils import timezone
 
-from itfsite.models import Organization, Notification, NotificationsFrequency
+from itfsite.models import Organization, Notification, NotificationsFrequency, Campaign, CampaignStatus
 from contrib.models import Pledge, PledgeExecution, PledgeStatus
 
 from twostream.decorators import anonymous_view, user_view_for
@@ -13,19 +13,8 @@ from twostream.decorators import anonymous_view, user_view_for
 def homepage(request):
 	# The site homepage.
 
-	# Get all of the open triggers that a user might participate in.
-	from contrib.models import Trigger, TriggerStatus
-	open_triggers = Trigger.objects.filter(status=TriggerStatus.Open).order_by('-total_pledged')
-	recent_executed_triggers = Trigger.objects.filter(status=TriggerStatus.Executed).select_related("execution").order_by('-execution__created')
-
-	# Exclude triggers in the process of being executed from the 'recent' list, because
-	# that list shows aggregate stats that are not yet valid
-	recent_executed_triggers = [t for t in recent_executed_triggers
-		if t.pledge_count <= t.execution.pledge_count]
-
 	return render(request, "itfsite/homepage.html", {
-		"open_triggers": open_triggers,
-		"recent_executed_triggers": recent_executed_triggers,
+		"open_campaigns": Campaign.objects.filter(status=CampaignStatus.Open).order_by('-created')[0:12],
 	})
 
 def simplepage(request, pagename):
@@ -139,59 +128,10 @@ def org_landing_page(request, path, id, slug):
 	if request.path != org.get_absolute_url():
 		return redirect(org.get_absolute_url())
 
-	# get the triggers to display & sort
-	from contrib.models import TriggerStatus
-	triggers = list(org.triggers.filter(visible=True,
-		trigger__status__in=(TriggerStatus.Open, TriggerStatus.Executed))\
-		.select_related('trigger'))
-	triggers.sort(key = lambda t : (t.trigger.status==TriggerStatus.Open, t.created), reverse=True)
-
 	return render(request, "itfsite/organization.html", {
 		"org": org,
-		"triggers": triggers,
+		"campaigns": org.open_campaigns(),
 	})
-
-def query_facebook(opengraph_id):
-	import json
-	import requests
-	r = requests.get(
-		"https://graph.facebook.com/v2.2/%s?access_token=%s" % (opengraph_id, settings.FACEBOOK_ACCESS_TOKEN),
-		timeout=15,
-		verify=True, # check SSL cert (is default, actually)
-		)
-	r.raise_for_status()
-	return r.json()
-
-def extract_opengraph_id(facebook_url):
-	import re
-	m = re.match("https?://www.facebook.com/pages/[^/]+/(\d+)", facebook_url)
-	if m:
-		return m.group(1)
-	m = re.match("https?://www.facebook.com/([^/\?]+)", facebook_url)
-	if m:
-		return m.group(1)
-	return None
-
-@anonymous_view
-def org_resource(request, path, id, slug, resource_type):
-	org = get_object_or_404(Organization, id=id)
-	if resource_type == "banner":
-		# Get the org's banner image from their Facebook cover image.
-		if org.facebook_url:
-			graph_id = extract_opengraph_id(org.facebook_url)
-			if graph_id:
-				graph = query_facebook(graph_id) # Page
-				graph = query_facebook(graph['cover']['id']) # Cover image
-				desired_width = int(request.GET.get('width', '1024'))
-				url = min(graph['images'], key = lambda im : abs(im['width']-desired_width))['source']
-				return redirect(url)
-
-		# No banner image available. Return the smallest transparent PNG.
-		# Better than a 404. h/t http://garethrees.org/2007/11/14/pngcrush/
-		return HttpResponse(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82',
-			content_type="image/png")
-
-	raise Http404()
 
 @login_required
 def dismiss_notifications(request):
@@ -216,3 +156,78 @@ def set_email_settings(request):
 		return HttpResponse(repr(e), content_type='text/plain', status=400)
 	# Return something, but this is ignored.
 	return HttpResponse('OK', content_type='text/plain')
+
+@anonymous_view
+def campaign(request, id):
+	# get the object, redirect to canonical URL if slug does not match
+	# (pass along any query string variables like utm_campaign)
+	campaign = get_object_or_404(Campaign, id=id)
+	qs = (("?"+request.META['QUERY_STRING']) if request.META['QUERY_STRING'] else "")
+	if request.path != campaign.get_absolute_url():
+		return redirect(campaign.get_absolute_url()+qs)
+
+	from contrib.models import TriggerStatus, TriggerCustomization, Pledge
+	from django.db.models import Sum
+
+	# Load all of the TriggerCustomizations that apply to any of the triggers.
+	triggers = [
+		(trigger, TriggerCustomization.objects.filter(owner=campaign.owner, trigger=trigger).first())
+		for trigger in campaign.contrib_triggers.all()
+	]
+
+	# We can only show pledged totals if no triggers have customizations that restrict the outcome.
+	can_show_pledge_totals = True
+	for trigger, tcust in triggers:
+		if tcust and tcust.outcome:
+			can_show_pledge_totals = False
+
+	# What trigger should the user take action on?
+	trigger = campaign.contrib_triggers.filter(status__in=(TriggerStatus.Open,TriggerStatus.Executed)).order_by('-created').first()
+	tcust = None
+	if trigger and campaign.owner: # campaigns without an owner cannot have a trigger customization
+		tcust = TriggerCustomization.objects.filter(trigger=trigger, owner=campaign.owner).first()
+
+	# render page
+	return render(request, "itfsite/campaign.html", {
+		"campaign": campaign,
+		"trigger": trigger,
+		"tcust": tcust,
+		"trigger_outcome_strings": tcust.outcome_strings() if tcust else trigger.outcome_strings(),
+		"suggested_pledge": 5,
+		"alg": Pledge.current_algorithm(),
+		"pledged_total": Pledge.objects.filter(via_campaign=campaign).aggregate(sum=Sum('amount'))["sum"] if can_show_pledge_totals else None,
+		})
+	
+@user_view_for(campaign)
+def campaign_user_view(request, id):
+	from contrib.models import Contribution
+	from contrib.views import get_recent_pledge_defaults, get_user_pledges
+
+	campaign = get_object_or_404(Campaign, id=id)
+
+	ret = { }
+
+	# Most recent pledge info so we can fill in defaults on the user's next pledge.
+	ret["pledge_defaults"] = get_recent_pledge_defaults(request.user, request)
+
+	# Get the user's pledges, if any, on any trigger tied to this campaign.
+	import django.template
+	template = django.template.loader.get_template("contrib/contrib.html")
+	pledges = get_user_pledges(request.user, request).filter(trigger__campaigns=campaign).order_by('-created')
+	ret["pledges"] = [
+		{
+			"trigger": pledge.trigger.id,
+			"rendered": template.render(django.template.Context({
+				"show_long_title": len(pledges) > 1,
+				"pledge": pledge,
+				"execution": PledgeExecution.objects.filter(pledge=pledge).first(),
+				"contribs": sorted(Contribution.objects.filter(pledge_execution__pledge=pledge).select_related("action"), key=lambda c : (c.recipient.is_challenger, c.action.name_sort)),
+				"share_url": request.build_absolute_uri(campaign.get_short_url()),
+			})),
+		} for pledge in pledges
+	]
+
+	# Other stuff.
+	ret["show_utm_tool"] = (request.user.is_authenticated() and request.user.is_staff)
+
+	return ret
