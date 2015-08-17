@@ -143,13 +143,12 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		# Enter pledge amount.
 		self.browser.execute_script("$('#pledge-amount input').val('12')")
-		self.browser.find_element_by_css_selector("#start-next").click()
+		self.browser.find_element_by_css_selector("#contribution-start-next").click()
 		time.sleep(1)
 
 		# Enter email address.
 		email = "unittest+%d@if.then.fund" % (random.randint(10000, 99999))
-		self.browser.execute_script("$('#emailEmail').val('%s')" % email)
-		self.browser.find_element_by_css_selector("#login-next").click()
+		self.browser.execute_script("$('#emailEmail').val('%s').blur()" % email)
 		time.sleep(1)
 
 		# Did we record it?
@@ -174,7 +173,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		self.browser.find_element_by_css_selector("#contribZip").send_keys("90000")
 		self.browser.find_element_by_css_selector("#contribOccupation").send_keys("quality assurance engineer")
 		self.browser.find_element_by_css_selector("#contribEmployer").send_keys("unemployed")
-		self.browser.find_element_by_css_selector("#contrib-next").click()
+		self.browser.find_element_by_css_selector("#contribution-contributorinfo-next").click()
 		time.sleep(1)
 
 		# Enter billing information.
@@ -276,7 +275,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		time.sleep(1) # Wait for form to fade in.
 
 		# Use default pledge amount.
-		self.browser.find_element_by_css_selector("#start-next").click()
+		self.browser.find_element_by_css_selector("#contribution-start-next").click()
 		time.sleep(.5)
 
 		# If the user is logged in, the login form is hidden. Otherwise enter
@@ -284,15 +283,12 @@ class SimulationTest(StaticLiveServerTestCase):
 		if not logged_in:
 			email = "unittest+%d@if.then.fund" % (random.randint(10000, 99999))
 			self.browser.execute_script("$('#emailEmail').val('%s')" % email)
-			self.browser.find_element_by_css_selector("#login-next").click()
 			time.sleep(1)
 
 		if not change_profile:
 			# Use default contributor, billing info
-			self.browser.find_element_by_css_selector("#contrib-next").click()
+			self.browser.find_element_by_css_selector("#contribution-contributorinfo-next").click()
 			time.sleep(.5)
-			self.browser.find_element_by_css_selector("#billing-next").click()
-			time.sleep(1)
 		else:
 			# Click 'Update'.
 			self.browser.find_element_by_css_selector("#pledge-contributor-old-update").click()
@@ -306,7 +302,7 @@ class SimulationTest(StaticLiveServerTestCase):
 			self.browser.find_element_by_css_selector("#contribZip").send_keys("90000")
 			self.browser.find_element_by_css_selector("#contribOccupation").send_keys("quality assurance engineer")
 			self.browser.find_element_by_css_selector("#contribEmployer").send_keys("unemployed")
-			self.browser.find_element_by_css_selector("#contrib-next").click()
+			self.browser.find_element_by_css_selector("#contribution-contributorinfo-next").click()
 			time.sleep(1)
 
 			# Enter billing information.
@@ -315,8 +311,9 @@ class SimulationTest(StaticLiveServerTestCase):
 			self.browser.execute_script("$('#billingCCNum').val('4111 1111 1111 1111')")
 			self.browser.execute_script("$('#billingCCExp').val('9/2025')")
 			self.browser.execute_script("$('#billingCCCVC').val('123')")
-			self.browser.find_element_by_css_selector("#billing-next").click()
-			time.sleep(1)
+
+		self.browser.find_element_by_css_selector("#billing-next").click()
+		time.sleep(1)
 
 		# We're back at the Trigger page, and after the user data is loaded
 		# the user sees an explanation of the pledge.
@@ -348,7 +345,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Click one of the outcome buttons.
 		self.browser.execute_script("$('#pledge-outcomes > button[data-index=1]').click()")
 		time.sleep(1) # Wait for form to fade in.
-		self.browser.find_element_by_css_selector("#start-next").click() # Use default pledge amount
+		self.browser.find_element_by_css_selector("#contribution-start-next").click() # Use default pledge amount
 		time.sleep(.5) # fade in
 
 		# Try to log in.
@@ -359,7 +356,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		time.sleep(1)
 
 		# Use pre-filled contributor/billing info.
-		self.browser.find_element_by_css_selector("#contrib-next").click()
+		self.browser.find_element_by_css_selector("#contribution-contributorinfo-next").click()
 		time.sleep(.5)
 		self.browser.find_element_by_css_selector("#billing-next").click()
 		time.sleep(1)
@@ -378,7 +375,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		time.sleep(1) # page loading...?
 		self.browser.execute_script("$('#pledge-outcomes > button[data-index=1]').click()")
 		time.sleep(1) # fade in
-		self.browser.find_element_by_css_selector("#start-next").click() # Use default pledge amount.
+		self.browser.find_element_by_css_selector("#contribution-start-next").click() # Use default pledge amount.
 		time.sleep(.5) # fade in
 
 		# Try to log in.

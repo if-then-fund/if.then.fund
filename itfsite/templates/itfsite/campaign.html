@@ -1,5 +1,6 @@
 {% extends "master.html" %}
 {% load static %}
+{% load humanize %}
 {% load itfsite_utils %}
 
 {% block title %}{{campaign.title}}{% endblock %}
@@ -32,7 +33,7 @@
 	}
 {% endif %}
 
-#splash-cta {
+#splash-text {
 	max-width: 40em;
 	padding-top: 1em;
 	padding-bottom: 75px;
@@ -43,14 +44,14 @@
 	text-shadow: 2px 4px 4px rgba(255, 255, 255, .8);
 }
 	@media screen and (min-width: 769px) {
-		#splash-cta { padding-top: 75px; }
+		#splash-text { padding-top: 75px; }
 	}
-	#splash-cta h1 {
+	#splash-text h1 {
 		margin-top: 0;
 		font-family: Yanone Kaffeesatz;
 		font-size: 56px;
 	}
-	#splash-cta.invert-text {
+	#splash-text.invert-text {
 		color: white;
 		text-shadow: 2px 4px 4px rgba(0, 0, 0, .8);
 	}
@@ -61,6 +62,10 @@
 	padding: 3em 0;
 	color: #FFF;
 }
+	#story a {
+		color: #FFA;
+		border-color: #FFA;
+	}
 
 	#story dl {
 		margin-top: -.5em;
@@ -117,30 +122,30 @@ form span.required:after {
 {% block body-wide %}
 <div id="splash">
   <div id="nav-wrap">
-  	<div class="container">
+	<div class="container">
 	  <div class="row">
-	      {% include "navbar.html" %}
+		  {% include "navbar.html" %}
 	  </div>
 	</div>
   </div>
 
   <div class="container">
 
-  	{% if campaign.owner %}
+	{% if campaign.owner %}
 	<div id="campaign-owner" style="float: right">
 		<a href="{{campaign.owner.get_absolute_url}}" title="{{campaign.owner.name}}">
 			{% if campaign.owner.banner_image.name %}
 			<div style="margin: 0 1em 0 0; border: 1px solid rgba(0,0,0,.5); width: 120px; height: 120px; background-image: url({{campaign.owner.banner_image.url}}?size=xs); background-size: cover; background-position: 50% 50%;">
-		    </div>
-		    {% else %}
-		    	{{campaign.owner.name}}
-		    {% endif %}
+			</div>
+			{% else %}
+				{{campaign.owner.name}}
+			{% endif %}
 		</a>
 	</div>
 	<div class="clearfix visible-xs"> </div>
 	{% endif %}
 
-	<div id="splash-cta" class="{{campaign.extra.style.splash.class}}">
+	<div id="splash-text" class="{{campaign.extra.style.splash.class}}">
 		<h1>{{campaign.headline}}</h1>
 
 		<div class="subhead">
@@ -153,9 +158,21 @@ form span.required:after {
 <div id="story">
 	<div class="container">
 		<div class="col-sm-8">
-			{{campaign.body_text|render_text:campaign.body_format}}
-
-			<p style="margin-top: 2em"><button class="btn btn-primary" onclick="smooth_scroll_to($('#write-a-letter'));">Get Started!</button></p>
+			{% with body_text=campaign.body_text|render_text:campaign.body_format %}
+			{% with body_text_truncated=body_text|truncatewords_html:70 %}
+				{% if body_text == body_text_truncated %}
+					{{body_text}}
+				{% else %}
+					{{body_text_truncated}}
+					<a href="#" onclick="return show_modal_confirm('About', $('#story-full>div'), [null, 'Close'])">Read More</a>
+					<div id="story-full" class="hidden">
+						<div>
+							{{body_text}}
+						</div>
+					</div>
+				{% endif %}
+			{% endwith %}
+			{% endwith %}
 		</div>
 		<div class="col-sm-4">
 			<dl>
@@ -165,8 +182,8 @@ form span.required:after {
 				{% endif %}
 
 				{% if pledged_total %}
-					<dt>{{pledged_total}}</dt>
-					<dd>committed so far</dd>
+					<dt>${{pledged_total}}</dt>
+					<dd>committed so far by {{pledged_user_count|intcomma}} contributor{{pledged_user_count|pluralize}}</dd>
 				{% endif %}
 			</dl>
 		</div>
@@ -193,72 +210,72 @@ form span.required:after {
 
 				<form id="write-letter-form" onsubmit="return write_letter_submit();">
 				  <div class="form-group">
-				    <label for="email">Your Email Address</label>
-				    <input type="email" class="form-control" id="email" placeholder="email address">
+					<label for="email">Your Email Address</label>
+					<input type="email" class="form-control" id="email" placeholder="email address">
 				  </div>
 				  <div class="row">
-				  	<div class="col-md-3 col-lg-2">
-				      <div class="form-group">
-				        <label for="namePrefix">Title</label>
-				        <select class="form-control" id="namePrefix" style="padding-left: 2px; padding-right: 0;">
-				        	<option></option>
-				        	{% for value in prefix_options %}<option>{{value}}</option>{% endfor %}
-				        </select>
-				      </div>
-				    </div>
-				  	<div class="col-md-4 col-lg-5">
-				      <div class="form-group">
-				        <label for="nameFirst">First Name</label>
-				        <input type="text" class="form-control" id="nameFirst" placeholder="first name">
-				      </div>
-				    </div>
-				  	<div class="col-md-5">
-				      <div class="form-group">
-				        <label for="nameLast">Last Name</label>
-				        <input type="text" class="form-control" id="nameLast" placeholder="last name">
-				      </div>
-				    </div>
+					<div class="col-md-3 col-lg-2">
+					  <div class="form-group">
+						<label for="namePrefix">Title</label>
+						<select class="form-control" id="namePrefix" style="padding-left: 2px; padding-right: 0;">
+							<option></option>
+							{% for value in prefix_options %}<option>{{value}}</option>{% endfor %}
+						</select>
+					  </div>
+					</div>
+					<div class="col-md-4 col-lg-5">
+					  <div class="form-group">
+						<label for="nameFirst">First Name</label>
+						<input type="text" class="form-control" id="nameFirst" placeholder="first name">
+					  </div>
+					</div>
+					<div class="col-md-5">
+					  <div class="form-group">
+						<label for="nameLast">Last Name</label>
+						<input type="text" class="form-control" id="nameLast" placeholder="last name">
+					  </div>
+					</div>
 				  </div>
 				  <div class="form-group">
-				    <label for="addrAddress">Home Address  <span class="tip">(where you vote)</span></label>
-				    <input type="text" class="form-control" id="addrAddress" placeholder="123 Your Location St.">
+					<label for="addrAddress">Home Address  <span class="tip">(where you vote)</span></label>
+					<input type="text" class="form-control" id="addrAddress" placeholder="123 Your Location St.">
 				  </div>
 				  <div class="row">
-				  	<div class="col-sm-5 col-md-6">
-				      <div class="form-group">
-				        <label for="addrCity">City</label>
-				        <input type="text" class="form-control" id="addrCity" placeholder="Everytown">
-				      </div>
-				    </div>
-				  	<div class="col-sm-3 col-md-2">
-				      <div class="form-group">
-				        <label for="addrState">State</label>
-				        <select class="form-control" id="addrState" size="1" style="padding-left: 2px; padding-right: 0;">
-				        	<option></option>
-				        	{% for state in state_abbrs %}<option>{{state}}</option>{% endfor %}
-				        </select>
-				      </div>
-				    </div>
-				  	<div class="col-sm-4">
-				      <div class="form-group">
-				        <label for="addrZip">ZIP</label>
-				        <input type="text" class="form-control" id="addrZip" placeholder="12345" maxlength="10">
-				      </div>
-				    </div>
+					<div class="col-sm-5 col-md-6">
+					  <div class="form-group">
+						<label for="addrCity">City</label>
+						<input type="text" class="form-control" id="addrCity" placeholder="Everytown">
+					  </div>
+					</div>
+					<div class="col-sm-3 col-md-2">
+					  <div class="form-group">
+						<label for="addrState">State</label>
+						<select class="form-control" id="addrState" size="1" style="padding-left: 2px; padding-right: 0;">
+							<option></option>
+							{% for state in state_abbrs %}<option>{{state}}</option>{% endfor %}
+						</select>
+					  </div>
+					</div>
+					<div class="col-sm-4">
+					  <div class="form-group">
+						<label for="addrZip">ZIP</label>
+						<input type="text" class="form-control" id="addrZip" placeholder="12345" maxlength="10">
+					  </div>
+					</div>
 				  </div>
 				  <div class="row hidden">
-				  	<div class="col-xs-12">
-				      <div class="form-group">
-				        <label for="phone">Phone Number <span class="tip">(required by some congressional offices)</span></label>
-				        <input type="tel" class="form-control" id="phone" placeholder="555-555-1234">
-				      </div>
-				    </div>
+					<div class="col-xs-12">
+					  <div class="form-group">
+						<label for="phone">Phone Number <span class="tip">(required by some congressional offices)</span></label>
+						<input type="tel" class="form-control" id="phone" placeholder="555-555-1234">
+					  </div>
+					</div>
 				  </div>
 	
 				  <button id="write-letter-next" type="submit" class="btn btn-primary">Next &raquo;</button>
 
 				  <small>
-				  	<p style="margin-top: 1.5em">All fields are required by the congressional office receiving your letter. You must have a mailing address within a United States congressional district to participate.</p>
+					<p style="margin-top: 1.5em">All fields are required by the congressional office receiving your letter. You must have a mailing address within a United States congressional district to participate.</p>
 				  </small>
 				</form>
 
@@ -323,13 +340,39 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 			$('#show_utm_tool').show();
 
 		// Show any actions the user already performed.
+		var can_make_pledge = true;
 		for (var i = 0; i < (the_page ? the_page.pledges.length : 0); i++) {
-		    var p = the_page.pledges[i];
-		    $('#my-actions').removeClass('hidden');
-	        $('#my-actions div.actions-container').append($(p.rendered));
+			var p = the_page.pledges[i];
+			$('#my-actions').removeClass('hidden');
+			$('#my-actions div.actions-container').append($(p.rendered));
+
+			{% if trigger %}
+			// If the user has already made a pledge on this trigger,
+			// show alternate content. Note that the user may not be
+			// logged in because we may have placed the pledge id into
+			// the user's session. Replace the form and return since
+			// everything else is about form validation.
+			if (p.trigger == {{trigger.id}}) {
+				// The user already made a pledge on this. Totally destroy
+				// the form elements for making another pledge.
+				$('#make-a-contribution').remove();
+				can_make_pledge = false;
+
+				// Mobile browsers (iOS and Android) don't seem to scroll
+				// to the page top on a reload, which we do after pledge
+				// submission to update the page so we end up here. At the
+				// least we should scroll up, but also the user's pledge
+				// may not be visible if we scroll to the top. So scroll
+				// to that.
+				smooth_scroll_to($('#my-actions'));
+			}
+			{% endif %}
 		}
 
-		pledge_init();
+		{% if trigger %}
+		if (can_make_pledge)
+			pledge_init();
+		{% endif %}
 	})
 
 	function utm_tool() {

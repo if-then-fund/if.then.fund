@@ -167,7 +167,7 @@ def campaign(request, id):
 		return redirect(campaign.get_absolute_url()+qs)
 
 	from contrib.models import TriggerStatus, TriggerCustomization, Pledge
-	from django.db.models import Sum
+	from django.db.models import Sum, Count
 
 	# Load all of the TriggerCustomizations that apply to any of the triggers.
 	triggers = [
@@ -195,7 +195,8 @@ def campaign(request, id):
 		"trigger_outcome_strings": tcust.outcome_strings() if tcust else trigger.outcome_strings(),
 		"suggested_pledge": 5,
 		"alg": Pledge.current_algorithm(),
-		"pledged_total": Pledge.objects.filter(via_campaign=campaign).aggregate(sum=Sum('amount'))["sum"] if can_show_pledge_totals else None,
+		"pledged_total": Pledge.objects.filter(via_campaign=campaign).exclude(user=None).aggregate(sum=Sum('amount'))["sum"] if can_show_pledge_totals else None,
+		"pledged_user_count": Pledge.objects.filter(via_campaign=campaign).exclude(user=None).values("user").aggregate(count=Count('user'))["count"] if can_show_pledge_totals else None,
 		})
 	
 @user_view_for(campaign)

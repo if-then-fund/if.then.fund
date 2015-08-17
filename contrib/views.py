@@ -193,7 +193,7 @@ def create_pledge(request):
 		exists_filters = { 'user': p.user }
 
 	# Anonymous user is submitting a pledge with an email address & password.
-	elif request.POST.get("hasPassword") == "1":
+	elif request.POST.get("password"):
 		from itfsite.accounts import User
 		from itfsite.betteruser import LoginException
 		try:
