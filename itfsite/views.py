@@ -217,7 +217,7 @@ def campaign_user_view(request, id):
 	ret["pledges"] = [
 		{
 			"trigger": pledge.trigger.id,
-			"rendered": template.render(django.template.Context({
+			"rendered": template.render(django.template.RequestContext(request, {
 				"show_long_title": len(pledges) > 1,
 				"pledge": pledge,
 				"execution": PledgeExecution.objects.filter(pledge=pledge).first(),

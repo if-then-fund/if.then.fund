@@ -45,7 +45,7 @@
 		</p>
 	{% endif %}
 
-	{% if pledge.trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
+	{% if pledge.trigger.status|stringformat:'s' == 'TriggerStatus.Open' and not HIDE_REMOTE_EMBEDS %}
 		<hr>
 		<div class="container-fluid">
 			<div class="row">
