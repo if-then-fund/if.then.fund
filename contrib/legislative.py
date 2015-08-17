@@ -3,6 +3,9 @@ from django.conf import settings
 
 ALLOW_DEAD_BILL = False
 
+class TriggerAlreadyExistsException(Exception):
+	pass
+
 def create_trigger_from_bill(bill_id, chamber):
 	# split/validate the bill ID
 	import re
@@ -50,7 +53,8 @@ def create_trigger_from_bill(bill_id, chamber):
 	t = Trigger()
 
 	t.key = "usbill:" + bill_id + ":" + chamber
-	if Trigger.objects.filter(key=t.key).exists(): raise Exception("A trigger for this bill and chamber already exists.")
+	if Trigger.objects.filter(key=t.key).exists():
+		raise TriggerAlreadyExistsException("A trigger for this bill and chamber already exists.")
 
 	t.title = bill['title'][0:200]
 	t.owner = None

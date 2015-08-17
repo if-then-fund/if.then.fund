@@ -1,14 +1,16 @@
 #!django_script
 import sys, random
-from itfsite.models import User
+from itfsite.models import User, Campaign
 from contrib.models import *
 
-trigger = Trigger.objects.get(id=sys.argv[1])
+campaign = Campaign.objects.get(id=sys.argv[1])
+trigger = campaign.contrib_triggers.first()
 user = User.objects.create(email="unit.test+%d@if.then.fund" % random.randint(10000, 20000))
 ci = ContributorInfo.createRandom()
 p = Pledge.objects.create(
 	user=user,
 	trigger=trigger,
+	via_campaign=campaign,
 	profile=ci,
 	algorithm=Pledge.current_algorithm()['id'],
 	desired_outcome=random.randint(0, len(trigger.outcomes)-1),

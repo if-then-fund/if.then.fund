@@ -8,7 +8,7 @@
 # Create some sample triggers.
 fixtures/sample-triggers 
 
-# Create a bunch of random pledges on triggers 1 and 2.
+# Create a bunch of random pledges on campaigns 1 and 2.
 fixtures/create-random-pledge 1
 fixtures/create-random-pledge 1
 fixtures/create-random-pledge 1

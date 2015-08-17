@@ -1,7 +1,7 @@
 #!django_script
 from itfsite.models import *
 from contrib.models import *
-from contrib.legislative import create_trigger_from_bill
+from contrib.legislative import create_trigger_from_bill, TriggerAlreadyExistsException
 
 # Create some triggers.
 for bill in ("hconres1-114", "hr22-114", "s30-114"):
@@ -9,27 +9,47 @@ for bill in ("hconres1-114", "hr22-114", "s30-114"):
 		t = create_trigger_from_bill(bill, 'h')
 		t.status = TriggerStatus.Open
 		t.save()
-		print(t.get_absolute_url())
-	except Exception as e:
-		print(e)
+	except TriggerAlreadyExistsException as e:
+		print(bill, e)
 
-# Create a triggercustomization.
-org = Organization.objects.create(
-	name="Test Organization",
-	slug="test-organization",
-	orgtype=OrganizationType.C4,
-	description="This is a test organization.",
-	description_format=0,
-	)
-for trigger in [Trigger.objects.last()]:
-	tcust = TriggerCustomization.objects.create(
-		owner=org,
-		trigger=trigger,
-		title="Customized-" + trigger.title,
-		slug="customized-" + trigger.slug,
-		visible=True,
-		subhead="We think this bill should pass.",
-		subhead_format=0,
-		description="We think this bill should pass.",
+# Create an Organization to own some Campaigns and TriggerCustomizations.
+org = Organization.objects.filter(name="Test Organization").first()
+if not org:
+	org = Organization.objects.create(
+		name="Test Organization",
+		slug="test-organization",
+		orgtype=OrganizationType.C4,
+		description="This is a test organization.",
 		description_format=0,
 		)
+
+# Create a triggercustomization for each.
+for trigger in Trigger.objects.all():
+	TriggerCustomization.objects.get_or_create(
+		owner=org,
+		trigger=trigger,
+		defaults={
+
+		})
+
+# Create a campaign for each.
+for trigger in Trigger.objects.all():
+	for owner in (None, org):
+		campaign = Campaign.objects.filter(owner=owner, contrib_triggers=trigger).first()
+		if not campaign:
+			campaign = Campaign.objects.create(
+				title=trigger.title,
+				slug=trigger.slug,
+				subhead=trigger.subhead,
+				subhead_format=trigger.subhead_format,
+
+				owner=owner,
+
+				status=CampaignStatus.Open,
+
+				headline=trigger.title,
+				body_text=trigger.description,
+				body_format=trigger.description_format,
+			)
+			campaign.contrib_triggers.add(trigger)
+		print(campaign.get_absolute_url())
