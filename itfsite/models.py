@@ -105,7 +105,7 @@ class Campaign(models.Model):
 		return "Campaign(%d, %s)" % (self.id, repr(self.title))
 
 	def get_absolute_url(self):
-		return "/a/%d/%s" % (self.id, self.slug)
+		return "/a/%d/%s%s" % (self.id, (self.owner.slug + "-") if self.owner else "", self.slug)
 
 	def get_short_url(self):
 		return settings.SITE_ROOT_URL + ("/a/%d" % self.id)
