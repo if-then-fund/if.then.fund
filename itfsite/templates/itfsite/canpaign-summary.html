@@ -1,0 +1,26 @@
+{% load itfsite_utils %}
+
+<div class="campaign-description">
+	{{campaign.subhead|render_text_plain:campaign.subhead_format|truncatewords:30}}
+</div>
+
+<div class="campaign-description">
+	{% with totals=campaign.get_contrib_totals %}
+		{% if totals.contrib_total > 0 %}
+			{# has contributions #}
+
+			{% if totals.contrib_fixed_outcome_total > 0 %}
+				{{totals.contrib_fixed_outcome_total|currency}} contributed
+				
+			{% else %}
+				{# report totals by outcome for the most recent trigger #}
+				<p>{% for outcome in totals.by_trigger.0.aggregates.outcomes %}
+					{{outcome.label}}: {{outcome.total|currency}}<br>
+				{% endfor %}</p>
+			{% endif %}
+		{% elif totals.pledged_total %}
+			{# just pledges, no contributions yet #}
+			{{ totals.pledged_total|currency }} committed so far
+		{% endif %}
+	{% endwith %}
+</div>

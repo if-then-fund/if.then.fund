@@ -390,19 +390,22 @@ def cancel_pledge(request):
 
 @anonymous_view
 def report(request):
-	context = {
+	if "trigger" in request.GET:
+		trigger = get_object_or_404(Trigger, id=request.GET['trigger'])
+	else:
+		trigger = None
 
+	context = {
 	}
-	context.update(report_fetch_data(request))
+	context.update(report_fetch_data(trigger))
 	return render(request, "contrib/totals.html", context)
 
-def report_fetch_data(request):
+def report_fetch_data(trigger, via_campaign, with_actor_details=True):
 	pledge_slice_fields = { }
-	slice_fields = { }
+	pledgeexec_slice_fields = { }
+	ca_slice_fields = { }
 
-	if "trigger" in request.GET:
-		# get the object & validate that there is data
-		trigger = get_object_or_404(Trigger, id=request.GET['trigger'])
+	if trigger:
 		pledge_slice_fields["trigger"] = trigger
 		try:
 			te = trigger.execution
@@ -412,7 +415,13 @@ def report_fetch_data(request):
 			raise Http404("This trigger did not have any contributions.")
 		if te.pledge_count < .75 * trigger.pledge_count:
 			raise Http404("This trigger is still being executed.")
-		slice_fields["trigger_execution"] = te
+		pledgeexec_slice_fields["trigger_execution"] = te
+		ca_slice_fields["trigger_execution"] = te
+
+	if via_campaign:
+		pledge_slice_fields["via_campaign"] = via_campaign
+		pledgeexec_slice_fields["pledge__via_campaign"] = via_campaign
+		ca_slice_fields["via_campaign"] = via_campaign
 
 	# form response
 	ret = { }
@@ -427,34 +436,37 @@ def report_fetch_data(request):
 	ret["pledge_aggregate"] = pledges.aggregate(amount=Sum('amount'))["amount"]
 
 	# number of executed pledges and users with executed pledges
-	pledge_executions = PledgeExecution.objects.filter(problem=PledgeExecutionProblem.NoProblem, **slice_fields)
+	pledge_executions = PledgeExecution.objects.filter(problem=PledgeExecutionProblem.NoProblem, **pledgeexec_slice_fields)
 	ret["users"] = pledge_executions.values("pledge__user").distinct().count()
 	ret["num_triggers"] = pledge_executions.values("trigger_execution").distinct().count()
 	ret["first_contrib_date"] = pledge_executions.order_by('created').first().created
 	ret["last_contrib_date"] = pledge_executions.order_by('created').last().created
 
 	# aggregate count and amount of campaign contributions
-	ret["total"] = ContributionAggregate.get_slice(**slice_fields)
+	ret["total"] = ContributionAggregate.get_slice(**ca_slice_fields)
 	if ret["total"]["count"] > 0:
 		ret["total"]["average"] = ret["total"]["total"] / ret["total"]["count"]
 
-	if "trigger_execution" in slice_fields:
+	if "trigger_execution" in ca_slice_fields:
 		# Aggregates by outcome.
-		ret['outcomes'] = ContributionAggregate.get_slices('outcome', **slice_fields)
+		ret['outcomes'] = ContributionAggregate.get_slices('outcome', **ca_slice_fields)
 
 	# Aggregates by actor.
-	from collections import defaultdict
-	ret['actors'] = defaultdict(lambda : defaultdict( lambda : decimal.Decimal(0) ))
-	for rec in ContributionAggregate.get_slices('actor', 'incumbent', **slice_fields):
-		ret['actors'][rec['actor']]['actor'] = rec['actor']
-		ret['actors'][rec['actor']][str(rec['incumbent'])] += rec['total']
-	ret['actors'] = sorted(ret['actors'].values(), key = lambda x : (-(x['True'] + x['False']), -x['True'], x['actor'].name_sort))
+	if with_actor_details:
+		from collections import defaultdict
+		ret['actors'] = defaultdict(lambda : defaultdict( lambda : decimal.Decimal(0) ))
+		for rec in ContributionAggregate.get_slices('actor', 'incumbent', **ca_slice_fields):
+			ret['actors'][rec['actor']]['actor'] = rec['actor']
+			ret['actors'][rec['actor']][str(rec['incumbent'])] += rec['total']
+			if "action" in rec:
+				ret['actors'][rec['actor']]['action'] = rec['action']
+		ret['actors'] = sorted(ret['actors'].values(), key = lambda x : (-(x['True'] - x['False']), -x['True'], x['actor'].name_sort))
 
 	# Aggregates by incumbent/chalenger.
-	ret['by_incumb_chlngr'] = ContributionAggregate.get_slices('incumbent', **slice_fields)
+	ret['by_incumb_chlngr'] = ContributionAggregate.get_slices('incumbent', **ca_slice_fields)
 
 	# Aggregates by party.
-	ret['by_party'] = ContributionAggregate.get_slices('party', **slice_fields)
+	ret['by_party'] = ContributionAggregate.get_slices('party', **ca_slice_fields)
 
 	# report
 	return ret

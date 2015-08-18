@@ -1,5 +1,4 @@
 {% extends "master.html" %}
-{% load itfsite_utils %}
 
 {% block title2 %}if.then.fund - {% include "tagline.txt" %}{% endblock %}
 
@@ -159,11 +158,11 @@
 						{% if forloop.counter0|divisibleby:3 %}<div class="clearfix visible-md-block"></div><div class="clearfix visible-lg-block"></div>{% endif %}
 						<div class="col-sm-6 col-md-4">
 							<div class="campaign-bubble">
-								<div class="campaign-title"><a href="{{c.get_absolute_url}}">{{c.title}}</a></div>
 								<div class="campaign-description">
-									<p>{% if c.owner %}{{c.owner.name}}{% endif %}</p>
-									{{c.subhead|render_text_plain:c.subhead_format|truncatewords:30}}
+									<strong>{% if c.owner %}{{c.owner.name}}{% endif %}</strong>
 								</div>
+								<div class="campaign-title"><a href="{{c.get_absolute_url}}">{{c.title}}</a></div>
+								{% include "itfsite/canpaign-summary.html" with campaign=c %}
 								<div class="campaign-take-action">
 									<a href="{{c.get_absolute_url}}">Take Action &raquo;</a>
 								</div>

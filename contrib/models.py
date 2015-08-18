@@ -335,7 +335,7 @@ class TriggerCustomization(models.Model):
 		unique_together = ('trigger', 'owner')
 
 	def __str__(self):
-		return "%s / %s: %s" % (self.owner, self.trigger, self.title)
+		return "%s / %s" % (self.owner, self.trigger)
 
 	def has_fixed_outcome(self):
 		return self.outcome is not None
@@ -1328,7 +1328,8 @@ class Contribution(models.Model):
 			{ "trigger_execution": self.action.execution, "via_campaign": self.pledge_execution.pledge.via_campaign },
 		]:
 			update(**kw)
-			update(outcome=self.pledge_execution.pledge.desired_outcome, **kw)
+			if "trigger_execution" in kw:
+				update(outcome=self.pledge_execution.pledge.desired_outcome, **kw)
 			update(actor=self.action.actor, incumbent=not self.recipient.is_challenger, **kw)
 			update(incumbent=not self.recipient.is_challenger, **kw)
 			update(party=self.action.party if not self.recipient.is_challenger else self.recipient.party, **kw)
@@ -1364,7 +1365,7 @@ class ContributionAggregate(models.Model):
 		unique_together = [CONTRIBUTION_AGGREGATE_FIELDS]
 
 	def __str__(self):
-		return "%d | %s %s %s %s %s %s" % (self.trigger_execution_id, self.via, self.outcome, self.action_id, self.incumbent, self.party, self.district)
+		return "%d | %s %s %s %s %s %s" % (self.trigger_execution_id, self.via_campaign, self.outcome, self.actor_id, self.incumbent, self.party, self.district)
 
 	class Updater(object):
 		def __init__(self, buffered=True):
@@ -1447,10 +1448,31 @@ class ContributionAggregate(models.Model):
 		# if actors were requested, pre-fetch objects
 		actors = Actor.objects.in_bulk(rec['actor'] for rec in ret if 'actor' in rec)
 
+		# if actors were requested add Action instances
+		actions = { }
+		if slce.get('trigger_execution') and len(actors) > 0:
+			actions = Action.objects.filter(execution=slce['trigger_execution']).select_related('execution__trigger')
+			actions = { action.actor_id: action for action in actions }
+
+		# if outcome was requested, add outcome labels
+		if 'outcome' in across and slce.get('trigger_execution'):
+			outcome_strings = slce['trigger_execution'].trigger.outcome_strings()
+			if slce.get('via_campaign'):
+				# Get outcome strings from any TriggerCustomization, if there is one.
+				tcust = TriggerCustomization.objects.filter(owner=slce['via_campaign'].owner, trigger=slce['trigger_execution'].trigger).first()
+				if tcust:
+					outcome_strings = tcust.outcome_strings()
+
 		# turn integers from .values() back into objects
 		for rec in ret:
-			if 'actor' in rec: rec['actor'] = actors[rec['actor']]
-			if 'party' in rec: rec['party'] = ActorParty(rec['party'])
+			if 'actor' in rec:
+				rec['actor'] = actors[rec['actor']]
+				rec['action'] = actions[rec['actor'].id]
+
+			if 'party' in rec:
+				rec['party'] = ActorParty(rec['party'])
+			if 'outcome' in rec and 'trigger_execution' in slce:
+				rec['label'] = outcome_strings[rec['outcome']]['label']
 		
 		return ret
 

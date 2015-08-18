@@ -5,7 +5,7 @@ from contrib.models import *
 
 campaign = Campaign.objects.get(id=sys.argv[1])
 trigger = campaign.contrib_triggers.first()
-user = User.objects.create(email="unit.test+%d@if.then.fund" % random.randint(10000, 20000))
+user = User.objects.create(email="unit.test+%d@if.then.fund" % random.randint(100000, 900000))
 ci = ContributorInfo.createRandom()
 p = Pledge.objects.create(
 	user=user,

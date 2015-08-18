@@ -116,6 +116,10 @@ form span.required:after {
 	background-color: #EEE;
 	padding-top: 2em;
 }
+
+.table {
+	font-size: 90%;
+}
 </style>
 {% endblock %}
 
@@ -175,17 +179,63 @@ form span.required:after {
 			{% endwith %}
 		</div>
 		<div class="col-sm-4">
+			{% with totals=campaign.get_contrib_totals %}
 			<dl>
 				{% if letters_campaign %}
 				<dt>###</dt>
 				<dd>letters written</dd>
 				{% endif %}
 
-				{% if pledged_total %}
-					<dt>${{pledged_total}}</dt>
-					<dd>committed so far by {{pledged_user_count|intcomma}} contributor{{pledged_user_count|pluralize}}</dd>
+				{% if totals.contrib_total > 0 %}
+					{# has contributions #}
+					{% if totals.contrib_fixed_outcome_total > 0 %}
+						<dt>{{totals.contrib_fixed_outcome_total|currency}}</dt>
+						<dd>
+							contributed by {{totals.contrib_user_count|intcomma}} contributor{{totals.contrib_user_count|pluralize}}
+							{% if totals.by_trigger|length == 1 %}
+							<small>(<a href="#" onclick="$('#modal_trigger_{{totals.by_trigger.0.trigger.id}}').modal(); return false;">details</a>)</small>
+							{% endif %}
+						</dd>
+						{% if totals.by_trigger|length > 1 %}
+						{% for trigger in totals.by_trigger %}
+							<p><small><a href="#" onclick="$('#modal_trigger_{{trigger.trigger.id}}').modal(); return false;">{{trigger.trigger.title}}</a></small></p>
+						{% endfor %}
+						{% endif %}
+					
+					{% else %}
+						{% for trigger in totals.by_trigger %}
+							{% if totals.by_trigger|length > 1 %}
+								<p><b>{{trigger.trigger.title}}</b></p>
+							{% endif %}
+							<p style="float: right"><small><a href="#" onclick="$('#modal_trigger_{{trigger.trigger.id}}').modal(); return false;">Details</a></small></p>
+							{% for outcome in trigger.aggregates.outcomes %}
+								<dt>{{outcome.total|currency}}</dt>
+								<dd>{{outcome.label}}</dd>
+							{% endfor %}
+						{% endfor %}
+					{% endif %}
+
+				{% elif totals.pledged_total != None %}
+					{# just pledges, no contributions yet #}
+					<dt>{{ totals.pledged_total|currency }}</dt>
+					<dd>committed so far by {{totals.pledged_user_count|intcomma}} contributor{{totals.pledged_user_count|pluralize}}</dd>
+
+				{% else %}
+					<dt>{{ totals.pledged_site_wide|currency }}</dt>
+					<dd>committed on all sides of this issue site-wide*</dd>
+					<p style="font-size: 13px; line-height: 128%;">*Federal law prevents us from giving this campaign&rsquo;s total ahead of congressional action. Instead we show the total committed on both sides of this issue across all <span class="site-brand">if.then.fund</span> campaigns.</p>
+
 				{% endif %}
+
 			</dl>
+			{% endwith %}
+
+			<hr>
+
+			<small>
+			<p>This page was added to <span class="site-brand">if.then.fund</span> {% if campaign.owner %}by <a href="{{campaign.owner.get_absolute_url}}">{{campaign.owner.name}}</a>{% endif %} on {{campaign.created|date}}.</p>
+			{% if trigger.execution %}<p>The {{trigger.trigger_type.strings.action_noun}} occurred on {{trigger.execution.action_time|date}}. Contributions began to be processed on {{trigger.execution.created|date}}.</p>{% endif %}
+			</small>
 		</div>
 	</div>
 </div>
@@ -327,6 +377,57 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 	<div style="margin-top: .5em"><input id="utm_tool_link" type="text" value="" style="width: 100%" readonly></div>
 </div>
 
+{% with totals=campaign.get_contrib_totals %}
+{% for trigger in totals.by_trigger %}
+    <div id="modal_trigger_{{trigger.trigger.id}}" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_trigger_{{trigger.trigger.id}}_title" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="modal_trigger_{{trigger.trigger.id}}_title">{{trigger.trigger.title}}</h4>
+          </div>
+          <div class="modal-body">
+          	{{trigger.trigger.execution.description|render_text:trigger.trigger.execution.description_format}}
+
+            <h5 style="margin-top: 2em">Contributions By {{trigger.trigger.trigger_type.strings.action_noun.title}}</h5>
+            <table class="table" style="width: auto">
+            <tr><th>{{trigger.trigger.trigger_type.strings.action_noun.title}}</th> <th>Total Contributions</th></tr>
+            {% for outcome in trigger.aggregates.outcomes %}
+            	<tr><td>{{outcome.label}}</td> <td>{{outcome.total|currency}}</td></tr>
+            {% endfor %}
+            </table>
+
+            <h5>Contributions By Party of Recipient Candidate</h5>
+            <table class="table" style="width: auto">
+            <tr><th>Party</th> <th>Total Contributions</th></tr>
+            {% for party in trigger.aggregates.by_party %}
+            	<tr><td>{{party.party.name}}</td> <td>{{party.total|currency}}</td></tr>
+            {% endfor %}
+            </table>
+
+            <h5>Contributions By {{trigger.trigger.trigger_type.strings.actor.title}}</h5>
+            <table class="table">
+            <tr>
+            	<th>{{trigger.trigger.trigger_type.strings.actor.title}}</th>
+            	<th>{{trigger.trigger.trigger_type.strings.action_noun.title}}</th>
+            	<th>Contributions to<br>{{trigger.trigger.trigger_type.strings.actor.title}}</th>
+            	<th>Contributions to<br>Opponent</th>
+            </tr>
+            {% for actor in trigger.aggregates.actors %}
+            	<tr>
+            		<td>{{actor.actor}}</td>
+            		<td>{{actor.action.outcome_label}}</td>
+            		<td class="{% if actor.True > 0 %}text-success{% else %}text-muted{% endif %}">{{actor.True|currency}}</td>
+            		<td class="{% if actor.False > 0 %}text-danger{% else %}text-muted{% endif %}">{{actor.False|currency}}</td>
+            	</tr>
+            {% endfor %}
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endfor %}
+{% endwith %}
 
 {# with body-wide, we leave open two divs: an unstyled dive and a .container #}
 

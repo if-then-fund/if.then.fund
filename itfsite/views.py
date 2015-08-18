@@ -14,7 +14,7 @@ def homepage(request):
 	# The site homepage.
 
 	return render(request, "itfsite/homepage.html", {
-		"open_campaigns": Campaign.objects.filter(status=CampaignStatus.Open).order_by('-created')[0:12],
+		"open_campaigns": Campaign.objects.filter(status=CampaignStatus.Open).order_by('-created')[0:16], # 16 for debugging
 	})
 
 def simplepage(request, pagename):
@@ -167,19 +167,6 @@ def campaign(request, id):
 		return redirect(campaign.get_absolute_url()+qs)
 
 	from contrib.models import TriggerStatus, TriggerCustomization, Pledge
-	from django.db.models import Sum, Count
-
-	# Load all of the TriggerCustomizations that apply to any of the triggers.
-	triggers = [
-		(trigger, TriggerCustomization.objects.filter(owner=campaign.owner, trigger=trigger).first())
-		for trigger in campaign.contrib_triggers.all()
-	]
-
-	# We can only show pledged totals if no triggers have customizations that restrict the outcome.
-	can_show_pledge_totals = True
-	for trigger, tcust in triggers:
-		if tcust and tcust.outcome:
-			can_show_pledge_totals = False
 
 	# What trigger should the user take action on?
 	trigger = campaign.contrib_triggers.filter(status__in=(TriggerStatus.Open,TriggerStatus.Executed)).order_by('-created').first()
@@ -190,13 +177,14 @@ def campaign(request, id):
 	# render page
 	return render(request, "itfsite/campaign.html", {
 		"campaign": campaign,
+
+		# for contrib.Trigger actions
 		"trigger": trigger,
 		"tcust": tcust,
 		"trigger_outcome_strings": tcust.outcome_strings() if tcust else trigger.outcome_strings(),
 		"suggested_pledge": 5,
 		"alg": Pledge.current_algorithm(),
-		"pledged_total": Pledge.objects.filter(via_campaign=campaign).exclude(user=None).aggregate(sum=Sum('amount'))["sum"] if can_show_pledge_totals else None,
-		"pledged_user_count": Pledge.objects.filter(via_campaign=campaign).exclude(user=None).values("user").aggregate(count=Count('user'))["count"] if can_show_pledge_totals else None,
+
 		})
 	
 @user_view_for(campaign)

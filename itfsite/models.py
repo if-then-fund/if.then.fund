@@ -4,6 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.template import Template, Context
 from django.conf import settings
+from django.http import Http404
 
 from itfsite.accounts import User, NotificationsFrequency
 from contrib.models import TextFormat
@@ -109,6 +110,89 @@ class Campaign(models.Model):
 
 	def get_short_url(self):
 		return settings.SITE_ROOT_URL + ("/a/%d" % self.id)
+
+	def get_contrib_totals(self):
+		# Get all of the displayable totals for this campaign.
+
+		ret = { }
+
+		from django.db.models import Sum, Count
+		from contrib.models import TriggerStatus, TriggerCustomization, Pledge, PledgeExecution, PledgeExecutionProblem
+
+		# What pledges should we show? For consistency across stats, filter out unconfirmed
+		# pledges.
+		pledges = Pledge.objects.exclude(user=None)
+		if self.owner:
+			# When we're showing a campaign owned by an organization, then we
+			# only count pledges to this very campaign.
+			pledges = pledges.filter(via_campaign=self)
+		else:
+			# Otherwise, we can count any campaign but only to triggers in this
+			# campaign.
+			pledges = pledges.filter(trigger__in=self.contrib_triggers.all())
+
+		# If no trigger cutomization has a fixed outcome, then we can show
+		# plege totals. (We can't show pledge totals when there is a fixed
+		# outcome.) In no case do we break this down by desired outcome.
+		# There are never TriggerCustomizations when this campaign has no
+		# owner.
+		tcusts = TriggerCustomization.objects.filter(owner=self.owner, trigger__campaigns=self)
+		if not tcusts.exclude(outcome=None).exists():
+			ret["pledged_total"] = pledges.aggregate(sum=Sum('amount'))["sum"] or 0
+			ret["pledged_user_count"] = pledges.values("user").distinct().aggregate(count=Count('user'))["count"] or 0
+		else:
+			ret["pledged_site_wide"] = Pledge.objects.exclude(user=None).filter(trigger__in=self.contrib_triggers.all()).aggregate(sum=Sum('amount'))["sum"] or 0
+
+		# If any trigger has been executed, then we can show executed totals.
+		# In all cases we can show the total amount of contributions across all triggers.
+		# Of course, this could be on all sides of an issue, so this isn't usually
+		# interesting.
+		ret["contrib_total"] = 0
+		ret["contrib_user_count"] = 0 # not distinct across triggers
+
+		# Assume all fixed-outcome triggers are about the same issue. Compute the totals
+		# across those triggers. Otherwise, we don't know whether outcome X in any trigger
+		# corresponds to the same real-world issue as outcome X in any other trigger.
+		ret["contrib_fixed_outcome_total"] = 0
+
+		# Report outcomes by trigger, with a breakdown by outcome, and sum across triggers.
+		from contrib.views import report_fetch_data
+		ret["by_trigger"] = []
+		for trigger in self.contrib_triggers.filter(status=TriggerStatus.Executed).order_by('-created'):
+			try:
+				# Get this trigger's totals.
+				agg = report_fetch_data(trigger, via_campaign=self if self.owner else None)
+				ret["by_trigger"].append({
+					"trigger": trigger,
+					"aggregates": agg
+				})
+
+				# We sum here and not in an aggregate SQL statement for two reasons:
+				# Triggers that haven't had all of their pledges executed should not
+				# reveal grossly incomplete information. And our templates assume that
+				# if contrib_total > 0, then there is by_trigger information. So we
+				# do these two parts together for consistency.
+				ret["contrib_total"] += agg["total"]["total"]
+				ret["contrib_user_count"] += agg["users"] # not distinct
+
+				# If this trigger has a TriggerCustomization with a fixed outcome,
+				# sum the total contributions for that outcome only.
+				tcust = TriggerCustomization.objects.filter(owner=self.owner, trigger=trigger).first()
+				if tcust and tcust.outcome is not None:
+					for outcome in agg["outcomes"]:
+						if outcome["outcome"] == tcust.outcome:
+							# No easy way to get the total number of unique users.
+							ret["contrib_fixed_outcome_total"] += outcome["total"]
+
+			except Http404:
+				# This is how report_fetch_data indicates that data
+				# is not available. That could be because we haven't
+				# yet executed enough pledges to report contribution
+				# totals.
+				continue
+
+		return ret
+
 
 #####################################################################
 #

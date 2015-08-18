@@ -1,10 +1,11 @@
 #!django_script
+import random
 from itfsite.models import *
 from contrib.models import *
 from contrib.legislative import create_trigger_from_bill, TriggerAlreadyExistsException
 
 # Create some triggers.
-for bill in ("hconres1-114", "hr22-114", "s30-114"):
+for bill in ("hconres1-114", "hr22-114", "s30-114", "s31-114"):
 	try:
 		t = create_trigger_from_bill(bill, 'h')
 		t.status = TriggerStatus.Open
@@ -12,29 +13,53 @@ for bill in ("hconres1-114", "hr22-114", "s30-114"):
 	except TriggerAlreadyExistsException as e:
 		print(bill, e)
 
-# Create an Organization to own some Campaigns and TriggerCustomizations.
-org = Organization.objects.filter(name="Test Organization").first()
-if not org:
-	org = Organization.objects.create(
-		name="Test Organization",
-		slug="test-organization",
+# Create some Organizations to own some Campaigns and TriggerCustomizations.
+org1 = Organization.objects.filter(name="Test Organization 1").first()
+if not org1:
+	org1 = Organization.objects.create(
+		name="Test Organization 1",
+		slug="test-organization-1",
+		orgtype=OrganizationType.C4,
+		description="This is a test organization.",
+		description_format=0,
+		)
+org2 = Organization.objects.filter(name="Test Organization 2").first()
+if not org2:
+	org2 = Organization.objects.create(
+		name="Test Organization 2",
+		slug="test-organization-2",
+		orgtype=OrganizationType.C4,
+		description="This is a test organization.",
+		description_format=0,
+		)
+org3 = Organization.objects.filter(name="Test Organization 3").first()
+if not org3:
+	org3 = Organization.objects.create(
+		name="Test Organization 3",
+		slug="test-organization-3",
 		orgtype=OrganizationType.C4,
 		description="This is a test organization.",
 		description_format=0,
 		)
 
-# Create a triggercustomization for each.
+# Create TriggerCustomizations for each...
 for trigger in Trigger.objects.all():
 	TriggerCustomization.objects.get_or_create(
-		owner=org,
+		owner=org1,
 		trigger=trigger,
 		defaults={
 
 		})
+	TriggerCustomization.objects.get_or_create(
+		owner=org2,
+		trigger=trigger,
+		defaults={
+			outcome=random.randint(0, 1),
+		})
 
 # Create a campaign for each.
 for trigger in Trigger.objects.all():
-	for owner in (None, org):
+	for owner in (None, org1, org2, org3):
 		campaign = Campaign.objects.filter(owner=owner, contrib_triggers=trigger).first()
 		if not campaign:
 			campaign = Campaign.objects.create(
