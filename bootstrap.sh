@@ -19,9 +19,6 @@ fi
 
 git submodule update --init
 
-mkdir -p itfsite/static/js/ext
-wget -qO itfsite/static/js/ext/jquery.payment.js https://raw.githubusercontent.com/stripe/jquery.payment/3dbada6a8c7fbb0d13ac121d0581a738d9576f53/lib/jquery.payment.js
-
 # Install package dependencies.
 
 function apt_install {
