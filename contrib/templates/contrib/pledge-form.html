@@ -719,15 +719,29 @@ function do_pledge_start_next() {
   mixpanel.track("Pledge Amount Entered", { 'trigger': {{trigger.id}}, 'amount': get_contribution_amount() });
 }
 
+var _did_pledge_show_email_popover = false;
+function pledge_show_email_popover(text) {
+  var e = $('#emailEmail');
+  if (_did_pledge_show_email_popover) e.popover("destroy");
+  if (text) {
+    // something about having it be animated makes it sometimes prematurely disappear,
+    // maybe because of combining it with our ajax loading indicator?
+    e.popover({ content: text, placement: 'bottom', animation: false }).popover('show');
+    _did_pledge_show_email_popover = true;
+  } else {
+    _did_pledge_show_email_popover = false;
+  }
+}
+
 function do_pledge_login() {
   $('#login-error').fadeOut();
 
   if ($('#emailEmail').val() == "") {
-    $('#emailEmail').popover({ content: "Enter your email address.", placement: 'bottom' }).popover('show');
+    pledge_show_email_popover("Enter your email address.");
     return;
   }
 
-  $('#emailEmail').popover('destroy');
+  pledge_show_email_popover(); // clear
 
   // User wants to log in. An AJAX login will reset the CSRF token, so
   // we'll avoid actually logging the user in now and just do validation
@@ -765,7 +779,6 @@ function do_pledge_validate_email(callback) {
   // invalid. In the future we may want to issue a different
   // message for emails that are Valid but not Deliverable.
   // We also silently skip Error and let the user go forward.
-  $('#emailEmail').popover('destroy');
   ajax_with_indicator({
     url: "/contrib/_validate_email",
     method: "POST",
@@ -776,11 +789,28 @@ function do_pledge_validate_email(callback) {
       ref_code: '{{request.GET.utm_campaign|escapejs}}',
       email: $('#emailEmail').val()
     },
+    indicator_delay: callback ? 100 : 1000, // when we're doing early validation, avoid the modal timer indicator
     success: function(response) {
       if (response != "OK") {
-          $('#emailEmail').popover({ content: response, placement: 'bottom' }).popover('show');
-          return;
+        pledge_show_email_popover(response);
+        return;
       }
+
+      // If it's valid, issue a warning if it's a likely misspelling
+      // of a popular domain. We do this second because it is a warning
+      // and not an error.
+      $('#emailEmail').mailcheck({
+        suggested: function(element, suggestion) {
+          // warning
+          pledge_show_email_popover("Are you sure you didn't mean " + suggestion.full + "?");
+        },
+        empty: function(element) {
+          // no warning
+          pledge_show_email_popover(); // clear
+        }
+      });
+
+      // Either way, it was at most an informative warning, so go on.
       if (callback) callback();
     }
   })
