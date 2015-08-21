@@ -459,14 +459,6 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 				// the form elements for making another pledge.
 				$('#make-a-contribution').remove();
 				can_make_pledge = false;
-
-				// Mobile browsers (iOS and Android) don't seem to scroll
-				// to the page top on a reload, which we do after pledge
-				// submission to update the page so we end up here. At the
-				// least we should scroll up, but also the user's pledge
-				// may not be visible if we scroll to the top. So scroll
-				// to that.
-				smooth_scroll_to($('#my-actions'));
 			}
 			{% endif %}
 		}
