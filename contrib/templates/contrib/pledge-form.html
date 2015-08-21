@@ -755,6 +755,7 @@ function do_pledge_login() {
       trigger: {{trigger.id}}
     },
     success: function(response) {
+      // Error?
       if (response.status == "NotValid") {
         $('#login-error').text(response.message);
         $('#login-error').slideDown();
@@ -765,6 +766,13 @@ function do_pledge_login() {
         $('#login-error').slideDown();
         return;
       }
+
+      // Okay success. The user may not have any pledges in their account, but
+      // the "login" was successful. Hide the login form fields, although we
+      // still need the password field to be present to submit the form. This
+      // change is one-way.
+      $('#emailEmail').prop('disabled', true);
+      $('#pledge-login').slideUp();
 
       // Set contributor info from past records.
       setPledgeDefaults(response);
