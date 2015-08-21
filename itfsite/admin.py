@@ -17,12 +17,19 @@ class TriggersInline(admin.TabularInline):
     verbose_name = 'Trigger'
     show_change_link = True
 
+class LettersInline(admin.TabularInline):
+    model = Campaign.letters.through
+    extra = 1
+    raw_id_fields = ('letterscampaign',)
+    verbose_name = 'Letter Campaigns'
+    show_change_link = True
+
 class CampaignAdmin(admin.ModelAdmin):
     list_display = ['slug', 'owner', 'id', 'title', 'created']
     search_fields = ['id', 'slug', 'title', 'owner__name', 'owner__slug']
     raw_id_fields = ['owner']
-    inlines = [TriggersInline]
-    exclude = ['contrib_triggers']
+    inlines = [TriggersInline, LettersInline]
+    exclude = ['contrib_triggers', 'letters']
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Organization, OrganizationAdmin)

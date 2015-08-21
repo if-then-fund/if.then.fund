@@ -119,6 +119,15 @@
 	font-weight: 300;
 }
 
+form label {
+  font-weight: normal;
+  font-size: 14px;
+  padding-right: .5em;
+}
+form p {
+  line-height: 137%;
+}
+
 form span.required:after {
 	content: '*';
 	color: #484;
@@ -284,95 +293,7 @@ form span.required:after {
 {% if letters_campaign %}
 <div id="write-a-letter">
 	<div class="container">
-		<h2>Write a letter</h2>
-
-		<div class="row">
-			<div class="col-sm-7 col-md-6">
-		
-				<p style="margin-bottom: 1em">Tell your representative and senators to take action.</p>
-
-				<form id="write-letter-form" onsubmit="return write_letter_submit();">
-				  <div class="form-group">
-					<label for="email">Your Email Address</label>
-					<input type="email" class="form-control" id="email" placeholder="email address">
-				  </div>
-				  <div class="row">
-					<div class="col-md-3 col-lg-2">
-					  <div class="form-group">
-						<label for="namePrefix">Title</label>
-						<select class="form-control" id="namePrefix" style="padding-left: 2px; padding-right: 0;">
-							<option></option>
-							{% for value in prefix_options %}<option>{{value}}</option>{% endfor %}
-						</select>
-					  </div>
-					</div>
-					<div class="col-md-4 col-lg-5">
-					  <div class="form-group">
-						<label for="nameFirst">First Name</label>
-						<input type="text" class="form-control" id="nameFirst" placeholder="first name">
-					  </div>
-					</div>
-					<div class="col-md-5">
-					  <div class="form-group">
-						<label for="nameLast">Last Name</label>
-						<input type="text" class="form-control" id="nameLast" placeholder="last name">
-					  </div>
-					</div>
-				  </div>
-				  <div class="form-group">
-					<label for="addrAddress">Home Address  <span class="tip">(where you vote)</span></label>
-					<input type="text" class="form-control" id="addrAddress" placeholder="123 Your Location St.">
-				  </div>
-				  <div class="row">
-					<div class="col-sm-5 col-md-6">
-					  <div class="form-group">
-						<label for="addrCity">City</label>
-						<input type="text" class="form-control" id="addrCity" placeholder="Everytown">
-					  </div>
-					</div>
-					<div class="col-sm-3 col-md-2">
-					  <div class="form-group">
-						<label for="addrState">State</label>
-						<select class="form-control" id="addrState" size="1" style="padding-left: 2px; padding-right: 0;">
-							<option></option>
-							{% for state in state_abbrs %}<option>{{state}}</option>{% endfor %}
-						</select>
-					  </div>
-					</div>
-					<div class="col-sm-4">
-					  <div class="form-group">
-						<label for="addrZip">ZIP</label>
-						<input type="text" class="form-control" id="addrZip" placeholder="12345" maxlength="10">
-					  </div>
-					</div>
-				  </div>
-				  <div class="row hidden">
-					<div class="col-xs-12">
-					  <div class="form-group">
-						<label for="phone">Phone Number <span class="tip">(required by some congressional offices)</span></label>
-						<input type="tel" class="form-control" id="phone" placeholder="555-555-1234">
-					  </div>
-					</div>
-				  </div>
-	
-				  <button id="write-letter-next" type="submit" class="btn btn-primary">Next &raquo;</button>
-
-				  <small>
-					<p style="margin-top: 1.5em">All fields are required by the congressional office receiving your letter. You must have a mailing address within a United States congressional district to participate.</p>
-				  </small>
-				</form>
-
-			</div>
-			<div class="col-sm-5 col-md-6">
-				<div id="letter-preview">
-					<p>Dear representative,</p>
-					<p>Reptiles are the best pets ever, and turtles are cute. Please take action on this very important issue.</p>
-					<p>Sincerely,</p>
-					<p>[your name]
-				</div>
-			</div>
-		</div>			
-		
+		{% include "letters/write-your-rep-form.html" %}
 	</div>
 </div>
 {% endif %}
@@ -495,6 +416,10 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 			}
 			{% endif %}
 		}
+
+		{% if letters_campaign %}
+			letters_init();
+		{% endif %}
 
 		{% if trigger %}
 		if (can_make_pledge)

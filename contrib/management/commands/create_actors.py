@@ -38,6 +38,9 @@ class Command(BaseCommand):
 		de_recips = DemocracyEngineAPI.recipients()
 		de_recips = { r['recipient_id']: r for r in de_recips }
 
+		# Mark all actors as not-current.
+		Actor.objects.update(office=None)
+
 		# Create Actor instances.
 		for p in r:
 			# The last term is the Member of Congress's current term.
@@ -51,6 +54,14 @@ class Command(BaseCommand):
 			# independents.
 			party = party_map[term.get('caucus', term['party'])]
 
+			# Form our office code to key what office this person holds.
+			if term['type'] == 'rep':
+				office = ["H", term['state'], "%02d" % term['district']]
+			elif term['type'] == 'sen':
+				office = ["S", term['state'], "%02d" % term['class']]
+			else:
+				raise ValueError()
+
 			# Actor instance field values.
 			fields = {
 				'name_long': build_name(p, term, mode="full"),
@@ -58,6 +69,7 @@ class Command(BaseCommand):
 				'name_sort': build_name(p, term, mode="sort"),
 				'party': party,
 				'title': build_title(p, term),
+				'office': "-".join(office),
 			}
 
 			# Create or update.
@@ -102,14 +114,6 @@ class Command(BaseCommand):
 			# Create a challenger for the Actor if one is not yet set
 			# and the Actor has an active recipient itself.
 			if actor.challenger is None and recipient.active:
-				# Get the office based on the Actor's current term and opposing party.
-				term = actor.extra['legislators-current']['term']
-				if term['type'] == 'rep':
-					office = ["H", term['state'], "%02d" % term['district']]
-				elif term['type'] == 'sen':
-					office = ["S", term['state'], "%02d" % term['class']]
-				else:
-					raise ValueError()
 				party = actor.party.opposite()
 
 				# See if the Democracy Engine recipient exists.

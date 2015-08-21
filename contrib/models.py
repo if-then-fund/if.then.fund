@@ -410,6 +410,8 @@ class Actor(models.Model):
 
 	govtrack_id = models.IntegerField(unique=True, help_text="GovTrack's ID for this person.")
 
+	office = models.CharField(max_length=7, blank=True, null=True, unique=True, help_text="A code specifying the office currently held by the Actor, in the same format as Recipient.office_sought.")
+
 	name_long = models.CharField(max_length=128, help_text="The long form of the person's current name, meant for a page title.")
 	name_short = models.CharField(max_length=128, help_text="The short form of the person's current name, usually a last name, meant for in-page second references.")
 	name_sort = models.CharField(max_length=128, help_text="The sorted list form of the person's current name.")
@@ -1226,7 +1228,7 @@ class Recipient(models.Model):
 
 	actor = models.OneToOneField(Actor, blank=True, null=True, help_text="The Actor that this recipient corresponds to (i.e. this Recipient is an incumbent).")
 
-	office_sought = models.CharField(max_length=7, blank=True, null=True, help_text="For challengers, a code specifying the office sought in the form of 'S-NY-I' (New York class 1 senate seat) or 'H-TX-30' (Texas 30th congressional district). Unique with party.")
+	office_sought = models.CharField(max_length=7, blank=True, null=True, db_index=True, help_text="For challengers, a code specifying the office sought in the form of 'S-NY-I' (New York class 1 senate seat) or 'H-TX-30' (Texas 30th congressional district). Unique with party.")
 	party = EnumField(ActorParty, blank=True, null=True, help_text="The party of the challenger, or null if this Recipient is for an incumbent. Unique with office_sought.")
 
 	class Meta:

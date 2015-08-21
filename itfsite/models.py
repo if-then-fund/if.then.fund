@@ -96,6 +96,7 @@ class Campaign(models.Model):
 
 	# Actions.
 	contrib_triggers = models.ManyToManyField('contrib.Trigger', blank=True, related_name="campaigns", help_text="Triggers to offer the user to take action on (or to show past actions).")
+	letters = models.ManyToManyField('letters.LettersCampaign', blank=True, related_name="campaigns", help_text="LettersCampaigns to offer the user to take action on (or to show past actions).")
 
 	# Additional data.
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")

@@ -1,0 +1,205 @@
+<h2>Write a letter</h2>
+
+<div class="row">
+	<div class="col-sm-7 col-md-6">
+		<form id="write-letter-form" onsubmit="return false;">
+			<p style="margin-bottom: 1em">Let&rsquo;s find out who
+				{% if letters_campaign.target_representatives and letters_campaign.target_senators %}
+					represents you in Congress.
+				{% elif letters_campaign.target_representatives %}
+					your representative in Congress is.
+				{% elif letters_campaign.target_senators %}
+					your senators in Congress are.
+				{% endif %}
+			</p>
+
+			<p>What is your mailing address where you vote?</p>
+
+			<div class="form-group">
+				{# <label for="addrAddress">Address  <span class="tip">(where you vote)</span></label> #}
+				<input type="text" class="form-control" id="addrAddress" placeholder="123 Your Location St.">
+			</div>
+			<div class="row">
+				<div class="col-sm-5 col-md-6">
+				  <div class="form-group">
+					{# <label for="addrCity">City</label> #}
+					<input type="text" class="form-control" id="addrCity" placeholder="Everytown">
+				  </div>
+				</div>
+				<div class="col-sm-3 col-md-2">
+				  <div class="form-group">
+					{# <label for="addrState">State</label> #}
+					<select class="form-control" id="addrState" size="1" style="padding-left: 2px; padding-right: 0;">
+						<option></option>
+						{% for state in state_abbrs %}<option>{{state}}</option>{% endfor %}
+					</select>
+				  </div>
+				</div>
+				<div class="col-sm-4">
+				  <div class="form-group">
+					{# <label for="addrZip">ZIP</label> #}
+					<input type="text" class="form-control" id="addrZip" placeholder="12345" maxlength="10">
+				  </div>
+				</div>
+			</div>
+			<button id="write-letter-find-reps" type="submit" class="btn btn-primary" onclick="write_letter_find_reps()">Next &raquo;</button>
+
+			<div id="letters-stage-two" style="display: none">
+
+				<p id="letters-who-are-my-reps">Your will be writing a letter to <span></span>.</p>
+				<p>Your legislators require that we provide your name, address, email address, and phone number with your message. Please complete the form:</p>
+
+				<div class="form-group">
+					<label for="email">Email Address</label>
+					<input type="email" class="form-control" id="email" placeholder="email address">
+				</div>
+				<label for="namePrefix">Name</label>
+				<div class="row">
+					<div class="col-md-3 col-lg-2">
+					  <div class="form-group">
+						{# <label for="namePrefix">Title</label> #}
+						<select class="form-control" id="namePrefix" style="padding-left: 2px; padding-right: 0;">
+							<option></option>
+							{% for value in prefix_options %}<option>{{value}}</option>{% endfor %}
+						</select>
+					  </div>
+					</div>
+					<div class="col-md-4 col-lg-5">
+					  <div class="form-group">
+						{# <label for="nameFirst">First Name</label> #}
+						<input type="text" class="form-control" id="nameFirst" placeholder="first name">
+					  </div>
+					</div>
+					<div class="col-md-5">
+					  <div class="form-group">
+						{# <label for="nameLast">Last Name</label> #}
+						<input type="text" class="form-control" id="nameLast" placeholder="last name">
+					  </div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-xs-12">
+					  <div class="form-group">
+						<label for="phone">Phone Number <span class="tip">(required by some congressional offices)</span></label>
+						<input type="tel" class="form-control" id="phone" placeholder="555-555-1234">
+					  </div>
+					</div>
+				</div>
+
+				<button id="write-letter-submit" type="submit" class="btn btn-primary" onclick="write_letter_submit()">Send Letter</button>
+			</div>
+
+		</form>
+
+	</div>
+	<div class="col-sm-5 col-md-6">
+		<div id="letter-preview">
+			<p>Dear representative,</p>
+			<p>Reptiles are the best pets ever, and turtles are cute. Please take action on this very important issue.</p>
+			<p>Sincerely,</p>
+			<p>[your name]
+		</div>
+	</div>
+</div>			
+
+<script>
+function ajax_submit(options) {
+	var old_success = options.success;
+	options.success = function(res) {
+		if (res.error) {
+			// add .has-error to the indicated field
+			if (res.field) $('#' + res.field).parent('.form-group').addClass("has-error");
+
+			// show error modal, then re-enable fields
+			show_modal_error("Error", res.error, function() {
+				if (options.fields) options.fields.prop('disabled', false);
+				if (old_error) old_error();
+			})
+			return;
+		}
+
+		if (options.fields) options.fields.prop('disabled', false);
+		if (old_success) old_success(res);
+	};
+
+	var old_error = options.error;
+	options.error = function(res) {
+		show_modal_error("Error", "Something went wrong, sorry!", function() {
+			if (options.fields) options.fields.prop('disabled', false);
+			if (old_error) old_error();
+		})
+	};
+
+	//
+
+	$('.form-group').removeClass('has-error');
+	if (options.fields) options.fields.prop('disabled', true);
+
+	ajax_with_indicator(options);
+}
+
+function letters_init() {
+	if (window.location.hash == "#demo") {
+		$('#addrAddress').val('4415 Pine St')
+		$('#addrCity').val('Philadelphia')
+		$('#addrState').val('PA')
+		$('#addrZip').val('19104')
+	}
+}
+
+function write_letter_find_reps() {
+	ajax_submit({
+		fields: $('#write-letter-form input, #write-letter-form select, #write-letter-form button'),
+		url: "/letters/_ajax/find-reps",
+		method: "POST",
+		data: {
+			campaign: {{letters_campaign.id}},
+			addrAddress: $('#addrAddress').val(),
+			addrCity: $('#addrCity').val(),
+			addrState: $('#addrState').val(),
+			addrZip: $('#addrZip').val()
+		},
+		success: function(res) {
+			// show fields
+			$('#write-letter-find-reps').hide();
+			$('#letters-stage-two').slideDown();
+
+			// update text
+			var mocs = "";
+			for (var i = 0; i < res.mocs.length; i++) {
+				if (i > 0) {
+					if (res.mocs.length > 2) mocs += ",";
+					mocs += " ";
+					if (i == res.mocs.length - 1) mocs += "and ";
+				}
+				mocs += res.mocs[i].name;
+			}
+			$('#letters-who-are-my-reps span').text(mocs);
+		},
+	});
+}
+
+function write_letter_submit() {
+	ajax_submit({
+		fields: $('#write-letter-form input, #write-letter-form select, #write-letter-form button'),
+		url: "/letters/_ajax/write-letter",
+		method: "POST",
+		data: {
+			campaign: {{letters_campaign.id}},
+			email: $('#email').val(),
+			namePrefix: $('#namePrefix').val(),
+			nameFirst: $('#nameFirst').val(),
+			nameLast: $('#nameLast').val(),
+			addrAddress: $('#addrAddress').val(),
+			addrCity: $('#addrCity').val(),
+			addrState: $('#addrState').val(),
+			addrZip: $('#addrZip').val(),
+			phone: $('#phone').val()
+		},
+		success: function(res) {
+		},
+		error: function() {
+		}
+	});
+}
+</script>

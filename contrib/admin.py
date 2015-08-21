@@ -118,7 +118,7 @@ class TriggerExecutionAdmin(admin.ModelAdmin):
     pledge_count_.short_description = "pledges (exct'd/contrib'd)"
 
 class ActorAdmin(admin.ModelAdmin):
-    list_display = ['name_long', 'party', 'govtrack_id', 'challenger', 'id']
+    list_display = ['name_long', 'party', 'govtrack_id', 'office', 'challenger', 'id']
     raw_id_fields = ['challenger']
     search_fields = ['id', 'name_long', 'govtrack_id', 'challenger__id', 'challenger__office_sought']
 

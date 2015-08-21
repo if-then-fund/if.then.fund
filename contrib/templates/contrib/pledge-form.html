@@ -19,13 +19,10 @@
     max-width: 20vw;
   }
 
-#advanced-filters label {
-  font-weight: normal;
+#advanced-filters label div {
+  margin-left: 1.5em;
+  font-size: 85%;
 }
-  #advanced-filters label div {
-    margin-left: 1.5em;
-    font-size: 85%;
-  }
   #pledge-party {
     margin-bottom: .25em;
   }
@@ -44,16 +41,6 @@
     font-size: 24px;
     text-align: right;
   }
-
-#pledge-info label {
-  font-weight: normal;
-  font-size: 14px;
-  padding-right: .5em;
-}
-#pledge-info p {
-  font-size: 14px;
-  line-height: 137%;
-}
 
 .input-table {
   margin-bottom: 1.5em;
@@ -549,7 +536,7 @@ function pledge_begin(button_elem) {
 
 	// Set form field for submission.
 	$('#pledge-info input[name="desired_outcome"]').val($(button_elem).attr('data-index'))
-	
+
 	// Track event.
 	mixpanel.track("Pledge Begin", { 'campaign': {{campaign.id}}, 'outcome_index': outcome_index });
 

@@ -13,6 +13,8 @@ urlpatterns = patterns('',
 	url(r'^(user|org)/(\d+)/([^/]+)$', 'itfsite.views.org_landing_page'),
 	url(r'a/(?P<id>\d+)(?:/[a-z0-9_-]+)?$', 'itfsite.views.campaign'),
 
+	url(r'^letters/', include('letters.urls')),
+
 	url(r'^accounts/login$', auth_views.login),
 	url(r'^accounts/logout$', auth_views.logout, { 'next_page': '/' } ),
 	url(r'^accounts/password-change$', auth_views.password_change, { 'post_change_redirect': '/home', 'template_name': 'registration/password_change.html' }, name='password_change' ),

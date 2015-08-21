@@ -174,6 +174,11 @@ def campaign(request, id):
 	if trigger and campaign.owner: # campaigns without an owner cannot have a trigger customization
 		tcust = TriggerCustomization.objects.filter(trigger=trigger, owner=campaign.owner).first()
 
+	# Which letter-writing campaign should the user take action on?
+	from letters.models import LettersCampaign, CampaignStatus as LettersCampaignStatus
+	from letters.views import state_abbrs, get_honorific_options
+	letters_campaign = campaign.letters.filter(status=LettersCampaignStatus.Open).order_by('-created').first()
+
 	# render page
 	return render(request, "itfsite/campaign.html", {
 		"campaign": campaign,
@@ -184,6 +189,11 @@ def campaign(request, id):
 		"trigger_outcome_strings": tcust.outcome_strings() if tcust else trigger.outcome_strings(),
 		"suggested_pledge": 5,
 		"alg": Pledge.current_algorithm(),
+
+		# for letter writing campaigns
+		"letters_campaign": letters_campaign,
+		"state_abbrs": state_abbrs,
+		"prefix_options": get_honorific_options, # left as a callable so that we only query if we need it
 
 		})
 	
