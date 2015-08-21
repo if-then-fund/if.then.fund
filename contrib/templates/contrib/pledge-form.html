@@ -251,7 +251,7 @@
                     <div id="emailPasswordDiv" style="display: none; margin-left: 1em">
                       <div class="form-group form-inline">
                         <label for="emailPassword">Password:</label>
-                        <input type="password" id="emailPassword" name="password" class="form-control" style="max-width: 15em">
+                        <input type="password" id="emailPassword" class="form-control" style="max-width: 15em">
                         <button id="login-next" type="button" class="btn btn-primary" onclick="do_pledge_login()">Login &gt;</button>
                       </div>
                       <div class="small" style="margin-top: 2px">Forgot your password? Uncheck the box above and continue.</div>
@@ -767,12 +767,12 @@ function do_pledge_login() {
         return;
       }
 
-      // Okay success. The user may not have any pledges in their account, but
-      // the "login" was successful. Hide the login form fields, although we
-      // still need the password field to be present to submit the form. This
-      // change is one-way.
+      // Okay success. The user is logged in. The user may not have any pledges
+      // in their account, but the "login" was successful. Hide the login form
+      // fields --- they are no longer used.
       $('#emailEmail').prop('disabled', true);
       $('#pledge-login').slideUp();
+      $('#contribNameFirst').focus();
 
       // Set contributor info from past records.
       setPledgeDefaults(response);

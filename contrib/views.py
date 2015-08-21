@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.db import transaction
 from django.db.models import Q, Count
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, Http404
@@ -31,12 +31,12 @@ def get_user_pledges(user, request):
 
 
 @require_http_methods(['POST'])
+@ensure_csrf_cookie
 @json_response
 def get_user_defaults(request):
-	# Get the user's past contributor information to pre-populate fields.
-	# We avoid doing an actual login here because login() changes the
-	# CSRF token, and a mid-page token change will cause future AJAX
-	# requests to fail.
+	# A user is in the process of making a pledge and wants to log in.
+	# Authenticate, log them in, and then return default values to
+	# pre-populate fields like their name & address.
 
 	# authenticate
 	from itfsite.accounts import User
@@ -51,7 +51,14 @@ def get_user_defaults(request):
 	if trigger.pledges.filter(user=user).exists():
 		return { "status": "AlreadyPledged" }
 
-	# get recent data
+	# login() resets the CSRF token. This might be redundant, but
+	# @ensure_csrf_cookie ensures that we send that CSRF token in
+	# the response (as a cookie). The twostream library will detect
+	# the new token in the AJAX response.
+	from django.contrib.auth import login
+	login(request, user)
+
+	# Return the user's past contributor information to pre-populate fields.
 	return get_recent_pledge_defaults(user, request)
 
 def get_recent_pledge_defaults(user, request):
@@ -192,24 +199,10 @@ def create_pledge(request):
 		p.user = request.user
 		exists_filters = { 'user': p.user }
 
-	# Anonymous user is submitting a pledge with an email address & password.
-	elif request.POST.get("password"):
-		from itfsite.accounts import User
-		from itfsite.betteruser import LoginException
-		try:
-			user = User.authenticate(request.POST['email'].strip(), request.POST['password'].strip())
-			# Login succeeded.
-			p.user = user
-			exists_filters = { 'user': p.user }
-		except LoginException as e:
-			# Login failed. We did client-side validation so this should
-			# not occur. Treat as if the user didn't provide a password.
-			pass
-
-	# Anonymous user and/or authentication failed.
+	# Anonymous user.
 	# Will do email verification below, but at least not validate it
 	# (should have already been validated client side).
-	if not p.user:
+	else:
 		p.email = request.POST.get('email').strip()
 
 		from email_validator import validate_email, EmailNotValidError
@@ -365,14 +358,7 @@ def create_pledge(request):
 		# Wipe the IncompletePledge because the user finished the form.
 		IncompletePledge.objects.filter(email=p.email, trigger=p.trigger).delete()
 
-	# If the user had good authentication but wasn't logged in yet, log them
-	# in now. This messes up the CSRF token but the client should redirect to
-	# a new page anyway.
-	if p.user and p.user != request.user:
-		from django.contrib.auth import login
-		login(request, p.user)
-
-	# Client will reload the page.
+	# Done.
 	return { "status": "ok" }
 
 @json_response
