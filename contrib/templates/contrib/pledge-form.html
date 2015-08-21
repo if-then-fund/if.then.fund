@@ -854,7 +854,7 @@ function do_contributor_next_() {
   $('#emailEmail').prop('readonly', true);
   $('#pledge-contributor input[type=text]').prop('readonly', true);
   $('#pledge-contributor input[type=checkbox]').prop('disabled', true);
-  $('#pledge-contributor .buttons').hide();
+  $('#pledge-contributor .buttons, #pledge-contributor-old-update').hide();
   show_and_scroll('pledge-payment');
 
   mixpanel.track("Pledge Contributor Info Entered", { 'trigger': {{trigger.id}} });
@@ -956,7 +956,7 @@ function pledge_payment_cancel() {
   $('#emailEmail').prop('readonly', false);
   $('#pledge-contributor input[type=text]').prop('readonly', false);
   $('#pledge-contributor input[type=checkbox]').prop('disabled', false);
-  $('#pledge-contributor .buttons').show();
+  $('#pledge-contributor .buttons, #pledge-contributor-old-update').show();
   $('#pledge-payment').hide();
 }
 </script>
