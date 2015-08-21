@@ -189,8 +189,7 @@ def campaign(request, id):
 	
 @user_view_for(campaign)
 def campaign_user_view(request, id):
-	from contrib.models import Contribution
-	from contrib.views import get_recent_pledge_defaults, get_user_pledges
+	from contrib.views import get_recent_pledge_defaults, get_user_pledges, render_pledge_template
 
 	campaign = get_object_or_404(Campaign, id=id)
 
@@ -199,20 +198,12 @@ def campaign_user_view(request, id):
 	# Most recent pledge info so we can fill in defaults on the user's next pledge.
 	ret["pledge_defaults"] = get_recent_pledge_defaults(request.user, request)
 
-	# Get the user's pledges, if any, on any trigger tied to this campaign.
-	import django.template
-	template = django.template.loader.get_template("contrib/contrib.html")
+	# Pull in all of the user's existing pledges for this campaign.
 	pledges = get_user_pledges(request.user, request).filter(trigger__campaigns=campaign).order_by('-created')
 	ret["pledges"] = [
 		{
 			"trigger": pledge.trigger.id,
-			"rendered": template.render(django.template.RequestContext(request, {
-				"show_long_title": len(pledges) > 1,
-				"pledge": pledge,
-				"execution": PledgeExecution.objects.filter(pledge=pledge).first(),
-				"contribs": sorted(Contribution.objects.filter(pledge_execution__pledge=pledge).select_related("action"), key=lambda c : (c.recipient.is_challenger, c.action.name_sort)),
-				"share_url": request.build_absolute_uri(campaign.get_short_url()),
-			})),
+			"rendered": render_pledge_template(request, pledge, show_long_title=len(pledges) > 1),
 		} for pledge in pledges
 	]
 

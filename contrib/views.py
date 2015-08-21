@@ -217,7 +217,7 @@ def create_pledge(request):
 	# synchronization problem. Just redirect to that pledge.
 	p_exist = Pledge.objects.filter(trigger=p.trigger, **exists_filters).first()
 	if p_exist is not None:
-		return { "status": "ok" }
+		return { "status": "already-pledged" }
 
 	# Field values & validation.
 
@@ -359,7 +359,10 @@ def create_pledge(request):
 		IncompletePledge.objects.filter(email=p.email, trigger=p.trigger).delete()
 
 	# Done.
-	return { "status": "ok" }
+	return {
+		"status": "ok",
+		"html": render_pledge_template(request, p),
+	}
 
 @json_response
 def cancel_pledge(request):
@@ -373,6 +376,18 @@ def cancel_pledge(request):
 		return { "status": "ok" }
 	else:
 		return { "status": "error", "message": "You don't own that pledge." }
+
+def render_pledge_template(request, pledge, show_long_title=False):
+	# Get the user's pledges, if any, on any trigger tied to this campaign.
+	import django.template
+	template = django.template.loader.get_template("contrib/contrib.html")
+	return template.render(django.template.RequestContext(request, {
+		"show_long_title": show_long_title,
+		"pledge": pledge,
+		"execution": PledgeExecution.objects.filter(pledge=pledge).first(),
+		"contribs": sorted(Contribution.objects.filter(pledge_execution__pledge=pledge).select_related("action"), key=lambda c : (c.recipient.is_challenger, c.action.name_sort)),
+		"share_url": request.build_absolute_uri(pledge.via_campaign.get_short_url()),
+	}))
 
 @anonymous_view
 def report(request):

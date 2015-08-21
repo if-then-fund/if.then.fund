@@ -396,7 +396,7 @@
 
               <p style="margin: 1.5em 0">By clicking next, you agree that you have reviewed the contributor requirements above and our <a href="/terms" target="_blank">terms of use</a>.</p>
 
-              <div class="buttons" style="margin: 1.5em 0">
+              <div id="pledge-submit-buttons" class="buttons" style="margin: 1.5em 0">
                 <button type="button" class="btn btn-default" onclick="pledge_payment_cancel()">&lt; Back</button>
                 <button id="billing-next" type="button" class="btn btn-warning" onclick="pledge_submit()">Confirm</button>
               </div>
@@ -418,7 +418,8 @@
 
 </div> <!-- /make-pledge -->
 
-
+<div id="completed-pledge-holder">
+</div>
       
     
 <script>
@@ -908,20 +909,32 @@ function pledge_submit() {
   var data = { };
   for (var i = 0; i < form_params.length; i++)
     data[form_params[i].name] = form_params[i].value;
+
+  // Disable the payment fields prior to AJAX. Do this after serializeArray which
+  // seems to skip disabled fields.
+  $('#billingCCNum, #billingCCExp, #billingCCCVC, #pledge-submit-buttons button').attr('disabled', true);
+
   ajax_with_indicator({
     url: '/contrib/_submit',
     method: "POST",
     data: data,
     success: function(res) {
-      if (res && res.status == "ok") {
-        // show a loading indicator and have it go indefinitely until the page reloads
-        // to show the user updated info on the pledge he/she made
-        setTimeout("$('#ajax_loading_indicator').fadeIn()", 100);
-        window.location.reload()
+      if (res.status == "ok") {
+        // The pledge was saved. Update the page.
+        var n = $('<div/>')
+        n.html(res.html);
+        $('#completed-pledge-holder').append(n);
+        $('#make-pledge').slideUp(function() { show_and_scroll('completed-pledge-holder'); });
+            // else: $('#pledge-submit-buttons').slideUp();
+
+      } else if (res.status == "already-pledged") {
+        show_modal_error("Error", "It looks like you have already pledged a contribution here. Please reload the page to see it.");
       } else if (res.status == "error" && res.message) {
         show_modal_error("Error", res.message);
+        $('#billingCCNum, #billingCCExp, #billingCCCVC, #pledge-submit-buttons button').attr('disabled', false);
       } else {
         show_modal_error("Error", "Something went wrong, sorry.");
+        $('#billingCCNum, #billingCCExp, #billingCCCVC, #pledge-submit-buttons button').attr('disabled', false);
         console.log(res);
       }
     }
