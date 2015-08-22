@@ -83,11 +83,14 @@ function make_fixed_header() {
 	if ($('#page-fixed-header').length == 0)
 		return;
 	
+	var h1top = $('h1').offset().top;
 	var h1bot = $('h1').offset().top + $('h1').outerHeight();
 
 	$(window).on('scroll', function() {
 		var top = $(window).scrollTop();
-		if (top < h1bot)
+		if (top <= h1top/2)
+			$('#page-fixed-header').stop().hide();
+		else if (top < h1bot - 30)
 			$('#page-fixed-header').stop().fadeOut();
 		else
 			$('#page-fixed-header').stop().fadeIn();

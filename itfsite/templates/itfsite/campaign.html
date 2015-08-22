@@ -148,6 +148,11 @@ form span.required:after {
 {% endblock %}
 
 {% block body-wide %}
+<div id="page-fixed-header">
+	{{campaign.title}}
+	{% if campaign.owner %} &mdash; {{campaign.owner.name}}{% endif %}
+</div>
+
 <div id="splash">
   <div id="nav-wrap">
 	<div class="container">
