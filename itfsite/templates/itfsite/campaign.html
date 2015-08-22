@@ -6,6 +6,30 @@
 {% block title %}{{campaign.title}}{% endblock %}
 
 {% block head %}
+
+<meta property="og:title" content="{{campaign.title}} ({% if campaign.owner %}{{campaign.owner.name}} on {% endif %}if.then.fund)" />
+{% if trigger %}
+<meta property="og:description" content="Reshape Congress by making a contribution based on how {{trigger.trigger_type.strings.actors}} {{trigger.trigger_type.strings.action_vb_inf}}.">
+{% endif %}
+
+{# for Twitter summary card, min size 120x120 and less than 1MB #}
+{% if campaign.og_image.name %}
+<meta property="og:image" content="{{ROOT_URL}}{{campaign.og_image.url}}?size=xs" />
+{% elif campaign.splash_image.name %}
+<meta property="og:image" content="{{ROOT_URL}}{{campaign.splash_image.url}}?size=xs" />
+{% elif campaign.owner.banner_image.name %}
+<meta property="og:image" content="{{ROOT_URL}}{{campaign.owner.banner_image.url}}?size=xs" />
+{% else %}
+<meta property="og:image" content="{{ROOT_URL}}/static/branding/icons/favicon-192x192.png" />
+{% endif %}
+
+{% if campaign.owner.twitter_handle %}
+<meta name="twitter:creator" content="@{{campaign.owner.twitter_handle}}" />
+<meta name="twitter:card" content="summary_large_image" />
+{% else %}
+<meta name="twitter:card" content="summary" />
+{% endif %}
+
 <style>
 {% if campaign.splash_image.name %}
 #splash {

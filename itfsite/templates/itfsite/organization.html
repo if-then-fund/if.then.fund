@@ -4,6 +4,10 @@
 {% block title %}{{org.name}}{% endblock %}
 
 {% block head %}
+{% if org.twitter_handle %}
+<meta name="twitter:creator" content="@{{org.twitter_handle}}" />
+{% endif %}
+
 <style>
 #nav-wrap {
 	margin-bottom: 0;
@@ -35,12 +39,12 @@ h1 {
 }
 @media screen and (max-width: 768px) {
 	#page-banner {
-		background-image: url({{org.banner_image_url}}?width=xs);
+		background-image: url({{org.banner_image_url}}?size=xs);
 	}
 }
 @media screen and (max-width: 640px) {
 	#page-banner {
-		background-image: url({{org.banner_image_url}}?width=xs);
+		background-image: url({{org.banner_image_url}}?size=xs);
 	}
 }
 {% endif %}
