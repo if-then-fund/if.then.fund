@@ -238,6 +238,19 @@ h3.invert {
 	font-size: 24px;
 	font-weight: bold;
 	}
+.organization-profile-pic {
+	width: 150px;
+	height: 150px;
+	background-size: cover;
+	background-position: 50% 50%;
+	border: 1px solid #AAA;
+}
+	.organization-banner .organization-profile-pic {
+		float: right;
+		position: absolute;
+		top: -75px;
+		right: 15px;
+	}
 
 .notifications-popup {
 }

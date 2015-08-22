@@ -4,6 +4,14 @@
 {% block title %}{{org.name}}{% endblock %}
 
 {% block head %}
+{# for Twitter summary card, min size 120x120 and less than 1MB #}
+{% if org.og_image.name %}
+<meta property="og:image" content="{{ROOT_URL}}{{org.og_image.url}}?size=tb" />
+{% elif org.profile_image.name %}
+<meta property="og:image" content="{{ROOT_URL}}{{org.profile_image.url}}?size=tb" />
+{% elif org.banner_image.name %}
+<meta property="og:image" content="{{ROOT_URL}}{{org.banner_image.url}}?size=tb" />
+{% endif %}
 {% if org.twitter_handle %}
 <meta name="twitter:creator" content="@{{org.twitter_handle}}" />
 {% endif %}
@@ -68,7 +76,13 @@ h1 {
 	<div id="page-banner" class="organization-banner">
 		<div class="container">
 			<div class="row">
-				<div class="col-sm-9 col-sm-offset-3">
+				<div class="col-sm-3">
+				{% if org.profile_image.name %}
+					<div class="organization-profile-pic" style="background-image: url({{org.profile_image.url}}?size=tb);"> </div>
+				{% endif %}
+				</div>
+
+				<div class="col-sm-9">
 					<h1>{{org.name}}</h1>
 					<p>{{org.orgtype.display}}</p>
 				</div>

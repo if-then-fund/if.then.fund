@@ -50,6 +50,8 @@ class Organization(models.Model):
 	description = models.TextField(help_text="Description text in the format given by description_format.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
+	profile_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The square 'profile image' to display on the organization's page, and the default image for og_image.")
+	og_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The og:image to display for the organization's page and the default og:image for the organization's campaigns.")
 	banner_image = models.ImageField(upload_to='org-banner-image', blank=True, null=True, help_text="A raw image to display for this organization's banner image.")
 
 	website_url = models.URLField(max_length=256, blank=True, null=True, help_text="The URL to this organization's website.")

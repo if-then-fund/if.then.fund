@@ -166,6 +166,10 @@
 								<div class="campaign-take-action">
 									<a href="{{c.get_absolute_url}}">Take Action &raquo;</a>
 								</div>
+
+								{% if c.owner.profile_image.name %}
+								<div style="margin: 1em auto 0 auto; border: 1px solid #555; background-image: url({{c.owner.profile_image.url}}?size=tb);" class="organization-profile-pic"></div>
+								{% endif %}
 							</div>
 						</div>
 					{% endfor %}

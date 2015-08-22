@@ -14,11 +14,13 @@
 
 {# for Twitter summary card, min size 120x120 and less than 1MB #}
 {% if campaign.og_image.name %}
-<meta property="og:image" content="{{ROOT_URL}}{{campaign.og_image.url}}?size=xs" />
+<meta property="og:image" content="{{ROOT_URL}}{{campaign.og_image.url}}?size=tb" />
+{% elif campaign.owner.og_image.name %}
+<meta property="og:image" content="{{ROOT_URL}}{{campaign.owner.og_image.url}}?size=tb" />
 {% elif campaign.splash_image.name %}
-<meta property="og:image" content="{{ROOT_URL}}{{campaign.splash_image.url}}?size=xs" />
+<meta property="og:image" content="{{ROOT_URL}}{{campaign.splash_image.url}}?size=tb" />
 {% elif campaign.owner.banner_image.name %}
-<meta property="og:image" content="{{ROOT_URL}}{{campaign.owner.banner_image.url}}?size=xs" />
+<meta property="og:image" content="{{ROOT_URL}}{{campaign.owner.banner_image.url}}?size=tb" />
 {% else %}
 <meta property="og:image" content="{{ROOT_URL}}/static/branding/icons/favicon-192x192.png" />
 {% endif %}
@@ -167,8 +169,8 @@ form span.required:after {
 	{% if campaign.owner %}
 	<div id="campaign-owner" style="float: right">
 		<a href="{{campaign.owner.get_absolute_url}}" title="{{campaign.owner.name}}">
-			{% if campaign.owner.banner_image.name %}
-			<div style="margin: 0 1em 0 0; border: 1px solid rgba(0,0,0,.5); width: 120px; height: 120px; background-image: url({{campaign.owner.banner_image.url}}?size=xs); background-size: cover; background-position: 50% 50%;">
+			{% if campaign.owner.profile_image.name %}
+			<div style="margin: 0 1em 0 0; border: 1px solid rgba(0,0,0,.5); background-image: url({{campaign.owner.profile_image.url}}?size=tb);" class="organization-profile-pic">
 			</div>
 			{% else %}
 				{{campaign.owner.name}}
