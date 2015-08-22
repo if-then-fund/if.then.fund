@@ -2,9 +2,10 @@
 
 body {
 	background-color: #FAFAFA;
-	font-family: 'Noto Serif', serif;
-	font-size: 16px;
-	line-height: 140%;
+	font-family: Arial, sans-serif;
+	font-size: 15px;
+	font-weight: 300;
+	line-height: 150%;
 }
 
 footer {
@@ -12,8 +13,9 @@ footer {
 	color: #555;
 }
 
-.navbar, h1, h2, h3, h4, h5, h6 {
-	font-family: 'Roboto Slab', serif;
+h1, h2, h3, h4, h5, h6 {
+	font-weight: normal;
+	font-family: "jaf-facitweb", sans-serif;
 }
 
 h1 {
@@ -125,14 +127,6 @@ a, a:hover, a:link, a:visited, a:active {
 	}
 }
 
-.overline {
-	margin-bottom: .33em;
-	font-family: 'Roboto Slab', serif;
-}
-	.overline+h1 {
-		margin-top: 0;
-	}
-
 #footer-social {
 	padding: 0;
 	list-style: none;
@@ -217,7 +211,7 @@ h3.invert {
 	background: #333 url('/static/branding/navbar-title.png') 10px 10px no-repeat;
 	min-height: 50px;
 	color: white;
-	font-family: 'Roboto Slab', serif;
+	font-family: "adelle-sans", sans-serif;
 	font-size: 90%;
 	line-height: 125%;
 	padding: 14px 12px 10px 140px;
@@ -225,7 +219,7 @@ h3.invert {
 }
 
 .long-text {
-	line-height: 145%;
+	line-height: 160%;
 }
 
 .organization-banner {
