@@ -161,6 +161,7 @@ form span.required:after {
 
 <div id="story">
 	<div class="container">
+	<div class="row">
 		<div class="col-sm-8">
 			{% with body_text=campaign.body_text|render_text:campaign.body_format %}
 			{% with body_text_truncated=body_text|truncatewords_html:70 %}
@@ -237,6 +238,7 @@ form span.required:after {
 			{% if trigger.execution %}<p>The {{trigger.trigger_type.strings.action_noun}} occurred on {{trigger.execution.action_time|date}}. Contributions began to be processed on {{trigger.execution.created|date}}.</p>{% endif %}
 			</small>
 		</div>
+	</div>
 	</div>
 </div>
 
