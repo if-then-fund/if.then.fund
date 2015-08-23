@@ -94,7 +94,7 @@ class UserLetter(models.Model):
 
 	# User.
 	user = models.ForeignKey('itfsite.User', blank=True, null=True, on_delete=models.PROTECT, help_text="The user writing the letter. When an anonymous user writes a letter, this is null, the user's email address is stored instead.")
-	email = models.EmailField(max_length=254, blank=True, null=True, help_text="When an anonymous user writes a letter, their email address is stored here.")
+	anon_user = models.ForeignKey('itfsite.AnonymousUser', blank=True, null=True, on_delete=models.CASCADE, help_text="When an anonymous user makes a pledge, a one-off object is stored here and we send a confirmation email.")
 	profile = models.ForeignKey(ConstituentInfo, related_name="letters", on_delete=models.PROTECT, help_text="The user's information (name, address, etc.).")
 
 	# Source.
@@ -112,4 +112,4 @@ class UserLetter(models.Model):
 	updated = models.DateTimeField(auto_now=True)
 
 	class Meta:
-		unique_together = [('letterscampaign', 'user'), ('letterscampaign', 'email')]
+		unique_together = [('letterscampaign', 'user'), ('letterscampaign', 'anon_user')]

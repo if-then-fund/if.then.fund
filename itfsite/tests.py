@@ -189,12 +189,12 @@ class SimulationTest(StaticLiveServerTestCase):
 		self.assertFalse(IncompletePledge.objects.filter(email=email, trigger=trigger).exists())
 
 		# Get the pledge and check its fields.
-		p = trigger.pledges.get(email=email)
+		p = trigger.pledges.get(anon_user__email=email)
 		self.assertEqual(p.ref_code, utm_campaign)
 		self.assertEqual(p.via_campaign, campaign)
 
 		# An email confirmation was sent.
-		self.assertFalse(p.should_retry_email_confirmation())
+		self.assertFalse(p.anon_user.should_retry_email_confirmation())
 
 		# Some tests don't click the confirmation link.
 		if break_before_confirmation:
@@ -277,13 +277,6 @@ class SimulationTest(StaticLiveServerTestCase):
 		# Use default pledge amount.
 		self.browser.find_element_by_css_selector("#contribution-start-next").click()
 		time.sleep(.5)
-
-		# If the user is logged in, the login form is hidden. Otherwise enter
-		# an email address.
-		if not logged_in:
-			email = "unittest+%d@if.then.fund" % (random.randint(10000, 99999))
-			self.browser.execute_script("$('#emailEmail').val('%s')" % email)
-			time.sleep(1)
 
 		if not change_profile:
 			# Use default contributor, billing info

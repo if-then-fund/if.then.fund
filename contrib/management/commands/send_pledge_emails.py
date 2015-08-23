@@ -65,8 +65,8 @@ class Command(BaseCommand):
 				self.send_pledge_email(pre_or_post, pledge)
 
 			elif pre_or_post == "emailconfirm":
-				if pledge.should_retry_email_confirmation():
-					pledge.send_email_confirmation(first_try=False)
+				if pledge.anon_user.should_retry_email_confirmation():
+					pledge.anon_user.send_email_confirmation()
 	
 	def send_pledge_email(self, pre_or_post, pledge):
 		# What will happen when the pledge is executed?

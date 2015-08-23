@@ -9,7 +9,7 @@
 {% if not pledge.user and not pledge.execution %}
 {# pre-execution, email not confirmed #}
 	<p class="text-danger"><strong>Action Required:</strong></p>
- 	<p class="text-danger">We sent you an email. You <strong>must</strong> click the link in the email to confirm your email address before the contribution can be made. The email went to {{pledge.email}}.</p>
+ 	<p class="text-danger">We sent you an email. You <strong>must</strong> click the link in the email to confirm your email address before the contribution can be made. The email went to {{pledge.anon_user.email}}.</p>
  	<hr>
 {% endif %}
 

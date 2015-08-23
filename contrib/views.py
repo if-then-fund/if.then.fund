@@ -22,11 +22,16 @@ def get_user_pledges(user, request):
 	# (A simple "|" of QuerySets is easier to construct but it creates a UNION
 	# that then requires a DISTINCT which in Postgres is incompatible with
 	# SELECT FOR UPDATE. So we form a proper 'WHERE x OR y' clause.)
+	
 	filters = Q(id=-99999) # a dummy filter that excludes everything, in case no other filters apply
+
 	if user and user.is_authenticated():
 		filters |= Q(user=user)
-	if request.session.get('anon_pledge_created'):
-		filters |= Q(id__in=request.session.get('anon_pledge_created'))
+
+	anon_user = request.session.get("anonymous-user")
+	if anon_user is not None:
+		filters |= Q(anon_user_id=anon_user)
+
 	return Pledge.objects.filter(filters)
 
 
@@ -78,7 +83,8 @@ def get_recent_pledge_defaults(user, request):
 	ret['open_pledges'] = pledges.filter(status=PledgeStatus.Open).count()
 
 	# Copy Pledge fields.
-	for field in ('email', 'amount', 'incumb_challgr', 'filter_party', 'filter_competitive'):
+	ret['email'] = pledge.get_email()
+	for field in ('amount', 'incumb_challgr', 'filter_party', 'filter_competitive'):
 		ret[field] = getattr(pledge, field)
 		if type(ret[field]).__name__ == "Decimal":
 			ret[field] = float(ret[field])
@@ -189,7 +195,7 @@ def create_pledge(request):
 	p.made_after_trigger_execution = (p.trigger.status == TriggerStatus.Executed)
 
 	# ref_code (i.e. utm_campaign code) and Campaign ('via_campaign')
-	from itfsite.models import Campaign
+	from itfsite.models import Campaign, AnonymousUser
 	p.ref_code = get_sanitized_ref_code(request)
 	p.via_campaign = Campaign.objects.get(id=request.POST['via_campaign'])
 
@@ -200,18 +206,34 @@ def create_pledge(request):
 		exists_filters = { 'user': p.user }
 
 	# Anonymous user.
-	# Will do email verification below, but at least not validate it
+	# Will do email verification below, but validate it early.
 	# (should have already been validated client side).
 	else:
-		p.email = request.POST.get('email').strip()
+		email = request.POST.get('email').strip()
 
-		from email_validator import validate_email, EmailNotValidError
-		try:
-			validate_email(p.email, allow_smtputf8=False)
-		except EmailNotValidError as e:
-			raise HumanReadableValidationError(str(e))
+		# If the user makes multiple actions anonymously, we'll associate
+		# a single AnonymousUser instance.
+		anon_user = AnonymousUser.objects.filter(id=request.session.get("anonymous-user")).first()
+		if anon_user and anon_user.email == email:
+			# Reuse this AnonymousUser instance.
+			p.anon_user = anon_user
+		else:
+			# Validate email.
+			from email_validator import validate_email, EmailNotValidError
+			try:
+				validate_email(email, allow_smtputf8=False)
+			except EmailNotValidError as e:
+				raise HumanReadableValidationError(str(e))
 
-		exists_filters = { 'email': p.email }
+			# Create a new AnonymousUser instance.
+			p.anon_user = AnonymousUser.objects.create(email=email)
+
+			# Record in the session so the user can reuse this instance and
+			# to grant the user temporary (within the session cookie's session)
+			# access to the resources the user creates while anonymous.
+			request.session['anonymous-user'] = p.anon_user.id
+
+		exists_filters = { 'anon_user': p.anon_user }
 
 	# If the user has already made this pledge, it is probably a
 	# synchronization problem. Just redirect to that pledge.
@@ -346,17 +368,10 @@ def create_pledge(request):
 	else:
 		# The pledge needs to get confirmation of the user's email address,
 		# which will lead to account creation.
-		p.send_email_confirmation(first_try=True)
-
-		# And in order for the user to be able to view the pledge on the
-		# next page, prior to email confirmation, we'll need to set a token
-		# to grant permission. Only hold up to 20 values.
-		request.session['anon_pledge_created'] = \
-			request.session.get('anon_pledge_created', [])[-20:] \
-			+ [p.id]
+		p.anon_user.send_email_confirmation()
 
 		# Wipe the IncompletePledge because the user finished the form.
-		IncompletePledge.objects.filter(email=p.email, trigger=p.trigger).delete()
+		IncompletePledge.objects.filter(email=p.anon_user.email, trigger=p.trigger).delete()
 
 	# Done.
 	return {

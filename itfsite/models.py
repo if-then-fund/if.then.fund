@@ -6,7 +6,7 @@ from django.template import Template, Context
 from django.conf import settings
 from django.http import Http404
 
-from itfsite.accounts import User, NotificationsFrequency
+from itfsite.accounts import User, NotificationsFrequency, AnonymousUser
 from contrib.models import TextFormat
 
 import enum

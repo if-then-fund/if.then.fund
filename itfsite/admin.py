@@ -6,6 +6,10 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ['email', 'id', 'is_active', 'is_staff', 'is_superuser', 'date_joined']
     search_fields = ['id', 'email']
 
+class AnonymousUserAdmin(admin.ModelAdmin):
+    list_display = ['email', 'id', 'created', 'confirmed_user']
+    search_fields = ['id', 'email', 'confirmed_user__email']
+
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ['slug', 'orgtype', 'id', 'name', 'created']
     search_fields = ['id', 'slug', 'name']
@@ -32,6 +36,7 @@ class CampaignAdmin(admin.ModelAdmin):
     exclude = ['contrib_triggers', 'letters']
 
 admin.site.register(User, UserAdmin)
+admin.site.register(AnonymousUser, AnonymousUserAdmin)
 admin.site.register(Organization, OrganizationAdmin)
 admin.site.register(Campaign, CampaignAdmin)
 admin.site.register(Notification) # not really helpful outside of debugging

@@ -364,7 +364,7 @@ class TriggerExecution(models.Model):
 	description = models.TextField(help_text="Once a trigger is executed, additional text added to explain how funds were distributed.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
-	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges executed. This counts pledges from unconfirmed email addresses that do not result in contributions. Used to check when a Trigger is done executing.")
+	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges executed. This counts pledges from anonymous users that do not result in contributions. Used to check when a Trigger is done executing.")
 	pledge_count_with_contribs = models.IntegerField(default=0, help_text="A cached count of the number of pledges executed with actual contributions made.")
 	num_contributions = models.IntegerField(default=0, db_index=True, help_text="A cached total number of campaign contributions executed.")
 	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of campaign contributions executed, excluding fees.")
@@ -623,8 +623,9 @@ class NoMassDeleteManager(models.Manager):
 class Pledge(models.Model):
 	"""A user's pledge of a contribution."""
 
-	user = models.ForeignKey('itfsite.User', blank=True, null=True, on_delete=models.PROTECT, help_text="The user making the pledge. When an anonymous user makes a pledge, this is null, the user's email address is stored, and the pledge should be considered unconfirmed/provisional and will not be executed.")
-	email = models.EmailField(max_length=254, blank=True, null=True, help_text="When an anonymous user makes a pledge, their email address is stored here and we send a confirmation email.")
+	user = models.ForeignKey('itfsite.User', blank=True, null=True, on_delete=models.PROTECT, help_text="The user making the pledge. When an anonymous user makes a pledge, this is null, the user's email address is stored in an AnonymousUser object referenced in anon_user, and the pledge should be considered unconfirmed/provisional and will not be executed.")
+	anon_user = models.ForeignKey('itfsite.AnonymousUser', blank=True, null=True, on_delete=models.CASCADE, help_text="When an anonymous user makes a pledge, a one-off object is stored here and we send a confirmation email.")
+	_email = models.EmailField(max_length=254, blank=True, null=True, help_text="to be removed.")
 	profile = models.ForeignKey(ContributorInfo, related_name="pledges", on_delete=models.PROTECT, help_text="The contributor information (name, address, etc.) and billing information used for this Pledge. Immutable and cannot be changed after execution.")
 
 	trigger = models.ForeignKey(Trigger, related_name="pledges", on_delete=models.PROTECT, help_text="The Trigger that this Pledge is for.")
@@ -632,7 +633,7 @@ class Pledge(models.Model):
 
 	ref_code = models.CharField(max_length=24, blank=True, null=True, db_index=True, help_text="An optional referral code that lead the user to take this action.")
 
-	# When a Pledge is cancelled, the object is deleted. The trigger/via_campaign/user/email fields
+	# When a Pledge is cancelled, the object is deleted. The trigger/via_campaign/user/anon_user fields
 	# are archived, plus the fields listed in this list. The fields below must
 	# be JSON-serializable.
 	cancel_archive_fields = (
@@ -661,7 +662,7 @@ class Pledge(models.Model):
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
 	class Meta:
-		unique_together = [('trigger', 'user'), ('trigger', 'email')]
+		unique_together = [('trigger', 'user'), ('trigger', 'anon_user')]
 		index_together = [('trigger', 'via_campaign')]
 
 	objects = NoMassDeleteManager()
@@ -725,7 +726,7 @@ class Pledge(models.Model):
 		if self.user:
 			return self.user.email
 		else:
-			return self.email
+			return self.anon_user.email
 
 	@property
 	def get_nice_status(self):
@@ -779,86 +780,31 @@ class Pledge(models.Model):
 				                 noun, verb, antidesired_outcome_label, ((" if the opponent is in the %sparty" % party_filter) if party_filter else ""))
 
 
-	def send_email_confirmation(self, first_try):
-		# Use a custom mailer function so we can send through our
-		# HTML emailer app.
-		def mailer(context):
-			from htmlemailer import send_mail
-			send_mail(
-				"contrib/mail/confirm_email",
-				settings.DEFAULT_FROM_EMAIL,
-				[context['email']],
-				{
-					"profile": self.profile, # used in salutation in email_template
-					"confirmation_url": context['confirmation_url'],
-					"pledge": self,
-					"first_try": first_try,
-				})
-
-		from email_confirm_la.models import EmailConfirmation
-		if first_try:
-			# Make an EmailConfirmation object.
-			ec = EmailConfirmation.create(self)
-		else:
-			# Get an existing EmailConfirmation object.
-			ec = EmailConfirmation.get_for(self)
-		ec.send(mailer=mailer)			
-
-	def should_retry_email_confirmation(self):
-		from datetime import timedelta
-		from django.utils import timezone
-		from email_confirm_la.models import EmailConfirmation
-		try:
-			ec = EmailConfirmation.get_for(self)
-		except EmailConfirmation.DoesNotExist as e:
-			# The record expired. No need to send again.
-			return False
-		if ec.send_count >= 3:
-			# Already sent three emails, stop.
-			return False
-		if ec.sent_at < timezone.now() - timedelta(days=1):
-			# More than a day has passed since the last email, so send again.
-			return True
-		return False
-
-	# A user confirms an email address on an anonymous pledge.
-	@transaction.atomic
-	def email_confirmation_confirmed(self, confirmation, request):
-		from django.contrib import messages
-
-		# Sanity check - has this pledge already been confirmed?
-		if self.user:
-			return
-
-		# Get or create a user account for this person.
-		from itfsite.accounts import User
-		user = User.get_or_create(confirmation.email)
-
+	def set_confirmed_user(self, user, request):
 		# The user may have anonymously created a second Pledge for the same
 		# trigger. We can't tell them before they confirm their email that
 		# they already made a pledge. We can't confirm both --- warn the user
 		# and go on.
+
+		from django.contrib import messages
+
 		if self.trigger.pledges.filter(user=user).exists():
 			messages.add_message(request, messages.ERROR, 'You had a previous contribution already scheduled for the same thing. Your more recent contribution will be ignored.')
 			return
 
-		# Move the anonymous pledge to the user's account.
+		# Move this anonymous pledge to the user's account.
 		self.user = user
-		self.email = None
+		self.anon_user = None
 		self.email_confirmed_at = timezone.now()
-		self.save(update_fields=['user', 'email', 'email_confirmed_at'])
-
-		# Run steps that happen after a pledge is confirmed.
-		self.run_post_confirm_steps()
+		self.save(update_fields=['user', 'anon_user', 'email_confirmed_at'])
 
 		# Let the user know what happened.
 		messages.add_message(request, messages.SUCCESS, 'Your contribution regarding %s has been confirmed.'
 			% self.trigger.title)
 
-	def email_confirmation_response_view(self, request):
-		# The user may be new, so take them to a welcome page.
-		from itfsite.accounts import first_time_confirmed_user
-		return first_time_confirmed_user(request, self.user, self.get_absolute_url())
+		# And run the steps that happen once a user is confirmed. This is
+		# separate since some Pledges are born confirmed.
+		self.run_post_confirm_steps()
 
 	def run_post_confirm_steps(self):
 		# Create new notifications for this user based on any recommendations
@@ -1027,7 +973,8 @@ class CancelledPledge(models.Model):
 	trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE, help_text="The Trigger that the pledge was for.")
 	via_campaign = models.ForeignKey('itfsite.Campaign', blank=True, null=True, on_delete=models.CASCADE, help_text="The Campaign that this Pledge was made via.")
 	user = models.ForeignKey('itfsite.User', blank=True, null=True, on_delete=models.CASCADE, help_text="The user who made the pledge, if not anonymous.")
-	email = models.EmailField(max_length=254, blank=True, null=True, help_text="The email address of an unconfirmed pledge.")
+	_email = models.EmailField(max_length=254, blank=True, null=True, help_text="to be deleted")
+	anon_user = models.ForeignKey('itfsite.AnonymousUser', blank=True, null=True, on_delete=models.CASCADE, help_text="When an anonymous user makes a pledge, a one-off object is stored here and we send a confirmation email.")
 
 	pledge = JSONField(blank=True, help_text="The original Pledge information.")
 
@@ -1037,7 +984,7 @@ class CancelledPledge(models.Model):
 		cp.trigger = pledge.trigger
 		cp.via_campaign = pledge.via_campaign
 		cp.user = pledge.user
-		cp.email = pledge.email
+		cp.anon_user = pledge.anon_user
 		cp.pledge = { k: getattr(pledge, k) for k in Pledge.cancel_archive_fields }
 		cp.pledge['amount'] = float(cp.pledge['amount']) # can't JSON-serialize a Decimal
 		cp.pledge['created'] = cp.pledge['created'].isoformat() # can't JSON-serialize a DateTime
