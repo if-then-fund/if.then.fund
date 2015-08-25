@@ -14,6 +14,8 @@
 <div class="row">
 	<div class="col-sm-7 col-md-6">
 		<form id="write-letter-form" onsubmit="return false;">
+			<input type="hidden" name="campaign" value="{{letters_campaign.id}}"/>
+
 			<p style="margin-bottom: 1em">Let&rsquo;s find out who
 				{% if letters_campaign.target_representatives and letters_campaign.target_senators %}
 					represents you in Congress.
@@ -27,20 +29,20 @@
 			<p>What is your mailing address where you vote?</p>
 
 			<div class="form-group">
-				{# <label for="addrAddress">Address  <span class="tip">(where you vote)</span></label> #}
-				<input type="text" class="form-control" id="addrAddress" placeholder="123 Your Location St.">
+				{# <label for="lettersAddrAddress">Address  <span class="tip">(where you vote)</span></label> #}
+				<input type="text" class="form-control" id="lettersAddrAddress" name="addrAddress" placeholder="123 Your Location St.">
 			</div>
 			<div class="row">
 				<div class="col-sm-5 col-md-6">
 				  <div class="form-group">
-					{# <label for="addrCity">City</label> #}
-					<input type="text" class="form-control" id="addrCity" placeholder="Everytown">
+					{# <label for="lettersAddrCity">City</label> #}
+					<input type="text" class="form-control" id="lettersAddrCity" name="addrCity" placeholder="Everytown">
 				  </div>
 				</div>
 				<div class="col-sm-3 col-md-2">
 				  <div class="form-group">
-					{# <label for="addrState">State</label> #}
-					<select class="form-control" id="addrState" size="1" style="padding-left: 2px; padding-right: 0;">
+					{# <label for="lettersAddrState">State</label> #}
+					<select class="form-control" id="lettersAddrState" name="addrState" size="1" style="padding-left: 2px; padding-right: 0;">
 						<option></option>
 						{% for state in state_abbrs %}<option>{{state}}</option>{% endfor %}
 					</select>
@@ -48,53 +50,50 @@
 				</div>
 				<div class="col-sm-4">
 				  <div class="form-group">
-					{# <label for="addrZip">ZIP</label> #}
-					<input type="text" class="form-control" id="addrZip" placeholder="12345" maxlength="10">
+					{# <label for="lettersAddrZip">ZIP</label> #}
+					<input type="text" class="form-control" id="lettersAddrZip" name="addrZip" placeholder="12345" maxlength="10">
 				  </div>
 				</div>
 			</div>
-			<button id="write-letter-find-reps" type="submit" class="btn btn-primary" onclick="write_letter_find_reps()">Next &raquo;</button>
+			<button id="write-letter-find-reps" class="btn btn-primary" onclick="write_letter_find_reps()">Next &raquo;</button>
 
 			<div id="letters-stage-two" style="display: none">
 
 				<p id="letters-who-are-my-reps">Your will be writing a letter to <span></span>.</p>
-				<p>Your legislators require that we provide your name, address, email address, and phone number with your message. Please complete the form:</p>
+				<p>Your legislators require that we provide your name, address, and the fields below with your message. Please complete the form:</p>
 
 				<div class="form-group">
-					<label for="email">Email Address</label>
-					<input type="email" class="form-control" id="email" placeholder="email address">
+					<label for="lettersEmail">Email Address</label>
+					<input type="email" class="form-control" id="lettersEmail" name="email" placeholder="email address">
 				</div>
 				<label for="namePrefix">Name</label>
 				<div class="row">
 					<div class="col-md-3 col-lg-2">
 					  <div class="form-group">
-						{# <label for="namePrefix">Title</label> #}
-						<select class="form-control" id="namePrefix" style="padding-left: 2px; padding-right: 0;">
-							<option></option>
-							{% for value in prefix_options %}<option>{{value}}</option>{% endfor %}
+						{# <label for="lettersNamePrefix">Title</label> #}
+						<select class="form-control" id="lettersNamePrefix" name="namePrefix" style="padding-left: 2px; padding-right: 0;">
+							{# filled in once we know possible options #}
 						</select>
 					  </div>
 					</div>
 					<div class="col-md-4 col-lg-5">
 					  <div class="form-group">
-						{# <label for="nameFirst">First Name</label> #}
-						<input type="text" class="form-control" id="nameFirst" placeholder="first name">
+						{# <label for="lettersNameFirst">First Name</label> #}
+						<input type="text" class="form-control" id="lettersNameFirst" name="nameFirst" placeholder="first name">
 					  </div>
 					</div>
 					<div class="col-md-5">
 					  <div class="form-group">
-						{# <label for="nameLast">Last Name</label> #}
-						<input type="text" class="form-control" id="nameLast" placeholder="last name">
+						{# <label for="lettersNameLast">Last Name</label> #}
+						<input type="text" class="form-control" id="lettersNameLast" name="nameLast" placeholder="last name">
 					  </div>
 					</div>
 				</div>
-				<div class="row">
-					<div class="col-xs-12">
-					  <div class="form-group">
-						<label for="phone">Phone Number <span class="tip">(required by some congressional offices)</span></label>
-						<input type="tel" class="form-control" id="phone" placeholder="555-555-1234">
-					  </div>
-					</div>
+				<div id="letter-phone-field" class="form-group">
+					<label for="lettersPhone">Phone Number <span class="tip">(required by some congressional offices)</span></label>
+					<input type="tel" class="form-control" id="lettersPhone" name="phone" placeholder="555-555-1234">
+				</div>
+				<div id="letter-additional-fields">
 				</div>
 
 				<button id="write-letter-submit" type="submit" class="btn btn-primary" onclick="write_letter_submit()">Send Letter</button>
@@ -119,12 +118,17 @@ function ajax_submit(options) {
 	options.success = function(res) {
 		if (res.error) {
 			// add .has-error to the indicated field
-			if (res.field) $('#' + res.field).parent('.form-group').addClass("has-error");
+			var field = null;
+			if (res.field) {
+				field = $('form *[name="' + res.field + '"]');
+				field.parent('.form-group').addClass("has-error");
+			}
 
 			// show error modal, then re-enable fields
 			show_modal_error("Error", res.error, function() {
 				if (options.fields) options.fields.prop('disabled', false);
 				if (old_error) old_error();
+				if (field) field.focus();
 			})
 			return;
 		}
@@ -151,10 +155,10 @@ function ajax_submit(options) {
 
 function letters_init() {
 	if (window.location.hash == "#demo") {
-		$('#addrAddress').val('4415 Pine St')
-		$('#addrCity').val('Philadelphia')
-		$('#addrState').val('PA')
-		$('#addrZip').val('19104')
+		$('#lettersAddrAddress').val('4604 Old Highway 91')
+		$('#lettersAddrCity').val('Nephi')
+		$('#lettersAddrState').val('UT')
+		$('#lettersAddrZip').val('84648')
 	}
 }
 
@@ -165,17 +169,66 @@ function write_letter_find_reps() {
 		method: "POST",
 		data: {
 			campaign: {{letters_campaign.id}},
-			addrAddress: $('#addrAddress').val(),
-			addrCity: $('#addrCity').val(),
-			addrState: $('#addrState').val(),
-			addrZip: $('#addrZip').val()
+			addrAddress: $('#lettersAddrAddress').val(),
+			addrCity: $('#lettersAddrCity').val(),
+			addrState: $('#lettersAddrState').val(),
+			addrZip: $('#lettersAddrZip').val()
 		},
 		success: function(res) {
+			// disable address fields
+
+				// can't mark a <select> as read-only? making it 'disabled' would exclude it from serializeArray().
+			$('#lettersAddrAddress, #lettersAddrCity, #lettersAddrZip').prop('readonly', true);
+
+			// prepare dynamic fields.
+
+			$('#lettersNamePrefix').html('<option></option>'); // clear options, add an empty option
+			res.votervoice.fields.prefix_options.forEach(function(item) {
+				$('#lettersNamePrefix').append($("<option/>").text(item));
+			})
+
+			$('#letter-phone-field').hide();
+			res.votervoice.fields.requiredUserFields.forEach(function(item) {
+				if (item == "phone")
+					$('#letter-phone-field').show();
+			})
+
+			$('#letter-additional-fields').html(''); // clear
+			var qid = 0;
+			function add_additional_field(question_type, question) {
+				var n = $("<div class='form-group'><label></label><select class='form-control'/></div>");
+				$('#letter-additional-fields').append(n);
+				$('#letter-additional-fields').append($("<input type='hidden'/>")
+					.attr('name', 'extra-' + qid + '-type')
+					.val(question_type));
+				$('#letter-additional-fields').append($("<input type='hidden'/>")
+					.attr('name', 'extra-' + qid + '-id')
+					.val(question.id));
+				n.find('select').attr('id', 'letters-additional-field-' + qid);
+				n.find('select').attr('name', 'extra-' + qid + '-value');
+				n.find('label').attr('for', n.find('select').attr('id'));
+				n.find('label').text(question.question);
+				n.find('select').html('<option/>'); // empty option
+				question.validAnswers.forEach(function(item) {
+					n.find('select').append($("<option/>").text(item));
+				})
+				qid++;
+			}
+			res.votervoice.fields.sharedQuestions.forEach(function(item) {
+				add_additional_field("shared", item);
+			})
+			res.votervoice.fields.requiredQuestions.forEach(function(item) {
+				add_additional_field("required", item);
+			})
+			
+
 			// show fields
+
 			$('#write-letter-find-reps').hide();
 			$('#letters-stage-two').slideDown();
 
 			// update text
+
 			var mocs = "";
 			for (var i = 0; i < res.mocs.length; i++) {
 				if (i > 0) {
@@ -186,27 +239,26 @@ function write_letter_find_reps() {
 				mocs += res.mocs[i].name;
 			}
 			$('#letters-who-are-my-reps span').text(mocs);
+
+			// focus
+			$('#lettersEmail').focus();
+
 		},
 	});
 }
 
 function write_letter_submit() {
+	// Valid. Submit! Collect all of the form fields.
+	var form_params = $('#write-letter-form').serializeArray();
+	var data = { };
+	for (var i = 0; i < form_params.length; i++)
+		data[form_params[i].name] = form_params[i].value;
+
 	ajax_submit({
 		fields: $('#write-letter-form input, #write-letter-form select, #write-letter-form button'),
 		url: "/letters/_ajax/write-letter",
 		method: "POST",
-		data: {
-			campaign: {{letters_campaign.id}},
-			email: $('#email').val(),
-			namePrefix: $('#namePrefix').val(),
-			nameFirst: $('#nameFirst').val(),
-			nameLast: $('#nameLast').val(),
-			addrAddress: $('#addrAddress').val(),
-			addrCity: $('#addrCity').val(),
-			addrState: $('#addrState').val(),
-			addrZip: $('#addrZip').val(),
-			phone: $('#phone').val()
-		},
+		data: data,
 		success: function(res) {
 		},
 		error: function() {

@@ -176,7 +176,7 @@ def campaign(request, id):
 
 	# Which letter-writing campaign should the user take action on?
 	from letters.models import LettersCampaign, CampaignStatus as LettersCampaignStatus
-	from letters.views import state_abbrs, get_honorific_options
+	from letters.views import state_abbrs
 	letters_campaign = campaign.letters.filter(status=LettersCampaignStatus.Open).order_by('-created').first()
 
 	# render page
@@ -193,7 +193,6 @@ def campaign(request, id):
 		# for letter writing campaigns
 		"letters_campaign": letters_campaign,
 		"state_abbrs": state_abbrs,
-		"prefix_options": get_honorific_options, # left as a callable so that we only query if we need it
 
 		})
 	

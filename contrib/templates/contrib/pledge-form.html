@@ -891,15 +891,15 @@ function pledge_submit() {
     if (!validate_and_set_cc_fields())
       return;
 
+  // Disable the payment fields prior to AJAX. (Use 'readonly' and not 'disabled' because serializeArray
+  // skips disabled fields.)
+  $('#billingCCNum, #billingCCExp, #billingCCCVC, #pledge-submit-buttons button').prop('readonly', true);
+
   // Valid. Submit! Collect all of the form fields.
   var form_params = $('#pledge-info').serializeArray();
   var data = { };
   for (var i = 0; i < form_params.length; i++)
     data[form_params[i].name] = form_params[i].value;
-
-  // Disable the payment fields prior to AJAX. Do this after serializeArray which
-  // seems to skip disabled fields.
-  $('#billingCCNum, #billingCCExp, #billingCCCVC, #pledge-submit-buttons button').attr('disabled', true);
 
   ajax_with_indicator({
     url: '/contrib/_submit',
