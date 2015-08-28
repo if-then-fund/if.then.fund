@@ -4,7 +4,7 @@
 	<p style="float: right; margin-bottom: 0"><button onclick="return cancel_pledge({{pledge.id}})" class="btn btn-default btn-sm">Cancel Contribution</button></p>
 {% endif %}
 
-<h2 style="margin-top: 0">Your contribution {% if show_long_title %}for {{pledge.trigger.title}}{% endif %}</h2>
+<h2>Your contribution {% if show_long_title %}for {{pledge.trigger.title}}{% endif %}</h2>
 
 {% if not pledge.user and not pledge.execution %}
 {# pre-execution, email not confirmed #}

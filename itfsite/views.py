@@ -175,7 +175,7 @@ def campaign(request, id):
 		tcust = TriggerCustomization.objects.filter(trigger=trigger, owner=campaign.owner).first()
 
 	# Which letter-writing campaign should the user take action on?
-	from letters.models import LettersCampaign, CampaignStatus as LettersCampaignStatus
+	from letters.models import LettersCampaign, CampaignStatus as LettersCampaignStatus, UserLetter
 	from letters.views import state_abbrs
 	letters_campaign = campaign.letters.filter(status=LettersCampaignStatus.Open).order_by('-created').first()
 
@@ -193,30 +193,54 @@ def campaign(request, id):
 		# for letter writing campaigns
 		"letters_campaign": letters_campaign,
 		"state_abbrs": state_abbrs,
+		"letters_sent": UserLetter.objects.filter(letterscampaign__campaigns=campaign).count(),
 
 		})
 	
 @user_view_for(campaign)
 def campaign_user_view(request, id):
 	from contrib.views import get_recent_pledge_defaults, get_user_pledges, render_pledge_template
+	from letters.views import get_recent_letter_defaults, get_user_letters, render_letter_template
 
 	campaign = get_object_or_404(Campaign, id=id)
 
 	ret = { }
+	ret["actions"] = []
+
+	# What actions has the user already taken?
+	pledges = get_user_pledges(request.user, request).filter(trigger__campaigns=campaign).order_by('-created')
+	letters = get_user_letters(request.user, request).filter(letterscampaign__campaigns=campaign).order_by('-created')
+
+	# CONTRIB
 
 	# Most recent pledge info so we can fill in defaults on the user's next pledge.
 	ret["pledge_defaults"] = get_recent_pledge_defaults(request.user, request)
 
 	# Pull in all of the user's existing pledges for this campaign.
-	pledges = get_user_pledges(request.user, request).filter(trigger__campaigns=campaign).order_by('-created')
-	ret["pledges"] = [
+	ret["actions"] += [
 		{
+			"type": "contrib.Pledge",
+			"date": pledge.created.isoformat(),
 			"trigger": pledge.trigger.id,
-			"rendered": render_pledge_template(request, pledge, show_long_title=len(pledges) > 1),
+			"rendered": render_pledge_template(request, pledge, show_long_title=len(pledges)+len(letters) > 1),
 		} for pledge in pledges
 	]
 
+	# LETTERS
+
+	ret["letter_defaults"] = get_recent_letter_defaults(request.user, request)
+
+	ret["actions"] += [
+		{
+			"type": "letters.UserLetter",
+			"date": letter.created.isoformat(),
+			"letterscampaign": letter.letterscampaign.id,
+			"rendered": render_letter_template(request, letter, show_long_title=len(pledges)+len(letters) > 1),
+		} for letter in letters
+	]
+
 	# Other stuff.
+	ret["actions"].sort(key = lambda x : x["date"], reverse=True)
 	ret["show_utm_tool"] = (request.user.is_authenticated() and request.user.is_staff)
 
 	return ret

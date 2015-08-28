@@ -215,8 +215,8 @@ form span.required:after {
 			{% with totals=campaign.get_contrib_totals %}
 			<dl>
 				{% if letters_campaign %}
-				<dt>###</dt>
-				<dd>letters written</dd>
+				<dt>{{letters_sent}}</dt>
+				<dd>letter{{letters_sent|pluralize}} written</dd>
 				{% endif %}
 
 				{% if totals.contrib_total > 0 %}
@@ -389,10 +389,12 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 
 		// Show any actions the user already performed.
 		var can_make_pledge = true;
-		for (var i = 0; i < (the_page ? the_page.pledges.length : 0); i++) {
-			var p = the_page.pledges[i];
+		var can_write_letter = true;
+		for (var i = 0; i < (the_page ? the_page.actions.length : 0); i++) {
+			var action = the_page.actions[i];
 			$('#my-actions').removeClass('hidden');
-			$('#my-actions div.actions-container').append($(p.rendered));
+			var n = $("<div/>").html(action.rendered)
+			$('#my-actions div.actions-container').append(n);
 
 			{% if trigger %}
 			// If the user has already made a pledge on this trigger,
@@ -400,16 +402,24 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 			// logged in because we may have placed the pledge id into
 			// the user's session. Replace the form and return since
 			// everything else is about form validation.
-			if (p.trigger == {{trigger.id}}) {
+			if (action.trigger == {{trigger.id}}) {
 				// The user already made a pledge on this. Totally destroy
 				// the form elements for making another pledge.
 				$('#make-a-contribution').remove();
 				can_make_pledge = false;
 			}
 			{% endif %}
+			
+			{% if letters_campaign %}
+			if (action.letterscampaign == {{letters_campaign.id}}) {
+				$('#write-a-letter').remove();
+				can_write_letter = false;
+			}
+			{% endif %}
 		}
 
 		{% if letters_campaign %}
+		if (can_write_letter)
 			letters_init();
 		{% endif %}
 

@@ -133,10 +133,13 @@ class AnonymousUser(models.Model):
 		return False
 
 	# A user confirms an email address on an anonymous pledge.
-	@transaction.atomic
 	def email_confirmation_confirmed(self, confirmation, request):
+		self.email_confirmed(confirmation.email, request)
+
+	@transaction.atomic
+	def email_confirmed(self, email, request):
 		# Get or create a user account for this person.
-		user = User.get_or_create(confirmation.email)
+		user = User.get_or_create(email)
 
 		# Update this record.
 		self.confirmed_user = user
@@ -146,6 +149,13 @@ class AnonymousUser(models.Model):
 		from contrib.models import Pledge
 		for pledge in Pledge.objects.filter(anon_user=self):
 			pledge.set_confirmed_user(user, request)
+
+		# Confirm all associated letters.
+		from letters.models import UserLetter
+		for letter in UserLetter.objects.filter(anon_user=self):
+			letter.set_confirmed_user(user, request)
+
+		return user
 
 	def email_confirmation_response_view(self, request):
 		# The user may be new, so take them to a welcome page.
@@ -158,7 +168,7 @@ class AnonymousUser(models.Model):
 		return first_time_confirmed_user(request, self.confirmed_user,
 			pledge.get_absolute_url() if pledge else "/home")
 
-def first_time_confirmed_user(request, user, next):
+def first_time_confirmed_user(request, user, next, just_get_url=False):
 	# The user has just confirmed their email address. Log them in.
 	# If they don't have a password set on their account, welcome them
 	# and ask for a password. Otherwise, send them on their way to the
@@ -171,9 +181,11 @@ def first_time_confirmed_user(request, user, next):
 	login(request, user)
 
 	if not user.has_usable_password():
-		return HttpResponseRedirect("/accounts/welcome?" +
-			urllib.parse.urlencode({ "next": next }))
+		url = "/accounts/welcome?" + urllib.parse.urlencode({ "next": next })
+		if just_get_url: return url
+		return HttpResponseRedirect(url)
 	else:
+		if just_get_url: return None # no need to go to welcome page
 		return HttpResponseRedirect(next)
 
 @login_required

@@ -5,6 +5,7 @@ import enum
 from enum3field import EnumField, django_enum
 from itfsite.models import Organization
 from itfsite.utils import JSONField
+from contrib.models import NoMassDeleteManager
 
 @django_enum
 class CampaignStatus(enum.Enum):
@@ -52,42 +53,16 @@ class ConstituentInfo(models.Model):
 
 	@property
 	def name(self):
-		return ' '.join(self.extra[k] for k in ('nameFirst', 'nameLast'))
+		return ' '.join(self.extra['name'][k] for k in ('nameFirst', 'nameLast'))
 
 	@property
 	def address(self):
-		return ', '.join(self.extra[k] for k in ('addressCity', 'addressState'))
+		return ', '.join(self.extra['address'][k] for k in ('addrCity', 'addrState'))
 
 	def same_as(self, other):
 		import json
 		def normalize(data): return json.dumps(data, sort_keys=True)
 		return (normalize(self.extra) == normalize(other.extra))
-
-	def geocode(self):
-		# Updates this record with geocoder information, especially congressional district
-		# and timezone.
-		from contrib.legislative import geocode
-		info = geocode([
-			self['addressAddress'],
-			self['addressCity'],
-			self['addressState'],
-			self['addressZip']])
-		self.extra['geocode'] = info
-		self.is_geocoded = True
-		self.save(update_fields=['is_geocoded', 'extra'], override_immutable_check=True)
-
-	@staticmethod
-	def createRandom():
-		# For testing!
-		import random
-		return ConstituentInfo.objects.create(extra={
-			"nameFirst": random.choice(["Jeanie", "Lucrecia", "Marvin", "Jasper", "Carlo", "Millicent", "Zack", "Raul", "Johnny", "Margarette"]),
-			"nameLast": random.choice(["Ramm", "Berns", "Wannamaker", "McCarroll", "Bumbrey", "Caudle", "Bridwell", "Pacelli", "Crowley", "Montejano"]),
-			"addressAddress": "%d %s %s" % (random.randint(10, 200), random.choice(["Fir", "Maple", "Cedar", "Dogwood", "Persimmon", "Beech"]), random.choice([ "St", "Ave", "Ct"])),
-			"addressCity": random.choice(["Rudy", "Hookerton", "La Ward", "Marenisco", "Nara Visa"]),
-			"addressState": random.choice(["NQ", "BL", "PS"]),
-			"addressZip": random.randint(10000, 88888),
-		})
 
 class UserLetter(models.Model):
 	"""A letter written by a user."""
@@ -113,3 +88,51 @@ class UserLetter(models.Model):
 
 	class Meta:
 		unique_together = [('letterscampaign', 'user'), ('letterscampaign', 'anon_user')]
+
+	objects = NoMassDeleteManager()
+
+	def delete(self):
+		if self.submitted:
+			raise ValueError("Cannot delete a UserLetter once its messages have been submitted for delivery.")
+		super(UserLetter, self).delete()	
+
+	def get_email(self):
+		if self.user:
+			return self.user.email
+		else:
+			return self.anon_user.email
+
+	@property
+	def submission_status(self):
+		if self.submitted:
+			return "has been sent"
+		else:
+			return "will be sent"
+
+	@property
+	def indented_recipients(self):
+		def nice_list(items):
+			if len(items) <= 1:
+				return "".join(items)
+			elif len(items) == 2:
+				return items[0] + " and " + items[1]
+			else:
+				return ", ".join(items[0:-1]) + " and " + items[-1]
+
+		recips = [ m["target_name"] for m in self.extra.get("messages_queued", []) + self.extra.get("messages_sent", []) ]
+		return nice_list(recips)
+
+	def set_confirmed_user(self, user, request):
+		from django.contrib import messages
+		if self.letterscampaign.letters.filter(user=user).exists():
+			messages.add_message(request, messages.ERROR, 'You already wrote a letter on this subject.')
+			return
+
+		# Move this anonymous action to the user's account.
+		self.user = user
+		self.anon_user = None
+		self.save(update_fields=['user', 'anon_user'])
+
+		# Let the user know what happened.
+		messages.add_message(request, messages.SUCCESS, 'Your letter regarding %s %s.'
+			% (self.letterscampaign.title, self.submission_status))

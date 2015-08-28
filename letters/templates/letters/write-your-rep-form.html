@@ -9,12 +9,16 @@
 }
 </style>
 
+<div>
+
 <h2>Write a letter</h2>
 
-<div class="row">
+<div id="write-letter-form-row" class="row">
 	<div class="col-sm-7 col-md-6">
 		<form id="write-letter-form" onsubmit="return false;">
 			<input type="hidden" name="campaign" value="{{letters_campaign.id}}"/>
+			<input type="hidden" name="via_campaign" value="{{campaign.id}}"/>
+		    <input type="hidden" name="ref_code" value="{{request.GET.utm_campaign}}"/>
 
 			<p style="margin-bottom: 1em">Let&rsquo;s find out who
 				{% if letters_campaign.target_representatives and letters_campaign.target_senators %}
@@ -96,6 +100,16 @@
 				<div id="letter-additional-fields">
 				</div>
 
+				<div id="letter-vv-email-confirm-code" style="display: none">
+					<p class="text-danger">We&rsquo;ve sent you an email. <strong>KEEP THIS PAGE OPEN.</strong> The email will contain a code to verify your email address. When you receive that code, type it in here and then continue:</p>
+					<input type="hidden" name="vv-email-confirm-email">
+					<input type="hidden" name="vv-email-confirm-verif-id">
+					<div class="form-group">
+						<label for="lettersVvEmailConfirmCode">Email verification code</label>
+						<input type="text" class="form-control" id="lettersVvEmailConfirmCode" name="vv-email-confirm-verif-code" placeholder="1234">
+					</div>
+				</div>
+
 				<button id="write-letter-submit" type="submit" class="btn btn-primary" onclick="write_letter_submit()">Send Letter</button>
 			</div>
 
@@ -107,10 +121,16 @@
 			<p>Dear representative,</p>
 			<p>Reptiles are the best pets ever, and turtles are cute. Please take action on this very important issue.</p>
 			<p>Sincerely,</p>
-			<p>[your name]
+			<p>[your name]</p>
 		</div>
 	</div>
-</div>			
+</div>
+
+<div id="write-letter-submitted" class="hidden">
+	<p>Thanks! Your letter to <span></span> will be sent.</p>
+</div>
+
+</div>
 
 <script>
 function ajax_submit(options) {
@@ -154,13 +174,31 @@ function ajax_submit(options) {
 }
 
 function letters_init() {
+	if (the_page && the_page.letter_defaults && the_page.letter_defaults.profile) {
+		$('#lettersAddrAddress').val(the_page.letter_defaults.profile.address.addrAddress)
+		$('#lettersAddrCity').val(the_page.letter_defaults.profile.address.addrCity)
+		$('#lettersAddrState').val(the_page.letter_defaults.profile.address.addrState)
+		$('#lettersAddrZip').val(the_page.letter_defaults.profile.address.addrZip)
+		$('#lettersEmail').val(the_page.letter_defaults.email)
+		$('#lettersNamePrefix').attr('initial-value', the_page.letter_defaults.profile.name.namePrefix);
+		$('#lettersNameFirst').val(the_page.letter_defaults.profile.name.nameFirst)
+		$('#lettersNameLast').val(the_page.letter_defaults.profile.name.nameLast)
+		$('#lettersPhone').val(the_page.letter_defaults.profile.name.phone)
+	}
+
 	if (window.location.hash == "#demo") {
 		$('#lettersAddrAddress').val('4604 Old Highway 91')
 		$('#lettersAddrCity').val('Nephi')
 		$('#lettersAddrState').val('UT')
 		$('#lettersAddrZip').val('84648')
+		$('#lettersEmail').val('test+0@if.then.fund');
+		$('#lettersNamePrefix').attr('initial-value', 'Ms.');
+		$('#lettersNameFirst').val('Jane');
+		$('#lettersNameLast').val('Doe');
 	}
 }
+
+function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
 function write_letter_find_reps() {
 	ajax_submit({
@@ -186,6 +224,7 @@ function write_letter_find_reps() {
 			res.votervoice.fields.prefix_options.forEach(function(item) {
 				$('#lettersNamePrefix').append($("<option/>").text(item));
 			})
+			$('#lettersNamePrefix').val($('#lettersNamePrefix').attr('initial-value')); // set initial value from default
 
 			$('#letter-phone-field').hide();
 			res.votervoice.fields.requiredUserFields.forEach(function(item) {
@@ -213,6 +252,11 @@ function write_letter_find_reps() {
 					n.find('select').append($("<option/>").text(item));
 				})
 				qid++;
+
+				if (window.location.hash == "#demo") {
+					// For demonstrations, pre-select a random option.
+					n.find('select').val(question.validAnswers[getRandomInt(0, question.validAnswers.length-1)]);
+				}
 			}
 			res.votervoice.fields.sharedQuestions.forEach(function(item) {
 				add_additional_field("shared", item);
@@ -260,6 +304,24 @@ function write_letter_submit() {
 		method: "POST",
 		data: data,
 		success: function(res) {
+			if (res.status == "already-wrote-a-letter") {
+        		show_modal_error("Error", "It looks like you have already written a letter on this subject. Please reload the page to see it.");
+        		$('#write-letter-form input, #write-letter-form select, #write-letter-form button').prop('disabled', true);
+			} else if (res.status == "vv-verify-email") {
+				// VoterVoice sent a verification email. Show the new form fields to
+				// collect the verification code.
+				$('#letter-vv-email-confirm-code').slideDown();
+				$('#write-letter-form input[name="vv-email-confirm-email"]').val(res.for_email);
+				$('#write-letter-form input[name="vv-email-confirm-verif-id"]').val(res.verificationId);
+			} else if (res.status == "needs-password") {
+				// Redirect to the welcome page.
+				window.location = res.redirect;
+			} else {
+				// All good. Replace the form with letter info.
+				$('#write-letter-form-row').slideUp(function() { $('#write-letter-form-row').remove(); })
+				$('#write-letter-submitted').find('span').text(res.sent_to);
+				$('#write-letter-submitted').removeClass('hidden');
+			}
 		},
 		error: function() {
 		}

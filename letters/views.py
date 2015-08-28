@@ -6,7 +6,7 @@ from django.core import serializers
 
 import json
 
-from .models import LettersCampaign, ConstituentInfo
+from .models import LettersCampaign, ConstituentInfo, UserLetter
 from contrib.utils import json_response
 from votervoice import VoterVoiceAPIClient
 
@@ -90,6 +90,8 @@ def validate_address(request, campaign, for_ui):
 
 	#################################################################
 	# VALIDATE ADDRESS FIELDS
+	#################################################################
+
 	for field in ('addrAddress', 'addrCity', 'addrState', 'addrZip'):
 		value = request.POST.get(field, '').strip()
 		if not value:
@@ -107,7 +109,6 @@ def validate_address(request, campaign, for_ui):
 			"error": "That's not a valid USPS state abbreviation.",
 			"field": "state",
 		})
-	#################################################################
 
 	#################################################################
 	# GEOCODE THE ADDRESS
@@ -115,6 +116,8 @@ def validate_address(request, campaign, for_ui):
 	# we pass to other VoterVoice calls. Cache this for a
 	# very short time so that if the user gets to the next
 	# step quickly, we don't have to re-check this.
+	#################################################################
+
 	addressinfo = votervoice("GET", "addresses", {
 		"address1": info.extra["address"]['addrAddress'],
 		"city": info.extra["address"]['addrCity'],
@@ -141,21 +144,21 @@ def validate_address(request, campaign, for_ui):
 		raise ValidationError({
 				"error": "We could not find your address. Please check it for errors.",
 			})
-	#################################################################
 
 	#################################################################
 	# If this campaign is targetting senators only and the user lives in a district/territory
 	# without senators, then we cannot proceed.
+	#################################################################
 	if not campaign.target_representatives and info.extra["address"]['addrState'] in state_no_senators:
 		return {
 			"error": "We're only writing letters to senators, and unfortunately you do not have any senators.",
 		}
-	#################################################################
 
 	#################################################################
 	# DISTRICT LOOKUP
 	# Use the VoterVoice API to get the user's congressional district
 	# from their address.
+	#################################################################
 	districtinfo = votervoice("GET", "districts", {
 		"association": settings.VOTERVOICE_ASSOCIATION,
 		"address": json.dumps(addressinfo, sort_keys=True), # sort the keys so that the request URL is stable so it can be cached
@@ -178,10 +181,10 @@ def validate_address(request, campaign, for_ui):
 		raise ValidationError({
 			"error": "Your address does not appear to be within a United States congressional district.",
 		})
-	#################################################################
 
 	#################################################################
 	# GET MESSAGE TARGETS AND THEIR REQUIRED FORM FIELDS
+	#################################################################
 
 	# Who are we sending to?
 	groupIds = set()
@@ -228,9 +231,7 @@ def validate_address(request, campaign, for_ui):
 
 			# keep this target
 			targets.append(target)
-	#################################################################
 
-	#################################################################
 	# Is there anyone to send a letter to?
 	if len(targets) == 0:
 		# There are several reasons the list of targets might be empty: An error
@@ -239,9 +240,7 @@ def validate_address(request, campaign, for_ui):
 		return {
 			"error": "We cannot send your letter at this time. Your congressional office(s) may be vacant.",
 		}
-	#################################################################
 
-	#################################################################
 	# What fields are required to submit this message? Pool all of
 	# options across targets since we have one form for all targets.
 	requiredUserFields = set()
@@ -259,10 +258,10 @@ def validate_address(request, campaign, for_ui):
 		ret["id"] = question_id
 		return ret
 	sharedQuestions = list(map(lambda id : get_shared_question_details(id), sharedQuestions))
-	#################################################################
 
 	#################################################################
-	# Collapse CommonHonorific and CommunicatingWithCongressHonorific.
+	# Collapse CommonHonorific and CommunicatingWithCongressHonorific
+	#################################################################
 	prefix_options = None
 	if for_ui:
 		for q in list(sharedQuestions): # clone
@@ -274,10 +273,12 @@ def validate_address(request, campaign, for_ui):
 					prefix_options &= set(q['validAnswers'])
 				sharedQuestions.remove(q)
 	prefix_options = list(sort_honorific_options(prefix_options))
+
+
+	#################################################################
+	# Store VoterVoice API results.
 	#################################################################
 
-
-	# Store VoterVoice API results.
 	info.extra['votervoice'] = {
 		"querytime": timezone.now().isoformat(),
 		"addressinfo": addressinfo,
@@ -297,46 +298,50 @@ def validate_address(request, campaign, for_ui):
 def write_letter(request):
 	#################################################################
 	# BASIC VALIDATION
+	#################################################################
 	if request.method != "POST": raise Http404()
 	try:
 		# Which campaign is this?
 		campaign = LettersCampaign.objects.get(id=request.POST.get('campaign'))
 	except:
 		raise Http404()
-	#################################################################
 
 
 	#################################################################
 	# EMAIL VALIDATION
-	# Get and validate email address. This is nice to do ahead of
+	# Get/validate/normalize email address. This is nice to do ahead of
 	# validate_address because it is cheaper and will detect when
-	# the form hasn't been filled out yet.
+	# the form hasn't been filled out yet. Set allow_smtputf8=False
+	# because we don't know if the VoterVoice stack supports it.
+	#################################################################
 	from email_validator import validate_email, EmailNotValidError
 	try:
 		email = request.POST.get('email', '').strip()
 		if not email: raise EmailNotValidError("Enter an email address.")
-		email = validate_email(email)
+		email = validate_email(email, allow_smtputf8=False)['email']
 	except EmailNotValidError as e:
 		return {
 			"error": str(e),
 			"field": "email",
 		}
-	#################################################################
+
 
 	#################################################################
 	# ADDRESS VALIDATION/GET TARGETS
 	# Validate the address and get district information, message targets,
 	# and required form fields for those targets. The user has already
 	# done this part once, so it should go through OK.
+	#################################################################
 	try:
 		constit_info = validate_address(request, campaign, for_ui=False)
 	except ValidationError as e:
-		return { "error": e.response }
-	#################################################################
+		return e.response
+
 
 	#################################################################
 	# NAME VALIDATION
 	# Validate the name fields that we get from all users.
+	#################################################################
 	constit_info.extra['name'] = { }
 	for field in ('namePrefix', 'nameFirst', 'nameLast', 'phone'):
 		value = request.POST.get(field, '').strip()
@@ -347,12 +352,12 @@ def write_letter(request):
 				"field": field,
 			}
 		constit_info.extra['name'][field] = value
-	#################################################################
 
 
 	#################################################################
 	# BUILD MESSAGES.
 	# Build up the messages and validate dynamic fields.
+	#################################################################
 	messages = []
 	for target in constit_info.extra['votervoice']['targets']:
 		# Build the response data structure. Since we may have a
@@ -371,7 +376,11 @@ def write_letter(request):
 			"questionnaire": [],
 			}]
 		}
-		messages.append(response)
+		messages.append({
+			"target_name": target["name"],
+			"votervoice_target": target,
+			"votervoice_response": response,
+		})
 
 		# Validate that we have all of the required user fields.
 		for f in target["mdo"].get("requiredUserFields", []):
@@ -379,7 +388,7 @@ def write_letter(request):
 				# The phone number goes into the user information. We
 				# validate it here but don't include it in the message
 				# data.
-				if not constit_info['name']['phone']:
+				if not constit_info.extra['name']['phone']:
 					return {
 						"error": "Please fill out the form completely.",
 						"field": "phone",
@@ -441,7 +450,7 @@ def write_letter(request):
 				"question": rq["question"],
 				"answer": value,
 			})
-	#################################################################
+
 
 	#################################################################
 	# GET OR CREATE THE VOTERVOICE USER
@@ -449,8 +458,229 @@ def write_letter(request):
 	# submit a message for delivery. But we first have to create a User.
 	#################################################################
 
-	
+	# Create the data structure.
+	user = {
+		"emailAddress": email,
+		"honorific": constit_info.extra['name']['namePrefix'],
+		"givenNames": constit_info.extra['name']['nameFirst'],
+		"surname": constit_info.extra['name']['nameLast'],
+		"homeAddress": constit_info.extra['votervoice']['addressinfo'],
+		"phoneNumber": constit_info.extra['name']['phone'],
+	}
+
+	didVerifyEmail = False
+	import requests
+	if request.POST.get('vv-email-confirm-email') != email:
+		# This is a normal first attempt to submit the form.
+
+		# Create/update the user, getting back { "userId": 1, "userToken": "USER_TOKEN" }.
+		try:
+			# "You will see a HTTP status code of 200 or 201 depending on if an
+			# existing user's information was updated or created respectively."
+			user_info = votervoice("POST", "users", {
+					"association": settings.VOTERVOICE_ASSOCIATION,
+				},
+				user)
+		except requests.HTTPError as e:
+			if e.response.status_code != 409:
+				# 4xx (except 409): General validation error.
+				return {
+					"error": e.response.text,
+				}
+			else:
+				# "The user's information matched to an already existing user on our
+				# end and the information sent by your POST was significantly different
+				# that what we have in our system. You will see a HTTP status code of
+				# 409 when this occurs. In order to proceed in this case, you will
+				# have to verify user identify and user data ownership using the
+				# following process."
+
+				# VoterVoice will send the user an email. We get back:
+				# { "verificationId":"VERIFICATION_ID" }.
+				try:
+					email_verif_id = votervoice("POST", "emailownershipverifications", {
+							"association": settings.VOTERVOICE_ASSOCIATION,
+						},
+						{
+						    "emailAddress": email,
+						})
+				except requests.HTTPError as e:
+					if e.response.status_code == 429:
+						# We seem to get this if we try to send too many email verification
+						# emails at once? Not exactly sure.
+						return { "error": "It looks like you've submitted the form too many times. Wait a minute and then try again." }
+					raise
+
+				# Ask the user to wait and enter the verification code.
+				return {
+					"status": "vv-verify-email",
+					"for_email": email,
+					"verificationId": email_verif_id['verificationId'],
+				}
+
+	else:
+		# This is a second attempt with an email verification code.
+		# (See below for how we get here.)
+
+		# Pass the email verification code back to VoterVoice.
+		if request.POST.get('vv-email-confirm-verif-code', '').strip() == "":
+			return {
+				"error": "Enter the email verification code we have just emailed you.",
+				"field": "vv-email-confirm-verif-code",
+			}
+
+		try:
+			email_verif_proof = votervoice("POST", "emailownershipverifications/" + request.POST.get('vv-email-confirm-verif-id', '') + "/proof", { },
+				{
+				    "code": request.POST.get('vv-email-confirm-verif-code', ''),
+				})
+			didVerifyEmail = True
+		except requests.HTTPError as e:
+			# Verification code was incorrect.
+			return {
+				"error": "The email verification code was not correct. Please check that you copied it correct.",
+			}
+
+		# Get the existing user info.
+		existing_user = votervoice("GET", "users/identities",
+			{
+				"email": email,
+				"ownershipProof": email_verif_proof["proof"]
+			}, {})
+		if len(existing_user) == 0:
+			return {
+				"error": "Something went wrong, sorry. Error #5.",
+			}
+
+		# Set additional fields on user so we can submit the new fields.
+		user['userId'] = existing_user[0]['id']
+		user_token = existing_user[0]['token']
+
+		# Update user.
+		try:
+			votervoice("PUT", "users/" + user_token, {
+					"association": settings.VOTERVOICE_ASSOCIATION,
+				},
+				user)
+		except requests.HTTPError as e:
+			# Something went wrong updating the user. Maybe a validation error.
+			return {
+				"error": e.response.text,
+			}
+
+		# PUT doesn't give us back anything. Assemble the user_info we need.
+		user_info = { "userId": user['userId'], "userToken": user_token }
+
+
+	# We have user_info now. Put user ID and token into the constit_info structure.
+	constit_info.extra['votervoice']['user'] = user_info
+
+	#################################################################
+	# SAVE WHAT WE HAVE SO FAR
+	#################################################################
+
+	letter = UserLetter()
+	letter.letterscampaign = campaign
+
+	# ref_code (i.e. utm_campaign code) and Campaign ('via_campaign')
+	from itfsite.models import Campaign, AnonymousUser
+	from contrib.views import get_sanitized_ref_code
+	letter.ref_code = get_sanitized_ref_code(request)
+	letter.via_campaign = Campaign.objects.get(id=request.POST['via_campaign'])
+
+	# Set user from logged in state.
+	if request.user.is_authenticated():
+		letter.user = request.user
+		exists_filters = { 'user': letter.user }
+	else:
+		# If the user makes multiple actions anonymously, we'll associate
+		# a single AnonymousUser instance. Use an AnonymousUser stored in
+		# the session (if it's for the same email address as entered on)
+		# the form. If none is in the session, create one and add it to
+		# the session.
+		anon_user = AnonymousUser.objects.filter(id=request.session.get("anonymous-user")).first()
+		if anon_user and anon_user.email == email:
+			letter.anon_user = anon_user
+		else:
+			letter.anon_user = AnonymousUser.objects.create(email=email)
+			request.session['anonymous-user'] = letter.anon_user.id
+		exists_filters = { 'anon_user': letter.anon_user }
+
+	# If the user has already written a letter on this subject, it is probably a
+	# synchronization problem. Just redirect to that pledge.
+	letter_exists = UserLetter.objects.filter(letterscampaign=campaign, **exists_filters).first()
+	if letter_exists is not None:
+		return { "status": "already-wrote-a-letter" }
+
+	letter.congressional_district = "%s%02d" % (
+		constit_info.extra['address']['addrState'],
+		constit_info.extra['congressional_district']['district']
+		)
+
+	constit_info.save()
+	letter.profile = constit_info
+	letter.extra = {
+		"messages_queued": messages,
+	}
+	letter.save()
+
+	#################################################################
+	# SEND EMAIL VERIFICATION EMAILS WHERE NECESSARY
+	#################################################################
+
+	if letter.anon_user:
+		# This was made by an anonymous user.
+		if didVerifyEmail:
+			# But the user just confirmed their email address via VoterVoice.
+			# If we ask them to confirm their email address again, that's
+			# going to be weird. We'll confirm their address immediately...
+			user = letter.anon_user.email_confirmed(email, request)
+
+			# Then log them in and redirect them to the welcome page to
+			# set a password.
+			from itfsite.accounts import first_time_confirmed_user
+			welcome_url = first_time_confirmed_user(request, user, letter.via_campaign.get_absolute_url(), just_get_url=True)
+			if welcome_url is not None:
+				return {
+					"status": "needs-password",
+					"redirect": welcome_url,
+				}
+
+		else:
+			# Start the usual email verification process.
+			letter.anon_user.send_email_confirmation()
 
 	return {
-		"status": repr(messages),
+		"status": "ok",
+		#"html": render_letter_template(request, letter),
+		"sent_to": letter.indented_recipients,
+	}
+
+def get_user_letters(user, request):
+	# see contrib.get_user_pledges
+	from django.db.models import Q
+	filters = Q(id=-99999) # dummy, exclude all
+	if user and user.is_authenticated():
+		filters |= Q(user=user)
+	anon_user = request.session.get("anonymous-user")
+	if anon_user is not None:
+		filters |= Q(anon_user_id=anon_user)
+	return UserLetter.objects.filter(filters)
+
+def render_letter_template(request, letter, show_long_title=False):
+	# Get the user's pledges, if any, on any trigger tied to this campaign.
+	import django.template
+	template = django.template.loader.get_template("letters/letter.html")
+	return template.render(django.template.RequestContext(request, {
+		"show_long_title": show_long_title,
+		"letter": letter,
+		"share_url": request.build_absolute_uri(letter.via_campaign.get_short_url()),
+	}))
+
+def get_recent_letter_defaults(user, request):
+	letter = get_user_letters(request.user, request).order_by('-created').first()
+	if not letter: return None
+	return {
+		"email": letter.get_email(),
+		"profile": letter.profile.extra,
 	}

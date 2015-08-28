@@ -77,6 +77,19 @@ def get_recent_pledge_defaults(user, request):
 	pledges = get_user_pledges(user, request)
 	pledge = pledges.order_by('-created').first()
 	if not pledge:
+		# Try to get defaults from a letters.UserLetter.
+		from letters.views import get_user_letters
+		letter = get_user_letters(user, request).order_by('-created').first()
+		if letter:
+			ret.update({
+				"email": letter.get_email(),
+				"contribNameFirst": letter.profile.extra["name"]["nameFirst"],
+				"contribNameLast": letter.profile.extra["name"]["nameLast"],
+				"contribAddress": letter.profile.extra["address"]["addrAddress"],
+				"contribCity": letter.profile.extra["address"]["addrCity"],
+				"contribState": letter.profile.extra["address"]["addrState"],
+				"contribZip": letter.profile.extra["address"]["addrZip"],
+			})
 		return ret
 
 	# How many open pledges does this user already have?

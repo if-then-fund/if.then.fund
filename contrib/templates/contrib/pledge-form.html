@@ -496,9 +496,6 @@ function pledge_init() {
 }
 
 function setPledgeDefaults(pledge_defaults) {
-  if (!pledge_defaults.from_pledge)
-    return;
-
   // pre-populate contributor fields
   var fields = ['contribNameFirst', 'contribNameLast', 'contribAddress', 'contribCity', 'contribState', 'contribZip', 'contribOccupation', 'contribEmployer'];
   for (var i = 0; i < fields.length; i++) {
@@ -511,6 +508,9 @@ function setPledgeDefaults(pledge_defaults) {
       $('#' + fields[i]).val(v)
     }
   }
+
+  if (!pledge_defaults.from_pledge)
+    return;
 
   // populate credit card preview field
   $('#payment-old .cc-num').text(pledge_defaults.cclastfour);

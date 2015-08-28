@@ -15,11 +15,13 @@ class VoterVoiceAPIClient(object):
 
 	def __call__(self, http_method, api_method, qsargs, post_data, cache_duration=6):
 		cache_key = None
+
 		url = "https://www.votervoice.net/api/" + api_method
+		if len(qsargs.items()) > 0:
+			url += "?" + urllib.parse.urlencode(make_sorted_dict(qsargs)) # sorting is good for caching
 
 		urlopen = getattr(requests, http_method.lower())
 		if urlopen == requests.get:
-			url += "?" + urllib.parse.urlencode(make_sorted_dict(qsargs)) # sorting is good for caching
 			headers = { }
 			payload = None
 

@@ -1,0 +1,8 @@
+{% load itfsite_utils %}
+
+<h2>Your letter {% if show_long_title %}for {{letter.letterscampaign.title}}{% endif %}</h2>
+
+<p>
+	You wrote a letter to {{letter.indented_recipients}} on {{letter.created|date}}.
+	{% if not letter.submitted %}It is currently pending delivery.{% endif %}
+</p>
