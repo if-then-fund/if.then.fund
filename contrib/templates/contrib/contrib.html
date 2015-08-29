@@ -13,6 +13,10 @@
  	<hr>
 {% endif %}
 
+{% if campaign != pledge.via_campaign %}
+	<p class="text-warning">You already took action on this {{pledge.trigger.trigger_type.strings.action_noun}} {% if pledge.via_campaign.owner %}on <a href="{{pledge.via_campaign.owner.get_absolute_url}}">{{pledge.via_campaign.owner.name}}</a>&rsquo;s page{% else %}at{% endif %} <a href="{{pledge.via_campaign.get_absolute_url}}">{{pledge.via_campaign.title}}</a>.</p>
+{% endif %}
+
 {% if not pledge.execution or pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
 
 	<p id="pledge-explanation">You

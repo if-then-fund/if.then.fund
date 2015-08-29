@@ -389,7 +389,7 @@ def create_pledge(request):
 	# Done.
 	return {
 		"status": "ok",
-		"html": render_pledge_template(request, p),
+		"html": render_pledge_template(request, p, p.via_campaign),
 	}
 
 @json_response
@@ -405,13 +405,14 @@ def cancel_pledge(request):
 	else:
 		return { "status": "error", "message": "You don't own that pledge." }
 
-def render_pledge_template(request, pledge, show_long_title=False):
+def render_pledge_template(request, pledge, campaign, show_long_title=False):
 	# Get the user's pledges, if any, on any trigger tied to this campaign.
 	import django.template
 	template = django.template.loader.get_template("contrib/contrib.html")
 	return template.render(django.template.RequestContext(request, {
 		"show_long_title": show_long_title,
 		"pledge": pledge,
+		"campaign": campaign,
 		"execution": PledgeExecution.objects.filter(pledge=pledge).first(),
 		"contribs": sorted(Contribution.objects.filter(pledge_execution__pledge=pledge).select_related("action"), key=lambda c : (c.recipient.is_challenger, c.action.name_sort)),
 		"share_url": request.build_absolute_uri(pledge.via_campaign.get_short_url()),

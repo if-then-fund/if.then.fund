@@ -222,7 +222,7 @@ def campaign_user_view(request, id):
 			"type": "contrib.Pledge",
 			"date": pledge.created.isoformat(),
 			"trigger": pledge.trigger.id,
-			"rendered": render_pledge_template(request, pledge, show_long_title=len(pledges)+len(letters) > 1),
+			"rendered": render_pledge_template(request, pledge, campaign, show_long_title=len(pledges)+len(letters) > 1),
 		} for pledge in pledges
 	]
 
