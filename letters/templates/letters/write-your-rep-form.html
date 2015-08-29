@@ -1,11 +1,25 @@
+{% load itfsite_utils %}
+
 <style>
 #letter-preview {
-	margin: -1.5em 0 1em 0;
-	border: 1px solid #363;
-	border-radius: 6px;
-	background-color: #FEFEFE;
+	margin-bottom: 2em;
+	border: 1px solid rgba(0,0,0, .75);
+	background-color: #574;
 	padding: 1em;
-	font-weight: 300;
+	color: white;
+	font-weight: bold;
+}
+
+#letter-preview .boilerplate {
+	color: #EEE;
+	font-weight: normal;
+}
+
+@media screen and (min-width: 992px) {
+	#letter-preview {
+		margin-top: -1em;
+		margin-left: 2em;
+	}
 }
 </style>
 
@@ -14,7 +28,16 @@
 <h2>Write a letter</h2>
 
 <div id="write-letter-form-row" class="row">
-	<div class="col-sm-7 col-md-6">
+	<div class="col-md-push-6 col-md-6">
+		<p class="visible-xs">Please send a letter to Congress about this issue:</p>
+		<div id="letter-preview">
+			<p class="boilerplate">Dear {{letters_campaign.sample_honorific}},</p>
+			{{letters_campaign.message_body|render_text:'TextFormat.Markdown'}}
+			<p class="boilerplate">Sincerely,
+			<br>[your name]</p>
+		</div>
+	</div>
+	<div class="col-md-pull-6 col-md-6">
 		<form id="write-letter-form" onsubmit="return false;">
 			<input type="hidden" name="campaign" value="{{letters_campaign.id}}"/>
 			<input type="hidden" name="via_campaign" value="{{campaign.id}}"/>
@@ -115,14 +138,6 @@
 
 		</form>
 
-	</div>
-	<div class="col-sm-5 col-md-6">
-		<div id="letter-preview">
-			<p>Dear representative,</p>
-			<p>Reptiles are the best pets ever, and turtles are cute. Please take action on this very important issue.</p>
-			<p>Sincerely,</p>
-			<p>[your name]</p>
-		</div>
 	</div>
 </div>
 

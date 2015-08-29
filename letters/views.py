@@ -364,16 +364,16 @@ def write_letter(request):
 		# different message per target, build a complete UserAdvocacyMessage
 		# for each TargetDeliveryContract.
 		response = {
-			"subject": "this is the subject",
-		    "body": "this is the message body",
-		    "complimentaryClose": "Sincerely,",
+			"subject": campaign.message_subject,
+		    "body": campaign.message_body,
+		    "complimentaryClose": "Sincerely,", # also says this in the preview
 		    "modified": False, # did user edit the message?
 
 			"targets": [{
-			"type": "H",
-			"id": target["id"],
-			"deliveryMethod": target["mdo"]["deliveryMethod"],
-			"questionnaire": [],
+				"type": "H",
+				"id": target["id"],
+				"deliveryMethod": target["mdo"]["deliveryMethod"],
+				"questionnaire": [],
 			}]
 		}
 		messages.append({

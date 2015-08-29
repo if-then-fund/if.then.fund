@@ -22,6 +22,10 @@ class LettersCampaign(models.Model):
 	status = EnumField(CampaignStatus, default=CampaignStatus.Draft, help_text="The current status of the campaign.")
 	owner = models.ForeignKey(Organization, blank=True, null=True, on_delete=models.PROTECT, related_name="letters_campaigns", help_text="The user/organization which owns the campaign. Null if the campaign is created by us.")
 
+	# Content.
+	message_subject = models.CharField(max_length=100, help_text="The subject of the message. Used in message delivery.")
+	message_body = models.TextField(help_text="The body of the message sent to legislators. Rendered as if Markdown when previewing for users.")
+
 	# Who gets the letters?
 	target_senators = models.BooleanField(default=True, help_text="Target letters to senators.")
 	target_representatives = models.BooleanField(default=True, help_text="Target letters to representatives.")
@@ -35,6 +39,12 @@ class LettersCampaign(models.Model):
 
 	def __str__(self):
 		return "LettersCampaign(%d, %s)" % (self.id, repr(self.title))
+
+	def sample_honorific(self):
+		if self.target_representatives:
+			return "representative"
+		else:
+			return "senator"
 
 class ConstituentInfo(models.Model):
 	"""Information about a user used for letter delivery. Stored schema-less in the extra field. May be shared across UserLetters of the same user. Instances are immutable."""
