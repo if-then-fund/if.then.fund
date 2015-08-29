@@ -2,27 +2,17 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.conf import settings
 
 import selenium.webdriver
+from selenium.webdriver.support.ui import Select
 import re
 import time
 import random
 from datetime import timedelta
 from decimal import Decimal
 
-class SimulationTest(StaticLiveServerTestCase):
-	fixtures = ['fixtures/actor.yaml', 'fixtures/recipient.yaml']
-
+class SeleniumTest(StaticLiveServerTestCase):
 	@classmethod
 	def setUpClass(cls):
-		super(cls, SimulationTest).setUpClass()
-
-		# Override the suggested pledge amount so we have a known value
-		# to test against.
-		import contrib.views
-		contrib.views.SUGGESTED_PLEDGE_AMOUNT = 5
-
-		# Override the test that bills we use are not dead.
-		import contrib.legislative
-		contrib.legislative.ALLOW_DEAD_BILL = True
+		super(SeleniumTest, cls).setUpClass()
 
 		# Override the email backend so that we can capture it.
 		from django.conf import settings
@@ -33,19 +23,24 @@ class SimulationTest(StaticLiveServerTestCase):
 		import contrib.bizlogic
 		contrib.bizlogic.DemocracyEngineAPI = contrib.bizlogic.DummyDemocracyEngineAPI()
 
+		# Likewise VoterVoice, and expecially since we don't have
+		# a staging server to test against.
+		import letters.views, votervoice
+		letters.views.votervoice = votervoice.VoterVoiceDummyAPIClient()
+
 		# Start a headless browser.
 		cls.browser = selenium.webdriver.Firefox()
 
 	@classmethod
 	def tearDownClass(cls):
-		super(cls, SimulationTest).tearDownClass()
+		super(SeleniumTest, cls).tearDownClass()
 
 		# Terminate the debug server.
 		cls.browser.quit()
 
 	def setUp(self):
 		# make it easier to access the browser instance by aliasing to self.browser
-		self.browser = SimulationTest.browser
+		self.browser = type(self).browser
 
 		# clear the browser's cookies before each test
 		self.browser.delete_all_cookies()
@@ -54,13 +49,48 @@ class SimulationTest(StaticLiveServerTestCase):
 		from urllib.parse import urljoin
 		return urljoin(self.live_server_url, path)
 
-	def pop_email(self):
-		import django.core.mail
-		try:
-			msg = django.core.mail.outbox.pop()
-		except:
-			raise ValueError("No email was sent.")
-		return msg
+	def follow_email_confirmation_link(self):
+		# Get the email confirmation URL that we need to hit to confirm the user.
+		msg = pop_email().body
+		m = re.search(r"(http:\S*/ev/key/\S*/)", msg, re.S)
+		self.assertTrue(m)
+		conf_url = m.group(1)
+		self.assertTrue(conf_url.startswith(settings.SITE_ROOT_URL))
+		conf_url = conf_url.replace(settings.SITE_ROOT_URL + "/", "/")
+		self.browser.get(self.build_test_url(conf_url))
+		time.sleep(.5)
+
+		# Now we're at the "give a password" page.
+		# It starts with a message that the pledge is confirmed.
+		self.browser.find_element_by_css_selector("#global_modal .btn-default").click()
+		time.sleep(.5) # fadeOut
+		pw = '12345'
+		self.browser.find_element_by_css_selector("#inputPassword").send_keys(pw)
+		self.browser.find_element_by_css_selector("#inputPassword2").send_keys(pw)
+		self.browser.find_element_by_css_selector("#welcome-form").submit()
+		time.sleep(.5)
+
+		return pw
+
+#####################################################################
+
+class ContribTest(SeleniumTest):
+	fixtures = ['fixtures/actor.yaml', 'fixtures/recipient.yaml']
+
+	@classmethod
+	def setUpClass(cls):
+		super(ContribTest, cls).setUpClass()
+
+		# Override the suggested pledge amount so we have a known value
+		# to test against.
+		import contrib.views
+		contrib.views.SUGGESTED_PLEDGE_AMOUNT = 5
+
+		# Override the test that bills we use are not dead.
+		import contrib.legislative
+		contrib.legislative.ALLOW_DEAD_BILL = True
+
+	#########################################
 
 	def create_test_campaign(self, bill_num, chamber, with_customization=False):
 		# Create a Trigger.
@@ -96,6 +126,7 @@ class SimulationTest(StaticLiveServerTestCase):
 			slug=t.slug,
 			subhead="This is a test campaign.",
 			subhead_format=TextFormat.Markdown,
+			headline="Do More Tests",
 			body_text="This is a test campaign.",
 			body_format=TextFormat.Markdown,
 			)
@@ -200,25 +231,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		if break_before_confirmation:
 			return
 
-		# Get the email confirmation URL that we need to hit to confirm the user.
-		msg = self.pop_email().body
-		m = re.search(r"We need to confirm your email address first. .*(http:\S*/ev/key/\S*/)", msg, re.S)
-		self.assertTrue(m)
-		conf_url = m.group(1)
-		self.assertTrue(conf_url.startswith(settings.SITE_ROOT_URL))
-		conf_url = conf_url.replace(settings.SITE_ROOT_URL + "/", "/")
-		self.browser.get(self.build_test_url(conf_url))
-		time.sleep(1)
-
-		# Now we're at the "give a password" page.
-		# It starts with a message that the pledge is confirmed.
-		self.browser.find_element_by_css_selector("#global_modal .btn-default").click()
-		time.sleep(1) # fadeOut
-		pw = '12345'
-		self.browser.find_element_by_css_selector("#inputPassword").send_keys(pw)
-		self.browser.find_element_by_css_selector("#inputPassword2").send_keys(pw)
-		self.browser.find_element_by_css_selector("#welcome-form").submit()
-		time.sleep(1)
+		pw = self.follow_email_confirmation_link()
 
 		# We're back at the Trigger page, and after the user data is loaded
 		# the user sees an explanation of the pledge.
@@ -457,7 +470,7 @@ class SimulationTest(StaticLiveServerTestCase):
 		send_pledge_emails().handle()
 
 		# Check that the email has the correct URL.
-		msg = self.pop_email().body
+		msg = pop_email().body
 		self.assertIn(settings.SITE_ROOT_URL + ip.get_return_url(), msg)
 
 		# Start a pledge again
@@ -497,3 +510,161 @@ class SimulationTest(StaticLiveServerTestCase):
 
 		# Test that it appears executed on the site.
 		self._test_pledge_simple_execution(campaign, pledge_summary="You made a campaign contribution of $11.45 for this vote. It was split among the opponents in the next general election of representatives who voted against S. 1.")
+
+class LettersTest(SeleniumTest):
+	fixtures = ['fixtures/actor.yaml', 'fixtures/recipient.yaml']
+
+	@classmethod
+	def setUpClass(cls):
+		super(LettersTest, cls).setUpClass()
+
+	#########################################
+
+	def create_test_campaign(self):
+		# Create an organization.
+		from itfsite.models import Organization, OrganizationType
+		org = Organization.objects.create(
+			name="Test Organization",
+			slug="test-organization",
+			orgtype=OrganizationType.C4,
+			description="This is a test organization.",
+			description_format=0,
+			)
+
+		# Create a campaign.
+		from itfsite.models import Campaign, TextFormat
+		campaign = Campaign.objects.create(
+			owner=org,
+			title="Test Campaign",
+			slug="test-campaign",
+			subhead="This is a test campaign.",
+			subhead_format=TextFormat.Markdown,
+			headline="Do More Tests",
+			body_text="This is a test campaign.",
+			body_format=TextFormat.Markdown,
+			)
+
+		# Create a LettersCampaign.
+		from letters.models import LettersCampaign, CampaignStatus as LettersCampaignStatus
+		lc = LettersCampaign.objects.create(
+			title="Do More Unit Tests",
+			status=LettersCampaignStatus.Open,
+			owner=org,
+			message_subject="Do more unit tests",
+			message_body="Unit tests are really important.\n\nDo more of them.",
+			target_representatives=True,
+			target_senators=False,
+			)
+		campaign.letters.add(lc)
+
+		return campaign
+
+
+	def _test_letter(self, campaign, is_logged_in=False, with_new_surname=False, with_existing_email=None, with_utm_campaign=False):
+		# What URL?
+		url = campaign.get_absolute_url()
+		utm_campaign = None
+		if with_utm_campaign:
+			utm_campaign = "test_campaign_string"
+			url += "?utm_campaign=" + utm_campaign
+
+		# Load in browser. Check title.
+		self.browser.get(self.build_test_url(url))
+		self.assertRegex(self.browser.title, "Test Campaign")
+
+		# Click one of the outcome buttons.
+		self.browser.execute_script("$('#pledge-outcomes > button[data-index=0]').click()")
+
+		if not is_logged_in:
+			# Fill out address field.
+			self.browser.find_element_by_css_selector("#lettersAddrAddress").send_keys("123 Main Street")
+			self.browser.find_element_by_css_selector("#lettersAddrCity").send_keys("Everywhere")
+			self.browser.find_element_by_css_selector("#lettersAddrState").send_keys("NY") # has to be a real state
+			self.browser.find_element_by_css_selector("#lettersAddrZip").send_keys("12345")
+
+		self.browser.find_element_by_css_selector("#write-letter-find-reps").click()
+		time.sleep(10)
+
+		email = with_existing_email
+		if not is_logged_in:
+			if not email:
+				email = "unittest+%d@if.then.fund" % (random.randint(10000, 99999))
+			self.browser.find_element_by_css_selector("#lettersEmail").send_keys(email)
+			Select(self.browser.find_element_by_css_selector("#lettersNamePrefix")).select_by_index(1)
+			self.browser.find_element_by_css_selector("#lettersNameFirst").send_keys("John")
+			self.browser.find_element_by_css_selector("#lettersNameLast").send_keys("Doe" if not with_new_surname else "Franklin")
+
+		Select(self.browser.find_element_by_css_selector("#letters-additional-field-0")).select_by_index(1)
+		Select(self.browser.find_element_by_css_selector("#letters-additional-field-1")).select_by_index(1)
+		self.browser.find_element_by_css_selector("#write-letter-submit").click()
+
+		flow_one = True
+		if with_new_surname:
+			# Must enter code and submit again.
+			from letters.views import votervoice
+			time.sleep(.5)
+			self.browser.find_element_by_css_selector("#lettersVvEmailConfirmCode").send_keys(votervoice.LAST_EMAIL_VERIF_CODE)
+			self.browser.find_element_by_css_selector("#write-letter-submit").click()
+			time.sleep(1)
+
+			if not with_existing_email:
+				# When it's a new account, we're immediately redirected to the new account page.
+				# It starts with a message that the letter is confirmed. If it's not a new
+				# account, the VoterVoice email verification lets us immediately proceed.
+				self.browser.find_element_by_css_selector("#global_modal .btn-default").click()
+				time.sleep(.5) # fadeOut
+				pw = '12345'
+				self.browser.find_element_by_css_selector("#inputPassword").send_keys(pw)
+				self.browser.find_element_by_css_selector("#inputPassword2").send_keys(pw)
+				self.browser.find_element_by_css_selector("#welcome-form").submit()
+				flow_one = False
+
+		pw = None
+		if flow_one:
+			time.sleep(1)
+
+			# Submitted?
+			time.sleep(.5)
+			self.assertIn("Thanks! Your letter to", self.browser.find_element_by_css_selector("#write-a-letter").text)
+			
+			if not is_logged_in and not (with_existing_email and with_new_surname):
+				# Letter is written. Follow email confirmation. There is no email
+				# confirmation if we did a VoterVoice email confirmation.
+				pw = self.follow_email_confirmation_link()
+
+			# Head back to/reload campaign page and test that the user's letter appears.
+			self.browser.get(self.build_test_url(url))
+
+			if with_new_surname and with_existing_email:
+				# There was no email confirmation, but it was an anonymous user that
+				# got confirmed, so there's a modal.
+				self.browser.find_element_by_css_selector("#global_modal .btn-default").click()
+
+		time.sleep(1) # wait for ajax to load user's actions
+		self.assertIn("You wrote a letter to", self.browser.find_element_by_css_selector("#my-actions .letter-action-summary").text)
+
+		return (email, pw)
+
+	def test_letter(self):
+		# Write a letter on a campaign.
+		campaign = self.create_test_campaign()
+		(email, pw) = self._test_letter(campaign)
+
+		# The user is logged in now. Write a second letter while logged in.
+		campaign = self.create_test_campaign()
+		self._test_letter(campaign, is_logged_in=True)
+
+		# Log out and submit new user details that cause a VoterVoice user 'conflict'.
+		self.browser.get(self.build_test_url("/accounts/logout"))
+		campaign = self.create_test_campaign()
+		self._test_letter(campaign, with_existing_email=email, with_new_surname=True)
+
+
+def pop_email():
+	import django.core.mail
+	try:
+		msg = django.core.mail.outbox.pop()
+	except:
+		raise ValueError("No email was sent.")
+	return msg
+

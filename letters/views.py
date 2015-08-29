@@ -4,14 +4,16 @@ from django.conf import settings
 from django.utils import timezone
 from django.core import serializers
 
-import json
-
 from .models import LettersCampaign, ConstituentInfo, UserLetter
 from contrib.utils import json_response
-from votervoice import VoterVoiceAPIClient
+from votervoice import VoterVoiceAPIClient, VoterVoiceDummyAPIClient
 
 # VoterVoice API client.
-votervoice = VoterVoiceAPIClient(settings.VOTERVOICE_API_KEY)
+if settings.VOTERVOICE_API_KEY:
+	votervoice = VoterVoiceAPIClient(settings.VOTERVOICE_API_KEY)
+else:
+	# When debugging, use our stub library.
+	votervoice = VoterVoiceDummyAPIClient()
 
 # All states with representation in Congress, for validating addresses.
 state_abbrs = ['AK', 'AL', 'AR', 'AS', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA', 'GU', 'HI', 'IA', 'ID', 'IL', 'IN', 'KS', 'KY', 'LA', 'MA', 'MD', 'ME', 'MI', 'MN', 'MO', 'MP', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH', 'NJ', 'NM', 'NV', 'NY', 'OH', 'OK', 'OR', 'PA', 'PR', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VA', 'VI', 'VT', 'WA', 'WI', 'WV', 'WY']
@@ -46,33 +48,38 @@ def find_reps(request):
 	except ValidationError as e:
 		return e.response
 
+	# Return who we are writing the letter to, plus any
+	# questions we have to ask the user.
+	ret = constit_info.extra
+	ret['mocs'] = [{ "name": t["name"] } for t in constit_info.extra["votervoice"]["targets"]]
+
 	# Get info on who represents this district, using our own
 	# data because we will later link this up with any known
 	# position of the Actor on an issue.
-	from contrib.models import Actor
-	ret = constit_info.extra
-	ret['mocs'] = []
-	def add_actor(obj):
-		if obj is None: return
-		ret['mocs'].append({
-			"id": obj.id,
-			"name": obj.name_long,
-		})
-	if campaign.target_representatives:
-		add_actor(Actor.objects.filter(office='H-%s-%02d' % (constit_info.extra['address']['addrState'], constit_info.extra['congressional_district']['district'])).first())
-	if campaign.target_senators:
-		for senate_class in (1, 2, 3):
-			add_actor(Actor.objects.filter(office='S-%s-%02d' % (constit_info.extra['address']['addrState'], senate_class)).first())
+	# from contrib.models import Actor
+	# ret = constit_info.extra
+	# ret['mocs'] = []
+	# def add_actor(obj):
+	# 	if obj is None: return
+	# 	ret['mocs'].append({
+	# 		"id": obj.id,
+	# 		"name": obj.name_long,
+	# 	})
+	# if campaign.target_representatives:
+	# 	add_actor(Actor.objects.filter(office='H-%s-%02d' % (constit_info.extra['address']['addrState'], constit_info.extra['congressional_district']['district'])).first())
+	# if campaign.target_senators:
+	# 	for senate_class in (1, 2, 3):
+	# 		add_actor(Actor.objects.filter(office='S-%s-%02d' % (constit_info.extra['address']['addrState'], senate_class)).first())
 
 	if len(ret["mocs"]) == 0:
 		if not campaign.target_senators:
 			# Just representatives. One office. Singular.
-			raise {
+			return {
 				"error": "Your congressional office is currently vacant, so we cannot submit a letter on your behalf at this time.",
 			}
 		else:
 			# Senators (or senators and representative). Multiple offices - plural.
-			raise {
+			return {
 				"error": "Your congressional offices are currently vacant, so we cannot submit a letter on your behalf at this time.",
 			}
 
@@ -161,7 +168,7 @@ def validate_address(request, campaign, for_ui):
 	#################################################################
 	districtinfo = votervoice("GET", "districts", {
 		"association": settings.VOTERVOICE_ASSOCIATION,
-		"address": json.dumps(addressinfo, sort_keys=True), # sort the keys so that the request URL is stable so it can be cached
+		"address": addressinfo,
 	}, {})
 	for di in districtinfo:
 		if di['electedBody'] == "US House":
@@ -192,10 +199,9 @@ def validate_address(request, campaign, for_ui):
 	if campaign.target_representatives: groupIds.add("US Representative")
 
 	# Get the targets for the letter. Pull out only representatives and senators.
-	# I'm not sure if this is needed, but filter out anyone with canSend == False.
 	target_groups = votervoice("GET", "advocacy/matchedtargets", {
 		"association": settings.VOTERVOICE_ASSOCIATION,
-		"home": json.dumps(addressinfo, sort_keys=True), # sort the keys so that the request URL is stable so it can be cached
+		"home": addressinfo,
 	}, {})
 	targets = []
 	for target_group in target_groups:
@@ -237,9 +243,9 @@ def validate_address(request, campaign, for_ui):
 		# There are several reasons the list of targets might be empty: An error
 		# in matching from the address, we're sending to senators only and this
 		# person is in a U.S. district/territory, or the offices are all vacant.
-		return {
+		raise ValidationError({
 			"error": "We cannot send your letter at this time. Your congressional office(s) may be vacant.",
-		}
+		})
 
 	# What fields are required to submit this message? Pool all of
 	# options across targets since we have one form for all targets.
@@ -258,6 +264,7 @@ def validate_address(request, campaign, for_ui):
 		ret["id"] = question_id
 		return ret
 	sharedQuestions = list(map(lambda id : get_shared_question_details(id), sharedQuestions))
+
 
 	#################################################################
 	# Collapse CommonHonorific and CommunicatingWithCongressHonorific

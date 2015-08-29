@@ -190,6 +190,13 @@ def campaign(request, id):
 	from letters.views import state_abbrs
 	letters_campaign = campaign.letters.filter(status=LettersCampaignStatus.Open).order_by('-created').first()
 
+	if trigger:
+		outcome_strings = tcust.outcome_strings() if tcust else trigger.outcome_strings()
+	elif letters_campaign:
+		outcome_strings = [{ "label": "Contact Congress >" }]
+	else:
+		outcome_strings = []
+
 	# render page
 	return render(request, "itfsite/campaign.html", {
 		"campaign": campaign,
@@ -197,7 +204,7 @@ def campaign(request, id):
 		# for contrib.Trigger actions
 		"trigger": trigger,
 		"tcust": tcust,
-		"trigger_outcome_strings": tcust.outcome_strings() if tcust else trigger.outcome_strings(),
+		"trigger_outcome_strings": outcome_strings,
 		"suggested_pledge": 5,
 		"alg": Pledge.current_algorithm(),
 

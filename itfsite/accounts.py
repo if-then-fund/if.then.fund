@@ -81,12 +81,18 @@ class AnonymousUser(models.Model):
 	def send_email_confirmation(self):
 		# What can we say this email is for?
 		from contrib.models import Pledge
+		from letters.models import UserLetter
+		profile = None
 		pledge = Pledge.objects.filter(anon_user=self).first()
+		letter = UserLetter.objects.filter(anon_user=self).first()
 		if pledge:
 			template = "contrib/mail/confirm_email"
 			profile = pledge.profile
+		elif letter:
+			template = "letters/mail/confirm_email"
+			profile = letter.profile
 		else:
-			raise ValueError("AnonymousUser is not associated with a Pledge.")
+			raise ValueError("AnonymousUser is not associated with a Pledge or UserLetter.")
 
 		# Use a custom mailer function so we can send through our
 		# HTML emailer app.
@@ -100,6 +106,7 @@ class AnonymousUser(models.Model):
 					"profile": profile, # used in salutation in email_template
 					"confirmation_url": context['confirmation_url'],
 					"pledge": pledge,
+					"letter": letter,
 					"first_try": not self.sentConfirmationEmail,
 				})
 

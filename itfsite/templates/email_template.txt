@@ -1,4 +1,4 @@
-{% autoescape off %}{% if profile %}Hi {{profile.extra.contributor.contribNameFirst}},{% else %}Hello!{% endif %}
+{% autoescape off %}{% if profile %}Hi {% firstof profile.extra.contributor.contribNameFirst profile.extra.name.nameFirst %},{% else %}Hello!{% endif %}
 {% block content %}
 {% endblock %}
 Josh & Jonathan

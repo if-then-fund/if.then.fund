@@ -12,7 +12,7 @@ a {
 {% endblock %}
 
 {% block body %}
-<p>{% if profile %}Hi {{profile.extra.contributor.contribNameFirst}},{% else %}Hello!{% endif %}</p>
+<p>{% if profile %}Hi {% firstof profile.extra.contributor.contribNameFirst profile.extra.name.nameFirst %},{% else %}Hello!{% endif %}</p>
 
 {% block content %}
 {% endblock %}

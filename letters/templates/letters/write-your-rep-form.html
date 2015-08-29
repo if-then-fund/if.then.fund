@@ -331,11 +331,15 @@ function write_letter_submit() {
 			} else if (res.status == "needs-password") {
 				// Redirect to the welcome page.
 				window.location = res.redirect;
-			} else {
+			} else if (res.status == "ok") {
 				// All good. Replace the form with letter info.
 				$('#write-letter-form-row').slideUp(function() { $('#write-letter-form-row').remove(); })
 				$('#write-letter-submitted').find('span').text(res.sent_to);
 				$('#write-letter-submitted').removeClass('hidden');
+				smooth_scroll_to($('#write-a-letter'));
+			} else {
+        		show_modal_error("Error", "Something went wrong, sorry.");
+        		console.log(res);
 			}
 		},
 		error: function() {

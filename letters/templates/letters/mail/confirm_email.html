@@ -1,0 +1,11 @@
+{% extends "email_template.html" %}
+
+{% block content %}
+<p>Thank you for using if.then.fund to write a letter to Congress about {{letter.letterscampaign.title}}.</p>
+
+<p>We need to confirm your email address. Please click the link below to confirm:</p>
+
+<p><a href="{{ confirmation_url }}">{{ confirmation_url }}</a></p>
+
+<p>Thanks!</p>
+{% endblock %}
