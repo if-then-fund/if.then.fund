@@ -1,7 +1,7 @@
 {% load itfsite_utils %}
 
 {% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
-	<p style="float: right; margin-bottom: 0"><button onclick="return cancel_pledge()" class="btn btn-default btn-sm">Cancel Contribution</button></p>
+	<p style="float: right; margin-bottom: 0"><button onclick="return cancel_pledge({{pledge.id}})" class="btn btn-default btn-sm">Cancel Contribution</button></p>
 {% endif %}
 
 <h2 style="margin-top: 0">Your contribution {% if show_long_title %}for {{pledge.trigger.title}}{% endif %}</h2>
@@ -118,26 +118,4 @@
 	{% endfor %}
 </div>
 {% endif %}
-
-
-<script>
-function cancel_pledge(desire) {
-	show_modal_confirm(
-		"Cancel contribution?",
-		$("<p>Are you sure you want to cancel this contribution?</p>"),
-		["Cancel Contribution", "Nevermind"],
-		function() {
-			ajax_with_indicator({
-			    url: '/contrib/_cancel',
-			    method: "POST",
-			    data: { pledge: {{pledge.id}} },
-			    success: function(res) {
-			      setTimeout("$('#ajax_loading_indicator').fadeIn()", 100);
-			      window.location.reload()
-			    }
-			})
-		});
-	return false;
-}
-</script>
 

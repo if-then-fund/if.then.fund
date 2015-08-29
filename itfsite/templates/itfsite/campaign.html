@@ -427,5 +427,24 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 			url += "?utm_campaign=" + encodeURIComponent(campaign_code);
 		$('#utm_tool_link').val(url)
 	}
-    </script>
+
+	function cancel_pledge(pledge_id) {
+		show_modal_confirm(
+			"Cancel contribution?",
+			$("<p>Are you sure you want to cancel this contribution?</p>"),
+			["Cancel Contribution", "Nevermind"],
+			function() {
+				ajax_with_indicator({
+				    url: '/contrib/_cancel',
+				    method: "POST",
+				    data: { pledge: pledge_id },
+				    success: function(res) {
+				      setTimeout("$('#ajax_loading_indicator').fadeIn()", 100);
+				      window.location.reload()
+				    }
+				})
+			});
+		return false;
+	}
+	</script>
 {% endblock %}
