@@ -151,7 +151,7 @@ class ContributorInfoAdmin(admin.ModelAdmin):
 
 class PledgeAdmin(admin.ModelAdmin):
     list_display = ['id', 'status', 'trigger', 'user_or_email', 'amount', 'campaign', 'created']
-    readonly_fields = ['user', 'anon_user', 'trigger', 'profile', 'amount', 'algorithm'] # amount is read-only because a total is cached in the Trigger
+    readonly_fields = ['user', 'anon_user', 'trigger', 'via_campaign', 'profile', 'amount', 'algorithm'] # amount is read-only because a total is cached in the Trigger
     search_fields = ['id', 'user__email', 'anon_user__email'] \
       + ['trigger__'+f for f in TriggerAdmin.search_fields] \
       + ['profile__'+f for f in ContributorInfoAdmin.search_fields]
