@@ -31,6 +31,11 @@ class SeleniumTest(StaticLiveServerTestCase):
 		# Start a headless browser.
 		cls.browser = selenium.webdriver.Firefox()
 
+		# We have a lot of AJAX that dynamically shows elements. Rather than
+		# hard-coding time.sleep()'s, let Selenium poll for the element's
+		# visibility up to this amount of time.
+		cls.browser.implicitly_wait(6) # seconds
+
 	@classmethod
 	def tearDownClass(cls):
 		super(SeleniumTest, cls).tearDownClass()
@@ -58,17 +63,14 @@ class SeleniumTest(StaticLiveServerTestCase):
 		self.assertTrue(conf_url.startswith(settings.SITE_ROOT_URL))
 		conf_url = conf_url.replace(settings.SITE_ROOT_URL + "/", "/")
 		self.browser.get(self.build_test_url(conf_url))
-		time.sleep(.5)
 
 		# Now we're at the "give a password" page.
 		# It starts with a message that the pledge is confirmed.
 		self.browser.find_element_by_css_selector("#global_modal .btn-default").click()
-		time.sleep(.5) # fadeOut
 		pw = '12345'
 		self.browser.find_element_by_css_selector("#inputPassword").send_keys(pw)
 		self.browser.find_element_by_css_selector("#inputPassword2").send_keys(pw)
 		self.browser.find_element_by_css_selector("#welcome-form").submit()
-		time.sleep(.5)
 
 		return pw
 
@@ -169,18 +171,14 @@ class ContribTest(SeleniumTest):
 		self.browser.execute_script("$('#pledge-outcomes > button[data-index=0]').click()")
 		#self.browser.find_element_by_css_selector("#pledge-outcomes > button").click() # first button?
 
-		# Wait for form to fade in.
-		time.sleep(1)
-
 		# Enter pledge amount.
 		self.browser.execute_script("$('#pledge-amount input').val('12')")
 		self.browser.find_element_by_css_selector("#contribution-start-next").click()
-		time.sleep(1)
 
 		# Enter email address.
 		email = "unittest+%d@if.then.fund" % (random.randint(10000, 99999))
 		self.browser.execute_script("$('#emailEmail').val('%s').blur()" % email)
-		time.sleep(1)
+		time.sleep(.5)
 
 		# Did we record it?
 		from contrib.models import IncompletePledge
@@ -205,7 +203,6 @@ class ContribTest(SeleniumTest):
 		self.browser.find_element_by_css_selector("#contribOccupation").send_keys("quality assurance engineer")
 		self.browser.find_element_by_css_selector("#contribEmployer").send_keys("unemployed")
 		self.browser.find_element_by_css_selector("#contribution-contributorinfo-next").click()
-		time.sleep(1)
 
 		# Enter billing information.
 		# send_keys has some problem with the stripe JS library overriding <input> behavior,
@@ -214,7 +211,7 @@ class ContribTest(SeleniumTest):
 		self.browser.execute_script("$('#billingCCExp').val('9/2025')")
 		self.browser.execute_script("$('#billingCCCVC').val('123')")
 		self.browser.find_element_by_css_selector("#billing-next").click()
-		time.sleep(1)
+		time.sleep(.5)
 
 		# The IncompletePledge should now be gone.
 		self.assertFalse(IncompletePledge.objects.filter(email=email, trigger=trigger).exists())
@@ -271,7 +268,6 @@ class ContribTest(SeleniumTest):
 		pledge_summary="You made a campaign contribution of $9.44 for this vote. It was split among 424 representatives, each getting a part of your contribution if they voted in favor of S. 1, but if they voted against S. 1 their part of your contribution will go to their next general election opponent."):
 		# Reload the page.
 		self.browser.get(self.build_test_url(campaign.get_absolute_url()))
-		time.sleep(1)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
 			pledge_summary)
@@ -285,16 +281,13 @@ class ContribTest(SeleniumTest):
 
 		# Click one of the outcome buttons.
 		self.browser.execute_script("$('#pledge-outcomes > button[data-index=1]').click()")
-		time.sleep(1) # Wait for form to fade in.
 
 		# Use default pledge amount.
 		self.browser.find_element_by_css_selector("#contribution-start-next").click()
-		time.sleep(.5)
 
 		if not change_profile:
 			# Use default contributor, billing info
 			self.browser.find_element_by_css_selector("#contribution-contributorinfo-next").click()
-			time.sleep(.5)
 		else:
 			# Click 'Update'.
 			self.browser.find_element_by_css_selector("#pledge-contributor-old-update").click()
@@ -309,7 +302,6 @@ class ContribTest(SeleniumTest):
 			self.browser.find_element_by_css_selector("#contribOccupation").send_keys("quality assurance engineer")
 			self.browser.find_element_by_css_selector("#contribEmployer").send_keys("unemployed")
 			self.browser.find_element_by_css_selector("#contribution-contributorinfo-next").click()
-			time.sleep(1)
 
 			# Enter billing information.
 			# send_keys has some problem with the stripe JS library overriding <input> behavior,
@@ -319,7 +311,6 @@ class ContribTest(SeleniumTest):
 			self.browser.execute_script("$('#billingCCCVC').val('123')")
 
 		self.browser.find_element_by_css_selector("#billing-next").click()
-		time.sleep(1)
 
 		# We're back at the Trigger page, and after the user data is loaded
 		# the user sees an explanation of the pledge.
@@ -338,7 +329,6 @@ class ContribTest(SeleniumTest):
 
 		# Reload the page.
 		self.browser.get(self.build_test_url(campaign.get_absolute_url()))
-		time.sleep(1)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
 			"You made a campaign contribution of $10.99 for this vote. It was split among 99 senators, each getting a part of your contribution if they voted against BILL, but if they voted in favor of BILL their part of your contribution will go to their next general election opponent.".replace("BILL", bill))
@@ -350,22 +340,17 @@ class ContribTest(SeleniumTest):
 
 		# Click one of the outcome buttons.
 		self.browser.execute_script("$('#pledge-outcomes > button[data-index=1]').click()")
-		time.sleep(1) # Wait for form to fade in.
 		self.browser.find_element_by_css_selector("#contribution-start-next").click() # Use default pledge amount
-		time.sleep(.5) # fade in
 
 		# Try to log in.
 		self.browser.execute_script("$('#emailEmail').val('%s')" % email)
 		self.browser.find_element_by_css_selector("#emailEmailYesPassword").click()
 		self.browser.find_element_by_css_selector("#emailPassword").send_keys(pw)
 		self.browser.find_element_by_css_selector("#login-next").click()
-		time.sleep(1)
-
+		
 		# Use pre-filled contributor/billing info.
 		self.browser.find_element_by_css_selector("#contribution-contributorinfo-next").click()
-		time.sleep(.5)
 		self.browser.find_element_by_css_selector("#billing-next").click()
-		time.sleep(1)
 
 		# We're back at the Trigger page, and after the user data is loaded
 		# the user sees an explanation of the pledge.
@@ -378,18 +363,14 @@ class ContribTest(SeleniumTest):
 		# Re-start pledge.
 		self.browser.get(self.build_test_url("/accounts/logout"))
 		self.browser.get(self.build_test_url(campaign.get_absolute_url()))
-		time.sleep(1) # page loading...?
 		self.browser.execute_script("$('#pledge-outcomes > button[data-index=1]').click()")
-		time.sleep(1) # fade in
 		self.browser.find_element_by_css_selector("#contribution-start-next").click() # Use default pledge amount.
-		time.sleep(.5) # fade in
 
 		# Try to log in.
 		self.browser.execute_script("$('#emailEmail').val('%s')" % email)
 		self.browser.find_element_by_css_selector("#emailEmailYesPassword").click()
 		self.browser.find_element_by_css_selector("#emailPassword").send_keys(pw)
 		self.browser.find_element_by_css_selector("#login-next").click()
-		time.sleep(1)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#login-error").text,
 			"You have already scheduled a contribution for this vote. Please log in to see details.")
@@ -583,7 +564,6 @@ class LettersTest(SeleniumTest):
 			self.browser.find_element_by_css_selector("#lettersAddrZip").send_keys("12345")
 
 		self.browser.find_element_by_css_selector("#write-letter-find-reps").click()
-		time.sleep(10)
 
 		email = with_existing_email
 		if not is_logged_in:
@@ -602,17 +582,14 @@ class LettersTest(SeleniumTest):
 		if with_new_surname:
 			# Must enter code and submit again.
 			from letters.views import votervoice
-			time.sleep(.5)
 			self.browser.find_element_by_css_selector("#lettersVvEmailConfirmCode").send_keys(votervoice.LAST_EMAIL_VERIF_CODE)
 			self.browser.find_element_by_css_selector("#write-letter-submit").click()
-			time.sleep(1)
 
 			if not with_existing_email:
 				# When it's a new account, we're immediately redirected to the new account page.
 				# It starts with a message that the letter is confirmed. If it's not a new
 				# account, the VoterVoice email verification lets us immediately proceed.
 				self.browser.find_element_by_css_selector("#global_modal .btn-default").click()
-				time.sleep(.5) # fadeOut
 				pw = '12345'
 				self.browser.find_element_by_css_selector("#inputPassword").send_keys(pw)
 				self.browser.find_element_by_css_selector("#inputPassword2").send_keys(pw)
@@ -621,8 +598,6 @@ class LettersTest(SeleniumTest):
 
 		pw = None
 		if flow_one:
-			time.sleep(1)
-
 			# Submitted?
 			time.sleep(.5)
 			self.assertIn("Thanks! Your letter to", self.browser.find_element_by_css_selector("#write-a-letter").text)
