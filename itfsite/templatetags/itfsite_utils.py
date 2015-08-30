@@ -49,3 +49,7 @@ def currency(value):
 	else:
 		# Only show dollars, but use commas to group digits.
 		return "${:,.0f}".format(value)
+
+@register.filter
+def objtype(obj):
+	return type(obj).__name__

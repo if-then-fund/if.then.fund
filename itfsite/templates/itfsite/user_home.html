@@ -1,4 +1,5 @@
 {% extends "master.html" %}
+{% load humanize itfsite_utils %}
 
 {% block title %}Your Account{% endblock %}
 
@@ -8,6 +9,8 @@
 .profile p { margin-bottom: .33em ;}
 #action-summary { width: auto; }
 #action-summary td { border: none; padding-bottom: 0; }
+#action-summary td:first-child { padding-left: 0; }
+#action-history td.icon { text-align: center; padding-left: 0; padding-right: 0; }
 </style>
 {% endblock %}
 
@@ -86,22 +89,22 @@ function save_email_settings() {
 {% endfor %}
 {% endif %}
 
-<h2>Your Contributions</h2>
-
-<h3>Summary</h3>
+<h2>Your Actions</h2>
 
 <table id="action-summary" class="table">
+<tr><td>Letters Written:</td> <td>{{letters_written|intcomma}}</td></tr>
 <tr><td>Scheduled Contributions:</td> <td>${{total_pledged|floatformat:2}}</td></tr>
 <tr><td>Past Contributions:</td> <td>${{total_contribs|floatformat:2}} {% if total_contribs > 0 %}(<a href="{% url 'user_contrib_details' %}">view details</a>){% endif %}</td></tr>
 </table>
 
 <h3>History</h3>
 
-{% for pledge in pledges %}
+{% for action in actions %}
 	{% if forloop.first %}
-		<table class="table">
+		<table id="action-history" class="table">
 		<thead>
 			<tr>
+				<td></td>
 				<td>Action</td>
 				<td>Amount</td>
 				<td>Status</td>
@@ -110,7 +113,10 @@ function save_email_settings() {
 		<tbody>
 	{% endif %}
 
+	{% if action|objtype == 'Pledge' %}
+	{% with pledge=action %}
 	<tr>
+		<td class="icon"><i class="glyphicon glyphicon-usd" style="color: #688"></i></td>
 		<td>
 			<a href="{{pledge.get_absolute_url}}" style="border: none">{{ pledge.trigger.title }}</a>
 			<p class="text-muted" style="margin: .1em 0 0 0; font-size: 90%">
@@ -130,6 +136,28 @@ function save_email_settings() {
 			{{pledge.get_nice_status}}
 		</td>
 	</tr>
+	{% endwith %}
+	{% endif %}
+
+	{% if action|objtype == 'UserLetter' %}
+	{% with letter=action %}
+	<tr>
+		<td class="icon"><i class="glyphicon glyphicon-file" style="color: #757"></i></td>
+		<td>
+			<a href="{{letter.get_absolute_url}}" style="border: none">{{ letter.letterscampaign.title }}</a>
+			<p class="text-muted" style="margin: .1em 0 0 0; font-size: 90%">
+				Written on {{letter.created|date}}.
+			</p>
+		</td>
+		<td class="text-muted">
+			n/a
+		</td>
+		<td>
+			{{letter.submission_status_short}}
+		</td>
+	</tr>
+	{% endwith %}
+	{% endif %}
 
 	{% if forloop.last %}
 		</tbody>
@@ -137,7 +165,7 @@ function save_email_settings() {
 	{% endif %}
 
 {% empty %}
-	<p>You have not yet made a campaign contribution.</p>
+	<p>You have not yet taken any action.</p>
 {% endfor %}
 
 {% endblock %}

@@ -106,6 +106,9 @@ class UserLetter(models.Model):
 			raise ValueError("Cannot delete a UserLetter once its messages have been submitted for delivery.")
 		super(UserLetter, self).delete()	
 
+	def get_absolute_url(self):
+		return self.via_campaign.get_absolute_url()
+
 	def get_email(self):
 		if self.user:
 			return self.user.email
@@ -118,6 +121,13 @@ class UserLetter(models.Model):
 			return "has been sent"
 		else:
 			return "will be sent"
+
+	@property
+	def submission_status_short(self):
+		if self.submitted:
+			return "Sent"
+		else:
+			return "Pending"
 
 	@property
 	def indented_recipients(self):

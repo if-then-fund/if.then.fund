@@ -6,7 +6,6 @@ from django.conf import settings
 from django.utils import timezone
 
 from itfsite.models import Organization, Notification, NotificationsFrequency, Campaign, CampaignStatus
-from contrib.models import Pledge, PledgeExecution, PledgeStatus
 
 from twostream.decorators import anonymous_view, user_view_for
 
@@ -25,8 +24,14 @@ def simplepage(request, pagename):
 
 @login_required
 def user_home(request):
-	# Get the user's pledges.
-	pledges = Pledge.objects.filter(user=request.user).order_by('-created').prefetch_related()
+	from contrib.models import Pledge, PledgeStatus
+	from letters.models import UserLetter
+
+	# Get the user's actions.
+	pledges = Pledge.objects.filter(user=request.user).prefetch_related()
+	letters = UserLetter.objects.filter(user=request.user).prefetch_related()
+	actions = list(pledges) + list(letters)
+	actions.sort(key = lambda obj : obj.created, reverse=True)
 	
 	# Get the user's total amount of open pledges, i.e. their total possible
 	# future credit card charges / campaign contributions.
@@ -51,15 +56,21 @@ def user_home(request):
 		profiles = set(p.profile for p in open_pledges)
 
 	return render(request, "itfsite/user_home.html", {
-		'pledges': pledges,
+		'actions': actions,
+
 		'profiles': profiles,
+
+		'letters_written': letters.count(),
 		'total_pledged': total_pledged,
 		'total_contribs': total_contribs,
+
 		'notifs_freq': request.user.notifs_freq.name,
 		})
 
 @login_required
 def user_contribution_details(request):
+	from contrib.models import PledgeExecution
+
 	# Assemble a table of all line-item transactions.
 	items = []
 
