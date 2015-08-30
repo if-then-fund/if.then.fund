@@ -1,1 +1,1 @@
-{{subject}} -- {{count}} new alert{{count|pluralize}} from if.then.fund
+{{subject}} -- {{count}} new alert{{count|pluralize}} from {{SITE_NAME}}

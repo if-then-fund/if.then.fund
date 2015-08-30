@@ -5,17 +5,17 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{% block title2 %}{% block title %}{% endblock %} - if.then.fund{% endblock %}</title>
+        <title>{% block title2 %}{% block title %}{% endblock %} - {{SITE_NAME}}{% endblock %}</title>
 
         {% comment %}
-        <meta property="og:title" content="if.then.fund" />
+        <meta property="og:title" content="{{SITE_NAME}}" />
         <meta name="description" content="">
         <meta property="og:description" content="">
         <meta property="og:image" content="https://.../something.png" />
         <meta name="twitter:card" content="summary_large_image" />
         {% endcomment %}
 
-        <meta name="twitter:site" content="@ifthenfund" />
+        <meta name="twitter:site" content="@{{TWITTER_HANDLE}}" />
 
         <!-- favicon -->
         <link rel="apple-touch-icon" sizes="57x57" href="/static/branding/icons/apple-touch-icon-57x57.png">
@@ -94,17 +94,16 @@
             | <a href="{% url 'simplepage' 'terms' %}">Terms of Service</a>
             | <a href="{% url 'simplepage' 'open' %}">Open</a>
           </p>
-          <p>Join the <a href="https://docs.google.com/forms/d/1xR81Bfxw96_VeVhAvn2EvaM8j0VhB2Lt_z9ulWEGS2I/viewform"><span class="site-brand">if.then.fund</span> announcements</a> mail list to be alerted to new features as we launch them.</p>
+          <p>Join the <a href="https://docs.google.com/forms/d/1xR81Bfxw96_VeVhAvn2EvaM8j0VhB2Lt_z9ulWEGS2I/viewform"><span class="site-brand">{{SITE_NAME}}</span> announcements</a> mail list to be alerted to new features as we launch them.</p>
         </div>
         <div class="col-sm-3 col-md-2 hidden-print">
           <ul id="footer-social">
               <li title="Email"><script>
-              var addr = "olleh".split("").reverse().join("") + String.fromCharCode(2*0x20) + "if.then.fund";
+              var addr = "{{CONTACT_EMAIL_REVERSED|escapejs}}".split("").reverse().join("");
               document.write("\x3ca class='email' href='mailto:" + addr + "'\x3e\x3ci class='fa fa-envelope fa-fw'\x3e\x3c/i\x3e " + addr + "\x3c/a\x3e");
               </script></li>
-              <li title="Twitter"><a href="https://twitter.com/IfThenFund"><i class="fa fa-twitter fa-fw"></i> @IfThenFund</a></li>
-              <li title="Facebook"><a href="https://www.facebook.com/if.then.fund"><i class="fa fa-facebook fa-fw"></i> if.then.fund</a></li>
-              <li title="Github"><a href="https://github.com/if-then-fund"><i class="fa fa-github fa-fw"></i> if-then-fund</a></li>
+              <li title="Twitter"><a href="https://twitter.com/{{TWITTER_HANDLE}}"><i class="fa fa-twitter fa-fw"></i> @{{TWITTER_HANDLE}}</a></li>
+              {% include "footer-social.html" %}
           </ul>
         </div>
       </div>

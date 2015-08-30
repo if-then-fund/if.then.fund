@@ -1,8 +1,8 @@
 {% extends "email_template.txt" %}
 {% block content %}
-Thanks for visiting if.then.fund. It looks like you started to make a contribution but stopped mid-way through.
+Thanks for visiting {{SITE_NAME}}. It looks like you started to make a contribution but stopped mid-way through.
 
-We'd be glad to answer any question you have about the site --- just reply to this email. Our How It Works page at https://if.then.fund/about/how-it-works may also answer any questions you have.
+We'd be glad to answer any question you have about the site --- just reply to this email. Our How It Works page at {{ROOT_URL}}/about/how-it-works may also answer any questions you have.
 
 Or if you want to finish your contribution, just click this link:
 

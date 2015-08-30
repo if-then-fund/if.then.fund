@@ -1,10 +1,12 @@
 from django.conf import settings
 
+import re
+
 def itfsite_template_context_processor(request):
-	return {
-		"SITE_MODE": settings.SITE_MODE,
-		"ROOT_URL": request.build_absolute_uri("/").strip("/"), # remove trailing slash
-		"MIXPANEL_ID": settings.MIXPANEL_ID,
-		"HIDE_REMOTE_EMBEDS": settings.HIDE_REMOTE_EMBEDS,
-	}
+	ctx = dict(settings.DEFAULT_TEMPLATE_CONTEXT)
+
+	# for spam obfuscation
+	ctx["CONTACT_EMAIL_REVERSED"] = "".join(reversed(re.search(r"<(.*)>", settings.CONTACT_EMAIL).group(1)))
+
+	return ctx
 

@@ -235,7 +235,7 @@
                     <div style="margin-top: 2px; margin-left: 2px;">
                       <label for="emailEmailYesPassword" style="font-size: 80%">
                         <input id="emailEmailYesPassword" type="checkbox" name="hasPassword" onchange="$('#emailPasswordDiv').toggle($(this).prop('checked')); setTimeout('$(&quot;#emailPassword&quot;).focus()', 1)">
-                        I have an <span class="site-brand">if.then.fund</span> account already.
+                        I have an <span class="site-brand">{{SITE_NAME}}</span> account already.
                       </label>
                     </div>
                     <div id="emailPasswordDiv" style="display: none; margin-left: 1em">
@@ -480,7 +480,7 @@ function pledge_init() {
   // For testing, pre-fill form fields with demonstration values.
 
   if (window.location.hash == "#demo") {
-    $('#emailEmail').val("demo+" + parseInt(1000+Math.random()*5000) + "@if.then.fund")
+    $('#emailEmail').val("demo+" + parseInt(1000+Math.random()*5000) + "@{{SITE_DOMAIN}}")
     $('#contribNameFirst').val('John')
     $('#contribNameLast').val('Doe')
     $('#contribAddress').val('123 Main Street')

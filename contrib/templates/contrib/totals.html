@@ -2,12 +2,12 @@
 {% load itfsite_utils humanize %}
 {% load static from staticfiles %}
 
-{% block title %}if.then.fund&rsquo;s Aggregate Contributions{% endblock %}
+{% block title %}{{SITE_NAME}}&rsquo;s Aggregate Contributions{% endblock %}
 
 {% block head %}
-<meta property="og:title" content="if.then.fund&rsquo;s Aggregate Contributions" />
-<meta property="og:description" content="All campaign contributions made through if.then.fund.">
-<meta property="og:image" content="{{ROOT_URL}}/static/branding/icons/favicon-192x192.png" /> {# for Twitter summary card, min size 120x120 and < 1MB #}
+<meta property="og:title" content="{{SITE_NAME}}&rsquo;s Aggregate Contributions" />
+<meta property="og:description" content="All campaign contributions made through {{SITE_NAME}}.">
+{% include "og_image.html" %}
 <meta name="twitter:card" content="summary" />
 
 <style>
@@ -23,7 +23,7 @@ h3 + table { margin-top: 1em; }
 {% block body %}
 <h1>Totals</h1>
 
-<p><span class='site-brand'>if.then.fund</span> has processed {{total.total|currency}} in campaign contributions between {{first_contrib_date|date}} and {{last_contrib_date|date}}.</p>
+<p><span class='site-brand'>{{SITE_NAME}}</span> has processed {{total.total|currency}} in campaign contributions between {{first_contrib_date|date}} and {{last_contrib_date|date}}.</p>
 
 <div class="row">
 	<div class="col-sm-5">

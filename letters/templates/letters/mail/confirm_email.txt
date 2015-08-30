@@ -1,6 +1,6 @@
 {% extends "email_template.txt" %}
 {% block content %}
-Thank you for using if.then.fund to write a letter to Congress about {{letter.letterscampaign.title}}.
+Thank you for using {{SITE_NAME}} to write a letter to Congress about {{letter.letterscampaign.title}}.
 
 We need to confirm your email address. Please click the link below to confirm. You may need to copy the address into your web browser.
 

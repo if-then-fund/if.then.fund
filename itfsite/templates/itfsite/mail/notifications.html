@@ -1,6 +1,6 @@
 {% extends "email_template.html" %}
 {% block content %}
-<p>You have {{count}} new alert{{count|pluralize}} from if.then.fund.</p>
+<p>You have {{count}} new alert{{count|pluralize}} from {{SITE_NAME}}.</p>
 
 {% for alert in notifs %}
 <div style="margin-bottom: 1em">

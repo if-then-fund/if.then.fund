@@ -7,7 +7,7 @@
 
 {% block head %}
 
-<meta property="og:title" content="{{campaign.title}} ({% if campaign.owner %}{{campaign.owner.name}} on {% endif %}if.then.fund)" />
+<meta property="og:title" content="{{campaign.title}} ({% if campaign.owner %}{{campaign.owner.name}} on {% endif %}{{SITE_NAME}})" />
 {% if trigger %}
 <meta property="og:description" content="Reshape Congress by making a contribution based on how {{trigger.trigger_type.strings.actors}} {{trigger.trigger_type.strings.action_vb_inf}}.">
 {% endif %}
@@ -22,7 +22,7 @@
 {% elif campaign.owner.banner_image.name %}
 <meta property="og:image" content="{{ROOT_URL}}{{campaign.owner.banner_image.url}}?size=tb" />
 {% else %}
-<meta property="og:image" content="{{ROOT_URL}}/static/branding/icons/favicon-192x192.png" />
+{% include "og_image.html" %}
 {% endif %}
 
 {% if campaign.owner.twitter_handle %}
@@ -248,7 +248,7 @@ form span.required:after {
 				{% else %}
 					<dt>{{ totals.pledged_site_wide|currency }}</dt>
 					<dd>committed on all sides of this issue site-wide*</dd>
-					<p style="font-size: 13px; line-height: 128%;">*Federal law prevents us from giving this campaign&rsquo;s total ahead of congressional action. Instead we show the total committed on both sides of this issue across all <span class="site-brand">if.then.fund</span> campaigns.</p>
+					<p style="font-size: 13px; line-height: 128%;">*Federal law prevents us from giving this campaign&rsquo;s total ahead of congressional action. Instead we show the total committed on both sides of this issue across all <span class="site-brand">{{SITE_NAME}}</span> campaigns.</p>
 
 				{% endif %}
 
@@ -258,7 +258,7 @@ form span.required:after {
 			<hr>
 
 			<small>
-			<p>This page was added to <span class="site-brand">if.then.fund</span> {% if campaign.owner %}by <a href="{{campaign.owner.get_absolute_url}}">{{campaign.owner.name}}</a>{% endif %} on {{campaign.created|date}}.</p>
+			<p>This page was added to <span class="site-brand">{{SITE_NAME}}</span> {% if campaign.owner %}by <a href="{{campaign.owner.get_absolute_url}}">{{campaign.owner.name}}</a>{% endif %} on {{campaign.created|date}}.</p>
 			{% if trigger.execution %}<p>The {{trigger.trigger_type.strings.action_noun}} occurred on {{trigger.execution.action_time|date}}. Contributions began to be processed on {{trigger.execution.created|date}}.</p>{% endif %}
 			</small>
 		</div>
@@ -299,11 +299,11 @@ form span.required:after {
 <div class="container">
 
 <small>
-{% if not campaign.owner %} {# the 'we' doesn't make sense if the page wasn't created by if.then.fund #}
+{% if not campaign.owner %} {# the 'we' doesn't make sense if the page wasn't created by {{SITE_NAME}} #}
 <p>We aim to shift the balance of power to shape Congress away from concentrated wealth and toward small-dollar donors like you.</p>
 {% endif %}
 <p>You will be making a campaign contribution to {{trigger.trigger_type.strings.actors}} or their next opponent. Until the 
-{{trigger.trigger_type.strings.action_noun}} occurs, <span class="site-brand">if.then.fund</span> won't reveal to anyone what action you
+{{trigger.trigger_type.strings.action_noun}} occurs, <span class="site-brand">{{SITE_NAME}}</span> won't reveal to anyone what action you
 took. After the {{trigger.trigger_type.strings.action_noun}}, we’ll charge your card and split your contribution based on your
 instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 </small>

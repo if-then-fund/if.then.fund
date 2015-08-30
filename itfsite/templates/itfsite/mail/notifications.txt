@@ -1,6 +1,6 @@
 {% extends "email_template.txt" %}
 {% block content %}
-You have {{count}} new alert{{count|pluralize}} from if.then.fund.
+You have {{count}} new alert{{count|pluralize}} from {{SITE_NAME}}.
 {% for alert in notifs %}
 {{alert.body_text}}
 {% endfor %}

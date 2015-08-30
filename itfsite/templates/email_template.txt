@@ -2,7 +2,7 @@
 {% block content %}
 {% endblock %}
 Josh & Jonathan
-if.then.fund (https://if.then.fund)
+{{SITE_NAME}} ({{ROOT_URL}})
 {% block footer %}
 {% endblock %}
 {% endautoescape %}
