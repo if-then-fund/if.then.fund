@@ -70,16 +70,6 @@ a, a:hover, a:link, a:visited, a:active {
 		background-color: #888;
 	}
 
-	.navbar a.navbar-brand {
-		margin-top: 10px;
-		margin-left: -5px !important;
-		background: url('/static/branding/navbar-title.png');
-		width: 103px;
-		height: 30px;
-		text-indent: -99999em;
-		overflow: hidden;
-	}
-
 	.navbar a {
 		border: none;
 		text-decoration: none;
@@ -105,25 +95,6 @@ a, a:hover, a:link, a:visited, a:active {
 	#body-content {
 		border-left: 1px solid #EEE;
 		border-right: 1px solid #EEE;
-	}
-}
-
-@media screen {
-.site-brand {
-	display: inline-block;
-	background: url('/static/branding/content-title.png') no-repeat;
-	background-size: 100%;
-	width: 4.866666667em;
-	height: 1em;
-	text-indent: -99999em;
-	overflow: hidden;
-	margin-left: 1px;
-}
-}
-@media print {
-	.site-brand {
-		font-family: 'Times New Roman', serif;
-		font-weight: bold;
 	}
 }
 
@@ -162,20 +133,6 @@ a, a:hover, a:link, a:visited, a:active {
 
 }
 
-h3.invert {
-	margin: 1em 0 1em -2px;
-	font-weight: bold;
-	color: white;
-}
-	h3.invert span {
-		background-color: #582;
-		padding: 5px 10px;
-	}
-	h3.invert span:after {
-		content: "●●";
-		padding-left: .66em;
-	}
-
 #page-sections-nav {
 	margin-top: 36px;
 }
@@ -208,9 +165,6 @@ h3.invert {
 	top: 0;
 	left: 0;
 	right: 0;
-	background: #333 url('/static/branding/navbar-title.png') 10px 10px no-repeat;
-	min-height: 50px;
-	color: white;
 	font-family: "adelle-sans", sans-serif;
 	font-size: 90%;
 	line-height: 125%;

@@ -6,30 +6,52 @@ from django.conf import settings
 from django.utils import timezone
 
 from itfsite.models import Organization, Notification, NotificationsFrequency, Campaign, CampaignStatus
+from itfsite.middleware import get_branding
 
 from twostream.decorators import anonymous_view, user_view_for
+
+def render2(request, template, *args, **kwargs):
+	from django.template import TemplateDoesNotExist
+	try:
+		return render(request, template, *args, **kwargs)
+	except TemplateDoesNotExist:
+		# Try a brand-specific template.
+		template = template.replace(".html",
+			"-"
+			+ get_branding(request)['BRAND_ID'].replace(".", "")
+			+ ".html")
+		return render(request, template, *args, **kwargs)
 
 def homepage(request):
 	# The site homepage.
 
-	return render(request, "itfsite/homepage.html", {
-		"open_campaigns": Campaign.objects.filter(status=CampaignStatus.Open).order_by('-created')[0:16], # 16 for debugging
+	open_campaigns = Campaign.objects\
+		.filter(
+			status=CampaignStatus.Open,
+			brand=get_branding(request)['BRAND_INDEX'],
+		)\
+		.order_by('-created')\
+		[0:16]
+
+	return render2(request, "itfsite/homepage.html", {
+		"open_campaigns": open_campaigns,
 	})
 
 def simplepage(request, pagename):
 	# Renders a page that has no special processing.
 	# simplepage is validated by urls.py.
 	pagename = pagename.replace('/', '-')
-	return render(request, "itfsite/%s.html" % pagename)
+	return render2(request, "itfsite/%s.html" % pagename)
 
 @login_required
 def user_home(request):
 	from contrib.models import Pledge, PledgeStatus
 	from letters.models import UserLetter
 
-	# Get the user's actions.
-	pledges = Pledge.objects.filter(user=request.user).prefetch_related()
-	letters = UserLetter.objects.filter(user=request.user).prefetch_related()
+	# Get the user's actions that took place on the brand site that the user is actually on.
+	brand_filter = { "via_campaign__brand": get_branding(request)['BRAND_INDEX'] }
+	pledges = Pledge.objects.filter(user=request.user, **brand_filter).prefetch_related()
+	letters = UserLetter.objects.filter(user=request.user, **brand_filter).prefetch_related()
 	actions = list(pledges) + list(letters)
 	actions.sort(key = lambda obj : obj.created, reverse=True)
 	
@@ -170,9 +192,11 @@ def set_email_settings(request):
 
 @anonymous_view
 def campaign(request, id):
-	# get the object, redirect to canonical URL if slug does not match
+	# get the object, make sure it is for the right brand that the user is viewing
+	campaign = get_object_or_404(Campaign, id=id, brand=get_branding(request)['BRAND_INDEX'])
+
+	# redirect to canonical URL if slug does not match
 	# (pass along any query string variables like utm_campaign)
-	campaign = get_object_or_404(Campaign, id=id)
 	qs = (("?"+request.META['QUERY_STRING']) if request.META['QUERY_STRING'] else "")
 	if request.path != campaign.get_absolute_url():
 		return redirect(campaign.get_absolute_url()+qs)

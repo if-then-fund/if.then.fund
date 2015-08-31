@@ -13,6 +13,7 @@ class Command(BaseCommand):
 		for t in Trigger.objects.all():
 			c = Campaign.objects.create(
 				id=t.id,
+				brand=1,
 				title=t.title,
 				slug=t.slug,
 				subhead=t.subhead,

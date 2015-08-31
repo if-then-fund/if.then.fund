@@ -123,6 +123,7 @@ class ContribTest(SeleniumTest):
 
 		from itfsite.models import Campaign, TextFormat
 		campaign = Campaign.objects.create(
+			brand=1,
 			owner=org,
 			title=t.title,
 			slug=t.slug,
@@ -515,6 +516,7 @@ class LettersTest(SeleniumTest):
 		# Create a campaign.
 		from itfsite.models import Campaign, TextFormat
 		campaign = Campaign.objects.create(
+			brand=1,
 			owner=org,
 			title="Test Campaign",
 			slug="test-campaign",

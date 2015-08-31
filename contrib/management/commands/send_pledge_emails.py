@@ -9,6 +9,7 @@ from datetime import timedelta
 
 from contrib.models import Pledge, TriggerStatus, PledgeStatus, IncompletePledge
 from contrib.bizlogic import get_pledge_recipients, compute_charge
+from itfsite.middleware import get_branding
 
 from htmlemailer import send_mail
 
@@ -77,17 +78,21 @@ class Command(BaseCommand):
 			return
 		recip_contribs, fees, total_charge = compute_charge(pledge, recipients)
 
+		context = { }
+		context.update(get_branding(pledge.via_campaign.brand))
+		context.update({
+			"profile": pledge.profile, # used in salutation in email_template
+			"pledge": pledge,
+			"until": Pledge.current_algorithm()['pre_execution_warn_time'][1],
+			"total_charge": total_charge,
+		})
+
 		# Send email.
 		send_mail(
 			"contrib/mail/%s_execution" % pre_or_post,
-			settings.DEFAULT_FROM_EMAIL,
+			context["MAIL_FROM_EMAIL"],
 			[pledge.user.email],
-			{
-				"profile": pledge.profile, # used in salutation in email_template
-				"pledge": pledge,
-				"until": Pledge.current_algorithm()['pre_execution_warn_time'][1],
-				"total_charge": total_charge,
-			})
+			context)
 
 		# Record that it was sent.
 		field_name = "%s_execution_email_sent_at" % pre_or_post
@@ -100,18 +105,22 @@ class Command(BaseCommand):
 		# after the user left the page.
 		before = timezone.now() - timedelta(hours=3)
 		for ip in IncompletePledge.objects.filter(created__lt=before, sent_followup_at=None):
+			context = { }
+			context.update(get_branding(ip.via_campaign.brand))
+			context.update({
+				"incomplete_pledge": ip,
+				"url": settings.SITE_ROOT_URL + ip.get_return_url(),
+				"trigger": ip.trigger,
+			})
+
 			# Send email.
 			send_mail(
 				"contrib/mail/incomplete_pledge",
-				settings.DEFAULT_FROM_EMAIL,
+				get_branding(ip.via_campaign.brand)["MAIL_FROM_EMAIL"],
 				[ip.email],
-				{
-					"incomplete_pledge": ip,
-					"url": settings.SITE_ROOT_URL + ip.get_return_url(),
-					"trigger": ip.trigger,
-				},
+				context,
 				headers={
-					"Reply-To": settings.CONTACT_EMAIL,
+					"Reply-To": get_branding(ip.via_campaign.brand)["CONTACT_EMAIL"],
 				})
 
 			# Record that it was sent.

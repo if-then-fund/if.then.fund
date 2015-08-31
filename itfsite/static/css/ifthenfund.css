@@ -1,0 +1,43 @@
+.navbar a.navbar-brand {
+	margin-top: 10px;
+	background: url('/static/branding/if.then.fund/navbar-title.png');
+	width: 103px;
+	height: 30px;
+	text-indent: -99999em;
+	overflow: hidden;
+}
+	@media screen and (min-width: 768px) {
+		.navbar a.navbar-brand {
+			margin-left: -5px !important;
+		}
+	}
+	@media screen and (max-width: 767px) {
+		.navbar a.navbar-brand {
+			margin-left: 5px !important;
+		}
+	}
+
+@media screen {
+.site-brand {
+	display: inline-block;
+	background: url('/static/branding/if.then.fund/content-title.png') no-repeat;
+	background-size: 100%;
+	width: 4.866666667em;
+	height: 1em;
+	text-indent: -99999em;
+	overflow: hidden;
+	margin-left: 1px;
+}
+}
+@media print {
+	.site-brand {
+		font-family: 'Times New Roman', serif;
+		font-weight: bold;
+	}
+}
+
+#page-fixed-header {
+	background: #333 url('/static/branding/if.then.fund/navbar-title.png') 10px 10px no-repeat;
+	min-height: 50px;
+	color: white;
+}

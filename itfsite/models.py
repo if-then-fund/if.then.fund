@@ -19,6 +19,9 @@ from itfsite.utils import JSONField
 #
 #####################################################################
 
+from .middleware import load_brandings
+load_brandings()
+
 @django_enum
 class OrganizationType(enum.Enum):
 	User = 1 # any user can create an 'organization'
@@ -80,6 +83,7 @@ class Campaign(models.Model):
 	"""A call to action."""
 
 	# Metadata
+	brand = models.IntegerField(choices=settings.BRAND_CHOICES, help_text="Which multi-brand site does this campaign appear on.")
 	title = models.CharField(max_length=200, help_text="The title for the campaign.")
 	slug = models.SlugField(max_length=200, help_text="The URL slug for this campaign.")
 	subhead = models.TextField(help_text="Short sub-heading text for use in list pages and the meta description tag, in the format given by subhead_format.")

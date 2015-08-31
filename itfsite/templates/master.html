@@ -47,6 +47,7 @@
 
         <link rel="stylesheet" href="{% static "fonts/fonts.css" %}">
         <link rel="stylesheet" href="{% static "css/main.css" %}">
+        <link rel="stylesheet" href="{% static "css/"|add:BRAND_ID|cut:"."|add:".css" %}">
 
         <!--[if lt IE 9]>
             <script src="/static/js/html5-3.6-respond-1.1.0.min.js"></script>
@@ -84,17 +85,7 @@
       <div class="row hidden-print">
         <hr style="border-color: #DDD">
         <div class="col-sm-9 col-md-10">
-          <p>
-              <a href="/">Home</a>
-            | <a href="{% url 'simplepage' 'about' %}">About</a>
-            | <a href="{% url 'simplepage' 'about/press' %}">Press Clips</a>
-            | <a href="{% url 'simplepage' 'about/legal' %}">Legal Background</a>
-            {# | <a href="http://ifthenfund.wordpress.com/">Blog</a> #}
-            | <a href="{% url 'simplepage' 'privacy' %}">Privacy</a>
-            | <a href="{% url 'simplepage' 'terms' %}">Terms of Service</a>
-            | <a href="{% url 'simplepage' 'open' %}">Open</a>
-          </p>
-          <p>Join the <a href="https://docs.google.com/forms/d/1xR81Bfxw96_VeVhAvn2EvaM8j0VhB2Lt_z9ulWEGS2I/viewform"><span class="site-brand">{{SITE_NAME}}</span> announcements</a> mail list to be alerted to new features as we launch them.</p>
+          {% include "footer-links-"|add:BRAND_ID|cut:"."|add:".html" %}
         </div>
         <div class="col-sm-3 col-md-2 hidden-print">
           <ul id="footer-social">
@@ -103,12 +94,12 @@
               document.write("\x3ca class='email' href='mailto:" + addr + "'\x3e\x3ci class='fa fa-envelope fa-fw'\x3e\x3c/i\x3e " + addr + "\x3c/a\x3e");
               </script></li>
               <li title="Twitter"><a href="https://twitter.com/{{TWITTER_HANDLE}}"><i class="fa fa-twitter fa-fw"></i> @{{TWITTER_HANDLE}}</a></li>
-              {% include "footer-social.html" %}
+              {% include "footer-social-"|add:BRAND_ID|cut:"."|add:".html" %}
           </ul>
         </div>
       </div>
 
-      <p style="font-size: 90%">&copy; {% now 'Y' %} Civic Responsibility LLC</p>
+      <p style="font-size: 90%">&copy; {% now 'Y' %} {{COPYRIGHT}}</p>
       
       <hr>
       

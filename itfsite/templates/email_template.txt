@@ -1,7 +1,6 @@
 {% autoescape off %}{% if profile %}Hi {% firstof profile.extra.contributor.contribNameFirst profile.extra.name.nameFirst %},{% else %}Hello!{% endif %}
 {% block content %}
 {% endblock %}
-Josh & Jonathan
 {{SITE_NAME}} ({{ROOT_URL}})
 {% block footer %}
 {% endblock %}

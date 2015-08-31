@@ -42,6 +42,7 @@ def create_trigger(trigger_type, key, title):
 		}
 		)
 	campaign = Campaign.objects.create(
+		brand=0,
 		subhead="This is a test campaign.",
 		subhead_format=TextFormat.Markdown,
 		body_text="This is a test campaign.",
@@ -175,6 +176,7 @@ class ExecutionTestCase(TestCase):
 		# Campaign
 
 		self.campaign = Campaign.objects.create(
+			brand=0,
 			subhead="This is a test campaign.",
 			subhead_format=TextFormat.Markdown,
 			body_text="This is a test campaign.",

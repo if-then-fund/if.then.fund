@@ -88,27 +88,33 @@ class AnonymousUser(models.Model):
 		if pledge:
 			template = "contrib/mail/confirm_email"
 			profile = pledge.profile
+			brand_id = pledge.via_campaign.brand
 		elif letter:
 			template = "letters/mail/confirm_email"
 			profile = letter.profile
+			brand_id = letter.via_campaign.brand
 		else:
 			raise ValueError("AnonymousUser is not associated with a Pledge or UserLetter.")
 
 		# Use a custom mailer function so we can send through our
 		# HTML emailer app.
 		def mailer(context):
+			from itfsite.middleware import get_branding
+			context.update(get_branding(brand_id))
+
+			context.update({
+				"profile": profile, # used in salutation in email_template
+				"pledge": pledge,
+				"letter": letter,
+				"first_try": not self.sentConfirmationEmail,
+			})
+			
 			from htmlemailer import send_mail
 			send_mail(
 				template,
-				settings.DEFAULT_FROM_EMAIL,
+				context["MAIL_FROM_EMAIL"],
 				[context['email']],
-				{
-					"profile": profile, # used in salutation in email_template
-					"confirmation_url": context['confirmation_url'],
-					"pledge": pledge,
-					"letter": letter,
-					"first_try": not self.sentConfirmationEmail,
-				})
+				context)
 
 		from email_confirm_la.models import EmailConfirmation
 		if not self.sentConfirmationEmail:
