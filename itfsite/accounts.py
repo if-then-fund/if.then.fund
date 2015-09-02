@@ -79,6 +79,25 @@ class AnonymousUser(models.Model):
 		return self.email + ((" → " + str(self.confirmed_user)) if self.confirmed_user else "")
 
 	def send_email_confirmation(self):
+		# Sanity check.
+		if self.confirmed_user: raise ValueError("Can't send an email confirmation for an AnonymousUser that has already been confirmed.")
+
+		# Get or create an EmailConfirmation object.
+		from email_confirm_la.models import EmailConfirmation
+		if not self.sentConfirmationEmail:
+			# Make an EmailConfirmation object.
+			ec = EmailConfirmation.create(self)
+		else:
+			# Get an existing EmailConfirmation object.
+			ec = EmailConfirmation.get_for(self)
+
+			# Don't send another email confirmation if we just sent one for this user
+			# (e.g. if the user took a second action a few minutes later).
+			from datetime import timedelta
+			from django.utils import timezone
+			if timezone.now() - ec.sent_at <  timedelta(seconds=60*20):
+				return
+
 		# What can we say this email is for?
 		from contrib.models import Pledge
 		from letters.models import UserLetter
@@ -116,15 +135,10 @@ class AnonymousUser(models.Model):
 				[context['email']],
 				context)
 
-		from email_confirm_la.models import EmailConfirmation
-		if not self.sentConfirmationEmail:
-			# Make an EmailConfirmation object.
-			ec = EmailConfirmation.create(self)
-		else:
-			# Get an existing EmailConfirmation object.
-			ec = EmailConfirmation.get_for(self)
+		# Send.
 		ec.send(mailer=mailer)
 
+		# Update record.
 		self.sentConfirmationEmail = True
 		self.save()
 
