@@ -227,6 +227,7 @@
             </div>
             <div class="col-sm-7 col-sm-pull-5 col-md-6 col-md-pull-6">
               <div id="contributor-new">
+                <div id="pledge-email-name-and-address-new">
                 <div id="contributor-email" class="form-group">
                   <label for="email">Email Address</label>
                   <input type="email" class="form-control" id="emailEmail" name="email" placeholder="yourname@youremail.com" onblur="do_pledge_validate_email()">
@@ -289,6 +290,25 @@
                     </div>
                   </div>
                 </div>
+                </div>
+
+                <div id="pledge-email-name-and-address-old" style="display: none">
+                  <p>We&rsquo;ve got your name and address, but federal law requires that we collect some additional information.</p>
+
+                  <p style="margin: 1em 2em .5em 2em">
+                    <span class="field-contribNameFirst"> </span> <span class="field-contribNameLast"> </span>
+                    <br><span class="field-contribAddress"> </span>
+                    <br><span class="field-contribCity"> </span>, <span class="field-contribState"> </span> <span class="field-contribZip"> </span>
+                  </p>
+                  <p class="contributor-existing-email" style="margin: .25em 2em .5em 2em">
+                    <span class="field-emailEmail"> </span>
+                  </p>
+
+                  <p style="margin: .5em 2em 1.5em 2em">
+                    <button id="pledge-email-name-and-address-old-update" href="#" class="btn btn-default btn-sm" onclick="$('#pledge-email-name-and-address-old').hide(); $('#pledge-email-name-and-address-new').show(); $('#contributor-new .focus-on-shown').focus(); return false;">Update</button>
+                  </p>
+                </div>
+
                 <div class="row">
                   <div class="col-xs-12">
                     <div>
@@ -324,8 +344,8 @@
                   <br><span class="field-contribAddress"> </span>
                   <br><span class="field-contribCity"> </span>, <span class="field-contribState"> </span> <span class="field-contribZip"> </span>
                 </p>
-                <p id="contributor-existing-email" style="margin: .25em 2em .5em 2em">
-                  <span class="field-email"> </span>
+                <p class="contributor-existing-email" style="margin: .25em 2em .5em 2em">
+                  <span class="field-emailEmail"> </span>
                 </p>
                 <p style="margin: .25em 2em .5em 2em">
                   <span class="field-contribOccupation"> </span> <span style="font-size: 95%; font-style: italic">(occupation)</span>
@@ -422,7 +442,7 @@ function pledge_init() {
 
   // Don't let the user try to log in if they are logged in already.
   if (the_user) {
-    $('#contributor-email, #contributor-existing-email').remove();
+    $('#contributor-email, .contributor-existing-email').remove();
   }
 
   // Set some defaults based on the user's last pledge.
@@ -504,20 +524,42 @@ function pledge_init() {
 
 function setPledgeDefaults(pledge_defaults) {
   // pre-populate contributor fields
-  var fields = ['contribNameFirst', 'contribNameLast', 'contribAddress', 'contribCity', 'contribState', 'contribZip', 'contribOccupation', 'contribEmployer'];
+  var fields = ['emailEmail', 'contribNameFirst', 'contribNameLast', 'contribAddress', 'contribCity', 'contribState', 'contribZip', 'contribOccupation', 'contribEmployer'];
+  var has_field = { };
   for (var i = 0; i < fields.length; i++) {
     var v = pledge_defaults[fields[i]];
     if (v) {
-      // the span to preview
-      $('#contributor-old').find('.field-' + fields[i]).text(v);
+      // the span for the we've-already-got-it preview
+      $('#contributor-old, #pledge-email-name-and-address-old').find('.field-' + fields[i]).text(v);
 
       // the input field (which is what is actually submitted)
       $('#' + fields[i]).val(v)
+
+      // Remember that we have it.
+      has_field[[fields[i]]] = true;
     }
   }
 
-  if (!pledge_defaults.from_pledge)
+  if (!pledge_defaults.from_pledge) {
+    // We've prefilled, but it's partial information --- no billing information.
+
+    if (has_field.emailEmail && has_field.contribNameFirst && has_field.contribNameLast 
+      && has_field.contribAddress && has_field.contribCity && has_field.contribState && has_field.contribZip) {
+      // If we have email, name, and address fields, we can hide the input fields.
+      // They're filled in -- they're what gets submitted. Just hidden.
+      $('#pledge-email-name-and-address-new').hide();
+      $('#pledge-email-name-and-address-old').show();
+    
+    } else {
+      $('#pledge-email-name-and-address-new').show();
+      $('#pledge-email-name-and-address-old').hide();
+    }
+
+    $('#contributor-new, #payment-new').show();
+    $('#contributor-old, #payment-old').hide();
+
     return;
+  }
 
   // populate credit card preview field
   $('#payment-old .cc-num').text(pledge_defaults.cclastfour);
@@ -848,7 +890,7 @@ function do_contributor_next_() {
   $('#emailEmail').prop('readonly', true);
   $('#pledge-contributor input[type=text]').prop('readonly', true);
   $('#pledge-contributor input[type=checkbox]').prop('disabled', true);
-  $('#pledge-contributor .buttons, #pledge-contributor-old-update').hide();
+  $('#pledge-contributor .buttons, #pledge-email-name-and-address-old-update, #pledge-contributor-old-update').hide();
   show_and_scroll('pledge-payment');
 
   mixpanel.track("Pledge Contributor Info Entered", { 'trigger': {{trigger.id}} });
@@ -950,7 +992,7 @@ function pledge_payment_cancel() {
   $('#emailEmail').prop('readonly', false);
   $('#pledge-contributor input[type=text]').prop('readonly', false);
   $('#pledge-contributor input[type=checkbox]').prop('disabled', false);
-  $('#pledge-contributor .buttons, #pledge-contributor-old-update').show();
+  $('#pledge-contributor .buttons, #pledge-email-name-and-address-old-update, #pledge-contributor-old-update').show();
   $('#pledge-payment').hide();
 }
 </script>

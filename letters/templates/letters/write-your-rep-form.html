@@ -347,6 +347,15 @@ function write_letter_submit() {
 				$('#make-a-contribution-instead').remove();
 				$('#make-a-contribution').removeClass('hidden');
 				pledge_init();
+				setPledgeDefaults({
+					emailEmail: $('#lettersEmail').val(),
+					contribNameFirst: $('#lettersNameFirst').val(),
+					contribNameLast: $('#lettersNameLast').val(),
+					contribAddress: $('#lettersAddrAddress').val(),
+					contribCity: $('#lettersAddrCity').val(),
+					contribState: $('#lettersAddrState').val(),
+					contribZip: $('#lettersAddrZip').val()
+				});
 				{% endif %}
 			} else {
         		show_modal_error("Error", "Something went wrong, sorry.");

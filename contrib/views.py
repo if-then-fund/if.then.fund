@@ -82,7 +82,7 @@ def get_recent_pledge_defaults(user, request):
 		letter = get_user_letters(user, request).order_by('-created').first()
 		if letter:
 			ret.update({
-				"email": letter.get_email(),
+				"emailEmail": letter.get_email(),
 				"contribNameFirst": letter.profile.extra["name"]["nameFirst"],
 				"contribNameLast": letter.profile.extra["name"]["nameLast"],
 				"contribAddress": letter.profile.extra["address"]["addrAddress"],
@@ -96,7 +96,7 @@ def get_recent_pledge_defaults(user, request):
 	ret['open_pledges'] = pledges.filter(status=PledgeStatus.Open).count()
 
 	# Copy Pledge fields.
-	ret['email'] = pledge.get_email()
+	ret['emailEmail'] = pledge.get_email()
 	for field in ('amount', 'incumb_challgr', 'filter_party', 'filter_competitive'):
 		ret[field] = getattr(pledge, field)
 		if type(ret[field]).__name__ == "Decimal":
