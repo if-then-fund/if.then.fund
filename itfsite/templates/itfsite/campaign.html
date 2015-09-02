@@ -103,14 +103,6 @@
 		margin-bottom: 1em;
 	}
 
-#write-a-letter {
-	background-color: #BDA;
-	padding: 3em 0;
-	color: #010;
-}
-
-
-
 form label {
   font-weight: normal;
   font-size: 14px;
@@ -133,7 +125,7 @@ form span.required:after {
 		font-weight: normal;
 	}
 
-#make-a-contribution {
+#action-pane {
 	background-color: #EEB;
 	padding: 3em 0;
 	color: #110;
@@ -282,18 +274,25 @@ form span.required:after {
 	</div>
 </div>
 
-{% if letters_campaign %}
-<div id="write-a-letter">
-	<div class="container">
-		{% include "letters/write-your-rep-form.html" %}
+<div id="action-pane">
+	{% if letters_campaign %}
+	<div id="write-a-letter">
+		<div class="container">
+			{% include "letters/write-your-rep-form.html" %}
+			{% if trigger %}
+				<p id="make-a-contribution-instead" style="margin-top: 1em"><small>Skip this and <a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(false);">make a contribution instead</a>.</small></p>
+			{% endif %}
+		</div>
 	</div>
-</div>
-{% endif %}
+	{% endif %}
 
-<div id="make-a-contribution">
-	<div class="container">
-		{% include "contrib/pledge-form.html" %}
+	{% if trigger %}
+	<div id="make-a-contribution" {% if letters_campaign %}class="hidden"{% endif %}>
+		<div class="container">
+			{% include "contrib/pledge-form.html" %}
+		</div>
 	</div>
+	{% endif %}
 </div>
 
 <div id="footer-container">
@@ -388,8 +387,8 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 			$('#show_utm_tool').show();
 
 		// Show any actions the user already performed.
-		var can_make_pledge = true;
-		var can_write_letter = true;
+		var can_write_letter = {% if letters_campaign %}true{% else %}false {% endif %};
+		var can_make_pledge = {% if trigger %}true{% else %}false{% endif %};
 		for (var i = 0; i < (the_page ? the_page.actions.length : 0); i++) {
 			var action = the_page.actions[i];
 			$('#my-actions').removeClass('hidden');
@@ -405,29 +404,34 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 			if (action.trigger == {{trigger.id}}) {
 				// The user already made a pledge on this. Totally destroy
 				// the form elements for making another pledge.
-				$('#make-a-contribution').remove();
+				$('#make-a-contribution, #make-a-contribution-instead').remove();
 				can_make_pledge = false;
 			}
 			{% endif %}
 			
 			{% if letters_campaign %}
 			if (action.letterscampaign == {{letters_campaign.id}}) {
-				$('#write-a-letter').remove();
+				$('#write-a-letter, #write-a-letter-instead').remove();
+				$('#make-a-contribution').removeClass('hidden');
 				can_write_letter = false;
 			}
 			{% endif %}
 		}
 
-		{% if letters_campaign %}
 		if (can_write_letter)
 			letters_init();
-		{% endif %}
-
-		{% if trigger %}
-		if (can_make_pledge)
-			pledge_init();
-		{% endif %}
+		else if (can_make_pledge)
+			pledge_init(); // only init once shown, b/c of dynamic button sizing
+		else // can't do anything
+			$('#action-pane').remove();
 	})
+
+	function make_a_contribution_or_write_a_letter_instead(mode) {
+		$('#write-a-letter').toggleClass('hidden', !mode);
+		$('#make-a-contribution').toggleClass('hidden', mode);
+		if (!mode) pledge_init();
+		return false; // cancel click
+	}
 
 	function utm_tool() {
 		var url = ($('#utm_tool_short').prop('checked') ? "{{campaign.get_short_url|escapejs}}" : "{{ROOT_URL}}{{campaign.get_absolute_url|escapejs}}")

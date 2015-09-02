@@ -208,6 +208,9 @@
           <div class="buttons">
             <button id="contribution-start-next" type="button" class="btn btn-warning" onclick="do_pledge_start_next()">Next &gt;</button
             >
+            {% if letters_campaign %}
+             <p id="write-a-letter-instead" style="margin-top: 1em"><small><a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(true);">Write a letter instead</a>.</small></p>
+            {% endif %}
           </div>
         </div> <!-- /pledge-start -->
 
@@ -410,7 +413,11 @@
       
     
 <script>
+var _pledge_init_done = false;
 function pledge_init() {
+  if (_pledge_init_done) return;
+  _pledge_init_done= true;
+
   var suggested_pledge = {{suggested_pledge}};
 
   // Don't let the user try to log in if they are logged in already.

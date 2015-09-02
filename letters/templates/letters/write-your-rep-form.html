@@ -143,6 +143,9 @@
 
 <div id="write-letter-submitted" class="hidden">
 	<p>Thanks! Your letter to <span></span> will be sent.</p>
+	{% if trigger %}
+		<p>Now for an even bigger impact, make a campaign contribution to show you really care.</p>
+	{% endif %}
 </div>
 
 </div>
@@ -337,6 +340,14 @@ function write_letter_submit() {
 				$('#write-letter-submitted').find('span').text(res.sent_to);
 				$('#write-letter-submitted').removeClass('hidden');
 				smooth_scroll_to($('#write-a-letter'));
+
+				{% if trigger %}
+				// Get the user to also make a campaign contribution.
+				$('#write-a-letter-instead').remove();
+				$('#make-a-contribution-instead').remove();
+				$('#make-a-contribution').removeClass('hidden');
+				pledge_init();
+				{% endif %}
 			} else {
         		show_modal_error("Error", "Something went wrong, sorry.");
         		console.log(res);
