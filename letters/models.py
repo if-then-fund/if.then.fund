@@ -30,6 +30,13 @@ class LettersCampaign(models.Model):
 	target_senators = models.BooleanField(default=True, help_text="Target letters to senators.")
 	target_representatives = models.BooleanField(default=True, help_text="Target letters to representatives.")
 
+	# Body depends on an Actor's position on an issue.
+	body_toggles_on = models.ForeignKey('contrib.Trigger', blank=True, null=True, on_delete=models.PROTECT, help_text="Use alternate body text if the target has a known position on this issue, based on a TriggerExecution.")
+	message_subject0 = models.CharField(max_length=100, blank=True, null=True, help_text="The subject of the message, as in message_subject, for when the target has outcome 0 in the body_toggles_on trigger.")
+	message_body0 = models.TextField(blank=True, null=True, help_text="The body of the message, as in message_body, for when the target has outcome 0 in the body_toggles_on trigger.")
+	message_subject1 = models.CharField(max_length=100, blank=True, null=True, help_text="The subject of the message, as in message_subject, for when the target has outcome 1 in the body_toggles_on trigger.")
+	message_body1 = models.TextField(blank=True, null=True, help_text="The body of the message, as in message_body, for when the target has outcome 1 in the body_toggles_on trigger.")
+
 	# Additional data.
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 	created = models.DateTimeField(auto_now_add=True, db_index=True)

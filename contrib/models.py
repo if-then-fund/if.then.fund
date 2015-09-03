@@ -409,6 +409,7 @@ class Actor(models.Model):
 	"""A public figure, e.g. elected official with an election campaign, who might take an action."""
 
 	govtrack_id = models.IntegerField(unique=True, help_text="GovTrack's ID for this person.")
+	votervoice_id = models.IntegerField(blank=True, null=True, unique=True, help_text="VoterVoice's target ID for this person.")
 
 	office = models.CharField(max_length=7, blank=True, null=True, unique=True, help_text="A code specifying the office currently held by the Actor, in the same format as Recipient.office_sought.")
 

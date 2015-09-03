@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.core import serializers
 
 from .models import LettersCampaign, ConstituentInfo, UserLetter
+from contrib.models import Actor, Action
 from contrib.utils import json_response
 from votervoice import VoterVoiceAPIClient, VoterVoiceDummyAPIClient
 
@@ -51,27 +52,11 @@ def find_reps(request):
 	# Return who we are writing the letter to, plus any
 	# questions we have to ask the user.
 	ret = constit_info.extra
-	ret['mocs'] = [{ "name": t["name"] } for t in constit_info.extra["votervoice"]["targets"]]
+	ret['my_representatives'] = list(get_extended_target_info(campaign, constit_info).values())
+	ret['my_representatives'].sort(key = lambda x : x['sort'])
 
-	# Get info on who represents this district, using our own
-	# data because we will later link this up with any known
-	# position of the Actor on an issue.
-	# from contrib.models import Actor
-	# ret = constit_info.extra
-	# ret['mocs'] = []
-	# def add_actor(obj):
-	# 	if obj is None: return
-	# 	ret['mocs'].append({
-	# 		"id": obj.id,
-	# 		"name": obj.name_long,
-	# 	})
-	# if campaign.target_representatives:
-	# 	add_actor(Actor.objects.filter(office='H-%s-%02d' % (constit_info.extra['address']['addrState'], constit_info.extra['congressional_district']['district'])).first())
-	# if campaign.target_senators:
-	# 	for senate_class in (1, 2, 3):
-	# 		add_actor(Actor.objects.filter(office='S-%s-%02d' % (constit_info.extra['address']['addrState'], senate_class)).first())
-
-	if len(ret["mocs"]) == 0:
+	# If there are no targets, then the user cannot go on.
+	if len(ret["my_representatives"]) == 0:
 		if not campaign.target_senators:
 			# Just representatives. One office. Singular.
 			return {
@@ -301,6 +286,44 @@ def validate_address(request, campaign, for_ui):
 
 	return info
 
+def get_extended_target_info(campaign, constit_info):
+	# Get whether the target is known to support or oppose the issue.
+
+	ret = { }
+	for target in constit_info.extra["votervoice"]["targets"]:
+		# Basic info for display to the end user.
+		inf = {
+			"name": target['name'],
+			"position": None,
+			"sort": target['name']
+		}
+		ret[target['id']] = inf
+		gender = None
+
+		# Do we have an Actor for this target?
+		actor = Actor.objects.filter(votervoice_id=target['id']).first()
+		if actor:
+			# Update with better name info (our database is better).
+			inf.update({
+				"name": actor.name_long,
+				"sort": actor.name_sort,
+			})
+			gender = actor.extra.get("legislators-current", {}).get("bio", {}).get("gender")
+
+			# Do we have a recorded position for this person?
+			if campaign.body_toggles_on:
+				axn = Action.objects.filter(execution__trigger=campaign.body_toggles_on, actor=actor).first()
+				if axn:
+					inf['position'] = axn.outcome
+
+		# Fill-in default string.
+		if inf['position'] is None:
+			inf['position_text'] = "We don’t yet know where %s stands on this issue." % { "M": "he", "F": "she" }.get(gender, inf['name'])
+		else: # beware zero is a possible value
+			inf['position_text'] = campaign.body_toggles_on.outcome_strings()[inf['position']]['label']
+
+	return ret
+
 @json_response
 def write_letter(request):
 	#################################################################
@@ -360,6 +383,12 @@ def write_letter(request):
 			}
 		constit_info.extra['name'][field] = value
 
+	#################################################################
+	# TOGGLE ON KNOWN POSITIONS
+	# Toggle the subject/body depending on any known positions of the
+	# target politician.
+	#################################################################
+	target_positions = get_extended_target_info(campaign, constit_info)
 
 	#################################################################
 	# BUILD MESSAGES.
@@ -370,9 +399,19 @@ def write_letter(request):
 		# Build the response data structure. Since we may have a
 		# different message per target, build a complete UserAdvocacyMessage
 		# for each TargetDeliveryContract.
+
+		def toggle_string(string_default, string_0, string_1):
+			if target['id'] not in target_positions: return string_default
+			if (target_positions[target['id']]['position'] == 0) and string_0:
+				return string_0
+			elif (target_positions[target['id']]['position'] == 1) and string_1:
+				return string_1
+			else:
+				return string_default
+
 		response = {
-			"subject": campaign.message_subject,
-		    "body": campaign.message_body,
+			"subject": toggle_string(campaign.message_subject, campaign.message_subject0, campaign.message_subject1),
+		    "body": toggle_string(campaign.message_body,campaign.message_body0, campaign.message_body1),
 		    "complimentaryClose": "Sincerely,", # also says this in the preview
 		    "modified": False, # did user edit the message?
 

@@ -1,0 +1,44 @@
+{% extends "master.html" %}
+
+{% block title %}{{trigger.title}} - Edit Actions{% endblock %}
+
+{% block body %}
+<ol class="breadcrumb">
+  <li><a href="/admin">admin</a></li>
+  <li><a href="/admin/contrib/trigger">Triggers</a></li>
+  <li class="active"><a href="/admin/contrib/trigger/{{trigger.id}}">{{trigger.title}}</a></li>
+</ol>
+
+<h1>{{trigger.title}} &mdash; Edit Actions</h1>
+
+{% if error %}
+  <p class="text-danger">{{error}}</p>
+{% else %}
+  <form method="POST">
+      {% csrf_token %}
+      <table class="table">
+          {% for entry in data %}
+              <tr>
+                  <td>{{entry.actor.name_long}}</td>
+                  <td>
+                    <select name="actor_{{entry.actor.id}}">
+                      <option value="null">- Not Known -</option>
+                      {% for x in trigger.outcome_strings %}
+                        <option value="{{forloop.counter0}}" {% if entry.position == forloop.counter0 %}selected{% endif %}>{{x.label}} [{{forloop.counter0}}]</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+              </tr>
+          {% endfor %}
+          <tr>
+            <td/>
+            <td>
+              <button type="submit" class="btn btn-primary">Update</button>
+            </td>
+          </tr>
+      </table>
+  </form>
+{% endif %}
+
+{% endblock %}
+

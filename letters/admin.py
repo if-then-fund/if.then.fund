@@ -1,10 +1,11 @@
 from django.contrib import admin
+
 from .models import LettersCampaign, ConstituentInfo, UserLetter
 
 class CampaignAdmin(admin.ModelAdmin):
     list_display = ['title', 'owner', 'id', 'created']
     search_fields = ['title', 'owner__name', 'owner__slug']
-    raw_id_fields = ['owner']
+    raw_id_fields = ['owner', 'body_toggles_on']
 
 class ConstituentInfoAdmin(admin.ModelAdmin):
 	search_fields = ['id', 'extra']

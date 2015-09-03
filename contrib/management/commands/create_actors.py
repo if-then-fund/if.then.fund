@@ -38,10 +38,8 @@ class Command(BaseCommand):
 		de_recips = DemocracyEngineAPI.recipients()
 		de_recips = { r['recipient_id']: r for r in de_recips }
 
-		# Mark all actors as not-current.
-		Actor.objects.update(office=None)
-
 		# Create Actor instances.
+		seen_actors = set()
 		for p in r:
 			# The last term is the Member of Congress's current term.
 			term = p['terms'][-1]
@@ -91,6 +89,7 @@ class Command(BaseCommand):
 			if actor.extra in (None, ''): actor.extra = { }
 			actor.extra['legislators-current'] = p
 			actor.save()
+			seen_actors.add(actor.id)
 
 			if is_new:
 				self.stdout.write('Added: ' + actor.name_long)
@@ -135,6 +134,12 @@ class Command(BaseCommand):
 			# Update the 'active' field on the challenger.
 			if actor.challenger:
 				self.update_recipient_active(actor.challenger, de_recips)
+
+		# Mark all other actors, i.e. ones not in legislators-current, as not-current.
+		for actor in Actor.objects.exclude(id__in=seen_actors).exclude(office=None):
+			self.stdout.write('%s now marked as out of office.' % actor.name_long)
+			actor.office = None
+			actor.save()
 
 	def update_recipient_active(self, recipient, de_recips):
 		active = (de_recips[recipient.de_id]['status'] == 'active')

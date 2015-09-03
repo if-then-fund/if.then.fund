@@ -86,7 +86,21 @@
 
 			<div id="letters-stage-two" style="display: none">
 
-				<p id="letters-who-are-my-reps">Your will be writing a letter to <span></span>.</p>
+				<p>Here is what we know about where your
+					{% if letters_campaign.target_representatives and letters_campaign.target_senators %}
+						representative and senators
+					{% elif letters_campaign.target_representatives %}
+						representative
+					{% elif letters_campaign.target_senators %}
+						senators
+					{% endif %}
+				are on this issue.</p>
+
+				<table id="letters-my-reps" class="table">
+					<tbody>
+					</tbody>
+				</table>
+
 				<p>Your legislators require that we provide your name, address, and the fields below with your message. Please complete the form:</p>
 
 				<div class="form-group">
@@ -95,7 +109,7 @@
 				</div>
 				<label for="namePrefix">Name</label>
 				<div class="row">
-					<div class="col-md-3 col-lg-2">
+					<div class="col-sm-3 col-lg-2">
 					  <div class="form-group">
 						{# <label for="lettersNamePrefix">Title</label> #}
 						<select class="form-control" id="lettersNamePrefix" name="namePrefix" style="padding-left: 2px; padding-right: 0;">
@@ -103,13 +117,13 @@
 						</select>
 					  </div>
 					</div>
-					<div class="col-md-4 col-lg-5">
+					<div class="col-sm-4 col-lg-5">
 					  <div class="form-group">
 						{# <label for="lettersNameFirst">First Name</label> #}
 						<input type="text" class="form-control" id="lettersNameFirst" name="nameFirst" placeholder="first name">
 					  </div>
 					</div>
-					<div class="col-md-5">
+					<div class="col-sm-5">
 					  <div class="form-group">
 						{# <label for="lettersNameLast">Last Name</label> #}
 						<input type="text" class="form-control" id="lettersNameLast" name="nameLast" placeholder="last name">
@@ -287,20 +301,16 @@ function write_letter_find_reps() {
 			// show fields
 
 			$('#write-letter-find-reps').hide();
-			$('#letters-stage-two').slideDown();
+			$('#letters-stage-two').fadeIn();
 
-			// update text
-
-			var mocs = "";
-			for (var i = 0; i < res.mocs.length; i++) {
-				if (i > 0) {
-					if (res.mocs.length > 2) mocs += ",";
-					mocs += " ";
-					if (i == res.mocs.length - 1) mocs += "and ";
-				}
-				mocs += res.mocs[i].name;
+			// update position table
+			$('#letters-my-reps tbody').html('');
+			for (var i = 0; i < res.my_representatives.length; i++) {
+				var tr = $("<tr><td class='name'/><td class='position'/></tr>")
+				tr.find('.name').text(res.my_representatives[i].name);
+				tr.find('.position').text(res.my_representatives[i].position_text);
+				$('#letters-my-reps tbody').append(tr);
 			}
-			$('#letters-who-are-my-reps span').text(mocs);
 
 			// focus
 			$('#lettersEmail').focus();

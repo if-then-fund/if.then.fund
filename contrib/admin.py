@@ -30,7 +30,8 @@ class TriggerAdmin(admin.ModelAdmin):
         from django.conf.urls import patterns
         urls = super(TriggerAdmin, self).get_urls()
         return patterns('',
-            (r'^new-from-bill/$', self.admin_site.admin_view((self.new_from_bill)))
+            (r'^new-from-bill/$', self.admin_site.admin_view(self.new_from_bill)),
+            (r'^([0-9]+)/edit-actions$', self.admin_site.admin_view(self.edit_actions)),
         ) + urls
 
     def new_from_bill(self, request):
@@ -89,6 +90,73 @@ class TriggerAdmin(admin.ModelAdmin):
             error = None
 
         return render(request, "contrib/admin/new-trigger-from-bill.html", { 'form': form, 'error': error })
+
+    def edit_actions(self, request, trigger_id):
+        from django.shortcuts import render, get_object_or_404
+
+        trigger = get_object_or_404(Trigger, id=trigger_id)
+
+        # Validity checks.
+        if trigger.status == TriggerStatus.Open:
+            if trigger.pledge_count > 0:
+                return render(request, "contrib/admin/edit-actions.html", {
+                    "trigger": trigger,
+                    "error": "Can't edit this trigger. There are pledges on it."
+                })
+        elif trigger.status != TriggerStatus.Executed:
+            return render(request, "contrib/admin/edit-actions.html", {
+                "trigger": trigger,
+                "error": "Can't edit a trigger with status %s." % trigger.status.name,
+            })
+
+        if request.method == "POST":
+            with transaction.atomic():
+                # Execute if this trigger is not yet executed.
+                if trigger.status == TriggerStatus.Open:
+                    from django.utils import timezone
+                    trigger.execute(timezone.now(), {}, "n/a", TextFormat.Markdown, {})
+               
+                # Update positions.
+                for k, v in request.POST.items():
+                    if k.startswith("actor_"):
+                        actor = Actor.objects.get(id=k[6:])
+                        axn = Action.objects.filter(execution__trigger=trigger, actor=actor)
+                        if v == "null":
+                            # Delete action if exists.
+                            axn.delete()
+                        elif axn.first() and axn.first().outcome == int(v):
+                            # Exists with correct outcome value.
+                            pass
+                        else:
+                            # Doesn't exist, or exists with wrong outcome value.
+                            axn.delete()
+                            Action.create(trigger.execution, actor, int(v))
+
+
+        else: # GET
+            pass
+
+        # Which actors can have a position on this? Ones currently holding
+        # office.
+        actors = Actor.objects.exclude(office=None)
+
+        # Get existing positions.
+        existing_positions = { }
+        if trigger.status == TriggerStatus.Executed:
+            existing_positions = dict(trigger.execution.actions.values_list('actor__id', 'outcome'))
+
+        data = { }
+        for actor in actors:
+            data[actor] = {
+                "actor": actor,
+                "position": existing_positions.get(actor.id),
+            }
+
+        data = sorted(data.values(), key = lambda entry : entry['actor'].name_sort)
+        return render(request, "contrib/admin/edit-actions.html", {
+            "trigger": trigger,
+            "data": data,
+        })
 
 class TriggerStatusUpdateAdmin(admin.ModelAdmin):
     readonly_fields = ['trigger']
