@@ -28,6 +28,9 @@ class SeleniumTest(StaticLiveServerTestCase):
 		import letters.views, votervoice
 		letters.views.votervoice = votervoice.VoterVoiceDummyAPIClient()
 
+		# Make sure we're looking at the right branded site.
+		settings.DEFAULT_BRAND = "if.then.fund"
+
 		# Start a headless browser.
 		cls.browser = selenium.webdriver.Firefox()
 

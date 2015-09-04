@@ -20,6 +20,7 @@ INSTALLED_APPS += [
 
 MIDDLEWARE_CLASSES += ['twostream.middleware.CacheLogic',]
 
+TEMPLATES[0]['DIRS'] += [os.path.join(os.path.dirname(os.path.dirname(__file__)), 'branding/279project.xyz/templates')]
 TEMPLATES[0]['OPTIONS']['context_processors'] += [
 	"itfsite.middleware.itfsite_template_context_processor",
 ]
@@ -53,4 +54,4 @@ DEFAULT_TEMPLATE_CONTEXT = {
 	"HIDE_REMOTE_EMBEDS": environment.get('hide_remote_embeds', False),
 }
 
-DEFAULT_BRAND = "if.then.fund"
+DEFAULT_BRAND = "279project.xyz"
