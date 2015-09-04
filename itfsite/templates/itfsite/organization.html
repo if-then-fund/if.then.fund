@@ -27,11 +27,6 @@
 	margin-bottom: 25px;
 }
 
-#page-banner > div {
-	position: absolute;
-	bottom: .5em;
-}
-
 h1 {
 	margin: 0;
 }
@@ -47,22 +42,33 @@ h1 {
 }
 @media screen and (max-width: 768px) {
 	#page-banner {
-		background-image: url({{org.banner_image_url}}?size=xs);
+		background-image: url({{org.banner_image.url}}?size=xs);
 	}
 }
 @media screen and (max-width: 640px) {
 	#page-banner {
-		background-image: url({{org.banner_image_url}}?size=xs);
+		background-image: url({{org.banner_image.url}}?size=xs);
 	}
 }
 {% endif %}
 
+
+@media screen and (min-width: 768px) {
+	#page-banner > div {
+		position: absolute;
+		bottom: .5em;
+	}
+}
+
 @media screen and (max-width: 640px) {
 	#page-banner {
-		height: 200px;
+		min-height: 200px;
 	}
 	h1 {
 		font-size: 24px;
+	}
+	#page-banner p {
+		font-size: 18px;
 	}
 }
 
@@ -92,7 +98,7 @@ h1 {
 </div>
 
 <div class="row" style="margin-top: 1em">
-	<div class="col-sm-3" style="padding-left: 0; font-size: 90%">
+	<div class="col-sm-3" style="font-size: 90%">
 		<div class="panel panel-default">
 		  <div class="panel-heading hidden-xs">About {{org.name}}</div>
 		  <div class="panel-body">

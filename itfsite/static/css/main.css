@@ -179,6 +179,7 @@ a, a:hover, a:link, a:visited, a:active {
 .organization-banner {
 	background-color: #999; /* if there is no banner image and we get back a transparent png, this will show */
 	background-position: 50% 50%;
+	background-size: cover;
 	border: 1px solid #AAA;
 	color: #fff;
 	-webkit-font-smoothing: antialiased;
@@ -193,11 +194,21 @@ a, a:hover, a:link, a:visited, a:active {
 	background-position: 50% 50%;
 	border: 1px solid #AAA;
 }
-	.organization-banner .organization-profile-pic {
-		float: right;
-		position: absolute;
-		top: -75px;
-		right: 15px;
+	@media screen and (min-width: 768px) {
+		.organization-banner .organization-profile-pic {
+			float: right;
+			position: absolute;
+			top: -75px;
+			right: 15px;
+		}
+	}
+	@media screen and (max-width: 767px) {
+		.organization-banner {
+			text-align: center;
+		}
+		.organization-banner .organization-profile-pic {
+			margin: 1em auto;
+		}
 	}
 
 .notifications-popup {
