@@ -7,6 +7,8 @@
 
 <p>To see who your contributions were made to, please head over to <a href="{{pledge.via_campaign.get_short_url}}">your contribution</a> for further details.</p>
 
+{% if pledge.tip %}<p>We also made your ${{pledge.tip.amount|floatformat:2}} contribution to {{pledge.tip.recipient.name}}.</p>{% endif %}
+
 {% else %}
 
 <p>Your campaign contributions to {{pledge.targets_summary}} could not be made.</p>

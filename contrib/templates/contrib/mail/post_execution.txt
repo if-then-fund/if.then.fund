@@ -3,14 +3,18 @@
 {% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}Your campaign contributions totalling ${{pledge.execution.charged|floatformat:2}} were made to {{pledge.targets_summary}}.
 
 To see who your contributions were made to, please head over to the following address:
+
+{{pledge.via_campaign.get_short_url}}
+
+{% if pledge.tip %}We also made your ${{pledge.tip.amount|floatformat:2}} contribution to {{pledge.tip.recipient.name}}.{% endif %}
 {% else %}Your campaign contributions to {{pledge.targets_summary}} could not be made.
 
 {% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.FiltersExcludedAll' %}No {% if pledge.incumb_challgr == 1 %}{{pledge.trigger.trigger_type.strings.actors}}{% else %}recipients{% endif %} matched your criteria.{% endif %}{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.TransactionFailed' %}There was a problem charging your credit card.{% endif %}{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.Voided' %}You asked us to void this transaction.{% endif %}
 
 
 For more information, please head over to the following address:
-{% endif %}
-{{pledge.via_campaign.get_short_url}}
 
+{{pledge.via_campaign.get_short_url}}
+{% endif %}
 Thanks!
 {% endblock %}

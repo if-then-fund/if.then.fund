@@ -35,6 +35,10 @@
 	</p>
 
 	{% if pledge.status|stringformat:'s' == 'PledgeStatus.Open' %}
+		{% if pledge.tip_to_campaign_owner > 0 %}
+			<p>You also asked us to add a ${{pledge.tip_to_campaign_owner|floatformat:2}} contribution to {{pledge.via_campaign.owner.name}}, which will also be made when the {{pledge.trigger.trigger_type.strings.action_noun}} occurs.</p>
+		{% endif %}
+
 		{% if pledge.trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
 			<p style="line-height: 123%"><small>Your credit card will not be charged until after the {{pledge.trigger.trigger_type.strings.action_noun}} occurs. Your statement may show a $1 temporary authorization from Democracy Engine, LLC, but this authorization will not result in a charge.</small></p>
 		{% elif pledge.user %}
@@ -43,6 +47,8 @@
 	{% elif pledge.status|stringformat:'s' == 'PledgeStatus.Vacated' %}
 		<p>The event that this contribution was for is no longer expected to occur. Your contribution has been cancelled. Your credit card was not charged.</dd>
 	{% elif execution %}
+		{% if pledge.tip %}<p>We also made your ${{pledge.tip.amount|floatformat:2}} contribution to {{pledge.tip.recipient.name}}.</p>{% endif %}
+
 		<p class="small text-muted">
 			Your credit card was charged on {{execution.created|date}}.
 			{% if execution.charged < pledge.amount %}It was charged less than your intended contribution of ${{pledge.amount|floatformat:2}}. We can only make whole-penny contributions to the recipients of your contribution, so we had to round down.{% endif %}

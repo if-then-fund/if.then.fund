@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.conf import settings
 from datetime import timedelta
 
-from contrib.models import TriggerStatus, Pledge, PledgeStatus, ContributionAggregate
+from contrib.models import TriggerStatus, Pledge, PledgeStatus, ContributionAggregate, Tip
 
 import sys, os, tqdm
 from taskutils import exclusive_process
@@ -57,6 +57,15 @@ class Command(BaseCommand):
 				print(p)
 				print(e)
 				print()
+
+			# If the pledge was executed, execute any tip to the campaign owner.
+			if p.execution and p.tip_to_campaign_owner > 0:
+				try:
+					Tip.execute_from_pledge(p)
+				except ValueError as e:
+					print(p)
+					print(e)
+					print()
 
 		# Save.
 		ca_updater.sync()

@@ -61,6 +61,8 @@ class Organization(models.Model):
 	facebook_url = models.URLField(max_length=256, blank=True, null=True, help_text="The URL to this organization's Facebook Page.")
 	twitter_handle = models.CharField(max_length=64, blank=True, null=True, help_text="The organization's Twitter handle (omit the @-sign).")
 
+	de_recip_id = models.CharField(max_length=64, blank=True, null=True, unique=True, help_text="The recipient ID on Democracy Engine for taking tips.")
+
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
 	def __str__(self):

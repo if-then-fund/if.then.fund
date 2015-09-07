@@ -196,7 +196,7 @@ def update_pledge_profiles(pledges, new_profile):
 
 	# Delete any of the previous ContributorInfos that are no longer needed.
 	for ci in prev_profiles:
-		if not ci.pledges.exists():
+		if ci.can_delete():
 			ci.delete()
 
 @transaction.atomic
@@ -290,6 +290,14 @@ def create_pledge(request):
 		raise Exception("incumb_challgr is out of range")
 	if p.filter_party == ActorParty.Independent:
 		raise Exception("filter_party is out of range")
+	if request.POST.get("contribTipOrg"):
+		try:
+			p.tip_to_campaign_owner = float(request.POST['tip_amount'])
+			if p.tip_to_campaign_owner < 0: raise ValueError()
+		except ValueError:
+			raise Exception("%s is out of range" % 'tip_amount')
+	if p.tip_to_campaign_owner > 0 and (not p.via_campaign.owner or not p.via_campaign.owner.de_recip_id):
+		raise Exception("tip_to_campaign_owner cannot be non-zero")
 
 	tcust = TriggerCustomization.objects.filter(owner=p.via_campaign.owner, trigger=p.trigger).first()
 	if tcust and tcust.incumb_challgr and p.incumb_challgr != tcust.incumb_challgr:

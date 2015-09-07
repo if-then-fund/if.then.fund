@@ -526,6 +526,9 @@ class ContributorInfo(models.Model):
 			raise Exception("This model is immutable.")
 		super(ContributorInfo, self).save(*args, **kwargs)
 
+	def can_delete(self):
+		return not self.pledges.exists() and not self.tips.exists()
+
 	@property
 	def name(self):
 		return ' '.join(self.extra['contributor'][k] for k in ('contribNameFirst', 'contribNameLast'))
@@ -653,6 +656,8 @@ class Pledge(models.Model):
 	incumb_challgr = models.FloatField(help_text="A float indicating how to split the pledge: -1 (to challenger only) <=> 0 (evenly split between incumbends and challengers) <=> +1 (to incumbents only)")
 	filter_party = EnumField(ActorParty, blank=True, null=True, help_text="Contributions only go to candidates whose party matches this party. Independent is not an allowed value here.")
 	filter_competitive = models.BooleanField(default=False, help_text="Whether to filter contributions to competitive races.")
+
+	tip_to_campaign_owner = models.DecimalField(max_digits=6, decimal_places=2, default=decimal.Decimal(0), help_text="The amount in dollars that the user desires to send to the owner of via_campaign, zero if there is no one to tip or the user desires not to tip.")
 
 	cclastfour = models.CharField(max_length=4, blank=True, null=True, db_index=True, help_text="The last four digits of the user's credit card number, stored & indexed for fast look-up in case we need to find a pledge from a credit card number.")
 
@@ -1159,6 +1164,100 @@ class PledgeExecution(models.Model):
 		# re-increment now that the district is set
 		for c in self.contributions.all():
 			c.update_aggregates(factor=1)
+
+class Tip(models.Model):
+	"""A tip to an Organization made while making a Pledge."""
+
+	user = models.ForeignKey('itfsite.User', blank=True, null=True, on_delete=models.PROTECT, help_text="The user making the Tip.")
+	profile = models.ForeignKey(ContributorInfo, related_name="tips", on_delete=models.PROTECT, help_text="The contributor information (name, address, etc.) and billing information used for this Tip.")
+	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount of the tip, in dollars.")
+	recipient = models.ForeignKey('itfsite.Organization', on_delete=models.PROTECT, help_text="The recipient of the tip.")
+
+	de_recip_id = models.CharField(max_length=64, blank=True, null=True, db_index=True, help_text="The recipient ID on Democracy Engine that received the tip.")
+
+	via_campaign = models.ForeignKey('itfsite.Campaign', blank=True, null=True, related_name="tips", on_delete=models.PROTECT, help_text="The Campaign that this Tip was made via.")
+	via_pledge = models.OneToOneField(Pledge, blank=True, null=True, related_name="tip", on_delete=models.PROTECT, help_text="The executed Pledge that this Tip was made via.")
+	ref_code = models.CharField(max_length=24, blank=True, null=True, db_index=True, help_text="An optional referral code that lead the user to take this action.")
+
+	created = models.DateTimeField(auto_now_add=True, db_index=True)
+	updated = models.DateTimeField(auto_now=True)
+
+	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
+
+	def save(self, *args, override_immutable_check=False, **kwargs):
+		if self.id and not override_immutable_check:
+			raise Exception("This model is immutable.")
+		super().save(*args, **kwargs)
+
+	@staticmethod
+	def execute_from_pledge(pledge):
+		# Validate.
+		if not pledge.user: raise ValueError("Pledge was made by an unconfirmed user.")
+		if pledge.tip_to_campaign_owner == 0: raise ValueError("Pledge does not specify a tip.")
+		if not pledge.via_campaign.owner: raise ValueError("Campaign has no owner.")
+		if not pledge.via_campaign.owner.de_recip_id: raise ValueError("Campaign owner has no recipient id.")
+
+		# Create instance.
+		tip = Tip()
+
+		tip.user = pledge.user
+		tip.profile = pledge.profile
+
+		tip.amount = pledge.tip_to_campaign_owner
+
+		tip.via_pledge = pledge
+		tip.via_campaign = pledge.via_campaign
+		tip.recipient = pledge.via_campaign.owner
+		tip.de_recip_id = pledge.via_campaign.owner.de_recip_id
+
+		tip.extra = {
+			"donation": None,
+			"exception": "Not yet executed.",
+		}
+
+		tip.execute() # also saves
+
+		return tip
+
+	def execute(self):
+		import rtyaml
+		from contrib.bizlogic import create_de_donation_basic_dict, DemocracyEngineAPI
+
+		# Prepare the donation record for authorization & capture.
+		de_don_req = create_de_donation_basic_dict(self.via_pledge)
+		de_don_req.update({
+			# billing info
+			"token": self.profile.extra['billing']['de_cc_token'],
+
+			# line items
+			"line_items": [{
+				"recipient_id": self.de_recip_id,
+				"amount": DemocracyEngineAPI.format_decimal(self.amount),
+				}],
+
+			# reported to the recipient
+			"source_code": self.via_campaign.get_short_url(),
+			"ref_code": "",
+
+			# tracking info for internal use
+			"aux_data": rtyaml.dump({ # DE will gives this back to us encoded as YAML, but the dict encoding is ruby-ish so to be sure we can parse it, we'll encode it first
+				"via": self.via_campaign.id,
+				"pledge": self.via_pledge.id,
+				"user": self.user.id,
+				"email": self.user.email,
+				"pledge_created": self.via_pledge.created,
+				})
+			})
+
+		# Create the 'donation', which creates a transaction and performs cc authorization.
+		try:
+			don = DemocracyEngineAPI.create_donation(de_don_req)
+			self.extra["donation"] = don
+			self.extra["exception"] = None
+		except HumanReadableValidationError as e:
+			self.extra["exception"] = str(e)
+
+		self.save()
 
 #####################################################################
 #

@@ -111,6 +111,7 @@
     <input type="hidden" name="billingCCExpMonth" value="?"/>
     <input type="hidden" name="billingCCExpYear" value="?"/>
     <input type="hidden" name="copyFromPledge" value=""/>
+    <input type="hidden" name="tip_amount" value="0"/>
 
     <div>
       <div>
@@ -395,7 +396,7 @@
                   </td>
                 </tr>
               </table>
-              <p class="has-open-pledges" style="display: none;">We&rsquo;ll apply this payment information to your other scheduled contributions too.</p>
+              <p class="has-open-pledges" style="display: none; margin-bottom: 1.5em;">We&rsquo;ll apply this payment information to your other scheduled contributions too.</p>
               </div>
 
               <div id="payment-old" style="display: none">
@@ -403,6 +404,15 @@
                   <a href="#" onclick="$('#pledge-info input[name=&quot;copyFromPledge&quot;]').val(''); $('#payment-old').hide(); $('#payment-new').show(); $('#payment-new .focus-on-shown').focus(); return false;">Change card?</a>
                 </p>
               </div>
+
+              {% if campaign.owner.de_recip_id %}
+                <p>
+                  <label for="contribTipOrg">
+                    <input id="contribTipOrg" type="checkbox" name="contribTipOrg">
+                    Add a $<span id="contribTipOrgAmt">___</span> donation to {{campaign.owner.name}}
+                  </label>
+                </p>
+              {% endif %}
 
               <p style="margin: 1.5em 0">By clicking next, you agree that you have reviewed the contributor requirements above and our <a href="/terms" target="_blank">terms of use</a>.</p>
 
@@ -748,12 +758,30 @@ function contribution_start_validation(no_popover) {
   return valid;
 }
 
+function computeTipAmount(pledge_amount) {
+  // Compute a tip amount that is proportional to the
+  // pledge amount. No need to let user choose this.
+  return Math.round(pledge_amount/10*2) / 2 + .5;
+}
+
 function do_pledge_start_next() {
   if (!contribution_start_validation(true)) return;
+
+  {% if campaign.owner.de_recip_id %}
+  // Set the tip-to-organization amount.
+  var amt = get_contribution_amount();
+  var tip_amount = computeTipAmount(amt);
+  $('#pledge-info input[name="tip_amount"]').val(tip_amount);
+  $('#contribTipOrgAmt').text(tip_amount.toFixed(2));
+  {% endif %}
+
+  // Update controls.
   $('#pledge-amount input').prop('readonly', true);
   $('#pledge-start .buttons').hide();
   show_and_scroll('pledge-contributor');
-  mixpanel.track("Pledge Amount Entered", { 'trigger': {{trigger.id}}, 'amount': get_contribution_amount() });
+
+  // Analytics.
+  mixpanel.track("Pledge Amount Entered", { 'trigger': {{trigger.id}}, 'amount': amt });
 }
 
 var _did_pledge_show_email_popover = false;
