@@ -120,6 +120,10 @@ class Campaign(models.Model):
 	def get_short_url(self):
 		return settings.SITE_ROOT_URL + ("/a/%d" % self.id)
 
+	def get_active_letters_campaign(self):
+		from letters.models import CampaignStatus as LettersCampaignStatus
+		return self.letters.filter(status=LettersCampaignStatus.Open).order_by('-created').first()
+
 	def get_contrib_totals(self):
 		# Get all of the displayable totals for this campaign.
 

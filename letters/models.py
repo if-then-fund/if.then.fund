@@ -53,6 +53,36 @@ class LettersCampaign(models.Model):
 		else:
 			return "senator"
 
+	def announced_position_breakdown(self):
+		from contrib.models import Action
+		from django.db.models import Count
+		if not self.body_toggles_on: raise ValueError("can't call this if body_toggles_on is None")
+
+		# Get the total number of Action objects per outcome.
+		totals = Action.objects.filter(execution__trigger=self.body_toggles_on).values("outcome").annotate(count=Count('id'))
+		if len(totals) == 0: return None
+
+		# Re-group outcome.
+		def update_dict(d1, d2):
+			d1.update(d2)
+			return d1
+		totals = dict((x['outcome'], x['count']) for x in totals)
+		totals = \
+			[
+				update_dict(dict(outcome), {
+					"index": i,
+					"count": totals.get(i, 0),
+					"count_rel": totals.get(i, 0)/279, # !! specialty
+				})
+				for i, outcome in enumerate(self.body_toggles_on.outcomes)
+			]
+		#totals.append({
+		#	"label": "Unknown",
+		#	"count": 279 - sum(t["count"] for t in totals), # !!
+		#	"count_rel": (279 - sum(t["count"] for t in totals))/279, # !!
+		#})
+		return totals
+
 class ConstituentInfo(models.Model):
 	"""Information about a user used for letter delivery. Stored schema-less in the extra field. May be shared across UserLetters of the same user. Instances are immutable."""
 

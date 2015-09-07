@@ -21,6 +21,21 @@
 
 	<div class="wrapper">
 		{% include "itfsite/campaign-summary.html" with campaign=c %}
+
+		{% if c.get_active_letters_campaign and c.get_active_letters_campaign.body_toggles_on %}
+			{% with x=c.get_active_letters_campaign.announced_position_breakdown %}
+				{% if x %}
+					<div style="margin-top: 4px; border-top: 1px solid #999; padding-top: 4px;">
+					<table style="font-size: 90%;">
+					{% for outcome in x %}
+						<tr><td style="padding-right: 1.5em">{{outcome.count}} Legislator{{outcome.count|pluralize}}</td> <td>{{outcome.label}}</td></tr>
+					{% endfor %}
+					</table>
+					</div>
+				{% endif %}
+			{% endwith %}
+		{% endif %}
+				
 		<div class="campaign-take-action">
 			<a href="{{c.get_absolute_url}}">Take Action &raquo;</a>
 		</div>

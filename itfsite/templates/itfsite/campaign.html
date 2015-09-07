@@ -202,6 +202,20 @@ form span.required:after {
 				{% endif %}
 			{% endwith %}
 			{% endwith %}
+
+			{% if letters_campaign and letters_campaign.body_toggles_on %}
+				{% with x=letters_campaign.announced_position_breakdown %}
+					{% if x %}
+						<hr>
+						<div style="font-size: 130%; line-height: 135%;">
+							We need 279 legislators to get this issue fixed.
+							{% for outcome in x %}
+								{{outcome.count}} legislator{{outcome.count|pluralize}} {% if outcome.count > 1 %}have{% else %}has{% endif %} announced that they {% if outcome.object %}{{outcome.object}}{% else %}support {{outcome.label}}{% endif %}.
+							{% endfor %}
+						</div>
+					{% endif %}
+				{% endwith %}
+			{% endif %}
 		</div>
 		<div class="col-sm-4">
 			{% with totals=campaign.get_contrib_totals %}

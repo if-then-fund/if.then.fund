@@ -210,9 +210,9 @@ def campaign(request, id):
 		tcust = TriggerCustomization.objects.filter(trigger=trigger, owner=campaign.owner).first()
 
 	# Which letter-writing campaign should the user take action on?
-	from letters.models import LettersCampaign, CampaignStatus as LettersCampaignStatus, UserLetter
+	from letters.models import UserLetter
 	from letters.views import state_abbrs
-	letters_campaign = campaign.letters.filter(status=LettersCampaignStatus.Open).order_by('-created').first()
+	letters_campaign = campaign.get_active_letters_campaign()
 
 	if trigger:
 		outcome_strings = tcust.outcome_strings() if tcust else trigger.outcome_strings()
