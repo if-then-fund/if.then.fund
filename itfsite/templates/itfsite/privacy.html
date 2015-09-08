@@ -14,7 +14,11 @@
 
 <h1>Your Privacy</h1>
 
-<p><span class="site-brand">{{SITE_NAME}}</span> is committed to respecting your privacy as we try to shape Congress. This page describes what happens to your information as you use the website.</p>
+{% if BRAND_ID == "if.then.fund" %}
+	<p><span class="site-brand">{{SITE_NAME}}</span> is committed to respecting your privacy as we try to shape Congress. This page describes what happens to your information as you use the website.</p>
+{% else %}
+	<p><span class="site-brand">{{SITE_NAME}}</span> is powered by <a href="https://if.then.fund"><span class="site-brand-ifthenfund">if.then.fund</span></a>, which is committed to respecting your privacy. This page describes what happens to your information as you use the website.</p>
+{% endif %}
 
 <h2>The information we collect</h2>
 
@@ -46,6 +50,10 @@
 <p>We additionally employ DNSSEC, PBKDF2+SHA256 hashing for passwords, and TLS with third-party services. This all keeps your information secure. If you can think of something else we should be doing, just let us know.</p>
 
 <h2>Where your information goes</h2>
+
+{% if BRAND_ID != "if.then.fund" %}
+	<p>Your personal information is stored in <a href="https://if.then.fund"><span class="site-brand-ifthenfund">if.then.fund</span></a>&rsquo;s database and may be shared with our partners at <span class="site-brand">{{SITE_NAME}}</span>.</p>
+{% endif %}
 
 <p>We connect with the third-party services below to help us make <span class="site-brand">{{SITE_NAME}}</span> work. Each of them may obtain some of the information listed above or other data concerning some aspects of your browsing history on this website.</p>
 

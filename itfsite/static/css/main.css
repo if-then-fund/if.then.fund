@@ -56,6 +56,52 @@ a, a:hover, a:link, a:visited, a:active {
 	line-height: 133%;
 }
 
+/* BRAND */
+
+.itfbutton {
+	display: inline-block;
+	width: 1.5em;
+	height: 1.5em;
+	background: url('/static/branding/if.then.fund/navbar-title.png');
+	background-size: 5em 1.5em;
+	text-indent: -99999em;
+	overflow: hidden;
+	position: relative;
+	top: 5px;
+	margin-right: .5em;
+}
+	.input-group .itfbutton {
+		top: 0;
+		margin-right: 0;
+	}
+
+/* This is repeated in ifthenfund.css to style brand elements
+ * that appear on the main if.then.fund site. This is only for
+ * if.then.fund branding that appears on all multi-brand sites.
+ */
+@media screen {
+.site-brand-ifthenfund {
+	display: inline-block;
+	background: url('/static/branding/if.then.fund/content-title.png') no-repeat;
+	background-size: 100%;
+	width: 4.866666667em;
+	height: 1em;
+	text-indent: -99999em;
+	overflow: hidden;
+	margin-left: 1px;
+}
+	.invert-site-brand-ifthenfund .site-brand-ifthenfund {
+		background-image: url('/static/branding/if.then.fund/content-title-light.png');
+	}
+}
+@media print {
+	.site-brand-ifthenfund {
+		font-family: 'Times New Roman', serif;
+		font-weight: bold;
+	}
+}
+
+
 /* MASTER ELEMENTS */
 
 #nav-wrap {

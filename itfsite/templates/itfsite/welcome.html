@@ -31,10 +31,17 @@
 			<span class="glyphicon form-control-feedback"></span>
 		<span class="help-block small">Enter your password a second time to confirm.</span>
 		</div>
+
 		<div class="form-group" style="padding-top: 4px">
 			{% if error %}<p class="text-danger">{{error}}</p>{% endif %}
 			<button type="submit" class="btn btn-primary">Submit</button>
 		</div>
+
+	    {% if BRAND_ID != "if.then.fund" %}
+		<div class="form-group">
+			<p style="margin-top: 1.5em; font-size: 90%; line-height: 135%;"><span class="site-brand">{{SITE_NAME}}</span> is powered by <a href="https://if.then.fund" style="border: none"><span class="site-brand-ifthenfund">if.then.fund</span></a>. Your password will work on all sites powered by <a href="https://if.then.fund" style="border: none"><span class="site-brand-ifthenfund">if.then.fund</span></a>.</p>
+		</div>
+	    {% endif %}
 	</form>
 </div>
 

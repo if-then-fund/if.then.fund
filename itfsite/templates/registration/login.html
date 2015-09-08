@@ -10,6 +10,11 @@
 	<input type="hidden" name="next" value="{{ next }}" />
 
     <legend>Log In</legend>
+
+    {% if BRAND_ID != "if.then.fund" %}
+		<p style="margin: 1.5em 0;"><span class="site-brand">{{SITE_NAME}}</span> is powered by <a href="https://if.then.fund"><span class="site-brand-ifthenfund">if.then.fund</span></a>.</p>
+    {% endif %}
+
     {% csrf_token %}
     {{ form|bootstrap }}
     <div class="form-group">
