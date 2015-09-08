@@ -289,13 +289,29 @@ def validate_address(request, campaign, for_ui):
 def get_extended_target_info(campaign, constit_info):
 	# Get whether the target is known to support or oppose the issue.
 
+
+	def toggle_string(outcome, string_default, string_0, string_1):
+		if outcome is None:
+			return string_default
+		elif (outcome == 0) and string_0:
+			return string_0
+		elif (outcome == 1) and string_1:
+			return string_1
+		else:
+			return string_default
+
 	ret = { }
 	for target in constit_info.extra["votervoice"]["targets"]:
 		# Basic info for display to the end user.
 		inf = {
+			# default info on target
 			"name": target['name'],
 			"position": None,
-			"sort": target['name']
+			"sort": target['name'],
+
+			# default strings
+			"message_subject": campaign.message_subject,
+			"message_body": campaign.message_body,
 		}
 		ret[target['id']] = inf
 		gender = None
@@ -314,13 +330,24 @@ def get_extended_target_info(campaign, constit_info):
 			if campaign.body_toggles_on:
 				axn = Action.objects.filter(execution__trigger=campaign.body_toggles_on, actor=actor).first()
 				if axn:
-					inf['position'] = axn.outcome
+					inf.update({
+						# Record position.
+						'position': axn.outcome,
+
+						# Override default message subject/body if outcome corresponds to a non-empty override string.
+						'message_subject': toggle_string(axn.outcome, campaign.message_subject, campaign.message_subject0, campaign.message_subject1),
+		    			'message_body': toggle_string(axn.outcome, campaign.message_body,campaign.message_body0, campaign.message_body1),
+					})
 
 		# Fill-in default string.
 		if inf['position'] is None:
 			inf['position_text'] = "We don’t yet know where %s stands on this issue." % { "M": "he", "F": "she" }.get(gender, inf['name'])
 		else: # beware zero is a possible value
 			inf['position_text'] = campaign.body_toggles_on.outcome_strings()[inf['position']]['label']
+
+		# Add Markdown-rendered body for previewing.
+		import markdown2
+		inf['message_body_rendered'] = markdown2.markdown(inf['message_body'], safe_mode=True)
 
 	return ret
 
@@ -396,22 +423,14 @@ def write_letter(request):
 	#################################################################
 	messages = []
 	for target in constit_info.extra['votervoice']['targets']:
-		# Build the response data structure. Since we may have a
-		# different message per target, build a complete UserAdvocacyMessage
-		# for each TargetDeliveryContract.
-
-		def toggle_string(string_default, string_0, string_1):
-			if target['id'] not in target_positions: return string_default
-			if (target_positions[target['id']]['position'] == 0) and string_0:
-				return string_0
-			elif (target_positions[target['id']]['position'] == 1) and string_1:
-				return string_1
-			else:
-				return string_default
+		# Build the response data structure. Since we may have a different
+		# message per target, build a complete UserAdvocacyMessage for
+		# each TargetDeliveryContract. We've already selected the message
+		# text in get_extended_target_info.
 
 		response = {
-			"subject": toggle_string(campaign.message_subject, campaign.message_subject0, campaign.message_subject1),
-		    "body": toggle_string(campaign.message_body,campaign.message_body0, campaign.message_body1),
+			"subject": target_positions[target['id']]['message_subject'],
+		    "body": target_positions[target['id']]['message_body'],
 		    "complimentaryClose": "Sincerely,", # also says this in the preview
 		    "modified": False, # did user edit the message?
 

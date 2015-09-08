@@ -1,8 +1,11 @@
 {% load itfsite_utils %}
 
 <style>
-#letter-preview {
+#letter-preview-wrapper {
 	margin-bottom: 2em;
+}
+
+#letter-preview {
 	border: 1px solid rgba(0,0,0, .75);
 	background-color: #574;
 	padding: 1em;
@@ -16,7 +19,7 @@
 }
 
 @media screen and (min-width: 992px) {
-	#letter-preview {
+	#letter-preview-wrapper {
 		margin-top: -1em;
 		margin-left: 2em;
 	}
@@ -30,12 +33,23 @@
 <div id="write-letter-form-row" class="row">
 	<div class="col-md-push-6 col-md-6">
 		<p class="visible-xs">Please send a letter to Congress about this issue:</p>
-		<div id="letter-preview">
-			<p class="boilerplate">Dear {{letters_campaign.sample_honorific}},</p>
-			{{letters_campaign.message_body|render_text:'TextFormat.Markdown'}}
-			<p class="boilerplate">Sincerely,
-			<br>[your name]</p>
+
+		<div id="letter-preview-wrapper">
+			<ul id="letter-preview-tabs" class="nav nav-tabs hidden hidden-xs hidden-sm">
+			</ul>
+			<div id="letter-preview">
+				<div id="letter-preview-template">
+					<p class="boilerplate">Dear <span class="name">{{letters_campaign.sample_honorific}}</span>,</p>
+					<p class="subject"> </p>
+					<div class="body">{{letters_campaign.message_body|render_text:'TextFormat.Markdown'}}</div>
+					<p class="boilerplate">Sincerely,
+					<br>[your name]</p>
+				</div>
+				<div class="tab-content hidden-xs hidden-sm">
+				</div>
+			</div>
 		</div>
+
 	</div>
 	<div class="col-md-pull-6 col-md-6">
 		<form id="write-letter-form" onsubmit="return false;">
@@ -147,6 +161,7 @@
 					</div>
 				</div>
 
+				<button id="write-letter-preview" type="submit" class="btn btn-default visible-xs-inline visible-sm-inline" onclick="letters_preview_letters()">Preview</button>
 				<button id="write-letter-submit" type="submit" class="btn btn-primary" onclick="write_letter_submit()">Send Letter</button>
 			</div>
 
@@ -163,6 +178,23 @@
 </div>
 
 </div>
+
+<div id="letters_preview_modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="letters_preview_modal_title" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="letters_preview_modal_title">Preview Letters</h4>
+      </div>
+      <div class="modal-body">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script>
 function ajax_submit(options) {
@@ -250,6 +282,26 @@ function write_letter_find_reps() {
 				// can't mark a <select> as read-only? making it 'disabled' would exclude it from serializeArray().
 			$('#lettersAddrAddress, #lettersAddrCity, #lettersAddrZip').prop('readonly', true);
 
+			// update preview
+			$('#letter-preview-tabs').html('').removeClass('hidden');
+			for (var i = 0; i < res.my_representatives.length; i++) {
+				var n = $("<li class='presentation'><a href='#' role='rab' data-toggle='tab'></a></li>");
+				if (i == 0) n.addClass('active');
+				n.find('a').attr('href', '#rep-preview-' + i);
+				n.find('a').text(res.my_representatives[i].name);
+				$('#letter-preview-tabs').append(n);
+
+				var n = $("<div role='tabpanel' class='tab-pane'></div>");
+				n.attr('id', 'rep-preview-' + i);
+				if (i == 0) n.addClass('active');
+				n.append($('#letter-preview-template').clone());
+				n.find('.name').text(res.my_representatives[i].name);
+				n.find('.subject').text(res.my_representatives[i].message_subject);
+				n.find('.body').html(res.my_representatives[i].message_body_rendered);
+				$('#letter-preview .tab-content').append(n);
+			}
+			$('#letter-preview-template').addClass('visible-xs visible-sm'); // hide on screens where tabs are shown
+
 			// prepare dynamic fields.
 
 			$('#lettersNamePrefix').html('<option></option>'); // clear options, add an empty option
@@ -317,6 +369,21 @@ function write_letter_find_reps() {
 
 		},
 	});
+}
+
+function letters_preview_letters() {
+	// For small screens, this button appears to preview the letters.
+	$('#letters_preview_modal .modal-body').html('');
+	var n = $('#letter-preview-wrapper').clone();
+	n.find('.visible-xs').remove();
+	n.find('.hidden-xs').removeClass('hidden-xs').removeClass('hidden-sm');
+
+	// fixup ids so they don't duplicate
+	n.find('a').each(function() { $(this).attr('href', $(this).attr('href')+'_modal') })
+	n.find('.tab-pane').each(function() { $(this).attr('id', $(this).attr('id')+'_modal') })
+
+	$('#letters_preview_modal .modal-body').append(n);
+	$('#letters_preview_modal').modal();
 }
 
 function write_letter_submit() {
