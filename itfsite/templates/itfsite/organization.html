@@ -109,7 +109,7 @@ h1 {
 	<div id="main-part" class="col-sm-9">
 		{% for c in campaigns %}
 			<h2><a href="{{c.get_absolute_url}}">{{c.title}}</a></h2>
-			{% include "itfsite/canpaign-summary.html" with campaign=c %}
+			{% include "itfsite/campaign-summary.html" with campaign=c %}
 		{% endfor %}
 	</div>
 </div>

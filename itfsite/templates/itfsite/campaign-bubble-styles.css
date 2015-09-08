@@ -1,0 +1,37 @@
+.campaign-bubble {
+	border-radius: 10px;
+	border: 2px solid rgba(30,30,30,.4);
+	background: white;
+	margin-bottom: 1em;
+	overflow: hidden;
+}
+	.organization-banner {
+		border: none;
+	}
+	.campaign-bubble .wrapper {
+		padding: 10px;
+	}
+	.campaign-splash div {
+		padding: .5em 0;
+	}
+	.campaign-splash .campaign-owner {
+		font-size: 16px;
+	}
+	.campaign-title {
+		font-size: 22px;
+	}
+		.campaign-title a {
+			border: none;
+		}
+	.campaign-description {
+		font-size: 90%;
+		line-height: 130%;
+	}
+	.campaign-take-action {
+		margin-top: .75em;
+		text-align: right;
+	}
+		.campaign-take-action a {
+			font-weight: bold;
+			border: none;
+		}

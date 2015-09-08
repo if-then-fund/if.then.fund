@@ -97,41 +97,15 @@
 	margin-bottom: 1em;
 }
 
+{% include "itfsite/campaign-bubble-styles.css" %}
+
 .campaign-bubble {
-	border-radius: 10px;
-	border: 2px solid rgba(30,30,30,.4);
+	border: 2px solid rgba(30,30,30, .3);
 	background: white;
-	padding: 10px;
-	margin-bottom: 1em;
 }
 	.campaign-bubble a {
 		color: #126712; /* meets contrast requirement on white bg */
 	}
-	.campaign-title {
-		padding-bottom: 6px;
-		border-bottom: 1px solid #494;
-		margin-bottom: 8px;
-		line-height: 132%;
-	}
-		.campaign-title a {
-			font-size: 120%;
-			font-weight: bold;
-			border: none;
-		}
-	.campaign-description {
-		font-size: 90%;
-	}
-		.campaign-description p {
-			line-height: 130%;
-		}
-	.campaign-take-action {
-		margin-top: .75em;
-		text-align: right;
-	}
-		.campaign-take-action a {
-			font-weight: bold;
-			border: none;
-		}
 
 </style>
 {% endblock %}
@@ -156,20 +130,7 @@
 						{% if forloop.counter0|divisibleby:2 %}<div class="clearfix visible-sm-block"></div>{% endif %}
 						{% if forloop.counter0|divisibleby:3 %}<div class="clearfix visible-md-block"></div><div class="clearfix visible-lg-block"></div>{% endif %}
 						<div class="col-sm-6 col-md-4">
-							<div class="campaign-bubble">
-								<div class="campaign-description">
-									<strong>{% if c.owner %}{{c.owner.name}}{% endif %}</strong>
-								</div>
-								<div class="campaign-title"><a href="{{c.get_absolute_url}}">{{c.title}}</a></div>
-								{% include "itfsite/canpaign-summary.html" with campaign=c %}
-								<div class="campaign-take-action">
-									<a href="{{c.get_absolute_url}}">Take Action &raquo;</a>
-								</div>
-
-								{% if c.owner.profile_image.name %}
-								<div style="margin: 1em auto 0 auto; border: 1px solid #555; background-image: url({{c.owner.profile_image.url}}?size=tb);" class="organization-profile-pic"></div>
-								{% endif %}
-							</div>
+							{% include "itfsite/campaign-bubble.html" %}
 						</div>
 					{% endfor %}
 				</div>
