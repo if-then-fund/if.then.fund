@@ -117,7 +117,7 @@ a, a:hover, a:link, a:visited, a:active {
 	}
 
 	.navbar a {
-		border: none;
+		border: none !important;
 		text-decoration: none;
 		color: #E7E7E7;
 		font-size: 14px;
@@ -137,13 +137,6 @@ a, a:hover, a:link, a:visited, a:active {
 		background-color: inherit;
 	}
 
-@media screen and (min-width: 768px) {
-	#body-content {
-		border-left: 1px solid #EEE;
-		border-right: 1px solid #EEE;
-	}
-}
-
 #footer-social {
 	padding: 0;
 	list-style: none;
@@ -151,10 +144,8 @@ a, a:hover, a:link, a:visited, a:active {
 }
 	#footer-social a {
 		border: none;
-		color: #3c5e3c;
 	}
 		#footer-social a:hover {
-			color: #3c5e3c;
 		}
 
 #not-production {

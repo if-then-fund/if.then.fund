@@ -17,6 +17,20 @@
 		}
 	}
 
+@media screen and (min-width: 768px) {
+	#body-content {
+		border-left: 1px solid #EEE;
+		border-right: 1px solid #EEE;
+	}
+}
+
+#footer-social a {
+	color: #3c5e3c;
+}
+	#footer-social a:hover {
+		color: #3c5e3c;
+	}
+
 /* this is repeated in main.css so we can display the
  * main brand on other branded sites */
 @media screen {
