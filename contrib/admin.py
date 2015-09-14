@@ -26,6 +26,11 @@ class TriggerAdmin(admin.ModelAdmin):
     readonly_fields = ['pledge_count', 'total_pledged']
     search_fields = ['id', 'title', 'description']
 
+    actions = ['clone_for_announced_positions_on_this']
+    def clone_for_announced_positions_on_this(modeladmin, request, queryset):
+        for t in queryset.filter():
+            t.clone_as_announced_positions_on()
+
     def get_urls(self):
         from django.conf.urls import patterns
         urls = super(TriggerAdmin, self).get_urls()

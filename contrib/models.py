@@ -171,6 +171,33 @@ class Trigger(models.Model):
 			p.status = PledgeStatus.Vacated
 			p.save()
 
+	def clone_as_announced_positions_on(self):
+		t = Trigger()
+		t.key = self.key + ":announced"
+		t.title = "Announced Positions on " + self.title
+		t.owner = self.owner
+		t.trigger_type = TriggerType.objects.get_or_create(
+			key = "announced--positions",
+			defaults = {
+				"strings": {
+					"actor": 'member of Congress',
+					"actors": 'members of Congress',
+					"action_vb_inf": "announce they would vote",
+					"action_vb_pres_s": "announces they would vote",
+					"action_vb_past": "announced they would vote",
+			}})[0]
+		t.slug = self.slug + "-announced"
+		t.subhead = "n/a"
+		t.subhead_format = TextFormat.HTML
+		t.description = "n/a"
+		t.description_format = TextFormat.HTML
+		t.execution_note = "n/a"
+		t.execution_note_format = TextFormat.HTML
+		t.outcomes = self.outcomes
+		t.extra = self.extra
+		t.save()
+		return t
+
 class TriggerStatusUpdate(models.Model):
 	"""A status update about the Trigger providing further information to users looking at the Trigger that was not known when the Trigger was created."""
 
