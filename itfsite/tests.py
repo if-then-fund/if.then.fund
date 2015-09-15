@@ -57,7 +57,7 @@ class SeleniumTest(StaticLiveServerTestCase):
 		from urllib.parse import urljoin
 		return urljoin(self.live_server_url, path)
 
-	def follow_email_confirmation_link(self):
+	def follow_email_confirmation_link(self, test_string, already_has_account=False):
 		# Get the email confirmation URL that we need to hit to confirm the user.
 		msg = pop_email().body
 		m = re.search(r"(http:\S*/ev/key/\S*/)", msg, re.S)
@@ -69,7 +69,13 @@ class SeleniumTest(StaticLiveServerTestCase):
 
 		# Now we're at the "give a password" page.
 		# It starts with a message that the pledge is confirmed.
+		self.assertIn(test_string, self.browser.find_element_by_css_selector("#global_modal .modal-body").text)
 		self.browser.find_element_by_css_selector("#global_modal .btn-default").click()
+
+		# When the user already has an account, we're on an unspecified page
+		# after seeing the message.
+		if already_has_account: return None
+
 		pw = '12345'
 		self.browser.find_element_by_css_selector("#inputPassword").send_keys(pw)
 		self.browser.find_element_by_css_selector("#inputPassword2").send_keys(pw)
@@ -147,6 +153,7 @@ class ContribTest(SeleniumTest):
 			with_utm_campaign=False,
 			break_after_email=False, return_from_incomplete_pledge=None,
 			break_before_confirmation=False,
+			use_email=None,
 			):
 
 		# what trigger is this associated with?
@@ -180,15 +187,22 @@ class ContribTest(SeleniumTest):
 		self.browser.find_element_by_css_selector("#contribution-start-next").click()
 
 		# Enter email address.
-		email = "unittest+%d@if.then.fund" % (random.randint(10000, 99999))
+		if not use_email:
+			email = "unittest+%d@if.then.fund" % (random.randint(10000, 99999))
+		else:
+			email = use_email
 		self.browser.execute_script("$('#emailEmail').val('%s').blur()" % email)
 		time.sleep(.5)
 
 		# Did we record it?
+		from itfsite.models import User
 		from contrib.models import IncompletePledge
 		ip = IncompletePledge.objects.filter(email=email, trigger=trigger)
-		self.assertEqual(ip.count(), 1) # email/trigger is a unique pair
-		if not return_from_incomplete_pledge:
+		if User.objects.filter(email=email).exists():
+			self.assertEqual(ip.count(), 0) # we never create an IncompletePledge if email already exists as user
+		else:
+			self.assertEqual(ip.count(), 1) # email/trigger is a unique pair
+		if not return_from_incomplete_pledge and len(ip) > 0:
 			# Don't check the IncompletePledge details when returning from an
 			# IncompletePledge  because the object will hold the information
 			# from the original request  that generated the IncompletePledge.
@@ -232,7 +246,7 @@ class ContribTest(SeleniumTest):
 		if break_before_confirmation:
 			return
 
-		pw = self.follow_email_confirmation_link()
+		pw = self.follow_email_confirmation_link("has been confirmed")
 
 		# We're back at the Trigger page, and after the user data is loaded
 		# the user sees an explanation of the pledge.
@@ -424,8 +438,16 @@ class ContribTest(SeleniumTest):
 		self._test_pledge_returning_user(c2, email, pw)
 
 		# Log out and make a second pledge on the same trigger by doing it again.
+		# It will say the user already made a pledge.
 		self.browser.get(self.build_test_url("/accounts/logout"))
 		self._test_pledge_returning_user_logs_in_already_has_pledge(c2, email, pw)
+
+		# Do the same, but anonymously so that the clash is only detected after
+		# the user confirms their address. Since the user already has an account,
+		# we have to end follow_email_confirmation_link early.
+		self.browser.get(self.build_test_url("/accounts/logout"))
+		self._test_pledge_simple(c1, use_email=email, break_before_confirmation=True)
+		self.follow_email_confirmation_link("You had a previous contribution already scheduled", already_has_account=True)
 
 	def test_returning_without_confirmation_and_utm_campaign(self):
 		from contrib.models import ContributorInfo
@@ -615,7 +637,7 @@ class LettersTest(SeleniumTest):
 			if not is_logged_in and not (with_existing_email and with_new_surname):
 				# Letter is written. Follow email confirmation. There is no email
 				# confirmation if we did a VoterVoice email confirmation.
-				pw = self.follow_email_confirmation_link()
+				pw = self.follow_email_confirmation_link("will be sent")
 
 			# Head back to/reload campaign page and test that the user's letter appears.
 			self.browser.get(self.build_test_url(url))
