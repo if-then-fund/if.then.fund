@@ -362,10 +362,8 @@ class ContribTest(SeleniumTest):
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
 			"You have scheduled a campaign contribution of $5.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote against H.R. 30, but if they vote in favor of H.R. 30 their part of your contribution will go to their next general election opponent.")
 
-		# Log out and try again --- this time it should report that a pledge has already been made.
-
+	def _test_pledge_returning_user_logs_in_already_has_pledge(self, campaign, email, pw):
 		# Re-start pledge.
-		self.browser.get(self.build_test_url("/accounts/logout"))
 		self.browser.get(self.build_test_url(campaign.get_absolute_url()))
 		self.browser.execute_script("$('#pledge-outcomes > button[data-index=1]').click()")
 		self.browser.find_element_by_css_selector("#contribution-start-next").click() # Use default pledge amount.
@@ -415,12 +413,19 @@ class ContribTest(SeleniumTest):
 		self._test_trigger_execution(t1, 1, Decimal('12'), "https://www.govtrack.us/congress/votes/114-2015/h14")
 		self._test_pledge_simple_execution(c1)
 
-		# Log out and try again with pre-filling fields during the login step.
-		# This also does it yet another time testing that the user can't make
-		# a second pledge on the same trigger.
+	def test_returninguser(self):
+		# Create a pledge so the user has an account.
+		t1, c1 = self.create_test_campaign("s1-114", "h")
+		email, pw = self._test_pledge_simple(c1)
+
+		# Log out and try to make a new pledge by logging in,
 		self.browser.get(self.build_test_url("/accounts/logout"))
-		t4, c4 = self.create_test_campaign("hr30-114", "s")
-		self._test_pledge_returning_user(c4, email, pw)
+		t2, c2 = self.create_test_campaign("hr30-114", "s")
+		self._test_pledge_returning_user(c2, email, pw)
+
+		# Log out and make a second pledge on the same trigger by doing it again.
+		self.browser.get(self.build_test_url("/accounts/logout"))
+		self._test_pledge_returning_user_logs_in_already_has_pledge(c2, email, pw)
 
 	def test_returning_without_confirmation_and_utm_campaign(self):
 		from contrib.models import ContributorInfo
