@@ -449,6 +449,12 @@ class ContribTest(SeleniumTest):
 		self._test_pledge_simple(c1, use_email=email, break_before_confirmation=True)
 		self.follow_email_confirmation_link("You had a previous contribution already scheduled", already_has_account=True)
 
+		# We have to delete the latest Pledge, otherwise we keep trying to get
+		# the user to confirm it, even though the user has already clicked the
+		# confirmation link.
+		from contrib.models import Pledge
+		self.assertFalse(Pledge.objects.filter(trigger=t1, user=None).exists())
+
 	def test_returning_without_confirmation_and_utm_campaign(self):
 		from contrib.models import ContributorInfo
 

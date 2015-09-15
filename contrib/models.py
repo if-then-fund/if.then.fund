@@ -829,6 +829,7 @@ class Pledge(models.Model):
 
 		if self.trigger.pledges.filter(user=user).exists():
 			messages.add_message(request, messages.ERROR, 'You had a previous contribution already scheduled for the same thing. Your more recent contribution will be ignored.')
+			self.delete() # else we will try to confirm the email address indefinitely, but the AnonymousUser for this is already confirmed, so it would be an error
 			return
 
 		# Move this anonymous pledge to the user's account.

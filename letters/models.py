@@ -183,6 +183,7 @@ class UserLetter(models.Model):
 		from django.contrib import messages
 		if self.letterscampaign.letters.filter(user=user).exists():
 			messages.add_message(request, messages.ERROR, 'You already wrote a letter on this subject.')
+			self.delete() # else we will try to confirm the email address indefinitely, but the AnonymousUser for this is already confirmed, so it would be an error
 			return
 
 		# Move this anonymous action to the user's account.
