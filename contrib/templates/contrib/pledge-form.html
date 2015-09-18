@@ -139,7 +139,7 @@
                   <input id="filterIncumbents" type="checkbox" onchange="contribution_start_validation()"
                     {% if tcust.incumb_challgr != -1 %}checked{% endif %}
                     {% if tcust.incumb_challgr %}disabled class="hidden"{% endif %}>
-                  If a {{trigger.trigger_type.strings.actor}} {{trigger.trigger_type.strings.action_vb_pres_s}} <span class="fill-in"> </span>, then fund their reelection campaign.
+                  If a {{trigger.trigger_type.strings.actor}} {{trigger.verb}} <span class="fill-in"> </span>, then fund their reelection campaign.
                 </label>
               </div>
               {% endif %}
@@ -151,7 +151,7 @@
                   <input id="filterChallengers" type="checkbox" onchange="contribution_start_validation()"
                     {% if tcust.incumb_challgr != 1 %}checked{% endif %}
                     {% if tcust.incumb_challgr %}disabled class="hidden"{% endif %}>
-                  If a {{trigger.trigger_type.strings.actor}} {{trigger.trigger_type.strings.action_vb_pres_s}} <span class="fill-in"> </span>, then fund their opponent&rsquo;s campaign.
+                  If a {{trigger.trigger_type.strings.actor}} {{trigger.verb}} <span class="fill-in"> </span>, then fund their opponent&rsquo;s campaign.
                 </label>
               </div>
               {% endif %}
