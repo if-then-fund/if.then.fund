@@ -6,12 +6,15 @@ def load_brandings():
 	settings.BRANDS = { }
 	settings.BRAND_CHOICES = []
 	settings.BRANDS_FROM_INDEX = { }
+	settings.BRAND_DOMAIN_MAP = { }
 	for brand in glob.glob("branding/*"):
 		brandid = os.path.basename(brand)
 		data = json.load(open(os.path.join(brand, 'settings.json')))
 		settings.BRANDS[brandid] = data
 		settings.BRAND_CHOICES.append((data['index'], brandid))
 		settings.BRANDS_FROM_INDEX[data['index']] = brandid
+		settings.BRAND_DOMAIN_MAP[brandid] = brandid
+		for domain in data.get("alt-domains", []): settings.BRAND_DOMAIN_MAP[domain] = brandid
 	settings.BRAND_CHOICES.sort()
 
 def get_branding(request_or_brandid):
@@ -21,9 +24,12 @@ def get_branding(request_or_brandid):
 		brandid = settings.BRANDS_FROM_INDEX[request_or_brandid]
 	else:
 		# Choose brand ID from the request hostname.
-		brandid = request_or_brandid.get_host().split(":")[0]
-		if brandid in ("127.0.0.1", "localhost", "demo.if.then.fund"): brandid = settings.DEFAULT_BRAND
-		if brandid not in settings.BRANDS:
+		host = request_or_brandid.get_host().split(":")[0]
+		if host in settings.BRAND_DOMAIN_MAP:
+			brandid = settings.BRAND_DOMAIN_MAP[host]
+		elif host in ("127.0.0.1", "localhost", "demo.if.then.fund"):
+			brandid = settings.DEFAULT_BRAND
+		else:
 			raise DisallowedHost(brandid)
 
 	# Return a template context dictionary based on the branding settings.
