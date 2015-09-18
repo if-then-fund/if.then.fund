@@ -272,8 +272,12 @@ form span.required:after {
 			<hr>
 
 			<small>
-			<p>This page was added to <span class="site-brand">{{SITE_NAME}}</span> {% if campaign.owner %}by <a href="{{campaign.owner.get_absolute_url}}">{{campaign.owner.name}}</a>{% endif %} on {{campaign.created|date}}.</p>
-			{% if trigger.execution %}<p>The {{trigger.trigger_type.strings.action_noun}} occurred on {{trigger.execution.action_time|date}}. Contributions began to be processed on {{trigger.execution.created|date}}.</p>{% endif %}
+			<p>This page was added {% if campaign.owner %}by <a href="{{campaign.owner.get_absolute_url}}">{{campaign.owner.name}}</a>{% endif %} on {{campaign.created|date}}.</p>
+			{% if trigger.execution %}
+				<p>The {{trigger.trigger_type.strings.action_noun}} occurred on {{trigger.execution.action_time|date}}.
+				{% if trigger.execution.pledge_count_with_contribs %}Contributions began to be processed on {{trigger.execution.created|date}}.{% endif %}
+				</p>
+			{% endif %}
 			</small>
 		</div>
 	</div>
