@@ -1,0 +1,16 @@
+{% extends "admin/change_form.html" %}
+
+{% block after_related_objects %}
+<script>
+var x = "{{original.body_toggles_on.outcome_strings.0.label|escapejs}}";
+var y = "{{original.body_toggles_on.outcome_strings.1.label|escapejs}}";
+if (x) {
+    django.jQuery('label[for="id_message_subject0"]').text("Message Subject - " + x)
+    django.jQuery('label[for="id_message_body0"]').text("Message Body - " + x)
+}
+if (y) {
+    django.jQuery('label[for="id_message_subject1"]').text("Message Subject - " + y)
+    django.jQuery('label[for="id_message_body1"]').text("Message Body - " + y)
+}
+</script>
+{% endblock %}

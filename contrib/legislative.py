@@ -7,11 +7,20 @@ class TriggerAlreadyExistsException(Exception):
 	pass
 
 def create_trigger_from_bill(bill_id, chamber):
-	# split/validate the bill ID
 	import re
-	m = re.match("^([a-z]+)(\d+)-(\d+)$", bill_id)
-	if not m: raise ValueError("'%s' is not a bill ID, e.g. hr1234-114." % bill_id)
-	bill_type, bill_number, bill_congress = m.groups()
+
+	if bill_id.startswith("https://"):
+		# This is a GovTrack URL to a bill page.
+		m = re.match("https://www.govtrack.us/congress/bills/(\d+)/([a-z]+)(\d+)$", bill_id)
+		if not m: raise ValueError("Invalid bill URL.")
+		bill_congress, bill_type, bill_number = m.groups()
+		bill_id = "%s%d-%d" % (bill_type, int(bill_number), int(bill_congress))
+	else:
+		# split/validate the bill ID
+		m = re.match("^([a-z]+)(\d+)-(\d+)$", bill_id)
+		if not m: raise ValueError("'%s' is not a bill ID, e.g. hr1234-114." % bill_id)
+		bill_type, bill_number, bill_congress = m.groups()
+
 	bill_type = { "hres": "house_resolution", "s": "senate_bill", "sjres": "senate_joint_resolution", "hr": "house_bill", "hconres": "house_concurrent_resolution", "sconres": "senate_concurrent_resolution", "hjres": "house_joint_resolution", "sres": "senate_resolution" }.get(bill_type)
 	if not bill_type: raise ValueError("Not a bill ID, e.g. hr1234-114.")
 

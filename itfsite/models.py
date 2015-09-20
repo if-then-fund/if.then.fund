@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
@@ -123,6 +123,12 @@ class Campaign(models.Model):
 	def get_active_letters_campaign(self):
 		from letters.models import CampaignStatus as LettersCampaignStatus
 		return self.letters.filter(status=LettersCampaignStatus.Open).order_by('-created').first()
+
+	def contrib_triggers_with_tcust(self):
+		return [
+			(t, t.customizations.filter(owner=self.owner).first())
+			for t in self.contrib_triggers.all()
+		]
 
 	def get_contrib_totals(self):
 		# Get all of the displayable totals for this campaign.

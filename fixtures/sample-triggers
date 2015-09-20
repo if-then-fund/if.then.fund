@@ -54,7 +54,7 @@ for trigger in Trigger.objects.all():
 		owner=org2,
 		trigger=trigger,
 		defaults={
-			outcome=random.randint(0, 1),
+			"outcome": random.randint(0, 1),
 		})
 
 # Create a campaign for each.
@@ -63,6 +63,7 @@ for trigger in Trigger.objects.all():
 		campaign = Campaign.objects.filter(owner=owner, contrib_triggers=trigger).first()
 		if not campaign:
 			campaign = Campaign.objects.create(
+				brand=1,
 				title=trigger.title,
 				slug=trigger.slug,
 				subhead=trigger.subhead,

@@ -102,7 +102,7 @@ class TriggerAdmin(admin.ModelAdmin):
         trigger = get_object_or_404(Trigger, id=trigger_id)
 
         # Validity checks.
-        if trigger.status == TriggerStatus.Open:
+        if trigger.status in (TriggerStatus.Open, TriggerStatus.Draft):
             if trigger.pledge_count > 0:
                 return render(request, "contrib/admin/edit-actions.html", {
                     "trigger": trigger,

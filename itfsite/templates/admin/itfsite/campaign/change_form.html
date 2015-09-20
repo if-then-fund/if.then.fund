@@ -1,0 +1,39 @@
+{% extends "admin/change_form.html" %}
+
+{% block after_related_objects %}
+
+<style>
+#campaign-extra-info h4 { margin: 1.5em 0 .75em 0 !important; }
+</style>
+
+<fieldset id="campaign-extra-info" class="module">
+<div class="form-row field-extra">
+
+{% for trigger, tcust in original.contrib_triggers_with_tcust %}
+    {% if forloop.first %}<h4>Contribution Triggers</h4>{% endif %}
+    <div>
+        <p><a href="/admin/contrib/trigger/{{trigger.id}}" target="_blank">{{trigger.title}}</a></p>
+        {% if tcust %}
+            <p>&mdash; <a href="/admin/contrib/triggercustomization/{{tcust.id}}" target="_blank">customization by {{original.owner}}</a></p>
+        {% endif %}
+        {% if trigger.execution %}
+            <p>&mdash; <a href="/admin/contrib/triggerexecution/{{trigger.execution.id}}" target="_blank">executed on {{trigger.execution.created}}</a></p>
+        {% endif %}
+    </div>
+{% endfor %}
+
+{% for letters in original.letters.all %}
+    {% if forloop.first %}<h4>Letters Campaigns</h4>{% endif %}
+    <div>
+        <p><a href="/admin/letters/letterscampaign/{{letters.id}}" target="_blank">{{letters.title}}</a></p>
+        {% if letters.body_toggles_on %}
+            <p>&mdash; <a href="/admin/contrib/trigger/{{letters.body_toggles_on.id}}" target="_blank">{{letters.body_toggles_on.title}}</a></p>
+            <p>&mdash; <a href="/admin/contrib/trigger/{{letters.body_toggles_on.id}}/edit-actions" target="_blank">edit</a></p>
+        {% endif %}
+    </div>
+{% endfor %}
+
+</div>
+</fieldset>
+
+{% endblock %}

@@ -177,7 +177,7 @@ class Trigger(models.Model):
 		t.title = "Announced Positions on " + self.title
 		t.owner = self.owner
 		t.trigger_type = TriggerType.objects.get_or_create(
-			key = "announced--positions",
+			key = "announced-positions",
 			defaults = {
 				"strings": {
 					"actor": 'member of Congress',
