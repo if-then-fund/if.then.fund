@@ -139,10 +139,12 @@ class Command(BaseCommand):
 			if actor.challenger:
 				self.update_recipient_active(actor.challenger, de_recips)
 
-		# Mark all other actors, i.e. ones not in legislators-current, as not-current.
+		# Mark all other actors, i.e. ones not in legislators-current, as not-current
+		# by un-setting the 'office' and 'challenger' attributes.
 		for actor in Actor.objects.exclude(id__in=seen_actors).exclude(office=None):
 			self.stdout.write('%s now marked as out of office.' % actor.name_long)
 			actor.office = None
+			actor.challenger = None
 			actor.save()
 
 	def update_recipient_active(self, recipient, de_recips):
