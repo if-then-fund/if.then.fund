@@ -1543,11 +1543,12 @@ class ContributionAggregate(models.Model):
 		for rec in ret:
 			if 'actor' in rec:
 				rec['actor'] = actors[rec['actor']]
-				rec['action'] = actions[rec['actor'].id]
+				if slce.get('trigger_execution'):
+					rec['action'] = actions[rec['actor'].id]
 
 			if 'party' in rec:
 				rec['party'] = ActorParty(rec['party'])
-			if 'outcome' in rec and 'trigger_execution' in slce:
+			if 'outcome' in rec and slce.get('trigger_execution'):
 				rec['label'] = outcome_strings[rec['outcome']]['label']
 		
 		return ret

@@ -40,6 +40,7 @@ def currency(value):
 	# control over whether to show cents.
 
 	# value might be a Decimal instance.
+	if value == "": return "N/A"
 	value = float(value)
 
 	if value < 100:

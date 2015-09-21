@@ -428,14 +428,8 @@ def render_pledge_template(request, pledge, campaign, show_long_title=False):
 
 @anonymous_view
 def report(request):
-	if "trigger" in request.GET:
-		trigger = get_object_or_404(Trigger, id=request.GET['trigger'])
-	else:
-		trigger = None
-
-	context = {
-	}
-	context.update(report_fetch_data(trigger))
+	context = { }
+	context.update(report_fetch_data(None, None))
 	return render(request, "contrib/totals.html", context)
 
 def report_fetch_data(trigger, via_campaign, with_actor_details=True):
@@ -477,8 +471,9 @@ def report_fetch_data(trigger, via_campaign, with_actor_details=True):
 	pledge_executions = PledgeExecution.objects.filter(problem=PledgeExecutionProblem.NoProblem, **pledgeexec_slice_fields)
 	ret["users"] = pledge_executions.values("pledge__user").distinct().count()
 	ret["num_triggers"] = pledge_executions.values("trigger_execution").distinct().count()
-	ret["first_contrib_date"] = pledge_executions.order_by('created').first().created
-	ret["last_contrib_date"] = pledge_executions.order_by('created').last().created
+	if ret["num_triggers"] > 0:
+		ret["first_contrib_date"] = pledge_executions.order_by('created').first().created
+		ret["last_contrib_date"] = pledge_executions.order_by('created').last().created
 
 	# aggregate count and amount of campaign contributions
 	ret["total"] = ContributionAggregate.get_slice(**ca_slice_fields)
