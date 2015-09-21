@@ -205,7 +205,7 @@ form span.required:after {
 					{{body_text}}
 				{% else %}
 					{{body_text_truncated}}
-					<a href="#" onclick="return show_modal_confirm('About', $('#story-full>div'), [null, 'Close'])">Read More</a>
+					<a href="#" onclick="return show_modal_confirm('About', $('#story-full>div').clone(), [null, 'Close'])">Read More</a>
 					<div id="story-full" class="hidden">
 						<div>
 							{{body_text}}
