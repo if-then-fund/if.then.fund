@@ -61,7 +61,7 @@ class Organization(models.Model):
 	facebook_url = models.URLField(max_length=256, blank=True, null=True, help_text="The URL to this organization's Facebook Page.")
 	twitter_handle = models.CharField(max_length=64, blank=True, null=True, help_text="The organization's Twitter handle (omit the @-sign).")
 
-	de_recip_id = models.CharField(max_length=64, blank=True, null=True, unique=True, help_text="The recipient ID on Democracy Engine for taking tips.")
+	de_recip_id = models.CharField(max_length=64, blank=True, null=True, help_text="The recipient ID on Democracy Engine for taking tips.")
 
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
@@ -219,11 +219,20 @@ class Campaign(models.Model):
 		if not lc.body_toggles_on: return None
 		te = lc.body_toggles_on.execution # can raise TriggerExecution.DoesNotExist but template eats it
 		actions = te.actions.filter(outcome=0) # actors that have the desired position
-		return {
-			"house": max(0, 218 - actions.filter(office__startswith="H-").count()),
-			"senate": max(0, 60 - actions.filter(office__startswith="S-").count()),
-			"president": 1 - actions.filter(office="P").count(),
+		ret = {
+			"house": min(218, actions.filter(office__startswith="H-").count()),
+			"senate": min(60, actions.filter(office__startswith="S-").count()),
+			"president": actions.filter(office="P").count(), # max 1!
 		}
+		ret.update({
+			"total": ret["house"] + ret["senate"] + ret["president"], # each category must be capped
+
+			"house_needed": 218-ret["house"],
+			"senate_needed": 60-ret["senate"],
+			"president_needed": 1-ret["president"],
+			"total_needed": 279-(ret["house"] + ret["senate"] + ret["president"]) # each category must be capped
+		})
+		return ret
 
 #####################################################################
 #

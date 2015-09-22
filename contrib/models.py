@@ -198,10 +198,16 @@ class Trigger(models.Model):
 		t.extra = self.extra
 		t.save()
 
-		# Execute with no actor information.
-		t.execute(t.created, { }, "Empty.", TextFormat.HTML, { })
+		t.execute_empty()
 
 		return t
+
+	def execute_empty(self):
+		# Execute with no actor information.
+		if self.status == TriggerStatus.Draft:
+			self.status = TriggerStatus.Open # so we can execute it
+			self.save()
+		self.execute(self.created, { }, "Empty.", TextFormat.HTML, { })
 
 class TriggerStatusUpdate(models.Model):
 	"""A status update about the Trigger providing further information to users looking at the Trigger that was not known when the Trigger was created."""
@@ -472,7 +478,7 @@ class Action(models.Model):
 	name_sort = models.CharField(max_length=128, help_text="The sorted list form of the person's name at the time of the action.")
 	party = EnumField(ActorParty, help_text="The party of the Actor at the time of the action.")
 	title = models.CharField(max_length=200, help_text="Descriptive text for the office held by this actor at the time of the action.")
-	office = models.CharField(max_length=7, blank=True, null=True, unique=True, help_text="A code specifying the office held by the Actor at the time the Action was created, in the same format as Recipient.office_sought.")
+	office = models.CharField(max_length=7, blank=True, null=True, help_text="A code specifying the office held by the Actor at the time the Action was created, in the same format as Recipient.office_sought.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
 	challenger = models.ForeignKey('Recipient', null=True, blank=True, help_text="The Recipient that contributions to this Actor's challenger go to, at the time of the Action. Independents don't have challengers because they have no opposing party.")

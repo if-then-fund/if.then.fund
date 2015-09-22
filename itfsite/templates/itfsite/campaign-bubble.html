@@ -3,39 +3,29 @@
 		<a href="{{c.get_absolute_url}}">
 			<div class="campaign-splash organization-banner" style="background-image: url('{% if c.splash_image.name %}{{c.splash_image.url}}{% else %}{{c.owner.banner_image.url}}{% endif %}?size=tb');">
 				<div class="wrapper">
-					{% if c.owner.profile_image.name %}
-						<div style="float: right; margin-left: 1em; border: 1px solid #555; background-image: url({{c.owner.profile_image.url}}?size=tb); width: 75px; height: 75px; background-size: cover; background-position: 50% 50%;"></div>
-					{% endif %}
+					<div class="campaign-title">{{c.title}}</div>
 					{% if c.owner %}
 						<div class="campaign-owner">{{c.owner.name}}</div>
 					{% endif %}
-					<div class="campaign-title">{{c.title}}</div>
 				</div>
 			</div>
 		</a>
 	{% else %}
 		<div class="wrapper">
 			<div class="campaign-title"><a href="{{c.get_absolute_url}}">{{c.title}}</a></div>
+			{% if c.owner %}
+				<div class="campaign-owner">{{c.owner.name}}</div>
+			{% endif %}
 		</div>
 	{% endif %}
 
 	<div class="wrapper">
+		{% if c.owner.profile_image.name %}
+			<div style="float: left; margin-right: 10px; margin-bottom: 10px; border: 1px solid #555; background-image: url({{c.owner.profile_image.url}}?size=tb); width: 75px; height: 75px; background-size: cover; background-position: 50% 50%;"></div>
+		{% endif %}
+
 		{% include "itfsite/campaign-summary.html" with campaign=c %}
 
-		{% if c.get_active_letters_campaign and c.get_active_letters_campaign.body_toggles_on %}
-			{% with x=c.get_active_letters_campaign.announced_position_breakdown %}
-				{% if x %}
-					<div style="margin-top: 4px; border-top: 1px solid #999; padding-top: 4px;">
-					<table style="font-size: 90%;">
-					{% for outcome in x %}
-						<tr><td style="padding-right: 1.5em">{{outcome.count}} Legislator{{outcome.count|pluralize}}</td> <td>{{outcome.label}}</td></tr>
-					{% endfor %}
-					</table>
-					</div>
-				{% endif %}
-			{% endwith %}
-		{% endif %}
-				
 		<div class="campaign-take-action">
 			<a href="{{c.get_absolute_url}}">Take Action &raquo;</a>
 		</div>

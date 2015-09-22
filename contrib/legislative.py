@@ -98,9 +98,7 @@ def create_trigger_from_bill(bill_id, chamber):
 	t.save()
 	return t
 
-def load_govtrack_vote(trigger, govtrack_url, flip):
-	import requests, lxml.etree
-
+def map_outcome_indexes(trigger, flip):
 	# Map vote keys '+' and '-' to outcome indexes.
 	outcome_index = { }
 	for i, outcome in enumerate(trigger.outcomes):
@@ -114,6 +112,13 @@ def load_govtrack_vote(trigger, govtrack_url, flip):
 			k = { "+": "-", "-": "+" }[k]
 
 		outcome_index[k] = i
+
+	return outcome_index
+
+def load_govtrack_vote(trigger, govtrack_url, flip):
+	import requests, lxml.etree
+
+	outcome_index = map_outcome_indexes(trigger, flip)
 
 	# Get vote metadata from GovTrack's API, via the undocumented
 	# '.json' extension added to vote pages.
@@ -200,6 +205,30 @@ def execute_trigger_from_vote(trigger, govtrack_url, flip=False):
 			"govtrack_url": govtrack_url,
 			"govtrack_vote": vote,
 		})
+
+def load_govtrack_sponsors(trigger, govtrack_url, flip=False):
+	import requests, lxml.etree
+
+	outcome_index = map_outcome_indexes(trigger, flip)
+
+	# Get bill metadata from GovTrack's API, via the undocumented
+	# '.json' extension added to bill pages.
+	bill = requests.get(govtrack_url+'.json').json()
+
+	actor_outcomes = { }
+	for person in [bill.get('sponsor')] + bill.get('cosponsors', []):
+		if person is None: continue # empty sponsor
+		try:
+			actor = Actor.objects.get(govtrack_id=person.get('id'))
+		except Actor.DoesNotExist:
+			# See corresponding block for votes.
+			raise Exception("No Actor instance exists here for Member of Congress with GovTrack ID %d." % int(person.get('id')))
+
+		# Sponsors and cosponsors are all "pro".
+		outcome = outcome_index.get("+")
+		actor_outcomes[actor] = outcome
+
+	return (bill, actor_outcomes)
 
 def geocode(address):
 	# Geocodes an address using the CDYNE Postal Address Verification API.

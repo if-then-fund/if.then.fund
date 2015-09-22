@@ -104,6 +104,9 @@
 		color: #FFA;
 		border-color: #FFA;
 	}
+	#story hr {
+		border-color: #DBB;
+	}
 
 	#story dl {
 		margin-top: -.5em;
@@ -138,7 +141,7 @@ form span.required:after {
 	}
 
 #action-pane {
-	background-color: #EEB;
+	background-color: #F4F4C5;
 	padding: 3em 0;
 	color: #110;
 }
@@ -189,10 +192,10 @@ form span.required:after {
 		<h1>{{campaign.headline}}</h1>
 
 		<div class="subhead">
-			{{campaign.subhead|render_text:campaign.subhead_format}}
-
 			{% if BRAND_ID == "279project.xyz" %}
-			{% include "itfsite/campaign-subhead.html" %}
+				{% include "itfsite/campaign-subhead-"|add:BRAND_ID|cut:"."|add:".html" %}
+			{% else %}
+				{{campaign.subhead|render_text:campaign.subhead_format}}
 			{% endif %}
 		</div>
 	</div>
@@ -218,20 +221,6 @@ form span.required:after {
 				{% endif %}
 			{% endwith %}
 			{% endwith %}
-
-			{% if letters_campaign and letters_campaign.body_toggles_on %}
-				{% with x=letters_campaign.announced_position_breakdown %}
-					{% if x %}
-						<hr>
-						<div style="font-size: 130%; line-height: 135%;">
-							We need 279 legislators to get this issue fixed.
-							{% for outcome in x %}
-								{{outcome.count}} legislator{{outcome.count|pluralize}} {% if outcome.count > 1 %}have{% else %}has{% endif %} announced that they {% if outcome.object %}{{outcome.object}}{% else %}support {{outcome.label}}{% endif %}.
-							{% endfor %}
-						</div>
-					{% endif %}
-				{% endwith %}
-			{% endif %}
 		</div>
 		<div class="col-sm-4">
 			{% with totals=campaign.get_contrib_totals %}

@@ -26,10 +26,13 @@ class TriggerAdmin(admin.ModelAdmin):
     readonly_fields = ['pledge_count', 'total_pledged']
     search_fields = ['id', 'title', 'description']
 
-    actions = ['clone_for_announced_positions_on_this']
+    actions = ['clone_for_announced_positions_on_this', 'execute_empty']
     def clone_for_announced_positions_on_this(modeladmin, request, queryset):
         for t in queryset.filter():
             t.clone_as_announced_positions_on()
+    def execute_empty(modeladmin, request, queryset):
+        for t in queryset.filter():
+            t.execute_empty()
 
     def get_urls(self):
         from django.conf.urls import patterns
@@ -102,12 +105,11 @@ class TriggerAdmin(admin.ModelAdmin):
         trigger = get_object_or_404(Trigger, id=trigger_id)
 
         # Validity checks.
-        if trigger.status in (TriggerStatus.Open, TriggerStatus.Draft):
-            if trigger.pledge_count > 0:
-                return render(request, "contrib/admin/edit-actions.html", {
-                    "trigger": trigger,
-                    "error": "Can't edit this trigger. There are pledges on it."
-                })
+        if trigger.pledge_count > 0:
+            return render(request, "contrib/admin/edit-actions.html", {
+                "trigger": trigger,
+                "error": "Can't edit this trigger. There are pledges on it."
+            })
         elif trigger.status != TriggerStatus.Executed:
             return render(request, "contrib/admin/edit-actions.html", {
                 "trigger": trigger,
@@ -116,19 +118,17 @@ class TriggerAdmin(admin.ModelAdmin):
 
         if request.method == "POST":
             with transaction.atomic():
-                # Execute if this trigger is not yet executed.
-                if trigger.status == TriggerStatus.Open:
-                    from django.utils import timezone
-                    trigger.execute(timezone.now(), {}, "n/a", TextFormat.Markdown, {})
-               
                 # Update positions.
                 actor_outcomes = { }
                 for k, v in request.POST.items():
                     if k == "from-vote-url":
                         # Load the vote from GovTrack.
                         try:
-                            from .legislative import load_govtrack_vote
-                            (vote, when, ao) = load_govtrack_vote(trigger, v, flip=request.POST.get('from-vote-flip'))
+                            from .legislative import load_govtrack_vote, load_govtrack_sponsors
+                            if "/votes" in v:
+                                (vote, when, ao) = load_govtrack_vote(trigger, v, flip=request.POST.get('from-vote-flip'))
+                            else:
+                                (bill, ao) = load_govtrack_sponsors(trigger, v, flip=request.POST.get('from-vote-flip'))
                         except Exception as e:
                             return render(request, "contrib/admin/edit-actions.html", {
                                 "trigger": trigger,

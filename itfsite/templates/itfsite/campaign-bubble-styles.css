@@ -2,17 +2,18 @@
 	border-radius: 10px;
 	border: 2px solid rgba(30,30,30,.4);
 	background: white;
-	margin-bottom: 1em;
+	margin-bottom: 30px;
 	overflow: hidden;
 }
 	.organization-banner {
 		border: none;
+		min-height: 120px;
 	}
 	.campaign-bubble .wrapper {
 		padding: 10px;
 	}
 	.campaign-splash div {
-		padding: .5em 0;
+		padding-bottom: .5em;
 	}
 	.campaign-splash .campaign-owner {
 		font-size: 16px;
@@ -28,8 +29,7 @@
 		line-height: 130%;
 	}
 	.campaign-take-action {
-		margin-top: .75em;
-		text-align: right;
+		margin-top: .5em;
 	}
 		.campaign-take-action a {
 			font-weight: bold;
