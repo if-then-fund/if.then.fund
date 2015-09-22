@@ -1,8 +1,11 @@
 {% extends "email_template.html" %}
 
 {% block content %}
-{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
+{% if pledge.is_from_long_ago %}
+<p>On {{pledge.created|date}} you asked us to schedule campaign contributions depending on the outcome of a {{pledge.trigger.trigger_type.strings.action_noun}}. That {{pledge.trigger.trigger_type.strings.action_noun}} occurred, so we have now processed your contributions. Here is what happened:</p>
+{% endif %}
 
+{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}
 <p>Your campaign contributions totalling ${{pledge.execution.charged|floatformat:2}} were made to {{pledge.targets_summary}}.</p>
 
 <p>To see who your contributions were made to, please head over to <a href="{{pledge.via_campaign.get_short_url}}">your contribution</a> for further details.</p>

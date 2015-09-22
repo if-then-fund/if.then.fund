@@ -818,6 +818,9 @@ class Pledge(models.Model):
 				% (party_filter, noun, verb, desired_outcome_label,
 				                 noun, verb, antidesired_outcome_label, ((" if the opponent is in the %sparty" % party_filter) if party_filter else ""))
 
+	@property
+	def is_from_long_ago(self):
+		return timezone.now() - self.created > timedelta(days=21)
 
 	def set_confirmed_user(self, user, request):
 		# The user may have anonymously created a second Pledge for the same
