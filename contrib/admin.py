@@ -122,21 +122,45 @@ class TriggerAdmin(admin.ModelAdmin):
                     trigger.execute(timezone.now(), {}, "n/a", TextFormat.Markdown, {})
                
                 # Update positions.
+                actor_outcomes = { }
                 for k, v in request.POST.items():
-                    if k.startswith("actor_"):
-                        actor = Actor.objects.get(id=k[6:])
-                        axn = Action.objects.filter(execution__trigger=trigger, actor=actor)
-                        if v == "null":
-                            # Delete action if exists.
-                            axn.delete()
-                        elif axn.first() and axn.first().outcome == int(v):
-                            # Exists with correct outcome value.
-                            pass
-                        else:
-                            # Doesn't exist, or exists with wrong outcome value.
-                            axn.delete()
-                            Action.create(trigger.execution, actor, int(v))
+                    if k == "from-vote-url":
+                        # Load the vote from GovTrack.
+                        try:
+                            from .legislative import load_govtrack_vote
+                            (vote, when, ao) = load_govtrack_vote(trigger, v, flip=request.POST.get('from-vote-flip'))
+                        except Exception as e:
+                            return render(request, "contrib/admin/edit-actions.html", {
+                                "trigger": trigger,
+                                "error": str(e),
+                            })
+                        for actor, outcome in ao.items():
+                            if actor.office and isinstance(outcome, int):
+                                # Include only actors known to currently be in office
+                                # and those that had an aye/no vote.
+                                actor_outcomes[actor] = outcome
+                            else:
+                                # Clear out the positions of any actor mentioned in the
+                                # vote that does not have a current office or that voted
+                                # present/not-voting.
+                                actor_outcomes[actor] = "null"
 
+                    elif k.startswith("actor_"):
+                        actor = Actor.objects.get(id=k[6:])
+                        actor_outcomes[actor] = (v if v == "null" else int(v))
+
+                for actor, outcome in actor_outcomes.items():
+                    axn = Action.objects.filter(execution__trigger=trigger, actor=actor)
+                    if outcome == "null":
+                        # Delete action if exists.
+                        axn.delete()
+                    elif axn.first() and axn.first().outcome == outcome:
+                        # Exists with correct outcome value.
+                        pass
+                    else:
+                        # Doesn't exist, or exists with wrong outcome value.
+                        axn.delete()
+                        Action.create(trigger.execution, actor, outcome)
 
         else: # GET
             pass

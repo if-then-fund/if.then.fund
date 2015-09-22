@@ -98,7 +98,7 @@ def create_trigger_from_bill(bill_id, chamber):
 	t.save()
 	return t
 
-def execute_trigger_from_vote(trigger, govtrack_url, flip=False):
+def load_govtrack_vote(trigger, govtrack_url, flip):
 	import requests, lxml.etree
 
 	# Map vote keys '+' and '-' to outcome indexes.
@@ -120,7 +120,7 @@ def execute_trigger_from_vote(trigger, govtrack_url, flip=False):
 	vote = requests.get(govtrack_url+'.json').json()
 
 	# Sanity check that the chamber of the vote matches the trigger type.
-	if trigger.trigger_type.key not in ('congress_floorvote_x', 'congress_floorvote_' + vote['chamber'][0]):
+	if trigger.trigger_type.key not in ('congress_floorvote_x', 'congress_floorvote_' + vote['chamber'][0], 'announced-positions'):
 		raise Exception("The trigger type doesn't match the chamber the vote ocurred in.")
 
 	# Parse the date, which is in US Eastern time. Must make it
@@ -176,6 +176,11 @@ def execute_trigger_from_vote(trigger, govtrack_url, flip=False):
 				raise ValueError("Invalid vote option key: " + str(voter.get('vote')))
 
 		actor_outcomes[actor] = outcome
+
+	return (vote, when, actor_outcomes)
+
+def execute_trigger_from_vote(trigger, govtrack_url, flip=False):
+	(vote, when, actor_outcomes) = load_govtrack_vote(trigger, govtrack_url, flip=flip)
 
 	# Make a textual description of what happened.
 	description = """The {chamber} voted on this on {date}. For more details, see the [vote record on GovTrack.us]({link}).

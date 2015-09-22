@@ -212,6 +212,18 @@ class Campaign(models.Model):
 
 		return ret
 
+	def twoseventyninecounts(self):
+		# How many more ELOs does this issue need to pass?
+		lc = self.get_active_letters_campaign()
+		if not lc: return None
+		if not lc.body_toggles_on: return None
+		te = lc.body_toggles_on.execution # can raise TriggerExecution.DoesNotExist but template eats it
+		actions = te.actions.filter(outcome=0) # actors that have the desired position
+		return {
+			"house": max(0, 218 - actions.filter(office__startswith="H-").count()),
+			"senate": max(0, 60 - actions.filter(office__startswith="S-").count()),
+			"president": 1 - actions.filter(office="P").count(),
+		}
 
 #####################################################################
 #

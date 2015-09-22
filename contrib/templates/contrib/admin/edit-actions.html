@@ -15,11 +15,35 @@
   <p class="text-danger">{{error}}</p>
 {% else %}
   <form method="POST">
+    {% csrf_token %}
+
+    <div style="margin: 1em 0;">
+      <div class="form-group">
+        <label for="from-vote-url">Import from GovTrack Vote URL:</label>
+        <input type="text" class="form-control" id="from-vote-url" name="from-vote-url">
+      </div>
+      <div class="checkbox">
+        <label>
+          <input type="checkbox" id="from-vote-flip" name="from-vote-flip" value="1">
+          Flip Valence
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary">Import</button>
+    </div>
+  </form>
+
+  <hr>
+
+  <form method="POST">
       {% csrf_token %}
+
       <table class="table">
           {% for entry in data %}
+          {% if forloop.first %}
+            <thead><tr><th>Actor</th> <th>Outcome</th></tr></thead>
+          {% endif %}
               <tr>
-                  <td>{{entry.actor.name_long}}</td>
+                  <td>{{entry.actor.name_sort}}</td>
                   <td>
                     <select name="actor_{{entry.actor.id}}">
                       <option value="null">- Not Known -</option>
@@ -30,12 +54,14 @@
                   </td>
               </tr>
           {% endfor %}
+          {% if data|length %}
           <tr>
             <td/>
             <td>
               <button type="submit" class="btn btn-primary">Update</button>
             </td>
           </tr>
+          {% endif %}
       </table>
   </form>
 {% endif %}

@@ -173,6 +173,7 @@ class Trigger(models.Model):
 
 	def clone_as_announced_positions_on(self):
 		t = Trigger()
+		t.status = TriggerStatus.Open # so we can execute it
 		t.key = self.key + ":announced"
 		t.title = "Announced Positions on " + self.title
 		t.owner = self.owner
@@ -196,6 +197,10 @@ class Trigger(models.Model):
 		t.outcomes = self.outcomes
 		t.extra = self.extra
 		t.save()
+
+		# Execute with no actor information.
+		t.execute(t.created, { }, "Empty.", TextFormat.HTML, { })
+
 		return t
 
 class TriggerStatusUpdate(models.Model):
@@ -467,6 +472,7 @@ class Action(models.Model):
 	name_sort = models.CharField(max_length=128, help_text="The sorted list form of the person's name at the time of the action.")
 	party = EnumField(ActorParty, help_text="The party of the Actor at the time of the action.")
 	title = models.CharField(max_length=200, help_text="Descriptive text for the office held by this actor at the time of the action.")
+	office = models.CharField(max_length=7, blank=True, null=True, unique=True, help_text="A code specifying the office held by the Actor at the time the Action was created, in the same format as Recipient.office_sought.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
 	challenger = models.ForeignKey('Recipient', null=True, blank=True, help_text="The Recipient that contributions to this Actor's challenger go to, at the time of the Action. Independents don't have challengers because they have no opposing party.")
@@ -519,7 +525,7 @@ class Action(models.Model):
 
 		# Copy fields that may change on the Actor but that we want to know what they were
 		# at the time this Action ocurred.
-		for f in ('name_long', 'name_short', 'name_sort', 'party', 'title', 'extra', 'challenger'):
+		for f in ('name_long', 'name_short', 'name_sort', 'party', 'title', 'office', 'extra', 'challenger'):
 			setattr(a, f, getattr(actor, f))
 
 		# Save.

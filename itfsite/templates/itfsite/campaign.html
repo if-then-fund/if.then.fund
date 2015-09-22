@@ -190,6 +190,10 @@ form span.required:after {
 
 		<div class="subhead">
 			{{campaign.subhead|render_text:campaign.subhead_format}}
+
+			{% if BRAND_ID == "279project.xyz" %}
+			{% include "itfsite/campaign-subhead.html" %}
+			{% endif %}
 		</div>
 	</div>
   </div>
