@@ -19,7 +19,7 @@
 		</div>
 	{% endif %}
 
-	<div class="wrapper">
+	<div class="wrapper campaign-body">
 		{% if c.owner.profile_image.name %}
 			<div style="float: left; margin-right: 10px; margin-bottom: 10px; border: 1px solid #555; background-image: url({{c.owner.profile_image.url}}?size=tb); width: 75px; height: 75px; background-size: cover; background-position: 50% 50%;"></div>
 		{% endif %}
@@ -30,4 +30,28 @@
 			<a href="{{c.get_absolute_url}}">Take Action &raquo;</a>
 		</div>
 	</div>
+
+	{% if BRAND_ID == "279project.xyz" %}
+		{% with counts=c.twoseventyninecounts %}
+		{% if counts %}
+			<div class="twoseventyninecounts">
+			<p>{{counts.total_needed}} more needed to become law:</p>
+			<div class="row">
+				<div class="col-xs-4">
+		                        <div class="num">{{counts.house_needed}}</div>
+                		        <div class="descr">congresspersons</div>
+				</div>
+				<div class="col-xs-4">
+		                        <div class="num">{{counts.senate_needed}}</div>
+                		        <div class="descr">senators</div>
+				</div>
+				<div class="col-xs-4">
+		                        <div class="num">{{counts.president_needed}}</div>
+                		        <div class="descr">the President</div>
+				</div>
+			</div>
+			</div>
+		{% endif %}
+		{% endwith %}
+	{% endif %}
 </div>

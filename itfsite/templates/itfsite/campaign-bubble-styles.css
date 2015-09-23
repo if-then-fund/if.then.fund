@@ -12,6 +12,9 @@
 	.campaign-bubble .wrapper {
 		padding: 10px;
 	}
+	.campaign-bubble .wrapper.campaign-body {
+		min-height: 120px;
+	}
 	.campaign-splash div {
 		padding-bottom: .5em;
 	}
