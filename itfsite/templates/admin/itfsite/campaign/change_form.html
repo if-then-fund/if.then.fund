@@ -15,6 +15,8 @@
         <p><a href="/admin/contrib/trigger/{{trigger.id}}" target="_blank">{{trigger.title}}</a></p>
         {% if tcust %}
             <p>&mdash; <a href="/admin/contrib/triggercustomization/{{tcust.id}}" target="_blank">customization by {{original.owner}}</a></p>
+	{% elif original.owner %}
+            <p>&mdash; <a href="/admin/contrib/triggercustomization/add?owner={{original.owner.id}}&trigger={{trigger.id}}" target="_blank">create customization for {{original.owner}}</a></p>
         {% endif %}
         {% if trigger.execution %}
             <p>&mdash; <a href="/admin/contrib/triggerexecution/{{trigger.execution.id}}" target="_blank">executed on {{trigger.execution.created}}</a></p>
