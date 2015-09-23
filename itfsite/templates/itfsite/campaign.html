@@ -35,18 +35,18 @@
 <style>
 {% if campaign.splash_image.name %}
 #splash {
-	background-image: url('{{campaign.splash_image.url}}?size=lg');
+	background-image: url('{{campaign.splash_image.url}}?size=lg&blur=1');
 	background-size: cover;
 	background-position: 50% 50%;
 }
 	@media screen and (max-width: 1100px) {
-		#splash { background-image: url('{{campaign.splash_image.url}}?size=md'); }
+		#splash { background-image: url('{{campaign.splash_image.url}}?size=md&blur=1'); }
 	}
 	@media screen and (max-width: 1024px) {
-		#splash { background-image: url('{{campaign.splash_image.url}}?size=sm'); }
+		#splash { background-image: url('{{campaign.splash_image.url}}?size=sm&blur=1&quality=low'); }
 	}
 	@media screen and (max-width: 768px) {
-		#splash { background-image: url('{{campaign.splash_image.url}}?size=xs'); }
+		#splash { background-image: url('{{campaign.splash_image.url}}?size=xs&blur=1&quality=low'); }
 	}
 
 #nav-wrap {
