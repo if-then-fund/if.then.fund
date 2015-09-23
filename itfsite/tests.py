@@ -600,6 +600,7 @@ class LettersTest(SeleniumTest):
 			self.browser.find_element_by_css_selector("#lettersAddrCity").send_keys("Everywhere")
 			self.browser.find_element_by_css_selector("#lettersAddrState").send_keys("NY") # has to be a real state
 			self.browser.find_element_by_css_selector("#lettersAddrZip").send_keys("12345")
+			Select(self.browser.find_element_by_css_selector("#lettersVoterRegistration")).select_by_index(1)
 
 		self.browser.find_element_by_css_selector("#write-letter-find-reps").click()
 

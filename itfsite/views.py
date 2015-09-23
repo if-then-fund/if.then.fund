@@ -210,7 +210,7 @@ def campaign(request, id):
 		tcust = TriggerCustomization.objects.filter(trigger=trigger, owner=campaign.owner).first()
 
 	# Which letter-writing campaign should the user take action on?
-	from letters.models import UserLetter
+	from letters.models import UserLetter, VoterRegistrationStatus
 	from letters.views import state_abbrs
 	letters_campaign = campaign.get_active_letters_campaign()
 
@@ -235,6 +235,7 @@ def campaign(request, id):
 		# for letter writing campaigns
 		"letters_campaign": letters_campaign,
 		"state_abbrs": state_abbrs,
+		"voter_registration_options": [(v.value, v.name) for v in VoterRegistrationStatus],
 		"letters_sent": UserLetter.objects.filter(letterscampaign__campaigns=campaign).count(),
 
 		})

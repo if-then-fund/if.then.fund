@@ -4,7 +4,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.core import serializers
 
-from .models import LettersCampaign, ConstituentInfo, UserLetter
+from .models import LettersCampaign, ConstituentInfo, UserLetter, VoterRegistrationStatus
 from contrib.models import Actor, Action
 from contrib.utils import json_response
 from votervoice import VoterVoiceAPIClient, VoterVoiceDummyAPIClient
@@ -81,17 +81,27 @@ def validate_address(request, campaign, for_ui):
 	}
 
 	#################################################################
-	# VALIDATE ADDRESS FIELDS
+	# VALIDATE FIELDS
 	#################################################################
 
-	for field in ('addrAddress', 'addrCity', 'addrState', 'addrZip'):
+	for field in ('addrAddress', 'addrCity', 'addrState', 'addrZip', 'voterRegistration'):
 		value = request.POST.get(field, '').strip()
 		if not value:
 			raise ValidationError({
 				"error": "Please fill out the form completely.",
 				"field": field,
 			})
-		info.extra["address"][field] = value
+		if field == 'voterRegistration':
+			try:
+				value = VoterRegistrationStatus[value].name # string => enum => string
+			except ValueError:
+				raise ValidationError({
+					"error": "That's not a valid voter registration status.",
+					"field": "voterRegistration",
+				})
+			info.extra[field] = value
+		else:
+			info.extra["address"][field] = value
 
 	# Additional validation for the state field. Is it a state with a
 	# congressional district? (This is a <select> in the UI, so message
@@ -287,8 +297,18 @@ def validate_address(request, campaign, for_ui):
 	return info
 
 def get_extended_target_info(campaign, constit_info):
-	# Get whether the target is known to support or oppose the issue.
+	# Get whether the target is known to support or oppose the issue
+	# and customize the letter subject & body depending on this.
+	#
+	# Also add boilerplate to the top of the letter.
 
+	# for boilerplate, we'll need this:
+	my_voter_registration_status = {
+		VoterRegistrationStatus.Registered.name: "I am registered to vote.\n\n",
+		VoterRegistrationStatus.Registering.name: "I am registering to vote.\n\n",
+		VoterRegistrationStatus.NotRegistered.name: "",
+		VoterRegistrationStatus.TooYoung.name: "I am currently too young to register to vote but will be sharing your response with my parents and everyone else I know in this district who is of voting age.\n\n",
+	}[constit_info.extra['voterRegistration']]
 
 	def toggle_string(outcome, string_default, string_0, string_1):
 		if outcome is None:
@@ -344,6 +364,12 @@ def get_extended_target_info(campaign, constit_info):
 			inf['position_text'] = "We don’t yet know where %s stands on this issue." % { "M": "he", "F": "she" }.get(gender, inf['name'])
 		else: # beware zero is a possible value
 			inf['position_text'] = campaign.body_toggles_on.outcome_strings()[inf['position']]['label']
+
+		# Add boilerplate text to the message body.
+		inf['message_body'] = \
+			   "I live in your district.\n\n" \
+			 + my_voter_registration_status \
+			 + inf['message_body'].strip()
 
 		# Add Markdown-rendered body for previewing.
 		import markdown2

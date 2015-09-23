@@ -53,6 +53,18 @@ class LettersCampaign(models.Model):
 		else:
 			return "senator"
 
+@django_enum
+class VoterRegistrationStatus(enum.Enum):
+	# This is persisted using the name as a string key. The
+	# value is used for display.
+	Registered = "I am registered to vote."
+	Registering = "I will register to vote soon."
+	NotRegistered = "I am not registered to vote."
+	TooYoung = "I am too young to register to vote."
+
+	# When modifying the names here, be sure to update
+	# get_extended_target_info.
+
 class ConstituentInfo(models.Model):
 	"""Information about a user used for letter delivery. Stored schema-less in the extra field. May be shared across UserLetters of the same user. Instances are immutable."""
 
