@@ -136,7 +136,7 @@
               <div class="control-group">
                 <p style="margin-bottom: 0"><strong>Keep &rsquo;em in.</strong></p>
                 <label for="filterIncumbents">
-                  <input id="filterIncumbents" type="checkbox" onchange="contribution_start_validation()"
+                  <input id="filterIncumbents" type="checkbox" onchange="contribution_start_validation() && contribution_update_display_text()"
                     {% if tcust.incumb_challgr != -1 %}checked{% endif %}
                     {% if tcust.incumb_challgr %}disabled class="hidden"{% endif %}>
                   If a {{trigger.trigger_type.strings.actor}} {{trigger.verb}} <span class="fill-in"> </span>, then fund their reelection campaign.
@@ -148,7 +148,7 @@
               <div class="control-group">
                 <p style="margin-bottom: 0"><strong>Throw &rsquo;em out.</strong></p>
                 <label for="filterChallengers">
-                  <input id="filterChallengers" type="checkbox" onchange="contribution_start_validation()"
+                  <input id="filterChallengers" type="checkbox" onchange="contribution_start_validation() && contribution_update_display_text()"
                     {% if tcust.incumb_challgr != 1 %}checked{% endif %}
                     {% if tcust.incumb_challgr %}disabled class="hidden"{% endif %}>
                   If a {{trigger.trigger_type.strings.actor}} {{trigger.verb}} <span class="fill-in"> </span>, then fund their opponent&rsquo;s campaign.
@@ -165,7 +165,7 @@
               {% if tcust.filter_party|stringformat:'s' != 'ActorParty.Democratic' %}
               <div class="control-group">
                 <label for="filterPartyR" data-value="R">
-                  <input  id="filterPartyR" type="checkbox" onchange="contribution_start_validation()"
+                  <input  id="filterPartyR" type="checkbox" onchange="contribution_start_validation() && contribution_update_display_text()"
                     {% if tcust.filter_party|stringformat:'s' != 'ActorParty.Democratic' %}checked{% endif %}
                     {% if tcust.filter_party %}disabled class="hidden"{% endif %}>
                   Republicans
@@ -176,7 +176,7 @@
               {% if tcust.filter_party|stringformat:'s' != 'ActorParty.Republican' %}
               <div class="control-group">
                 <label for="filterPartyD" data-value="D">
-                  <input id="filterPartyD" type="checkbox" onchange="contribution_start_validation()"
+                  <input id="filterPartyD" type="checkbox" onchange="contribution_start_validation() && contribution_update_display_text()"
                     {% if tcust.filter_party|stringformat:'s' != 'ActorParty.Republican' %}checked{% endif %}
                     {% if tcust.filter_party %}disabled class="hidden"{% endif %}>
                   Democrats
