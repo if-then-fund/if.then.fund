@@ -15,12 +15,11 @@ from htmlemailer import send_mail
 
 class Command(BaseCommand):
 	args = ''
-	help = 'Sends pre- and post- pledge execution emails and email confirmation emails.'
+	help = 'Sends pre- and post- pledge execution emails and incomplete pledge emails.'
 
 	def handle(self, *args, **options):
 		self.send_pledge_emails('pre')
 		self.send_pledge_emails('post')
-		self.send_pledge_emails('emailconfirm')
 		self.send_incomplete_pledge_emails()
 
 	def send_pledge_emails(self, pre_or_post):
@@ -44,13 +43,6 @@ class Command(BaseCommand):
 				).exclude(user=None)
 			pledge_filter = lambda p : True
 
-		elif pre_or_post == "emailconfirm":
-			pledges = Pledge.objects.filter(
-				status=PledgeStatus.Open,
-				user=None
-				)
-			pledge_filter = lambda p : True
-
 		else:
 			raise ValueError()
 
@@ -61,14 +53,9 @@ class Command(BaseCommand):
 			if not pledge_filter(pledge):
 				continue
 
-			# Call the appropriate send function.
-			if pre_or_post in ("pre", "post"):
-				self.send_pledge_email(pre_or_post, pledge)
+			# Send email.
+			self.send_pledge_email(pre_or_post, pledge)
 
-			elif pre_or_post == "emailconfirm":
-				if pledge.anon_user.should_retry_email_confirmation():
-					pledge.anon_user.send_email_confirmation()
-	
 	def send_pledge_email(self, pre_or_post, pledge):
 		# What will happen when the pledge is executed?
 		recipients = get_pledge_recipients(pledge.trigger, pledge)
