@@ -79,6 +79,9 @@ class AnonymousUser(models.Model):
 		return self.email + ((" → " + str(self.confirmed_user)) if self.confirmed_user else "")
 
 	def send_email_confirmation(self):
+		from datetime import timedelta
+		from django.utils import timezone
+
 		# Sanity check.
 		if self.confirmed_user: raise ValueError("Can't send an email confirmation for an AnonymousUser that has already been confirmed.")
 
@@ -93,17 +96,34 @@ class AnonymousUser(models.Model):
 
 			# Don't send another email confirmation if we just sent one for this user
 			# (e.g. if the user took a second action a few minutes later).
-			from datetime import timedelta
-			from django.utils import timezone
 			if timezone.now() - ec.sent_at <  timedelta(seconds=60*20):
 				return
 
-		# What can we say this email is for?
-		from contrib.models import Pledge
+		# What can we say this email is for? Only choose actions that we
+		# can link to, so the campaign must be open. Choose the most recent
+		# action, so if the user takes multiple actions we show the one
+		# the user is most familiar with --- probably the action that
+		# led to this call (since this is called synchronously with making
+		# a pledge/writing a letter).
+		#
+		# For when we re-send confirmation emails later, ensure we choose
+		# an action that isn't already confirmed and wasn't created so long
+		# ago that the user will have forgotten what this is about. For
+		# Pledges, also don't try to confirm one that is already executed.
+		from itfsite.models import CampaignStatus
+		from contrib.models import Pledge, PledgeStatus
 		from letters.models import UserLetter
+		def filter_objs(qs):
+			# The same filters apply to Pledges and UserLetters.
+			return qs.filter(
+				user=None,
+				anon_user=self,
+				created__gt=timezone.now()-timedelta(days=7),
+				via_campaign__status=CampaignStatus.Open)\
+				.order_by('-created')
 		profile = None
-		pledge = Pledge.objects.filter(anon_user=self).first()
-		letter = UserLetter.objects.filter(anon_user=self).first()
+		pledge = filter_objs(Pledge.objects.filter(status=PledgeStatus.Open)).first()
+		letter = filter_objs(UserLetter.objects).first()
 		if pledge:
 			template = "contrib/mail/confirm_email"
 			profile = pledge.profile
@@ -113,7 +133,7 @@ class AnonymousUser(models.Model):
 			profile = letter.profile
 			brand_id = letter.via_campaign.brand
 		else:
-			raise ValueError("AnonymousUser is not associated with a Pledge or UserLetter.")
+			raise ValueError("AnonymousUser is not associated with a Pledge or UserLetter on an open campaign.")
 
 		# Use a custom mailer function so we can send through our
 		# HTML emailer app.

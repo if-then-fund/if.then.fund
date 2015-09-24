@@ -130,7 +130,7 @@ class ContribTest(SeleniumTest):
 				incumb_challgr=-1,
 				)
 
-		from itfsite.models import Campaign, TextFormat
+		from itfsite.models import Campaign, CampaignStatus, TextFormat
 		campaign = Campaign.objects.create(
 			brand=1,
 			owner=org,
@@ -141,6 +141,7 @@ class ContribTest(SeleniumTest):
 			headline="Do More Tests",
 			body_text="This is a test campaign.",
 			body_format=TextFormat.Markdown,
+			status=CampaignStatus.Open,
 			)
 		campaign.contrib_triggers.add(t)
 
@@ -550,7 +551,7 @@ class LettersTest(SeleniumTest):
 			)
 
 		# Create a campaign.
-		from itfsite.models import Campaign, TextFormat
+		from itfsite.models import Campaign, CampaignStatus, TextFormat
 		campaign = Campaign.objects.create(
 			brand=1,
 			owner=org,
@@ -561,6 +562,7 @@ class LettersTest(SeleniumTest):
 			headline="Do More Tests",
 			body_text="This is a test campaign.",
 			body_format=TextFormat.Markdown,
+			status=CampaignStatus.Open,
 			)
 
 		# Create a LettersCampaign.
