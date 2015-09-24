@@ -29,3 +29,19 @@ urlpatterns = patterns('',
 
     url(r'^ev/', include('email_confirm_la.urls')),
 )
+
+# Because we use context variables from our template context
+# processor in master.html, and the default error renderer
+# does not process template context processors, and that
+# leads to template errors, we can't render oops pages without
+# our own handler that does process template context processors.
+handler500 = 'itfsite.urls.ItfsiteHandler500'
+def ItfsiteHandler500(request, exception=None):
+	from django.http import HttpResponse
+	try:
+		from django.shortcuts import render
+		return render(request, '500.html', {})
+	except Exception as e:
+		return HttpResponse("Ooops! There was an error!\n\n%s\n\n%s"
+				% (str(e), repr(e)), content_type="text/plain")
+
