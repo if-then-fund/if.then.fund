@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.core.exceptions import DisallowedHost
 
+import re
+
 def load_brandings():
 	import glob, os.path, json
 	settings.BRANDS = { }
@@ -34,15 +36,16 @@ def get_branding(request_or_brandid):
 
 	# Return a template context dictionary based on the branding settings.
 	brand = settings.BRANDS[brandid]
+	email_domain = re.sub(r"^www\.", "", brand['site-domain'])
 	return {
 		"BRAND_ID": brandid,
 		"BRAND_INDEX": brand['index'],
 		"SITE_NAME": brand['site-name'],
 		"SITE_DOMAIN": brand['site-domain'],
 		"ROOT_URL": "https://" + brand['site-domain'],
-		"MAIL_FROM_EMAIL": '%s <no.reply@mail.%s>' % (brand['site-name'], brand['site-domain']),
-		"CONTACT_EMAIL": '%s <hello@%s>' % (brand['site-name'], brand['site-domain']),
-		"TWITTER_HANDLE": brand['twitter-handle'],
+		"MAIL_FROM_EMAIL": '%s <no.reply@mail.%s>' % (brand['site-name'], email_domain),
+		"CONTACT_EMAIL": '%s <hello@%s>' % (brand['site-name'], email_domain),
+		"TWITTER_HANDLE": brand.get('twitter-handle'),
 		"COPYRIGHT": brand['copyright'],
 	}
 

@@ -95,7 +95,7 @@
               var addr = "{{CONTACT_EMAIL_REVERSED|escapejs}}".split("").reverse().join("");
               document.write("\x3ca class='email' href='mailto:" + addr + "'\x3e\x3ci class='fa fa-envelope fa-fw'\x3e\x3c/i\x3e " + addr + "\x3c/a\x3e");
               </script></li>
-              <li title="Twitter"><a href="https://twitter.com/{{TWITTER_HANDLE}}"><i class="fa fa-twitter fa-fw"></i> @{{TWITTER_HANDLE}}</a></li>
+              {% if TWITTER_HANDLE %}<li title="Twitter"><a href="https://twitter.com/{{TWITTER_HANDLE}}"><i class="fa fa-twitter fa-fw"></i> @{{TWITTER_HANDLE}}</a></li>{% endif %}
               {% include "footer-social-"|add:BRAND_ID|cut:"."|add:".html" %}
           </ul>
         </div>
