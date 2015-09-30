@@ -200,6 +200,18 @@ class VoterVoiceDummyAPIClient:
 			assert post_data.get("homeAddress")
 			return ""
 
+		elif (http_method, api_method) == ("POST", "advocacy/responses"):
+			assert qsargs.get("user")
+			assert post_data.get("userId")
+			return {
+				"deliveredMessages": [
+					{
+						"targetedId": 1111,
+						"deliveredId": 123456
+					}
+					]
+				}
+
 		else:
 			raise Exception("Invalid call to VoterVoice: %s %s" % (http_method, url))
 

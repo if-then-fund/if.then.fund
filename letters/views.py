@@ -45,13 +45,14 @@ def find_reps(request):
 
 	# Validate the address and get district information.
 	try:
-		constit_info = validate_address(request, campaign, for_ui=True)
+		constit_info, fields = validate_address(request, campaign, for_ui=True)
 	except ValidationError as e:
 		return e.response
 
 	# Return who we are writing the letter to, plus any
 	# questions we have to ask the user.
-	ret = constit_info.extra
+	ret = dict(constit_info.extra) # clone
+	ret["fields"] = fields
 	ret['my_representatives'] = list(get_extended_target_info(campaign, constit_info).values())
 	ret['my_representatives'].sort(key = lambda x : x['sort'])
 
@@ -255,10 +256,8 @@ def validate_address(request, campaign, for_ui):
 	# Map sharedQuestion IDs to their full info. Put an 'id' field on the
 	# result so we still have it.
 	def get_shared_question_details(question_id):
-		ret = votervoice("GET", "advocacy/sharedquestions/" + question_id, {}, {})
-		ret["id"] = question_id
-		return ret
-	sharedQuestions = list(map(lambda id : get_shared_question_details(id), sharedQuestions))
+		return (question_id, votervoice("GET", "advocacy/sharedquestions/" + question_id, {}, {}))
+	sharedQuestions = dict(map(lambda id : get_shared_question_details(id), sharedQuestions))
 
 
 	#################################################################
@@ -266,14 +265,14 @@ def validate_address(request, campaign, for_ui):
 	#################################################################
 	prefix_options = None
 	if for_ui:
-		for q in list(sharedQuestions): # clone
-			if q["id"] in ('CommonHonorific', 'CommunicatingWithCongressHonorific'):
+		for key, q in list(sharedQuestions.items()): # clone
+			if key in ('CommonHonorific', 'CommunicatingWithCongressHonorific'):
 				if prefix_options is None:
 					prefix_options = set(q['validAnswers'])
 				else:
 					# Take intersection of options.
 					prefix_options &= set(q['validAnswers'])
-				sharedQuestions.remove(q)
+				del sharedQuestions[key]
 	prefix_options = list(sort_honorific_options(prefix_options))
 
 
@@ -286,15 +285,17 @@ def validate_address(request, campaign, for_ui):
 		"addressinfo": addressinfo,
 		"district": districtinfo,
 		"targets": targets,
-		"fields": {
-			"requiredUserFields": list(requiredUserFields),
-			"sharedQuestions": sharedQuestions,
-			"requiredQuestions": requiredQuestions,
-			"prefix_options": prefix_options,
-		}
 	}
 
-	return info
+
+	fields = {
+		"requiredUserFields": list(requiredUserFields),
+		"sharedQuestions": sharedQuestions,
+		"requiredQuestions": requiredQuestions,
+		"prefix_options": prefix_options,
+	}
+
+	return (info, fields)
 
 def get_extended_target_info(campaign, constit_info):
 	# Get whether the target is known to support or oppose the issue
@@ -416,7 +417,7 @@ def write_letter(request):
 	# done this part once, so it should go through OK.
 	#################################################################
 	try:
-		constit_info = validate_address(request, campaign, for_ui=False)
+		constit_info, fields = validate_address(request, campaign, for_ui=False)
 	except ValidationError as e:
 		return e.response
 
@@ -456,12 +457,11 @@ def write_letter(request):
 
 		response = {
 			"subject": target_positions[target['id']]['message_subject'],
-		    "body": target_positions[target['id']]['message_body'],
-		    "complimentaryClose": "Sincerely,", # also says this in the preview
-		    "modified": False, # did user edit the message?
-
+			"body": target_positions[target['id']]['message_body'],
+			"complimentaryClose": "Sincerely,", # also says this in the preview
+			"modified": False, # did user edit the message?
 			"targets": [{
-				"type": "H",
+				"type": target["type"],
 				"id": target["id"],
 				"deliveryMethod": target["mdo"]["deliveryMethod"],
 				"questionnaire": [],
@@ -526,7 +526,7 @@ def write_letter(request):
 					# Validation failed.
 					return value
 			response['targets'][0]["questionnaire"].append({
-				"question": sqid,
+				"question": fields["sharedQuestions"][sqid]["question"],
 				"answer": value,
 			})
 
@@ -711,8 +711,9 @@ def write_letter(request):
 	constit_info.save()
 	letter.profile = constit_info
 	letter.extra = {
-		"messages_queued": messages,
+		"messages": messages,
 	}
+	letter.pending = len(messages)
 	letter.save()
 
 	#################################################################
@@ -740,6 +741,15 @@ def write_letter(request):
 		else:
 			# Start the usual email verification process.
 			letter.anon_user.send_email_confirmation()
+
+	#################################################################
+	# DELIVER
+	#################################################################
+	letter.submit_for_delivery()
+
+	#################################################################
+	# DONE
+	#################################################################
 
 	return {
 		"status": "ok",
@@ -775,3 +785,4 @@ def get_recent_letter_defaults(user, request):
 		"email": letter.get_email(),
 		"profile": letter.profile.extra,
 	}
+

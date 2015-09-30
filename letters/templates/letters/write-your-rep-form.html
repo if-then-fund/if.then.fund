@@ -320,13 +320,13 @@ function write_letter_find_reps() {
 			// prepare dynamic fields.
 
 			$('#lettersNamePrefix').html('<option></option>'); // clear options, add an empty option
-			res.votervoice.fields.prefix_options.forEach(function(item) {
+			res.fields.prefix_options.forEach(function(item) {
 				$('#lettersNamePrefix').append($("<option/>").text(item));
 			})
 			$('#lettersNamePrefix').val($('#lettersNamePrefix').attr('initial-value')); // set initial value from default
 
 			$('#letter-phone-field').hide();
-			res.votervoice.fields.requiredUserFields.forEach(function(item) {
+			res.fields.requiredUserFields.forEach(function(item) {
 				if (item == "phone")
 					$('#letter-phone-field').show();
 			})
@@ -357,10 +357,12 @@ function write_letter_find_reps() {
 					n.find('select').val(question.validAnswers[getRandomInt(0, question.validAnswers.length-1)]);
 				}
 			}
-			res.votervoice.fields.sharedQuestions.forEach(function(item) {
+			for (var key in res.fields.sharedQuestions) {
+				var item = res.fields.sharedQuestions[key];
+				item.id = key;
 				add_additional_field("shared", item);
-			})
-			res.votervoice.fields.requiredQuestions.forEach(function(item) {
+			}
+			res.fields.requiredQuestions.forEach(function(item) {
 				add_additional_field("required", item);
 			})
 			

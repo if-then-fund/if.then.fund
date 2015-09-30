@@ -1,11 +1,12 @@
 from django.db import models
-from contrib.models import TextFormat
+from django.utils import timezone
+from django.conf import settings
 
 import enum
 from enum3field import EnumField, django_enum
 from itfsite.models import Organization
 from itfsite.utils import JSONField
-from contrib.models import NoMassDeleteManager
+from contrib.models import TextFormat, NoMassDeleteManager
 
 @django_enum
 class CampaignStatus(enum.Enum):
@@ -108,7 +109,8 @@ class UserLetter(models.Model):
 
 	# Delivery.
 	congressional_district = models.CharField(max_length=4, help_text="The user's congressional district in the form of XX##, e.g. AK00, at the time of submitting the letter, which determines who should receive the letter.")
-	submitted = models.BooleanField(default=False, help_text="Whether this letter was submitted to our delivery vendor.")
+	pending = models.IntegerField(default=0, help_text="The number of messages pending submission.")
+	delivered = models.IntegerField(default=0, help_text="The number of messages that have been submitted for delivery.")
 
 	# Additional data.
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
@@ -121,8 +123,8 @@ class UserLetter(models.Model):
 	objects = NoMassDeleteManager()
 
 	def delete(self):
-		if self.submitted:
-			raise ValueError("Cannot delete a UserLetter once its messages have been submitted for delivery.")
+		if self.delivered > 0:
+			raise ValueError("Cannot delete a UserLetter once any of its messages have been submitted for delivery.")
 		super(UserLetter, self).delete()	
 
 	def get_absolute_url(self):
@@ -136,14 +138,14 @@ class UserLetter(models.Model):
 
 	@property
 	def submission_status(self):
-		if self.submitted:
+		if self.pending == 0:
 			return "has been sent"
 		else:
 			return "will be sent"
 
 	@property
 	def submission_status_short(self):
-		if self.submitted:
+		if self.pending == 0:
 			return "Sent"
 		else:
 			return "Pending"
@@ -158,7 +160,7 @@ class UserLetter(models.Model):
 			else:
 				return ", ".join(items[0:-1]) + " and " + items[-1]
 
-		recips = [ m["target_name"] for m in self.extra.get("messages_queued", []) + self.extra.get("messages_sent", []) ]
+		recips = [ m["target_name"] for m in self.extra.get("messages", []) ]
 		return nice_list(recips)
 
 	def set_confirmed_user(self, user, request):
@@ -176,3 +178,45 @@ class UserLetter(models.Model):
 		# Let the user know what happened.
 		messages.add_message(request, messages.SUCCESS, 'Your letter regarding %s %s.'
 			% (self.letterscampaign.title, self.submission_status))
+
+
+	def submit_for_delivery(self):
+		from .views import votervoice
+		import requests
+
+		if self.delivered > 0:
+			raise Exception("Some of the messages have already been delivered.")
+
+		now = timezone.now().isoformat()
+		postdata = {
+			"association": settings.VOTERVOICE_ASSOCIATION,
+			"userId": self.profile.extra['votervoice']['user']['userId'],
+			"messages": [m["votervoice_response"] for m in self.extra["messages"]],
+			"signature": self.profile.name,
+			"defaultAddressType": "H"
+		}
+
+		try:
+			ret = votervoice("POST", "advocacy/responses", {
+					"user": self.profile.extra['votervoice']['user']['userToken'],
+				},
+				postdata)
+		except requests.HTTPError as e:
+			# Error in submission.
+			self.extra.setdefault("delivery_status", []).append({
+				"when": now,
+				"error": e.response.text,
+				"postdata": postdata,
+			})
+			self.save()
+			return
+
+		# Submission succeeded.
+		self.extra.setdefault("delivery_status", []).append({
+			"when": now,
+			"success": ret,
+			"postdata": postdata,
+		})
+		self.pending = 0
+		self.delivered = len(self.extra["messages"])
+		self.save()

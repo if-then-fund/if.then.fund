@@ -646,7 +646,7 @@ class LettersTest(SeleniumTest):
 			if not is_logged_in and not (with_existing_email and with_new_surname):
 				# Letter is written. Follow email confirmation. There is no email
 				# confirmation if we did a VoterVoice email confirmation.
-				pw = self.follow_email_confirmation_link("will be sent")
+				pw = self.follow_email_confirmation_link("has been sent")
 
 			# Head back to/reload campaign page and test that the user's letter appears.
 			self.browser.get(self.build_test_url(url))

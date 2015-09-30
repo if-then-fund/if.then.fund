@@ -4,5 +4,5 @@
 
 <p class="letter-action-summary">
 	You wrote a letter to {{letter.indented_recipients}} on {{letter.created|date}}.
-	{% if not letter.submitted %}It is currently pending delivery.{% endif %}
+	{% if letter.pending > 0 %}It is currently pending delivery.{% endif %}
 </p>

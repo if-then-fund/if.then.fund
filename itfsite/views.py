@@ -236,7 +236,7 @@ def campaign(request, id):
 		"letters_campaign": letters_campaign,
 		"state_abbrs": state_abbrs,
 		"voter_registration_options": [(v.value, v.name) for v in VoterRegistrationStatus],
-		"letters_sent": UserLetter.objects.filter(letterscampaign__campaigns=campaign).count(),
+		"letters_sent": UserLetter.objects.filter(letterscampaign__campaigns=campaign).aggregate(sum=Sum('delivered'))['sum'] or 0, # can be None if no letters written
 
 		})
 	
