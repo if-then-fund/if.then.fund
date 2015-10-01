@@ -1,0 +1,27 @@
+sharedQuestions = {
+	'US': {'question': 'Topic',
+ 'validAnswers': ['Agriculture',
+                  'Banking / Insurance / Financial Services',
+                  'Budget and Economy',
+                  'Business and Commerce',
+                  'Communications / Science / Technology',
+                  'Congress and Campaign Finance',
+                  'Defense and Military',
+                  'Education',
+                  'Energy',
+                  'Environment',
+                  'Foreign Affairs',
+                  'General / Miscellaneous / Other',
+                  'Health Care',
+                  'Homeland Security',
+                  'Housing and Urban Development',
+                  'Immigration',
+                  'Judiciary',
+                  'Labor and Employment',
+                  'Social Security',
+                  'Taxes',
+                  'Trade',
+                  'Transportation',
+                  'Veterans Affairs']}
+
+}

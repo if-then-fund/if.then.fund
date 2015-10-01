@@ -8,6 +8,8 @@ from itfsite.models import Organization
 from itfsite.utils import JSONField
 from contrib.models import TextFormat, NoMassDeleteManager
 
+from votervoice_sharedquestions import sharedQuestions as votervoice_sharedquestions
+
 @django_enum
 class CampaignStatus(enum.Enum):
 	Draft = 0
@@ -26,6 +28,7 @@ class LettersCampaign(models.Model):
 	# Content.
 	message_subject = models.CharField(max_length=100, help_text="The subject of the message. Used in message delivery.")
 	message_body = models.TextField(help_text="The body of the message sent to legislators. Rendered as if Markdown when previewing for users.")
+	topic = models.CharField(max_length=64, blank=True, null=True, choices=[(x, x) for x in votervoice_sharedquestions['US']['validAnswers']], help_text="")
 
 	# Who gets the letters?
 	target_senators = models.BooleanField(default=True, help_text="Target letters to senators.")

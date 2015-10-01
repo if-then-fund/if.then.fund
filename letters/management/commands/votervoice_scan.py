@@ -4,16 +4,42 @@ from django.db import transaction
 from optparse import make_option
 
 from contrib.models import Actor
+from letters.models import LettersCampaign, CampaignStatus
 from letters.views import votervoice, state_at_large, state_no_senators
 
 import csv, sys, multiprocessing
+import pprint
 import difflib
 
 class Command(BaseCommand):
 	args = ''
-	help = 'Scan VoterVoice\'s targets for unmatched IDs and unexpected messagedeliveryoptions.'
+	help = 'Scan VoterVoice\'s targets for unmatched IDs and unexpected messagedeliveryoptions and write the "US" shared question (about topic) valid answers to a module so we can import it as choices into a model field.'
 
 	def handle(self, *args, **options):
+		# For output.
+		w = csv.writer(sys.stdout)
+
+		# Get the "US" shared question and write to lib/votervoice_sharedquestions.py.
+		topic_question = votervoice("GET", "advocacy/sharedquestions/" + "US", {}, {})
+		with open("lib/votervoice_sharedquestions.py", "w") as f:
+			f.write("sharedQuestions = {\n")
+			f.write("\t'US': ")
+			pprint.pprint(topic_question, stream=f)
+			f.write("\n}\n")
+
+		# Check that no open letter campaigns are using an invalid topic.
+		used_topics = set(LettersCampaign.objects.filter(status=CampaignStatus.Open).values_list("topic", flat=True).distinct())
+		for topic in sorted(used_topics - set(topic_question['validAnswers']), key=lambda value:(value is not None, value)):
+			w.writerow([None, None, "Invalid topic %s set on campaigns: %s."
+				% (
+					repr(topic),
+					", ".join(
+						"%d (%s)" % (c.id, c.title)
+						for c in LettersCampaign.objects.filter(status=CampaignStatus.Open, topic=topic)
+						)
+				  )
+				])
+
 		# Get VoterVoice's list of US officials.
 		all_officials = votervoice("GET", "governments/USA/officials", {
 				"association": settings.VOTERVOICE_ASSOCIATION,
@@ -33,7 +59,6 @@ class Command(BaseCommand):
 			errors += sum(pool.map(check_message_delivery_options, all_officials), [])
 
 		# Display errors.
-		w = csv.writer(sys.stdout)
 		for official, error in errors:
 			w.writerow([official['id'], official['displayName'], error])
 

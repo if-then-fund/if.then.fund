@@ -49,6 +49,7 @@ class CampaignAdmin(admin.ModelAdmin):
         from django.http import HttpResponseRedirect
         from django.shortcuts import render
         from django import forms
+        from votervoice_sharedquestions import sharedQuestions as votervoice_sharedquestions
 
         class NewForm(forms.Form):
             brand = forms.TypedChoiceField(coerce=int, choices=settings.BRAND_CHOICES, help_text="Which multi-brand site will this campaign appear on?")
@@ -64,14 +65,15 @@ class CampaignAdmin(admin.ModelAdmin):
             pro_object = forms.CharField(label='Option 1 Description', help_text="e.g. 'to defend the environment'")
             con_label = forms.CharField(label='Option 2 Label (Con)', help_text="This is for the No/Nay vote, when creating a trigger. e.g. 'Pro-Environment'")
             con_object = forms.CharField(label='Option 2 Description', help_text="e.g. 'to defend the environment'")
-            trigger_type = forms.ChoiceField(label='Trigger Type', choices=(('', 'No Trigger'), ('x', 'Whichever Chamber Votes First'), ('h', 'House Vote'), ('s', 'Senate Vote')))
+            trigger_type = forms.ChoiceField(required=False, label='Trigger Type', choices=(('', 'No Trigger'), ('x', 'Whichever Chamber Votes First'), ('h', 'House Vote'), ('s', 'Senate Vote')))
             trigger_bill_url = forms.URLField(required=False, label="Create Trigger Using Bill", help_text="To associate the trigger with a bill, paste a link to the GovTrack.us bill page.")
             trigger_vote_url = forms.URLField(required=False, label="Execute Using Vote URL", help_text="If the vote has already occurred, paste a link to the GovTrack.us page with roll call vote details. The trigger will be immediately executed.")
             trigger_desired_outcome = forms.TypedChoiceField(required=False, coerce=int, choices=[(None, "(None)"), (0, "Option 1 (Pro)"), (1, "Option 2 (Con)")], help_text="The desired outcome of the trigger.")
 
             letters = forms.BooleanField(required=False, label="Send letters?")        
-            letter_subject = forms.CharField(required=False, help_text="The subject line for letters.")
-            letter_body = forms.CharField(widget=forms.Textarea, required=False, help_text="The body text of letters.")
+            letter_topic = forms.ChoiceField(required=False, choices=[("", "-----")] + [(x,x) for x in votervoice_sharedquestions['US']['validAnswers']])
+            letter_subject = forms.CharField(required=False, min_length=10, help_text="The subject line for letters.")
+            letter_body = forms.CharField(widget=forms.Textarea, required=False, min_length=64, help_text="The body text of letters.")
             letters_toggles_on_a_trigger = forms.BooleanField(required=False, label="Message Changes Depending on Position of Target?")        
             pro_letter_subject = forms.CharField(label='Option 1 Subject', required=False, help_text="The subject line for letters sent to targets associated with position 1. Blank to reuse the main subject.")
             pro_letter_body = forms.CharField(label='Option 1 Body', required=False, widget=forms.Textarea, help_text="The body text of letters sent to targets associated with position 1. Blank to reuse the main body.")
@@ -131,10 +133,14 @@ class CampaignAdmin(admin.ModelAdmin):
                         letters = None
                         letters_toggle_trigger = None
                         if form.cleaned_data['letters']:
+                            if not form.cleaned_data['letter_topic']: raise ValueError("letter_topic is required")
+                            if not form.cleaned_data['letter_subject']: raise ValueError("letter_subject is required")
+                            if not form.cleaned_data['letter_body']: raise ValueError("letter_body is required")
                             letters = LettersCampaign()
                             letters.title = campaign.title
                             letters.status = LettersCampaignStatus.Open
                             letters.owner = campaign.owner
+                            letters.topic = form.cleaned_data['letter_topic']
                             letters.message_subject = form.cleaned_data['letter_subject']
                             letters.message_body = form.cleaned_data['letter_body']
                             letters.target_senators = True

@@ -261,11 +261,19 @@ def validate_address(request, campaign, for_ui):
 
 
 	#################################################################
-	# Collapse CommonHonorific and CommunicatingWithCongressHonorific
+	# SPECIAL QUESTIONS: Prefix and Topic, which are displayed
+	# differently in the UI. But for letter submission we leave the
+	# message delivery options exactly as they are so we submit
+	# properly.
 	#################################################################
+
 	prefix_options = None
 	if for_ui:
 		for key, q in list(sharedQuestions.items()): # clone
+
+			# Extract the options allowed by CommonHonorific and
+			# CommunicatingWithCongressHonorific, which get displayed
+			# in our name prefix field.
 			if key in ('CommonHonorific', 'CommunicatingWithCongressHonorific'):
 				if prefix_options is None:
 					prefix_options = set(q['validAnswers'])
@@ -273,6 +281,13 @@ def validate_address(request, campaign, for_ui):
 					# Take intersection of options.
 					prefix_options &= set(q['validAnswers'])
 				del sharedQuestions[key]
+
+			# If the target requires a topic in the "US" shared question,
+			# and if this campaign has a topic set that is one of the
+			# options, then we don't need to display this as a form field.
+			if key == "US" and campaign.topic in q['validAnswers']:
+				del sharedQuestions[key]
+
 	prefix_options = list(sort_honorific_options(prefix_options))
 
 
@@ -516,17 +531,29 @@ def write_letter(request):
 			}
 
 		for sqid in target["mdo"].get("sharedQuestionIds", []):
+			# The message delivery options (MDO) record only provides the
+			# shared question ID. We've loaded the shared question details
+			# instead here:
+			sq = fields["sharedQuestions"][sqid]
+
 			if sqid in ("CommonHonorific", "CommunicatingWithCongressHonorific"):
 				# These are handled by our prefix field, which we treat as
 				# always required.
 				value = request.POST.get('namePrefix', '').strip()
+
+			elif sqid == "US" and campaign.topic in sq['validAnswers']:
+				# If the "US" shared question is needed, fill it in with
+				# the campaign's topic if that's a valid answer.
+				value = campaign.topic
+
 			else:
 				value = get_extra_field_value("shared", sqid, target)
 				if isinstance(value, dict):
 					# Validation failed.
 					return value
+					
 			response['targets'][0]["questionnaire"].append({
-				"question": fields["sharedQuestions"][sqid]["question"],
+				"question": sq["question"],
 				"answer": value,
 			})
 
