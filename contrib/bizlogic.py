@@ -129,7 +129,7 @@ def get_pledge_recipients(trigger, pledge):
 			try:
 				r = Recipient.objects.get(actor=action.actor)
 			except Recipient.DoesNotExist:
-				raise Recipient.DoesNotExist("There is no recipient for " + str(action.actor))
+				raise Recipient.DoesNotExist("There is no recipient for " + str(action.actor) + " while executing " + str(trigger) + ".")
 
 		else:
 			# The incumbent did something other than what the user wanted, so the
