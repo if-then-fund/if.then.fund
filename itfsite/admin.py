@@ -84,7 +84,7 @@ class CampaignAdmin(admin.ModelAdmin):
             form = NewForm(request.POST)
             error = None
             if form.is_valid():
-                from contrib.legislative import create_trigger_from_bill, execute_trigger_from_vote
+                from contrib.legislative import create_trigger_from_bill, create_congressional_vote_trigger, execute_trigger_from_vote
                 try:
                     # If any validation fails, don't create the trigger.
                     with transaction.atomic():
@@ -105,7 +105,11 @@ class CampaignAdmin(admin.ModelAdmin):
                         tcust = None
                         if form.cleaned_data['trigger_type']:
                             # Create trigger.
-                            trigger = create_trigger_from_bill(form.cleaned_data['trigger_bill_url'], form.cleaned_data['trigger_type'])
+                            if form.cleaned_data.get('trigger_bill_url'):
+                                trigger = create_trigger_from_bill(form.cleaned_data['trigger_bill_url'], form.cleaned_data['trigger_type'])
+                            else:
+                                trigger = create_congressional_vote_trigger(form.cleaned_data['trigger_type'], form.cleaned_data['title'], "something")
+
                             trigger.status = TriggerStatus.Open # can't execute while draft, and might as well open it since the campaign will be in draft status anyway
 
                             # Set outcome strings.

@@ -6,6 +6,54 @@ ALLOW_DEAD_BILL = False
 class TriggerAlreadyExistsException(Exception):
 	pass
 
+def get_trigger_type(chamber):
+	# get/create TriggerType for 'h' 's' or 'x' votes
+	# (in production the object should always exist, but in testing it
+	# needs to be created)
+	trigger_type, is_new = TriggerType.objects.get_or_create(
+		key = "congress_floorvote_%s" % chamber,
+		defaults = {
+			"strings": {
+			"actor": { 's': 'senator', 'h': 'representative', 'x': 'member of Congress' }[chamber],
+			"actors": { 's': 'senators', 'h': 'representatives', 'x': 'members of Congress' }[chamber],
+			"action_noun": "vote",
+			"action_vb_inf": "vote",
+			"action_vb_pres_s": "votes",
+			"action_vb_past": "voted",
+		}})
+	return trigger_type
+
+def create_congressional_vote_trigger(chamber, title, short_title):
+	t = Trigger()
+
+	t.owner = None
+	
+	t.trigger_type = get_trigger_type(chamber)
+	
+	t.title = title[0:200]
+
+	from django.template.defaultfilters import slugify
+	t.slug = slugify(t.title)[0:200]
+
+	chamber_name = { 's': 'Senate', 'h': 'House', 'x': 'Congress' }[chamber]
+	t.subhead = "The %s will soon vote on %s." % (chamber_name, short_title)
+	t.subhead_format = TextFormat.Markdown
+	t.description = "The %s will soon vote on %s." % (chamber_name, short_title)
+	t.description_format = TextFormat.Markdown
+	t.execution_note = "Contributions will be made when the %s votes on the bill." % chamber_name
+	t.execution_note_format = TextFormat.Markdown
+
+	t.outcomes = [
+		{ "vote_key": "+", "label": "Yes on %s" % short_title, "object": "in favor of %s" % short_title },
+		{ "vote_key": "-", "label": "No on %s" % short_title, "object": "against %s" % short_title },
+	]
+
+	t.extra = {
+		"max_split":  { 's': 100, 'h': 435, 'x': 435 }[chamber],
+	}
+
+	return t
+
 def create_trigger_from_bill(bill_id, chamber):
 	import re
 
@@ -26,7 +74,6 @@ def create_trigger_from_bill(bill_id, chamber):
 
 	# validate chamber
 	if chamber not in ('s', 'h', 'x'): raise ValueError("Chamber must be one of 'h' or 's'.")
-	chamber_name = { 's': 'Senate', 'h': 'House', 'x': 'Congress' }[chamber]
 
 	# get bill data from GovTrack
 	from contrib.utils import query_json_api
@@ -42,57 +89,21 @@ def create_trigger_from_bill(bill_id, chamber):
 	import datetime
 	bill['as_of'] = datetime.datetime.now().isoformat()
 
-	# get/create TriggerType
-	# (in production the object should always exist, but in testing it
-	# needs to be created)
-	trigger_type, is_new = TriggerType.objects.get_or_create(
-		key = "congress_floorvote_%s" % chamber,
-		defaults = {
-			"strings": {
-			"actor": { 's': 'senator', 'h': 'representative', 'x': 'member of Congress' }[chamber],
-			"actors": { 's': 'senators', 'h': 'representatives', 'x': 'members of Congress' }[chamber],
-			"action_noun": "vote",
-			"action_vb_inf": "vote",
-			"action_vb_pres_s": "votes",
-			"action_vb_past": "voted",
-		}})
-
 	# create object
 
-	t = Trigger()
+	t = create_congressional_vote_trigger(chamber, bill['title'], bill["display_number"])
 
 	t.key = "usbill:" + bill_id + ":" + chamber
 	if Trigger.objects.filter(key=t.key).exists():
 		raise TriggerAlreadyExistsException("A trigger for this bill and chamber already exists.")
 
-	t.title = bill['title'][0:200]
-	t.owner = None
-	t.trigger_type = trigger_type
-
-	from django.template.defaultfilters import slugify
-	t.slug = slugify(t.title)[0:200]
-
-	t.subhead = "The %s will soon vote on %s." % (chamber_name, bill["title"])
-	t.subhead_format = TextFormat.Markdown
-	t.description = "The %s will soon vote on %s." % (chamber_name, bill["title"])
-	t.description_format = TextFormat.Markdown
-	t.execution_note = "Contributions will be made when the %s votes on the bill." % chamber_name
-	t.execution_note_format = TextFormat.Markdown
-
-	short_title = bill["display_number"]
-	t.outcomes = [
-		{ "vote_key": "+", "label": "Yes on %s" % short_title, "object": "in favor of %s" % short_title },
-		{ "vote_key": "-", "label": "No on %s" % short_title, "object": "against %s" % short_title },
-	]
-
-	t.extra = {
-		"max_split":  { 's': 100, 'h': 435, 'x': 435 }[chamber],
+	t.extra.update({
 		"type": "usbill",
 		"bill_id": bill_id,
 		"chamber": chamber,
 		"govtrack_bill_id": bill["id"],
 		"bill_info": bill,
-	}
+	})
 
 	# save and return
 	t.save()
