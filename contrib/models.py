@@ -107,11 +107,18 @@ class Trigger(models.Model):
 		alg = Pledge.current_algorithm()
 		m1 = alg['min_contrib']
 		m2 = 0
-		if 'max_split' in self.extra:
+		max_split = self.max_split()
+		if True:
 			# The minimum pledge is one cent to all possible recipients, plus fees.
-			m2 = decimal.Decimal('0.01') * self.extra['max_split'] * (1 + alg['fees_percent']) + alg['fees_fixed']
+			m2 = decimal.Decimal('0.01') * max_split * (1 + alg['fees_percent']) + alg['fees_fixed']
 			m2 = m2.quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_UP)
 		return max(m1, m2)
+
+	def max_split(self):
+		if self.status != TriggerStatus.Executed:
+			return self.extra['max_split']
+		else:
+			return self.execution.actions.exclude(outcome=None).count()
 
 	# Execute.
 	@transaction.atomic
@@ -812,7 +819,7 @@ class Pledge(models.Model):
 		elif party_filter == "":
 			# goes to incumbents and challengers, no party filter
 			if self.status != PledgeStatus.Executed:
-				count = "up to %d" % self.trigger.extra['max_split']
+				count = "up to %d" % self.trigger.max_split()
 			else:
 				count = str(self.execution.contributions.count())
 			return "%s %s, each getting a part of your contribution if they %s %s, but if they %s %s their part of your contribution will go to their next general election opponent" \

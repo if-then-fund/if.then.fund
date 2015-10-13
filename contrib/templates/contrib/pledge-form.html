@@ -424,7 +424,7 @@
             <div class="col-sm-5 col-md-6">
               <div class="responsive-side-panel">
                 <h4>What happens next</h4>
-                  <p>You are about to schedule a campaign contribution for if and when the {{trigger.trigger_type.strings.action_noun}} occurs. Your contribution may be split up to {{trigger.extra.max_split}} ways depending on the outcome of the {{trigger.trigger_type.strings.action_noun}}.</p>
+                  <p>You are about to schedule a campaign contribution for if and when the {{trigger.trigger_type.strings.action_noun}} occurs. Your contribution may be split up to {{trigger.max_split}} ways depending on the outcome of the {{trigger.trigger_type.strings.action_noun}}.</p>
                   <p>We will not charge your credit card until the {{trigger.trigger_type.strings.action_noun}} occurs, and you can cancel this contribution any time before then.</p>
                   <p>You may see a $1 authorization from Democracy Engine, LLC on your credit card. This is how we test that your credit card information is valid. The $1 authorization will not result in an actual charge.</p>
               </div>
@@ -662,7 +662,7 @@ function contribution_update_display_text() {
   var outcome_index = $('#pledge-info input[name="desired_outcome"]').val();
 
   if (outcome_index == "?") {
-    $('#filter-summary span.text').text("We will split your contribution across up to {{trigger.extra.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}.");
+    $('#filter-summary span.text').text("We will split your contribution across up to {{trigger.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}.");
     $('#filter-summary .advanced-filters-link').hide();
     return;
   }
@@ -695,7 +695,7 @@ function contribution_update_display_text() {
   else if (ic == -1)
     who = "the opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + (party ? (" if the opponent is in the " + party + "party") : "");
   else if (party == "")
-    who = "up to {{trigger.extra.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + ", their part of your contribution will go to their next general election opponent"
+    who = "up to {{trigger.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + ", their part of your contribution will go to their next general election opponent"
   else
     who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + (party ? (" if the opponent is in the " + party + "party") : "");
 
