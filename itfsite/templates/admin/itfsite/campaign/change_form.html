@@ -19,7 +19,7 @@
             <p>&mdash; <a href="/admin/contrib/triggercustomization/add?owner={{original.owner.id}}&trigger={{trigger.id}}" target="_blank">create customization for {{original.owner}}</a></p>
         {% endif %}
         {% if trigger.execution %}
-            <p>&mdash; <a href="/admin/contrib/triggerexecution/{{trigger.execution.id}}" target="_blank">executed on {{trigger.execution.created}}</a></p>
+            <p>&mdash; <a href="/admin/contrib/triggerexecution/{{trigger.execution.id}}" target="_blank">executed on {{trigger.execution.created}}</a> | <a href="/admin/contrib/trigger/{{trigger.id}}/edit-actions" target="_blank">edit</a></p>
         {% endif %}
     </div>
 {% endfor %}
