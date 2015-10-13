@@ -147,41 +147,69 @@ class TriggerAdmin(admin.ModelAdmin):
 
                     elif k.startswith("actor_"):
                         actor = Actor.objects.get(id=k[6:])
-                        actor_outcomes[actor] = (v if v == "null" else int(v))
+                        actor_outcomes[actor] = (v if v in ("null", "rno") else int(v))
 
                 for actor, outcome in actor_outcomes.items():
                     axn = Action.objects.filter(execution__trigger=trigger, actor=actor)
                     if outcome == "null":
                         # Delete action if exists.
                         axn.delete()
-                    elif axn.first() and axn.first().outcome == outcome:
+                    elif axn.first() and outcome != "rno" and axn.first().outcome == outcome:
                         # Exists with correct outcome value.
+                        pass
+                    elif axn.first() and outcome == "rno" and axn.first().outcome == None:
+                        # Exists with correct outcome & a reason_for_no_outcome is set.
                         pass
                     else:
                         # Doesn't exist, or exists with wrong outcome value.
                         axn.delete()
+                        if outcome == "rno":
+                            return render(request, "contrib/admin/edit-actions.html", {
+                                "trigger": trigger,
+                                "error": "Can't set %s to having a reason for no outcome." % str(actor),
+                            })
                         Action.create(trigger.execution, actor, outcome)
 
         else: # GET
             pass
 
-        # Which actors can have a position on this? Ones currently holding
-        # office.
-        actors = Actor.objects.exclude(office=None)
-
         # Get existing positions.
-        existing_positions = { }
-        if trigger.status == TriggerStatus.Executed:
-            existing_positions = dict(trigger.execution.actions.values_list('actor__id', 'outcome'))
-
         data = { }
-        for actor in actors:
-            data[actor] = {
-                "actor": actor,
-                "position": existing_positions.get(actor.id),
-            }
+        if trigger.status == TriggerStatus.Executed:
+            # Actors that have an outcome recorded.
+            data.update({
+                action[0]: {
+                    "actor": action[0],
+                    "position": action[1],
+                }
+                for action
+                  in trigger.execution.actions.exclude(outcome=None).values_list('actor__id', 'outcome')
+            })
 
-        data = sorted(data.values(), key = lambda entry : (entry['position'] is None, entry['actor'].name_sort))
+            # Actors that have a reason_for_no_outcome recorded.
+            data.update({
+                action[0]: {
+                    "actor": action[0],
+                    "reason_for_no_outcome": action[1],
+                }
+                for action
+                  in trigger.execution.actions.filter(outcome=None).values_list('actor__id', 'reason_for_no_outcome')
+            })
+
+            # Convert Actor IDs to objects.
+            actors = Actor.objects.in_bulk({ entry["actor"] for entry in data.values() })
+            for entry in data.values():
+                entry["actor"] = actors[entry["actor"]]
+
+        # Which other actors can have a position on this? Ones currently holding
+        # office.
+        for actor in Actor.objects.exclude(office=None):
+            if actor.id not in data:
+                data[actor.id] = {
+                    "actor": actor,
+                }
+
+        data = sorted(data.values(), key = lambda entry : (not ('position' in entry or 'reason_for_no_outcome' in entry), entry['actor'].name_sort))
         return render(request, "contrib/admin/edit-actions.html", {
             "trigger": trigger,
             "data": data,

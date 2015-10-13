@@ -47,8 +47,11 @@
                   <td>
                     <select name="actor_{{entry.actor.id}}">
                       <option value="null">- Not Known -</option>
+                      {% if entry.reason_for_no_outcome %}
+                        <option value="rno" selected>/ {{entry.reason_for_no_outcome}} /</option>
+                      {% endif %}
                       {% for x in trigger.outcome_strings %}
-                        <option value="{{forloop.counter0}}" {% if entry.position == forloop.counter0 %}selected{% endif %}>{{x.label}} [{{forloop.counter0}}]</option>
+                        <option value="{{forloop.counter0}}" {% if 'position' in entry and entry.position == forloop.counter0 %}selected{% endif %}>{{x.label}} [{{forloop.counter0}}]</option>
                       {% endfor %}
                     </select>
                   </td>
