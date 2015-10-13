@@ -81,6 +81,10 @@
 		color: white;
 		text-shadow: 2px 4px 4px rgba(0, 0, 0, .8);
 	}
+		#splash-text.invert-text a {
+			color: #AAF;
+			border-color: #AAF;
+		}
 
 	#splash-text.invert-text.subhead-darken-bg .subhead {
 		background-color: rgba(20, 20, 20, .5);
@@ -94,6 +98,23 @@
 			margin-bottom: 0;
 		}
 
+	#splash-text .image-credit {
+		margin-top: 1.5em;
+		font-size: 66%;
+		color: #555;
+		text-shadow: none;
+	}
+		#splash-text.invert-text .image-credit {
+			color: #EEE;
+		}
+		#splash-text .image-credit a {
+			color: #336;
+			border-color: #336;
+		}	
+			#splash-text.invert-text .image-credit a {
+				color: #BBD;
+				border-color: #BBD;
+			}
 
 #story {
 	background-color: rgb(190, 80, 90);
@@ -203,6 +224,12 @@ form span.required:after {
 				{{campaign.subhead|render_text:campaign.subhead_format}}
 			{% endif %}
 		</div>
+
+		{% if campaign.image_credit %}
+			<div class="image-credit">
+				{{campaign.image_credit|render_text:campaign.subhead_format}}
+			</div>
+		{% endif %}
 	</div>
   </div>
 </div>
