@@ -181,7 +181,7 @@ class TriggerAdmin(admin.ModelAdmin):
                 "position": existing_positions.get(actor.id),
             }
 
-        data = sorted(data.values(), key = lambda entry : entry['actor'].name_sort)
+        data = sorted(data.values(), key = lambda entry : (entry['position'] is None, entry['actor'].name_sort))
         return render(request, "contrib/admin/edit-actions.html", {
             "trigger": trigger,
             "data": data,
