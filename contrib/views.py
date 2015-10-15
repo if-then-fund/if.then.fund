@@ -484,6 +484,17 @@ def report_fetch_data(trigger, via_campaign, with_actor_details=True):
 		# Aggregates by outcome.
 		ret['outcomes'] = ContributionAggregate.get_slices('outcome', **ca_slice_fields)
 
+		# Make sure all of the trigger's outcomes are represented --- add zeroes if needed.
+		has_outcomes = set(outcome['outcome'] for outcome in ret['outcomes'])
+		for outcome_index, outcome_info in enumerate(trigger.outcomes):
+			if outcome_index in has_outcomes: continue # already got this via get_slices
+			ret['outcomes'].append({
+				"outcome": outcome_index,
+				"label": outcome_info['label'], # normally added by get_slices
+				"total": 0,
+				"count": 0,
+			})
+
 	# Aggregates by actor.
 	if with_actor_details:
 		from collections import defaultdict
