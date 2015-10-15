@@ -279,6 +279,7 @@ form span.required:after {
 						{% endif %}
 					
 					{% else %}
+						<h3 style="margin-top: 0;">Contributions made{% if trigger %} so far{% endif %}:</h3>
 						{% for trigger in totals.by_trigger %}
 							{% if totals.by_trigger|length > 1 %}
 								<p><b>{{trigger.trigger.title}}</b></p>
@@ -286,7 +287,7 @@ form span.required:after {
 							<p style="float: right"><small><a href="#" onclick="$('#modal_trigger_{{trigger.trigger.id}}').modal(); return false;">Details</a></small></p>
 							{% for outcome in trigger.aggregates.outcomes %}
 								<dt>{{outcome.total|currency}}</dt>
-								<dd>{{outcome.label}}</dd>
+								<dd><em style="font-size: 90%">to</em> {{outcome.label}}</dd>
 							{% endfor %}
 						{% endfor %}
 					{% endif %}
@@ -294,7 +295,7 @@ form span.required:after {
 				{% elif totals.pledged_total != None %}
 					{# just pledges, no contributions yet #}
 					<dt>{{ totals.pledged_total|currency }}</dt>
-					<dd>committed so far by {{totals.pledged_user_count|intcomma}} contributor{{totals.pledged_user_count|pluralize}}</dd>
+					<dd>committed {% if trigger %}so far{% endif %} by {{totals.pledged_user_count|intcomma}} contributor{{totals.pledged_user_count|pluralize}}</dd>
 
 				{% else %}
 					<dt><span class="itfbutton"> </span>{{ totals.pledged_site_wide|currency }}</dt>
