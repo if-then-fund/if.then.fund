@@ -140,16 +140,17 @@ class Campaign(models.Model):
 		from contrib.models import TriggerStatus, TriggerCustomization, Pledge, PledgeExecution, PledgeExecutionProblem
 
 		# What pledges should we show? For consistency across stats, filter out unconfirmed
-		# pledges.
-		pledges = Pledge.objects.exclude(user=None)
+		# pledges and pledges made after the trigger was executed, which shouldn't be shown
+		# as a "pledge" per se --- those will be executed soon.
+		pledges_base = Pledge.objects.exclude(user=None).filter(made_after_trigger_execution=False)
 		if self.owner:
 			# When we're showing a campaign owned by an organization, then we
 			# only count pledges to this very campaign.
-			pledges = pledges.filter(via_campaign=self)
+			pledges = pledges_base.filter(via_campaign=self)
 		else:
 			# Otherwise, we can count any campaign but only to triggers in this
 			# campaign.
-			pledges = pledges.filter(trigger__in=self.contrib_triggers.all())
+			pledges = pledges_base.filter(trigger__in=self.contrib_triggers.all())
 
 		# If no trigger cutomization has a fixed outcome, then we can show
 		# plege totals. (We can't show pledge totals when there is a fixed
@@ -161,7 +162,7 @@ class Campaign(models.Model):
 			ret["pledged_total"] = pledges.aggregate(sum=Sum('amount'))["sum"] or 0
 			ret["pledged_user_count"] = pledges.values("user").distinct().aggregate(count=Count('user'))["count"] or 0
 		else:
-			ret["pledged_site_wide"] = Pledge.objects.exclude(user=None).filter(trigger__in=self.contrib_triggers.all()).aggregate(sum=Sum('amount'))["sum"] or 0
+			ret["pledged_site_wide"] = pledges_base.filter(trigger__in=self.contrib_triggers.all()).aggregate(sum=Sum('amount'))["sum"] or 0
 
 		# If any trigger has been executed, then we can show executed totals.
 		# In all cases we can show the total amount of contributions across all triggers.
