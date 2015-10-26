@@ -198,15 +198,19 @@
           <p id="filter-summary">
             <span class="text"> </span>
 
-            {% if not tcust.incumb_challgr or not tcust.filter_party %}
-              <span class="advanced-filters-link">[<a href="#" onclick="return show_and_scroll('advanced-filters', this.parentNode);">Advanced Filters</a>]</span>
-            {% else %}
+            {# see #advanced-filters-toggle #}
+            {% if tcust.incumb_challgr and tcust.filter_party %}
               {# no need to show the advanced options panel if there is nothing to customize #}
               <span style="font-style: italic;">(This has been preset by {{tcust.owner.name}}.)</span>
             {% endif %}
           </p>
 
           <div class="buttons">
+            {# see #filter-summary #}
+            {% if not tcust.incumb_challgr or not tcust.filter_party %}
+              <button id="advanced-filters-toggle" type="button" class="btn btn-default" onclick="return show_and_scroll('advanced-filters', this);">Advanced Filters</button>
+            {% endif %}
+
             <button id="contribution-start-next" type="button" class="btn btn-warning" onclick="do_pledge_start_next()">Next &gt;</button
             >
             {% if letters_campaign %}
@@ -652,7 +656,6 @@ function getPartyFilterValue() {
 function contribution_update_display_text() {
   // Fill in the user's choice in the checkbox fields for the filters for
   // who to give to.
-
   var trigger_outcomes = [
     {% for outcome in trigger_outcome_strings %}
       "{% if outcome.object %}{{outcome.object|escapejs}}{% else %}{{outcome.label|escapejs}}{% endif %}"{% if not forloop.last %}, {% endif %}
@@ -663,11 +666,11 @@ function contribution_update_display_text() {
 
   if (outcome_index == "?") {
     $('#filter-summary span.text').text("We will split your contribution across up to {{trigger.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}.");
-    $('#filter-summary .advanced-filters-link').hide();
+    $('#advanced-filters-toggle').prop('disabled', true);
     return;
   }
 
-  $('#filter-summary .advanced-filters-link').show();
+  $('#advanced-filters-toggle').prop('disabled', false);
 
   function fill_in(filter_elem, opponent) {
     if (opponent) outcome_index = 1 - outcome_index; // assumes two options!
