@@ -54,4 +54,4 @@ DEFAULT_TEMPLATE_CONTEXT = {
 	"HIDE_REMOTE_EMBEDS": environment.get('hide_remote_embeds', False),
 }
 
-DEFAULT_BRAND = "279forchange.us"
+DEFAULT_BRAND = "if.then.fund"
