@@ -72,9 +72,6 @@ class Trigger(models.Model):
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
-	slug = models.SlugField(max_length=200, help_text="The URL slug for this trigger.")
-	subhead = models.TextField(help_text="Short sub-heading text in the format given by description_format.")
-	subhead_format = EnumField(TextFormat, help_text="The format of the subhead text.")
 	description = models.TextField(help_text="Description text in the format given by description_format.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 	execution_note = models.TextField(help_text="Explanatory note about how this Trigger will be executed, in the format given by execution_note_format.")
@@ -194,9 +191,6 @@ class Trigger(models.Model):
 					"action_vb_pres_s": "announces they would vote",
 					"action_vb_past": "announced they would vote",
 			}})[0]
-		t.slug = self.slug + "-announced"
-		t.subhead = "n/a"
-		t.subhead_format = TextFormat.HTML
 		t.description = "n/a"
 		t.description_format = TextFormat.HTML
 		t.execution_note = "n/a"

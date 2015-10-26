@@ -32,12 +32,7 @@ def create_congressional_vote_trigger(chamber, title, short_title):
 	
 	t.title = title[0:200]
 
-	from django.template.defaultfilters import slugify
-	t.slug = slugify(t.title)[0:200]
-
 	chamber_name = { 's': 'Senate', 'h': 'House', 'x': 'Congress' }[chamber]
-	t.subhead = "The %s will soon vote on %s." % (chamber_name, short_title)
-	t.subhead_format = TextFormat.Markdown
 	t.description = "The %s will soon vote on %s." % (chamber_name, short_title)
 	t.description_format = TextFormat.Markdown
 	t.execution_note = "Contributions will be made when the %s votes on the bill." % chamber_name

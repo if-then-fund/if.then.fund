@@ -135,7 +135,7 @@ class ContribTest(SeleniumTest):
 			brand=1,
 			owner=org,
 			title=t.title,
-			slug=t.slug,
+			slug="test-campaign",
 			subhead="This is a test campaign.",
 			subhead_format=TextFormat.Markdown,
 			headline="Do More Tests",

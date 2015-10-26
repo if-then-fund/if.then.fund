@@ -65,7 +65,7 @@ for trigger in Trigger.objects.all():
 			campaign = Campaign.objects.create(
 				brand=1,
 				title=trigger.title,
-				slug=trigger.slug,
+				slug="test-campaign",
 				subhead=trigger.subhead,
 				subhead_format=trigger.subhead_format,
 

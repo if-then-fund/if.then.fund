@@ -20,15 +20,11 @@ class DEAPITestCase(TestCase):
 		self.assertEqual(f(Decimal('1234')), '$1234.00')
 
 def create_trigger(trigger_type, key, title):
-	from django.template.defaultfilters import slugify
 	trigger = Trigger.objects.create(
 		key=key,
 		title=title,
 		owner=None,
 		trigger_type=trigger_type,
-		slug=slugify(title),
-		subhead="This is a test trigger.",
-		subhead_format=TextFormat.Markdown,
 		description="This is a test trigger.",
 		description_format=TextFormat.Markdown,
 		execution_note="The trigger will be executed during the test.",
@@ -133,8 +129,6 @@ class ExecutionTestCase(TestCase):
 		import contrib.bizlogic
 		contrib.bizlogic.DemocracyEngineAPI = contrib.bizlogic.DummyDemocracyEngineAPI()
 
-		from django.template.defaultfilters import slugify
-
 		# TriggerType
 	
 		tt = TriggerType.objects.create(
@@ -155,9 +149,6 @@ class ExecutionTestCase(TestCase):
 			title="Test Trigger",
 			owner=None,
 			trigger_type=tt,
-			slug=slugify("Test Trigger"),
-			subhead="This is a test trigger.",
-			subhead_format=TextFormat.Markdown,
 			description="This is a test trigger.",
 			description_format=TextFormat.Markdown,
 			execution_note="The trigger will be executed during the test.",
