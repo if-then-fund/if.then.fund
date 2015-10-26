@@ -150,7 +150,8 @@ class ContribTest(SeleniumTest):
 
 	def _test_pledge_simple(self, campaign,
 			verb="vote",
-			pledge_summary="You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to 435 representatives, each getting a part of your contribution if they VERB in favor of S. 1, but if they VERB against S. 1 their part of your contribution will go to their next general election opponent.",
+			pledge_summary="You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to COUNT representatives, each getting a part of your contribution if they VERB in favor of S. 1, but if they VERB against S. 1 their part of your contribution will go to their next general election opponent.",
+			pledge_summary_count=435,
 			with_utm_campaign=False,
 			break_after_email=False, return_from_incomplete_pledge=None,
 			break_before_confirmation=False,
@@ -253,7 +254,7 @@ class ContribTest(SeleniumTest):
 		# the user sees an explanation of the pledge.
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			pledge_summary.replace("VERB", verb))
+			pledge_summary.replace("VERB", verb).replace("COUNT", str(pledge_summary_count)))
 
 		return email, pw
 
@@ -508,7 +509,7 @@ class ContribTest(SeleniumTest):
 
 		# Test the creation of a Pledge.
 		self.browser.get(self.build_test_url("/accounts/logout"))
-		email, pw = self._test_pledge_simple(campaign, verb="voted")
+		email, pw = self._test_pledge_simple(campaign, verb="voted", pledge_summary_count=424)
 
 		# Execute it.
 		from contrib.management.commands.execute_pledges import Command as execute_pledges
