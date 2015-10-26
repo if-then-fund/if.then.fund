@@ -69,6 +69,7 @@ class SeleniumTest(StaticLiveServerTestCase):
 
 		# Now we're at the "give a password" page.
 		# It starts with a message that the pledge is confirmed.
+		time.sleep(1) # a moment for the modal to display
 		self.assertIn(test_string, self.browser.find_element_by_css_selector("#global_modal .modal-body").text)
 		self.browser.find_element_by_css_selector("#global_modal .btn-default").click()
 
@@ -230,6 +231,7 @@ class ContribTest(SeleniumTest):
 		self.browser.execute_script("$('#billingCCNum').val('4111 1111 1111 1111')")
 		self.browser.execute_script("$('#billingCCExp').val('9/2025')")
 		self.browser.execute_script("$('#billingCCCVC').val('123')")
+		time.sleep(.5)
 		self.browser.find_element_by_css_selector("#billing-next").click()
 		time.sleep(.5)
 
@@ -389,6 +391,7 @@ class ContribTest(SeleniumTest):
 		self.browser.find_element_by_css_selector("#emailEmailYesPassword").click()
 		self.browser.find_element_by_css_selector("#emailPassword").send_keys(pw)
 		self.browser.find_element_by_css_selector("#login-next").click()
+		time.sleep(1)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#login-error").text,
 			"You have already scheduled a contribution for this vote. Please log in to see details.")
