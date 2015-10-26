@@ -66,8 +66,8 @@ for trigger in Trigger.objects.all():
 				brand=1,
 				title=trigger.title,
 				slug="test-campaign",
-				subhead=trigger.subhead,
-				subhead_format=trigger.subhead_format,
+				subhead="Some text here.",
+				subhead_format=TextFormat.Markdown,
 
 				owner=owner,
 
