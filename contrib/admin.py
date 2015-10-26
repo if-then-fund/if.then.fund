@@ -292,7 +292,7 @@ class CancelledPledgeAdmin(admin.ModelAdmin):
     readonly_fields = ['user', 'trigger']
     search_fields = ['user__email', 'anon_user__email'] + ['trigger__'+f for f in TriggerAdmin.search_fields]
     def user_or_email(self, obj):
-        return obj.user if obj.user else obj.anon_user.email
+        return obj.user if obj.user else ((obj.anon_user.email or "[None]") + " (?)")
     user_or_email.short_description = 'User or Unverified Email'
 
 @no_delete_action

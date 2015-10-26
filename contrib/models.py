@@ -669,7 +669,6 @@ class Pledge(models.Model):
 
 	user = models.ForeignKey('itfsite.User', blank=True, null=True, on_delete=models.PROTECT, help_text="The user making the pledge. When an anonymous user makes a pledge, this is null, the user's email address is stored in an AnonymousUser object referenced in anon_user, and the pledge should be considered unconfirmed/provisional and will not be executed.")
 	anon_user = models.ForeignKey('itfsite.AnonymousUser', blank=True, null=True, on_delete=models.CASCADE, help_text="When an anonymous user makes a pledge, a one-off object is stored here and we send a confirmation email.")
-	_email = models.EmailField(max_length=254, blank=True, null=True, help_text="to be removed.")
 	profile = models.ForeignKey(ContributorInfo, related_name="pledges", on_delete=models.PROTECT, help_text="The contributor information (name, address, etc.) and billing information used for this Pledge. Immutable and cannot be changed after execution.")
 
 	trigger = models.ForeignKey(Trigger, related_name="pledges", on_delete=models.PROTECT, help_text="The Trigger that this Pledge is for.")
@@ -1023,7 +1022,6 @@ class CancelledPledge(models.Model):
 	trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE, help_text="The Trigger that the pledge was for.")
 	via_campaign = models.ForeignKey('itfsite.Campaign', blank=True, null=True, on_delete=models.CASCADE, help_text="The Campaign that this Pledge was made via.")
 	user = models.ForeignKey('itfsite.User', blank=True, null=True, on_delete=models.CASCADE, help_text="The user who made the pledge, if not anonymous.")
-	_email = models.EmailField(max_length=254, blank=True, null=True, help_text="to be deleted")
 	anon_user = models.ForeignKey('itfsite.AnonymousUser', blank=True, null=True, on_delete=models.CASCADE, help_text="When an anonymous user makes a pledge, a one-off object is stored here and we send a confirmation email.")
 
 	pledge = JSONField(blank=True, help_text="The original Pledge information.")
