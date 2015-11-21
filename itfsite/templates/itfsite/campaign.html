@@ -292,6 +292,14 @@ form span.required:after {
 						{% endfor %}
 					{% endif %}
 
+				{% elif trigger.execution and not tcust and totals.pledged_total == 0 %}
+					{# show zeroes for the outcomes --- otherwise user is confused why we only show one total #}
+
+					{% for outcome in trigger_outcome_strings %}
+						<dt>{{0|currency}}</dt>
+						<dd><em style="font-size: 90%">to</em> {{outcome.label}} &mdash; be the first!</dd>
+                	{% endfor %}
+
 				{% elif totals.pledged_total != None %}
 					{# just pledges, no contributions yet #}
 					<dt>{{ totals.pledged_total|currency }}</dt>
@@ -303,7 +311,8 @@ form span.required:after {
 					<p style="font-size: 13px; line-height: 128%;">*Federal law prevents us from giving this campaign&rsquo;s total ahead of congressional action. Instead we show the total committed on both sides of this issue across all campaigns powered by <a href="https://if.then.fund"><span class="site-brand-ifthenfund">if.then.fund</span></a>.</p>
 
 				{% else %}
-					{# there are no executed pledges and no pledges made prior to trigger execution to show in the meanwhile, so this is probably a trigger created after a vote that has not yet had any activity #}
+					{# there are no executed pledges and no pledges made prior to trigger execution to show in the meanwhile, so this is probably a trigger created after a vote that has not yet had any activity, and has a fixed outcome #}
+
 					<dt>{{0|currency}}</dt>
 					<dd>
 						contributed so far &mdash; be the first!
