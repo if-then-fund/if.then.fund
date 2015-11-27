@@ -13,14 +13,18 @@ def get_trigger_type(chamber):
 	trigger_type, is_new = TriggerType.objects.get_or_create(
 		key = "congress_floorvote_%s" % chamber,
 		defaults = {
-			"strings": {
+		"strings": {
 			"actor": { 's': 'senator', 'h': 'representative', 'x': 'member of Congress' }[chamber],
 			"actors": { 's': 'senators', 'h': 'representatives', 'x': 'members of Congress' }[chamber],
 			"action_noun": "vote",
 			"action_vb_inf": "vote",
 			"action_vb_pres_s": "votes",
 			"action_vb_past": "voted",
-		}})
+		},
+		"extra": {
+			"max_split":  { 's': 100, 'h': 435, 'x': 435 }[chamber],
+		}
+		})
 	return trigger_type
 
 def create_congressional_vote_trigger(chamber, title, short_title):
@@ -43,9 +47,7 @@ def create_congressional_vote_trigger(chamber, title, short_title):
 		{ "vote_key": "-", "label": "No on %s" % short_title, "object": "against %s" % short_title },
 	]
 
-	t.extra = {
-		"max_split":  { 's': 100, 'h': 435, 'x': 435 }[chamber],
-	}
+	t.extra = { }
 
 	return t
 

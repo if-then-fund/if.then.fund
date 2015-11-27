@@ -33,9 +33,7 @@ def create_trigger(trigger_type, key, title):
 			{ "label": "Yes", "tip": "YesTip" },
 			{ "label": "No", "tip": "NoTip" },
 		],
-		extra={
-			"max_split": 100,
-		}
+		extra={ }
 		)
 	campaign = Campaign.objects.create(
 		brand=0,
@@ -58,6 +56,9 @@ class PledgeTestCase(TestCase):
 				"action_vb_inf": "ACT",
 				"action_vb_pres_s": "ACTS",
 				"action_vb_past": "ACTED",
+			},
+			extra={
+				"max_split": 100,
 			})
 
 		self.campaign, self.trigger = create_trigger(self.trigger_type, 'test', 'Test Trigger')

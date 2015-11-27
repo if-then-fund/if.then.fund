@@ -113,7 +113,7 @@ class Trigger(models.Model):
 
 	def max_split(self):
 		if self.status != TriggerStatus.Executed:
-			return self.extra['max_split']
+			return self.trigger_type.extra['max_split']
 		else:
 			return self.execution.actions.exclude(outcome=None).count()
 
