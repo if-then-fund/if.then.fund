@@ -131,6 +131,9 @@ class Campaign(models.Model):
 			for t in self.contrib_triggers.all()
 		]
 
+	def is_sole_trigger(self, trigger):
+		return self.contrib_triggers.count() == 1 and self.contrib_triggers.filter(id=trigger.id).exists()
+
 	def get_contrib_totals(self):
 		# Get all of the displayable totals for this campaign.
 

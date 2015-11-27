@@ -275,16 +275,18 @@ class ContributorInfoAdmin(admin.ModelAdmin):
     extra_.name = "Extra"
 
 class PledgeAdmin(admin.ModelAdmin):
-    list_display = ['id', 'status', 'trigger', 'user_or_email', 'amount', 'campaign', 'created']
+    list_display = ['id', 'status', 'action', 'user_or_email', 'amount', 'referrer', 'created']
     readonly_fields = ['user', 'anon_user', 'trigger', 'via_campaign', 'profile', 'amount', 'algorithm'] # amount is read-only because a total is cached in the Trigger
     search_fields = ['id', 'user__email', 'anon_user__email'] \
       + ['trigger__'+f for f in TriggerAdmin.search_fields] \
       + ['profile__'+f for f in ContributorInfoAdmin.search_fields]
+    def action(self, obj):
+        return str(obj.via_campaign) + (("/" + str(obj.trigger)) if not obj.via_campaign.is_sole_trigger(obj.trigger) else "")
     def user_or_email(self, obj):
         return obj.user if obj.user else (obj.anon_user.email + " (?)")
     user_or_email.short_description = 'User or Unverified Email'
-    def campaign(self, obj):
-        return "/".join(str(x) for x in [obj.via_campaign, obj.ref_code] if x)
+    def referrer(self, obj):
+        return obj.ref_code
 
 @no_delete_action
 class CancelledPledgeAdmin(admin.ModelAdmin):
@@ -297,15 +299,15 @@ class CancelledPledgeAdmin(admin.ModelAdmin):
 
 @no_delete_action
 class PledgeExecutionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'trigger', 'user_or_email', 'charged', 'created']
+    list_display = ['id', 'action', 'user_or_email', 'charged', 'created']
     readonly_fields = ['pledge', 'charged', 'fees']
     search_fields = ['id'] + ['pledge__'+f for f in PledgeAdmin.search_fields]
     def user_or_email(self, obj):
         p = obj.pledge
         return p.user if p.user else (p.anon_user.email + " (?)")
     user_or_email.short_description = 'User/Email'
-    def trigger(self, obj):
-        return obj.pledge.trigger
+    def action(self, obj):
+        return str(obj.pledge.via_campaign) + (("/" + str(obj.pledge.trigger)) if not obj.pledge.via_campaign.is_sole_trigger(obj.pledge.trigger) else "")
 
     # remove the Delete action
     actions = ['void'] + (['expunge_record'] if settings.DEBUG else [])
