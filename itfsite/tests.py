@@ -391,7 +391,7 @@ class ContribTest(SeleniumTest):
 		self.browser.find_element_by_css_selector("#emailEmailYesPassword").click()
 		self.browser.find_element_by_css_selector("#emailPassword").send_keys(pw)
 		self.browser.find_element_by_css_selector("#login-next").click()
-		time.sleep(1)
+		time.sleep(2)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#login-error").text,
 			"You have already scheduled a contribution for this vote. Please log in to see details.")
