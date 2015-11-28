@@ -231,7 +231,7 @@ class ContribTest(SeleniumTest):
 		self.browser.execute_script("$('#billingCCNum').val('4111 1111 1111 1111')")
 		self.browser.execute_script("$('#billingCCExp').val('9/2025')")
 		self.browser.execute_script("$('#billingCCCVC').val('123')")
-		time.sleep(.5)
+		time.sleep(3)
 		self.browser.find_element_by_css_selector("#billing-next").click()
 		time.sleep(.5)
 
@@ -372,10 +372,12 @@ class ContribTest(SeleniumTest):
 		
 		# Use pre-filled contributor/billing info.
 		self.browser.find_element_by_css_selector("#contribution-contributorinfo-next").click()
+		time.sleep(1)
 		self.browser.find_element_by_css_selector("#billing-next").click()
 
 		# We're back at the Trigger page, and after the user data is loaded
 		# the user sees an explanation of the pledge.
+		time.sleep(.5)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
 			"You have scheduled a campaign contribution of $5.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote against H.R. 30, but if they vote in favor of H.R. 30 their part of your contribution will go to their next general election opponent.")
@@ -391,7 +393,7 @@ class ContribTest(SeleniumTest):
 		self.browser.find_element_by_css_selector("#emailEmailYesPassword").click()
 		self.browser.find_element_by_css_selector("#emailPassword").send_keys(pw)
 		self.browser.find_element_by_css_selector("#login-next").click()
-		time.sleep(2)
+		time.sleep(3)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#login-error").text,
 			"You have already scheduled a contribution for this vote. Please log in to see details.")
