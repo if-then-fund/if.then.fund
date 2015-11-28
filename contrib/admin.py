@@ -50,12 +50,12 @@ class TriggerOutcomesWidget(forms.Widget):
                         <p class="help">%s</p>
                         </div>""" % (
                             n + "_" + key,
-                            label,
+                            escape_html(label),
                             n + "_" + key,
                             n + "_" + key,
                             escape_html(outcome.get(key, "") or ""), # None => empty string
                             escape_html(outcome.get("_default", {}).get(key, "")),
-                            help_text,
+                            escape_html(help_text),
                         )
                 # round-trip any keys that aren't submitted in form fields
                 other_keys = { key: value for key, value in outcome.items()

@@ -85,11 +85,11 @@ class Campaign(models.Model):
 	"""A call to action."""
 
 	# Metadata
-	brand = models.IntegerField(choices=settings.BRAND_CHOICES, help_text="Which multi-brand site does this campaign appear on.")
+	brand = models.IntegerField(default=1, choices=settings.BRAND_CHOICES, help_text="Which multi-brand site does this campaign appear on.")
 	title = models.CharField(max_length=200, help_text="The title for the campaign.")
 	slug = models.SlugField(max_length=200, help_text="The URL slug for this campaign.")
 	subhead = models.TextField(help_text="Short sub-heading text for use in list pages and the meta description tag, in the format given by subhead_format.")
-	subhead_format = EnumField(TextFormat, help_text="The format of the subhead and image_credit text.")
+	subhead_format = EnumField(TextFormat, default=TextFormat.Markdown, help_text="The format of the subhead and image_credit text.")
 	status = EnumField(CampaignStatus, default=CampaignStatus.Draft, help_text="The current status of the campaign.")
 	owner = models.ForeignKey(Organization, blank=True, null=True, on_delete=models.PROTECT, related_name="campaigns", help_text="The user/organization which owns the campaign. Null if the campaign is created by us.")
 
@@ -99,7 +99,7 @@ class Campaign(models.Model):
 	splash_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The big image to display behind the main call to action.")
 	image_credit = models.TextField(blank=True, null=True, help_text="Image credit, in the same format as the subhead.")
 	body_text = models.TextField(help_text="Body text, in the format given by body_format.")
-	body_format = EnumField(TextFormat, help_text="The format of the body_text field.")
+	body_format = EnumField(TextFormat, default=TextFormat.Markdown, help_text="The format of the body_text field.")
 
 	# Actions.
 	contrib_triggers = models.ManyToManyField('contrib.Trigger', blank=True, related_name="campaigns", help_text="Triggers to offer the user to take action on (or to show past actions).")

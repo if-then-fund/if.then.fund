@@ -214,7 +214,7 @@ form span.required:after {
 	<div class="clearfix visible-xs"> </div>
 	{% endif %}
 
-	<div id="splash-text" class="{{campaign.extra.style.splash.class}}">
+	<div id="splash-text" class="{% if campaign.extra.style.splash.invert_text %}invert-text{% endif %}">
 		<h1>{{campaign.headline}}</h1>
 
 		<div class="subhead">
