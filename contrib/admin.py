@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.db import transaction
 from django.conf import settings
+from django import forms
+from django.utils.html import escape as escape_html
 
 from contrib.models import *
 
@@ -20,84 +22,117 @@ def no_delete_action(admin):
             return actions
     return MyClass
 
+class TriggerOutcomesWidget(forms.Widget):
+    # We store outcomes as JSON, as an array of dicts. We want to
+    # make editing this less error-prone by not giving the end-user
+    # the raw JSON to edit.
+
+    def render(self, name, value, attrs=None):
+        try:
+            # Create separate form fields per outcome & attribute.
+            vote_key_str = { "+": "Aye/Yea Vote", "-": "Nay/No Vote" }
+            ret = """<div style="clear: both">"""
+            for i, outcome in enumerate(json.loads(value)):
+                n = escape_html(name) + "_" + str(i)
+                ret += """<div style="padding: 1em 0">"""
+                ret += """<div style="font-weight: bold; margin-bottom: .5em">Outcome #%d - %s</div>""" % (
+                    i+1,
+                    outcome.get("_default", {}).get("label") or 
+                        vote_key_str.get(outcome.get("vote_key"), "")
+                    )
+                for key, label, help_text in (
+                    ("label", "Label", "Primary text on the button to take action."),
+                    ("tip", "Tip", "Optional small text displayed below the label."),
+                    ("object", "Objective", "Finishes the sentence \"blah blah voted....\" ")):
+                    ret += """<div>
+                        <label for="id_%s">%s:</label>
+                        <input class="vTextField" id="id_%s" maxlength="256" name="%s" type="text" value="%s" placeholder="%s" style="width: 30em; margin-bottom: 0">
+                        <p class="help">%s</p>
+                        </div>""" % (
+                            n + "_" + key,
+                            label,
+                            n + "_" + key,
+                            n + "_" + key,
+                            escape_html(outcome.get(key, "") or ""), # None => empty string
+                            escape_html(outcome.get("_default", {}).get(key, "")),
+                            help_text,
+                        )
+                # round-trip any keys that aren't submitted in form fields
+                other_keys = { key: value for key, value in outcome.items()
+                    if key not in ("label", "tip", "object", "_default") }
+                ret += """<input type="hidden" name="%s" value="%s">""" % (
+                    n + "_otherkeys", escape_html(json.dumps(other_keys)))
+                ret += """<div>"""
+            #ret += """<pre>""" + escape_html(value) + """</pre>"""
+            ret += """<div>"""
+            return ret
+        except Exception:
+            # fallback
+            return admin.widgets.AdminTextareaWidget().render(name, value, attrs=attrs)
+
+    def value_from_datadict(self, data, files, name):
+        if name in data:
+            # fallback if we didn't replace the widget
+            return admin.widgets.AdminTextareaWidget().value_from_datadict(data, files, name)
+
+        outcomes = []
+        i = 0
+        while True:
+            n = escape_html(name) + "_" + str(i)
+            if n + "_label" not in data: break # no more outcomes
+            outcome = json.loads(data[n + "_otherkeys"])
+            outcome.update({
+                "label": data[n + "_label"].strip(),
+                "tip": data[n + "_tip"].strip() or None, # turn empty string into null
+                "object": data[n + "_object"].strip(),
+            })
+            outcomes.append(outcome)
+            i += 1
+
+        return json.dumps(outcomes)
+
+class TriggerAdminForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['outcomes'].widget = TriggerOutcomesWidget()
+    def clean_outcomes(self):
+        outcomes = self.cleaned_data['outcomes']
+        if not isinstance(outcomes, list) or len(outcomes) != 2: raise forms.ValidationError('Invalid data.')
+        for i, outcome in enumerate(outcomes):
+            if not outcome.get("label", "").strip():
+                raise forms.ValidationError("Outcome #%d's label cannot be empty." % (i+1))
+            if not outcome.get("object", "").strip():
+                raise forms.ValidationError("Outcome #%d's objective cannot be empty." % (i+1))
+        return outcomes
+
 class TriggerAdmin(admin.ModelAdmin):
+    form = TriggerAdminForm
     list_display = ['title', 'status', 'id', 'pledge_count', 'total_pledged', 'created']
     raw_id_fields = ['owner']
-    readonly_fields = ['pledge_count', 'total_pledged']
+    readonly_fields = ['status', 'pledge_count', 'total_pledged']
     search_fields = ['id', 'title', 'description']
+    exclude = ['key', 'owner', 'extra']
 
-    actions = ['clone_for_announced_positions_on_this', 'execute_empty']
+    actions = ['clone_for_announced_positions_on_this', 'execute_empty', 'draft_to_open', 'open_to_draft']
     def clone_for_announced_positions_on_this(modeladmin, request, queryset):
         for t in queryset.filter():
             t.clone_as_announced_positions_on()
     def execute_empty(modeladmin, request, queryset):
         for t in queryset.filter():
             t.execute_empty()
+    def draft_to_open(modeladmin, request, queryset):
+        queryset.filter(status=TriggerStatus.Draft).update(status=TriggerStatus.Open)
+    draft_to_open.short_description = "Draft => Open"
+    def open_to_draft(modeladmin, request, queryset):
+        queryset.filter(status=TriggerStatus.Open).update(status=TriggerStatus.Draft)
+    open_to_draft.short_description = "Open => Draft"
 
     def get_urls(self):
         from django.conf.urls import patterns
         urls = super(TriggerAdmin, self).get_urls()
         return patterns('',
-            (r'^new-from-bill/$', self.admin_site.admin_view(self.new_from_bill)),
             (r'^([0-9]+)/edit-actions$', self.admin_site.admin_view(self.edit_actions)),
         ) + urls
-
-    def new_from_bill(self, request):
-        # Create a new Trigger from a bill ID and a vote chamber.
-
-        from django.shortcuts import render, redirect
-        from django import forms
-
-        class NewFromBillForm(forms.Form):
-            congress = forms.ChoiceField(label='Congress', choices=((114, '114th Congress'),))
-            bill_type = forms.ChoiceField(label='Bill Type', choices=(('hr', 'H.R.'),('s', 'S.'),('hjres', 'H.J.Res.')))
-            bill_number = forms.IntegerField(label='Bill Number', min_value=1, max_value=9999)
-            vote_chamber = forms.ChoiceField(label='Vote in chamber', choices=(('x', 'Whichever Votes First'), ('h', 'House'), ('s', 'Senate')))
-            pro_label = forms.CharField(label='Pro Label', help_text="e.g. 'Pro-Environment'")
-            pro_object = forms.CharField(label='Pro Description', help_text="e.g. 'to defend the environment'")
-            con_label = forms.CharField(label='Con Label', help_text="e.g. 'Pro-Environment'")
-            con_object = forms.CharField(label='Con Description', help_text="e.g. 'to defend the environment'")
-            vote_url = forms.URLField(required=False, label="Vote URL", help_text="Optional. If the vote has already occurred, paste a link to the GovTrack.us page with roll call vote details.")
-        
-        if request.method == "POST":
-            form = NewFromBillForm(request.POST)
-            error = None
-            if form.is_valid():
-                from contrib.legislative import create_trigger_from_bill, execute_trigger_from_vote
-                from django.http import HttpResponseRedirect
-                try:
-                    # If any validation fails, don't create the trigger.
-                    with transaction.atomic():
-                        # Create trigger.
-                        bill_id = form.cleaned_data['bill_type'] + str(form.cleaned_data['bill_number']) + "-" + str(form.cleaned_data['congress'])
-                        t = create_trigger_from_bill(bill_id, form.cleaned_data['vote_chamber'])
-
-                        # Set tips.
-                        for outcome in t.outcomes:
-                            # move our default label to the tip
-                            outcome['tip'] = outcome['label']
-
-                            # bring in user values
-                            outcome['label'] = form.cleaned_data[('pro' if outcome['vote_key'] == "+" else 'con') + '_label']
-                            outcome['object'] = form.cleaned_data[('pro' if outcome['vote_key'] == "+" else 'con') + '_object']
-                        t.save()
-
-                        # If a vote URL is given, execute it immediately.
-                        if form.cleaned_data['vote_url']:
-                            t.status = TriggerStatus.Open # can't execute while draft
-                            t.save()
-                            execute_trigger_from_vote(t, form.cleaned_data['vote_url'])
-
-                    # Redirect to admin.
-                    return HttpResponseRedirect('/admin/contrib/trigger/%d' % t.id)
-                except Exception as e:
-                    error = str(e)
-
-        else: # GET
-            form = NewFromBillForm()
-            error = None
-
-        return render(request, "contrib/admin/new-trigger-from-bill.html", { 'form': form, 'error': error })
 
     def edit_actions(self, request, trigger_id):
         from django.shortcuts import render, get_object_or_404
@@ -229,10 +264,70 @@ class TriggerRecommendationAdmin(admin.ModelAdmin):
         for tr in queryset.filter(notifications_created=False):
             tr.create_initial_notifications()
 
+
+class TriggerCustomizationExtraWidget(forms.Widget):
+    # We store overridden outcome strings within the JSON extra field.
+    # Render this nicer in the admin.
+
+    def __init__(self, trigger_outcomes):
+        super().__init__()
+        self.trigger_outcomes = trigger_outcomes
+
+    def render(self, name, value, attrs=None):
+        # Get the current value. If empty, initialize to empty data.
+        outcome_strings = (json.loads(value) or {}).get('outcome_strings')
+        if not outcome_strings:
+            outcome_strings = [{} for outcome in self.trigger_outcomes]
+
+        # Copy in the main label so it can be displayed.
+        for i, outcome in enumerate(self.trigger_outcomes):
+            outcome_strings[i]['_default'] = outcome
+
+        return TriggerOutcomesWidget().render(
+            name + "_outcome_strings",
+            json.dumps(outcome_strings))
+       
+    def value_from_datadict(self, data, files, name):
+        # Get value.
+        outcome_strings = json.loads(TriggerOutcomesWidget().value_from_datadict(data, files, name + "_outcome_strings"))
+
+        # If all fields are empty, clear the whole thing.
+        for outcome in outcome_strings:
+            if outcome.get("label") or outcome.get("tip") or outcome.get("object"):
+                break
+        else:
+            # No truthy values.
+            outcome_strings = None
+
+        return json.dumps({
+            "outcome_strings": outcome_strings
+        })
+        
+        
+
+class TriggerCustomizationAdminForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'instance' not in kwargs or kwargs['instance'] is None: return # add form doesn't have an instance
+        self.fields['outcome'].widget = forms.Select(
+            choices=
+            [('', "---------")] +
+            [(i, outcome['label']) for i, outcome in enumerate(kwargs['instance'].trigger.outcomes)])
+        self.fields['incumb_challgr'].widget = forms.Select(
+            choices=[
+                (None, "---------"),
+                (1.0, "Incumbents Only"),
+                (-1.0, "Challengers Only"),
+                (0.0, "Both Incumbents and Challengers"),
+            ])
+        self.fields['extra'].widget = TriggerCustomizationExtraWidget(kwargs['instance'].trigger.outcomes)
+
 class TriggerCustomizationAdmin(admin.ModelAdmin):
+    form = TriggerCustomizationAdminForm
     list_display = ['id', 'owner', 'trigger', 'created']
     raw_id_fields = ['trigger', 'owner']
     search_fields = ['id', 'owner__id', 'owner__name', 'title'] + ['trigger__'+f for f in TriggerAdmin.search_fields]
+    exclude = ['filter_competitive'] # not used yet
 
 class TriggerExecutionAdmin(admin.ModelAdmin):
     list_display = ['id', 'trigger', 'pledge_count_', 'total_contributions', 'created']

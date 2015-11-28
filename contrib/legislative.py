@@ -12,6 +12,7 @@ def get_trigger_type(chamber):
 	# needs to be created)
 	trigger_type, is_new = TriggerType.objects.get_or_create(
 		key = "congress_floorvote_%s" % chamber,
+		title = { 's': 'Senate Vote', 'h': 'House Vote', 'x': 'House or Senate Vote (Whichever Comes First)' }[chamber],
 		defaults = {
 		"strings": {
 			"actor": { 's': 'senator', 'h': 'representative', 'x': 'member of Congress' }[chamber],

@@ -1,4 +1,4 @@
-import enum, decimal, copy
+import enum, decimal, copy, json
 
 from django.db import models, transaction, IntegrityError
 from django.conf import settings
@@ -50,7 +50,7 @@ class TriggerType(models.Model):
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
 	def __str__(self):
-		return self.key
+		return self.title
 
 @django_enum
 class TriggerStatus(enum.Enum):
@@ -65,7 +65,7 @@ class Trigger(models.Model):
 
 	key = models.CharField(max_length=64, blank=True, null=True, db_index=True, unique=True, help_text="An opaque look-up key to quickly locate this object.")
 
-	title = models.CharField(max_length=200, help_text="The title for the trigger.")
+	title = models.CharField(max_length=200, help_text="The legislative action that this trigger is about, in wonky language.")
 	owner = models.ForeignKey('itfsite.Organization', blank=True, null=True, on_delete=models.PROTECT, help_text="The user/organization which created the trigger and can update it. Empty for Triggers created by us.")
 	trigger_type = models.ForeignKey(TriggerType, on_delete=models.PROTECT, help_text="The type of the trigger, which determines how it is described in text.")
 
@@ -73,11 +73,16 @@ class Trigger(models.Model):
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
 	description = models.TextField(help_text="Description text in the format given by description_format.")
-	description_format = EnumField(TextFormat, help_text="The format of the description text.")
-	execution_note = models.TextField(help_text="Explanatory note about how this Trigger will be executed, in the format given by execution_note_format.")
-	execution_note_format = EnumField(TextFormat, help_text="The format of the execution_note text.")
+	description_format = EnumField(TextFormat, default=TextFormat.Markdown, help_text="The format of the description text.")
+	execution_note = models.TextField(default="n/a", help_text="Explanatory note about how this Trigger will be executed, in the format given by execution_note_format.")
+	execution_note_format = EnumField(TextFormat, default=TextFormat.Markdown, help_text="The format of the execution_note text.")
 	status = EnumField(TriggerStatus, default=TriggerStatus.Draft, help_text="The current status of the trigger: Open (accepting pledges), Paused (not accepting pledges), Executed (funds distributed), Vacated (existing pledges invalidated).")
-	outcomes = JSONField(default=[], help_text="An array (order matters!) of information for each possible outcome of the trigger, e.g. ['Voted Yes', 'Voted No'].")
+	outcomes = JSONField(
+		default=json.dumps([ # so the add form can be sensibly prepopulated --- default is a raw value for some reason
+			{ "vote_key": "+", "label": "Yes on This Vote", "object": "in favor of the bill" },
+			{ "vote_key": "-", "label": "No on This Vote", "object": "against passage of the bill" },
+		]),
+		help_text="An array (order matters!) of information for each possible outcome of the trigger, e.g. ['Voted Yes', 'Voted No'].")
 
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
@@ -363,10 +368,10 @@ class TriggerCustomization(models.Model):
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
-	outcome = models.IntegerField(blank=True, null=True, help_text="Restrict Pledges to this outcome index.")
-	incumb_challgr = models.FloatField(blank=True, null=True, help_text="Restrict Pledges to this incumb_challgr value.")
-	filter_party = EnumField(ActorParty, blank=True, null=True, help_text="Restrict Pledges to this party.")
-	filter_competitive = models.NullBooleanField(default=False, help_text="Restrict Pledges to this filter_competitive value.")
+	outcome = models.IntegerField(blank=True, null=True, verbose_name="Restrict Outcome", help_text="Restrict Pledges to this outcome.")
+	incumb_challgr = models.FloatField(blank=True, null=True, verbose_name="Restrict Incumbent-Challenger Choice", help_text="Restrict Pledges to be for just incumbents, just challengers, both incumbents and challengers (where user can't pick), or don't restrict the user's choice.")
+	filter_party = EnumField(ActorParty, blank=True, null=True, verbose_name="Restrict Party", help_text="Restrict Pledges to be to candidates of this party.")
+	filter_competitive = models.NullBooleanField(default=False, verbose_name="Restrict Competitive Filter", help_text="Restrict Pledges to this filter_competitive value.")
 
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 
