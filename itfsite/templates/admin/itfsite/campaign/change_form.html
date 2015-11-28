@@ -19,7 +19,7 @@
             <p>&mdash; <a href="/admin/contrib/triggercustomization/add?owner={{original.owner.id}}&trigger={{trigger.id}}" target="_blank">create customization for {{original.owner}}</a></p>
         {% endif %}
         {% if trigger.execution %}
-            <p>&mdash; <a href="/admin/contrib/triggerexecution/{{trigger.execution.id}}" target="_blank">executed on {{trigger.execution.created}}</a> | <a href="/admin/contrib/trigger/{{trigger.id}}/edit-actions" target="_blank">edit</a></p>
+            <p>&mdash; <a href="/admin/contrib/triggerexecution/{{trigger.execution.id}}" target="_blank">executed on {{trigger.execution.created}}</a> | <a href="/admin/contrib/triggerexecution/{{trigger.execution.id}}/actions" target="_blank">edit</a></p>
         {% endif %}
     </div>
 {% endfor %}
@@ -30,7 +30,7 @@
         <p><a href="/admin/letters/letterscampaign/{{letters.id}}" target="_blank">{{letters.title}}</a></p>
         {% if letters.body_toggles_on %}
             <p>&mdash; <a href="/admin/contrib/trigger/{{letters.body_toggles_on.id}}" target="_blank">{{letters.body_toggles_on.title}}</a></p>
-            <p>&mdash; <a href="/admin/contrib/trigger/{{letters.body_toggles_on.id}}/edit-actions" target="_blank">edit</a></p>
+            <p>&mdash; <a href="/admin/contrib/trigger/{{letters.body_toggles_on.execution.id}}/actions" target="_blank">edit</a></p>
         {% endif %}
     </div>
 {% endfor %}

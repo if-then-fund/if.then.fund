@@ -647,13 +647,13 @@ class PledgeStatus(enum.Enum):
 
 class NoMassDeleteManager(models.Manager):
 	class CustomQuerySet(models.QuerySet):
-		def delete(self):
+		def delete(self, *args, **kwargs):
 			# Can't do a mass delete because it would not update Trigger.total_pledged,
 			# in the case of the Pledge model.
 			#
 			# Instead call delete() on each instance, which handles the constraint.
 			for obj in self:
-				obj.delete()
+				obj.delete(*args, **kwargs)
 	def get_queryset(self):
 		return NoMassDeleteManager.CustomQuerySet(self.model, using=self._db)
 
@@ -1091,7 +1091,7 @@ class PledgeExecution(models.Model):
 
 		# Return the Pledge to the open state so we can try to execute again.
 		self.pledge.status = PledgeStatus.Open
-		self.pledge.save()
+		self.pledge.save(update_fields=['status'])
 
 		# Decrement the TriggerExecution's pledge_count.
 		te = self.pledge.trigger.execution

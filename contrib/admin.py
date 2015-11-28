@@ -127,129 +127,6 @@ class TriggerAdmin(admin.ModelAdmin):
         queryset.filter(status=TriggerStatus.Open).update(status=TriggerStatus.Draft)
     open_to_draft.short_description = "Open => Draft"
 
-    def get_urls(self):
-        from django.conf.urls import patterns
-        urls = super(TriggerAdmin, self).get_urls()
-        return patterns('',
-            (r'^([0-9]+)/edit-actions$', self.admin_site.admin_view(self.edit_actions)),
-        ) + urls
-
-    def edit_actions(self, request, trigger_id):
-        from django.shortcuts import render, get_object_or_404
-
-        trigger = get_object_or_404(Trigger, id=trigger_id)
-
-        # Validity checks.
-        if trigger.pledge_count > 0:
-            return render(request, "contrib/admin/edit-actions.html", {
-                "trigger": trigger,
-                "error": "Can't edit this trigger. There are pledges on it."
-            })
-        elif trigger.status != TriggerStatus.Executed:
-            return render(request, "contrib/admin/edit-actions.html", {
-                "trigger": trigger,
-                "error": "Can't edit a trigger with status %s." % trigger.status.name,
-            })
-
-        if request.method == "POST":
-            with transaction.atomic():
-                # Update positions.
-                actor_outcomes = { }
-                for k, v in request.POST.items():
-                    if k == "from-vote-url":
-                        # Load the vote from GovTrack.
-                        try:
-                            from .legislative import load_govtrack_vote, load_govtrack_sponsors
-                            if "/votes" in v:
-                                (vote, when, ao) = load_govtrack_vote(trigger, v, flip=request.POST.get('from-vote-flip'))
-                            else:
-                                (bill, ao) = load_govtrack_sponsors(trigger, v, flip=request.POST.get('from-vote-flip'))
-                        except Exception as e:
-                            return render(request, "contrib/admin/edit-actions.html", {
-                                "trigger": trigger,
-                                "error": str(e),
-                            })
-                        for actor, outcome in ao.items():
-                            if actor.office and isinstance(outcome, int):
-                                # Include only actors known to currently be in office
-                                # and those that had an aye/no vote.
-                                actor_outcomes[actor] = outcome
-                            else:
-                                # Clear out the positions of any actor mentioned in the
-                                # vote that does not have a current office or that voted
-                                # present/not-voting.
-                                actor_outcomes[actor] = "null"
-
-                    elif k.startswith("actor_"):
-                        actor = Actor.objects.get(id=k[6:])
-                        actor_outcomes[actor] = (v if v in ("null", "rno") else int(v))
-
-                for actor, outcome in actor_outcomes.items():
-                    axn = Action.objects.filter(execution__trigger=trigger, actor=actor)
-                    if outcome == "null":
-                        # Delete action if exists.
-                        axn.delete()
-                    elif axn.first() and outcome != "rno" and axn.first().outcome == outcome:
-                        # Exists with correct outcome value.
-                        pass
-                    elif axn.first() and outcome == "rno" and axn.first().outcome == None:
-                        # Exists with correct outcome & a reason_for_no_outcome is set.
-                        pass
-                    else:
-                        # Doesn't exist, or exists with wrong outcome value.
-                        axn.delete()
-                        if outcome == "rno":
-                            return render(request, "contrib/admin/edit-actions.html", {
-                                "trigger": trigger,
-                                "error": "Can't set %s to having a reason for no outcome." % str(actor),
-                            })
-                        Action.create(trigger.execution, actor, outcome)
-
-        else: # GET
-            pass
-
-        # Get existing positions.
-        data = { }
-        if trigger.status == TriggerStatus.Executed:
-            # Actors that have an outcome recorded.
-            data.update({
-                action[0]: {
-                    "actor": action[0],
-                    "position": action[1],
-                }
-                for action
-                  in trigger.execution.actions.exclude(outcome=None).values_list('actor__id', 'outcome')
-            })
-
-            # Actors that have a reason_for_no_outcome recorded.
-            data.update({
-                action[0]: {
-                    "actor": action[0],
-                    "reason_for_no_outcome": action[1],
-                }
-                for action
-                  in trigger.execution.actions.filter(outcome=None).values_list('actor__id', 'reason_for_no_outcome')
-            })
-
-            # Convert Actor IDs to objects.
-            actors = Actor.objects.in_bulk({ entry["actor"] for entry in data.values() })
-            for entry in data.values():
-                entry["actor"] = actors[entry["actor"]]
-
-        # Which other actors can have a position on this? Ones currently holding
-        # office.
-        for actor in Actor.objects.exclude(office=None):
-            if actor.id not in data:
-                data[actor.id] = {
-                    "actor": actor,
-                }
-
-        data = sorted(data.values(), key = lambda entry : (not ('position' in entry or 'reason_for_no_outcome' in entry), entry['actor'].name_sort))
-        return render(request, "contrib/admin/edit-actions.html", {
-            "trigger": trigger,
-            "data": data,
-        })
-
 class TriggerStatusUpdateAdmin(admin.ModelAdmin):
     readonly_fields = ['trigger']
     search_fields = ['id', 'trigger__id']
@@ -333,9 +210,121 @@ class TriggerExecutionAdmin(admin.ModelAdmin):
     list_display = ['id', 'trigger', 'pledge_count_', 'total_contributions', 'created']
     readonly_fields = ['trigger', 'pledge_count', 'pledge_count_with_contribs', 'num_contributions', 'total_contributions']
     search_fields = ['id'] + ['trigger__'+f for f in TriggerAdmin.search_fields]
+
     def pledge_count_(self, obj):
         return "%d/%d" % (obj.pledge_count, obj.pledge_count_with_contribs)
     pledge_count_.short_description = "pledges (exct'd/contrib'd)"
+
+    def get_urls(self):
+        from django.conf.urls import patterns
+        urls = super(TriggerExecutionAdmin, self).get_urls()
+        return patterns('',
+            (r'^([0-9]+)/actions$', self.admin_site.admin_view(self.edit_actions)),
+        ) + urls
+
+    def edit_actions(self, request, trigger_execution_id):
+        from django.shortcuts import render, get_object_or_404
+
+        trigger_execution = get_object_or_404(TriggerExecution, id=trigger_execution_id)
+        trigger = trigger_execution.trigger
+
+        # Validity checks.
+        if trigger.pledge_count > 0:
+            return render(request, "contrib/admin/edit-actions.html", {
+                "trigger": trigger,
+                "error": "Can't edit this trigger. There are pledges on it."
+            })
+
+        if request.method == "POST":
+            with transaction.atomic():
+                # Update positions.
+                actor_outcomes = { }
+                for k, v in request.POST.items():
+                    if k == "from-vote-url":
+                        # Load the vote from GovTrack.
+                        try:
+                            from .legislative import load_govtrack_vote, load_govtrack_sponsors
+                            if "/votes" in v:
+                                (vote, when, ao) = load_govtrack_vote(trigger, v, flip=request.POST.get('from-vote-flip'))
+                            else:
+                                (bill, ao) = load_govtrack_sponsors(trigger, v, flip=request.POST.get('from-vote-flip'))
+                        except Exception as e:
+                            return render(request, "contrib/admin/edit-actions.html", {
+                                "trigger": trigger,
+                                "error": str(e),
+                            })
+                        for actor, outcome in ao.items():
+                            if actor.office and isinstance(outcome, int):
+                                # Include only actors known to currently be in office
+                                # and those that had an aye/no vote.
+                                actor_outcomes[actor] = outcome
+                            else:
+                                # Clear out the positions of any actor mentioned in the
+                                # vote that does not have a current office or that voted
+                                # present/not-voting.
+                                actor_outcomes[actor] = "null"
+
+                    elif k.startswith("actor_"):
+                        actor = Actor.objects.get(id=k[6:])
+                        actor_outcomes[actor] = (v if v in ("null", "rno") else int(v))
+
+                for actor, outcome in actor_outcomes.items():
+                    axn = Action.objects.filter(execution=trigger_execution, actor=actor)
+                    if outcome == "null":
+                        # Delete action if exists.
+                        axn.delete()
+                    elif axn.first() and outcome != "rno" and axn.first().outcome == outcome:
+                        # Exists with correct outcome value.
+                        pass
+                    elif axn.first() and outcome == "rno" and axn.first().outcome == None:
+                        # Exists with correct outcome & a reason_for_no_outcome is set.
+                        pass
+                    else:
+                        # Doesn't exist, or exists with wrong outcome value.
+                        axn.delete()
+                        if outcome == "rno":
+                            return render(request, "contrib/admin/edit-actions.html", {
+                                "trigger": trigger,
+                                "error": "Can't set %s to having a reason for no outcome." % str(actor),
+                            })
+                        Action.create(trigger_execution, actor, outcome)
+
+        else: # GET
+            pass
+
+        # Get existing positions.
+        data = { }
+        if True:
+            # Fetch.
+            data.update({
+                action[0]: {
+                    "actor": action[0],
+                    "position": action[1],
+                    "reason_for_no_outcome": action[2],
+                }
+                for action
+                  in trigger_execution.actions.values_list('actor__id', 'outcome', 'reason_for_no_outcome')
+            })
+
+            # Convert Actor IDs to objects.
+            actors = Actor.objects.in_bulk({ entry["actor"] for entry in data.values() })
+            for entry in data.values():
+                entry["actor"] = actors[entry["actor"]]
+
+        # Which other actors can have a position on this? Ones currently holding
+        # office.
+        for actor in Actor.objects.exclude(office=None):
+            if actor.id not in data:
+                data[actor.id] = {
+                    "actor": actor,
+                }
+
+        # Sort and display.
+        data = sorted(data.values(), key = lambda entry : (not ('position' in entry or 'reason_for_no_outcome' in entry), entry['actor'].name_sort))
+        return render(request, "contrib/admin/edit-actions.html", {
+            "trigger": trigger,
+            "data": data,
+        })
 
 class ActorAdmin(admin.ModelAdmin):
     list_display = ['name_long', 'party', 'govtrack_id', 'office', 'challenger', 'id']
