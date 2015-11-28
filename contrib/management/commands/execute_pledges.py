@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.conf import settings
 from datetime import timedelta
 
-from contrib.models import TriggerStatus, Pledge, PledgeStatus, ContributionAggregate, Tip
+from contrib.models import TriggerStatus, Pledge, PledgeStatus, Tip
 
 import sys, os, tqdm
 from taskutils import exclusive_process
@@ -40,15 +40,12 @@ class Command(BaseCommand):
 			if p.user
 				or p.created < timezone.now() - timedelta(days=1) ]
 
-		# Batch the ContributionAggregate updates.
-		ca_updater = ContributionAggregate.Updater()
-
 		# Loop through them.
 		if sys.stdout.isatty(): pledges_to_execute = tqdm.tqdm(pledges_to_execute)
 		for p in pledges_to_execute:
 			# Execute the pledge.
 			try:
-				p.execute(ca_updater=ca_updater)
+				p.execute()
 
 			# ValueError indicates a known condition that makes the pledge
 			# non-executable. We should skip it. Sometimes it just means
@@ -66,6 +63,3 @@ class Command(BaseCommand):
 					print(p)
 					print(e)
 					print()
-
-		# Save.
-		ca_updater.sync()

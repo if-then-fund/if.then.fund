@@ -85,7 +85,7 @@ class Trigger(models.Model):
 	total_pledged = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of pledges made *prior* to trigger execution (excludes Pledges with made_after_trigger_execution).")
 
 	def __str__(self):
-		return "%s [%d]" % (self.key, self.id)
+		return "Trigger(%d, %s)" % (self.id, self.title[0:30])
 
 	@property
 	def verb(self):
@@ -420,18 +420,6 @@ class TriggerExecution(models.Model):
 		super(TriggerExecution, self).delete(*args, **kwargs)
 		self.trigger.status = TriggerStatus.Paused
 		self.trigger.save(update_fields=['status'])
-
-	def get_outcomes(self, via_campaign=None):
-		# Get the contribution aggregates by outcome
-		# and sort by total amount of contributions.
-		outcomes = copy.deepcopy(self.trigger.outcomes)
-		for i in range(len(outcomes)):
-			outcomes[i]['index'] = i
-			outcomes[i]['contribs'] = 0
-		for rec in ContributionAggregate.get_slices('outcome', trigger_execution=self, via_campaign=via_campaign):
-			outcomes[rec['outcome']]['contribs'] = rec['total']
-		outcomes.sort(key = lambda x : x['contribs'], reverse=True)
-		return outcomes
 
 	def most_recent_pledge_execution(self):
 		return self.pledges.order_by('-created').first()
@@ -881,7 +869,7 @@ class Pledge(models.Model):
 		return True
 
 	@transaction.atomic
-	def execute(self, ca_updater=None):
+	def execute(self):
 		# Lock the Pledge and the Trigger to prevent race conditions.
 		pledge = Pledge.objects.select_for_update().filter(id=self.id).first()
 		trigger = Trigger.objects.select_for_update().filter(id=pledge.trigger.id).first()
@@ -902,12 +890,6 @@ class Pledge(models.Model):
 		fees = 0
 		total_charge = 0
 		de_don = None
-
-		# Buffer updates to the ContributionAggregate table.
-		ca_updater_sync_at_end = False
-		if ca_updater is None:
-			ca_updater = ContributionAggregate.Updater()
-			ca_updater_sync_at_end = True
 
 		if pledge.user is None:
 			# We do not make contributions for pledges from unconfirmed email
@@ -983,7 +965,7 @@ class Pledge(models.Model):
 				c.save()
 
 				# Increment the TriggerExecution and Action's total_contributions.
-				c.update_aggregates(updater=ca_updater)
+				c.update_aggregates()
 
 			# Mark pledge as executed.
 			pledge.status = PledgeStatus.Executed
@@ -995,10 +977,6 @@ class Pledge(models.Model):
 			if len(recip_contribs) > 0:
 				trigger_execution.pledge_count_with_contribs = models.F('pledge_count_with_contribs') + 1
 			trigger_execution.save(update_fields=['pledge_count', 'pledge_count_with_contribs'])
-
-			# If the ContributionAggregate updater is local to this call, sync changes now.
-			if ca_updater_sync_at_end:
-				ca_updater.sync()
 
 		except Exception as e:
 			# If a DE transaction was made, include its info in any exception that was raised.
@@ -1315,8 +1293,10 @@ class Recipient(models.Model):
 	de_id = models.CharField(max_length=64, unique=True, help_text="The Democracy Engine ID that we have assigned to this recipient.")
 	active = models.BooleanField(default=True, help_text="Whether this Recipient can currently receive funds.")
 
+	# this is only set when the recipient is an incumbent - this is the candidate's Actor object
 	actor = models.OneToOneField(Actor, blank=True, null=True, help_text="The Actor that this recipient corresponds to (i.e. this Recipient is an incumbent).")
 
+	# these fields are only set for generically specified challengers
 	office_sought = models.CharField(max_length=7, blank=True, null=True, db_index=True, help_text="For challengers, a code specifying the office sought in the form of 'S-NY-I' (New York class 1 senate seat) or 'H-TX-30' (Texas 30th congressional district). Unique with party.")
 	party = EnumField(ActorParty, blank=True, null=True, help_text="The party of the challenger, or null if this Recipient is for an incumbent. Unique with office_sought.")
 
@@ -1400,204 +1380,74 @@ class Contribution(models.Model):
 		self.action.execution.num_contributions = models.F('num_contributions') + 1*factor
 		self.action.execution.save(update_fields=['total_contributions', 'num_contributions'])
 
-		# Increment the cached ContributionAggregates that this Contribution
-		# gets aggregated in.
-		self.update_contributionaggregates(factor=factor, updater=updater)
-
-	def update_contributionaggregates(self, factor=1, updater=None):
-		# Increment the cached ContributionAggregates that this Contribution
-		# gets aggregated in, in the order of the CONTRIBUTION_AGGREGATE_FIELDS array.
-		if updater is None: updater = ContributionAggregate.Updater(buffered=False)
-
-		def update(**fields):
-			d = tuple([ fields.get(k) for k in CONTRIBUTION_AGGREGATE_FIELDS ])
-			updater.add(d, 1*factor, self.amount*factor)
-
-		for kw in [
-			{},
-			{ "trigger_execution": self.action.execution },
-			{ "trigger_execution": self.action.execution, "via_campaign": self.pledge_execution.pledge.via_campaign },
-		]:
-			update(**kw)
-			if "trigger_execution" in kw:
-				update(outcome=self.pledge_execution.pledge.desired_outcome, **kw)
-			update(actor=self.action.actor, incumbent=not self.recipient.is_challenger, **kw)
-			update(incumbent=not self.recipient.is_challenger, **kw)
-			update(party=self.action.party if not self.recipient.is_challenger else self.recipient.party, **kw)
-
-
-
-CONTRIBUTION_AGGREGATE_FIELDS = (
-	'trigger_execution',
-	'via_campaign',
-	'outcome',
-	'actor',
-	'incumbent',
-	'party',
-	'district',
-	)
-class ContributionAggregate(models.Model):
-	"""Aggregate totals for various slices of contributions."""
-
-	updated = models.DateTimeField(auto_now=True, db_index=True)
-
-	trigger_execution = models.ForeignKey(TriggerExecution, blank=True, null=True, related_name='contribution_aggregates', on_delete=models.CASCADE, help_text="The TriggerExecution that these cached statistics are about.")
-	via_campaign = models.ForeignKey('itfsite.Campaign', blank=True, null=True, on_delete=models.CASCADE, help_text="The Campaign that the Pledges were made via.")
-	outcome = models.IntegerField(blank=True, null=True, help_text="The outcome index that was taken. Null if the slice encompasses all outcomes.")
-	actor = models.ForeignKey(Actor, blank=True, null=True, on_delete=models.CASCADE, help_text="The Actor who caused the Action that the contribution was made about. The contribution may have gone to an opponent.")
-	incumbent = models.NullBooleanField(blank=True, null=True, help_text="Whether the contribution was to the Actor (True) or the Actor's challenger (False).")
-	party = EnumField(ActorParty, blank=True, null=True, help_text="The party of the Recipient.")
-	district = models.CharField(max_length=4, blank=True, null=True, help_text="The congressional district of the user (at the time of the pledge), in the form of XX00. Null if the slice encompasses all district.")
-
-	count = models.IntegerField(default=0, help_text="A cached total count of campaign contributions executed in this slice.")
-	total = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text="A cached total dollar amount of campaign contributions executed in this slice, excluding fees.")
-
-	class Meta:
-		unique_together = [CONTRIBUTION_AGGREGATE_FIELDS]
-
-	def __str__(self):
-		return "%d | %s %s %s %s %s %s" % (self.trigger_execution_id, self.via_campaign, self.outcome, self.actor_id, self.incumbent, self.party, self.district)
-
-	class Updater(object):
-		def __init__(self, buffered=True):
-			self.buffered = buffered
-			self.buffer = { }
-		def add(self, fields, count, total):
-			if fields not in self.buffer:
-				self.buffer[fields] = { 'count': 0, 'total': decimal.Decimal(0) }
-			self.buffer[fields]['count'] += count
-			self.buffer[fields]['total'] += total
-			if not self.buffered or len(self.buffer) > 10000:
-				self.sync()
-		def sync(self):
-			for fields, values in self.buffer.items():
-				self.sync_item(fields, values['count'], values['total'])
-			self.buffer.clear()
-		def sync_item(self, fields, count, total):
-			agg, is_new = ContributionAggregate.objects.get_or_create(
-				defaults={ 'count': count, 'total': total },
-				**dict(zip(CONTRIBUTION_AGGREGATE_FIELDS, fields)))
-			if not is_new:
-				agg.count = models.F('count') + count
-				agg.total = models.F('total') + total
-				agg.save(update_fields=['count', 'total'])
-
 	@staticmethod
-	def get_slice(**slce):
-		# Returns a single slice. Whatever fields the caller
-		# hasn't specifically requested get filled in with
-		# None, which represents the aggregate across all
-		# values. Otherwise we'd be requesting multiple
-		# ContributionAggregate instances.
-		#
-		# Return a dict { "count": __, "total": __ } to match
-		# how get_slices returns a list of dicts via .values().
-		for f in slce:
-			if f not in CONTRIBUTION_AGGREGATE_FIELDS:
-				raise ValueError(f)
-		slce = dict(slce)
-		for field in CONTRIBUTION_AGGREGATE_FIELDS:
-			if field not in slce:
-				slce[field] = None
-		try:
-			ca = ContributionAggregate.objects.get(**slce)
-			return { "count": ca.count, "total": ca.total }
-		except ContributionAggregate.DoesNotExist:
-			return { "count": 0, "total": 0 }
+	def aggregate(*across, **kwargs):
+		# Expand field aliases. Each alias is a tuple of:
+		#  ((field, lookup), to-database-value, from-database-value)
+		aliases = {
+			"trigger":         ("pledge_execution__trigger_execution",       lambda v : v.execution, lambda v : v.trigger),
+			"desired_outcome": ("pledge_execution__pledge__desired_outcome", lambda v : v,           lambda v : v),
+			"actor":           ("action__actor",                             lambda v : v,           lambda v : v),
+			"incumbent":       ("recipient__actor__isnull",                  lambda v : not v,       lambda v : v == 0),
+		}
+		def getalias(a): return aliases.get(a, (a, lambda v : v, lambda v : v))
+		original_across = across
+		across = [ getalias(a)[0] for a in across]
+		kwargs = { getalias(k)[0]: getalias(k)[1](v) for (k, v) in kwargs.items() }
 
-	@staticmethod
-	def get_slices(*across, **slce):
-		# Returns a list of ContributionAggregates that match the
-		# slce values. For any field not mentioned in slce or
-		# across, fill it in with None so we get aggregates
-		# across those values. The fields in across are the ones
-		# the caller wants particular aggregates for, and for
-		# those we must *exclude* None because that represents
-		# the aggregate for all of those values.
+		# Apply filters.
+		contribs = Contribution.objects.filter(**kwargs)
 
-		# sanity check
-		if len(across) == 0: raise ValueError("Must specify at least one 'across' column.")
-		for f in list(slce) + list(across):
-			if f not in CONTRIBUTION_AGGREGATE_FIELDS:
-				raise ValueError(f)
+		if len(across) == 0:
+			# Return a tuple (count, amount) for contributions matching the
+			# keyword arguments, which are passed directly to Contribution.objects.filter.
+			# models.Count always gives an integer, but models.Sum can give None
+			# if there the count is zero, so force to 0.0 if it's None.
 
-		# build the filters
-		slce = dict(slce)
-		for field in CONTRIBUTION_AGGREGATE_FIELDS:
-			if field not in slce and field not in across:
-				slce[field] = None
-		c = ContributionAggregate.objects.filter(**slce)
-		for f in across: # must use separate 'exclude' calls
-			c = c.exclude(**{f: None})
-
-		# sort descending by total
-		c = c.order_by('-total')
-
-		# fetch all
-		ret = list(c.values('count', 'total', *across))
-
-		# if actors were requested, pre-fetch objects
-		actors = Actor.objects.in_bulk(rec['actor'] for rec in ret if 'actor' in rec)
-
-		# if actors were requested add Action instances
-		actions = { }
-		if slce.get('trigger_execution') and len(actors) > 0:
-			actions = Action.objects.filter(execution=slce['trigger_execution']).select_related('execution__trigger')
-			actions = { action.actor_id: action for action in actions }
-
-		# if outcome was requested, add outcome labels
-		if 'outcome' in across and slce.get('trigger_execution'):
-			outcome_strings = slce['trigger_execution'].trigger.outcome_strings()
-			if slce.get('via_campaign'):
-				# Get outcome strings from any TriggerCustomization, if there is one.
-				tcust = TriggerCustomization.objects.filter(owner=slce['via_campaign'].owner, trigger=slce['trigger_execution'].trigger).first()
-				if tcust:
-					outcome_strings = tcust.outcome_strings()
-
-		# turn integers from .values() back into objects
-		for rec in ret:
-			if 'actor' in rec:
-				rec['actor'] = actors[rec['actor']]
-				if slce.get('trigger_execution'):
-					rec['action'] = actions[rec['actor'].id]
-
-			if 'party' in rec:
-				rec['party'] = ActorParty(rec['party'])
-			if 'outcome' in rec and slce.get('trigger_execution'):
-				rec['label'] = outcome_strings[rec['outcome']]['label']
+			ret = contribs.aggregate(count=models.Count('id'), amount=models.Sum('amount'))
+			return (ret["count"], ret["amount"] or decimal.Decimal(0))
 		
-		return ret
+		else:
+			# Return a list of (value, (count, amount)) for contributions
+			# matching the keyword arguments and where value is a tuple
+			# from the cartesian product of the values of the fields in
+			# `across`, in the same order. The keyword arguments are passed
+			# directly to Contribution.objects.filter.
 
-	@staticmethod
-	@transaction.atomic
-	def rebuild():
-		# import tqdm if we have it for a nice console progress bar
-		try:
-			from tqdm import tqdm
-		except:
-			tqdm = lambda x : x
+			from django.db.models.expressions import RawSQL
+			qs = contribs
+			for i, f in enumerate(across):
+				if f == "recipient__actor__isnull":
+					qs = qs.annotate(**{ f: RawSQL("(select actor_id is null from contrib_recipient where contrib_recipient.id=recipient_id)", []) })
+			qs = qs\
+				.values(*across)\
+				.annotate(count=models.Count('id'), amount=models.Sum('amount'))
 
-		# utility function to page through objects
-		def iterate(qs, chunksize=5000):
-			import gc
-			pk = 0
-			last_pk = qs.order_by('-pk')[0].pk
-			qs = qs.order_by('pk')
-			while pk < last_pk:
-				for row in qs.filter(pk__gt=pk)[:chunksize].iterator():
-					pk = row.pk
-					yield row
-				gc.collect()
+			# map IDs back to object instances by getting the instances
+			# ahead of time in bulk
+			if "action" in original_across:
+				actions = Action.objects.select_related('actor', 'execution', 'execution__trigger').in_bulk(item["action"] for item in qs)
+			if "actor" in original_across:
+				actors = Actor.objects.in_bulk(item["action__actor"] for item in qs)
 
-		# Delete all ContributionAggregate objects.
-		ContributionAggregate.objects.all().delete()
+			# map IDs to object instances or, for aliases, apply the
+			# alias inverse function
+			def niceval(value, field):
+				if field == "action":
+					return actions[value]
+				elif field == "actor":
+					return actors[value]
+				elif field in ("action__party", "recipient__party"):
+					return ActorParty(value)
+				else:
+					return getalias(field)[2](value)
 
-		# Start incrementing new ones.
-		updater = ContributionAggregate.Updater()
+			# build up the list to return
+			ret = []
+			for item in qs:
+				ret.append( (tuple(niceval(item[a2], a1) for (a1, a2) in zip(original_across, across) ), (item['count'], item['amount'])))
 
-		iter = Contribution.objects.all().select_related('action__execution', 'pledge_execution__pledge__via_campaign', 'pledge_execution__pledge', 'action', 'action__actor', 'recipient', 'pledge_execution')
-		for c in tqdm(iterate(iter), total=Contribution.objects.count()):
-			c.update_contributionaggregates(updater=updater)
+			# sort by amount, descending
+			ret.sort(key = lambda item : item[1][1], reverse=True)
 
-		updater.sync()
-
+			return ret

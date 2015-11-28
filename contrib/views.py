@@ -8,7 +8,7 @@ from django.conf import settings
 
 from twostream.decorators import anonymous_view, user_view_for
 
-from contrib.models import Trigger, TriggerStatus, TriggerExecution, ContributorInfo, Pledge, PledgeStatus, PledgeExecution, PledgeExecutionProblem, Contribution, ActorParty, ContributionAggregate, IncompletePledge, TriggerCustomization
+from contrib.models import Trigger, TriggerStatus, TriggerExecution, ContributorInfo, Pledge, PledgeStatus, PledgeExecution, PledgeExecutionProblem, Contribution, ActorParty, IncompletePledge, TriggerCustomization
 from contrib.utils import json_response
 from contrib.bizlogic import HumanReadableValidationError, run_authorization_test
 
@@ -432,7 +432,7 @@ def report(request):
 	context.update(report_fetch_data(None, None))
 	return render(request, "contrib/totals.html", context)
 
-def report_fetch_data(trigger, via_campaign, with_actor_details=True):
+def report_fetch_data(trigger, via_campaign):
 	pledge_slice_fields = { }
 	pledgeexec_slice_fields = { }
 	ca_slice_fields = { }
@@ -448,12 +448,12 @@ def report_fetch_data(trigger, via_campaign, with_actor_details=True):
 		if te.pledge_count < .75 * trigger.pledge_count:
 			raise Http404("This trigger is still being executed.")
 		pledgeexec_slice_fields["trigger_execution"] = te
-		ca_slice_fields["trigger_execution"] = te
+		ca_slice_fields["pledge_execution__trigger_execution"] = te
 
 	if via_campaign:
 		pledge_slice_fields["via_campaign"] = via_campaign
 		pledgeexec_slice_fields["pledge__via_campaign"] = via_campaign
-		ca_slice_fields["via_campaign"] = via_campaign
+		ca_slice_fields["pledge_execution__pledge__via_campaign"] = via_campaign
 
 	# form response
 	ret = { }
@@ -476,41 +476,55 @@ def report_fetch_data(trigger, via_campaign, with_actor_details=True):
 		ret["last_contrib_date"] = pledge_executions.order_by('created').last().created
 
 	# aggregate count and amount of campaign contributions
-	ret["total"] = ContributionAggregate.get_slice(**ca_slice_fields)
+	ret["total"] = dict(zip(["count", "total"], Contribution.aggregate(**ca_slice_fields)))
 	if ret["total"]["count"] > 0:
 		ret["total"]["average"] = ret["total"]["total"] / ret["total"]["count"]
 
-	if "trigger_execution" in ca_slice_fields:
+	if trigger:
 		# Aggregates by outcome.
-		ret['outcomes'] = ContributionAggregate.get_slices('outcome', **ca_slice_fields)
-
-		# Make sure all of the trigger's outcomes are represented --- add zeroes if needed.
-		has_outcomes = set(outcome['outcome'] for outcome in ret['outcomes'])
+		ret['outcomes'] = []
+		outcome_totals = dict(Contribution.aggregate('desired_outcome', **ca_slice_fields))
 		for outcome_index, outcome_info in enumerate(trigger.outcomes):
-			if outcome_index in has_outcomes: continue # already got this via get_slices
+			outcome_total = outcome_totals.get((outcome_index,), (0, decimal.Decimal(0)))
 			ret['outcomes'].append({
 				"outcome": outcome_index,
-				"label": outcome_info['label'], # normally added by get_slices
-				"total": 0,
-				"count": 0,
+				"label": outcome_info['label'],
+				"total": outcome_total[1],
+				"count": outcome_total[0],
 			})
 
 	# Aggregates by actor.
-	if with_actor_details:
-		from collections import defaultdict
-		ret['actors'] = defaultdict(lambda : defaultdict( lambda : decimal.Decimal(0) ))
-		for rec in ContributionAggregate.get_slices('actor', 'incumbent', **ca_slice_fields):
-			ret['actors'][rec['actor']]['actor'] = rec['actor']
-			ret['actors'][rec['actor']][str(rec['incumbent'])] += rec['total']
-			if "action" in rec:
-				ret['actors'][rec['actor']]['action'] = rec['action']
-		ret['actors'] = sorted(ret['actors'].values(), key = lambda x : (-(x['True'] - x['False']), -x['True'], x['actor'].name_sort))
+	from collections import defaultdict
+	ret['actors'] = defaultdict(lambda : defaultdict( lambda : decimal.Decimal(0) ))
+	for ((action_or_actor, incumbent), (count, total)) in Contribution.aggregate('action' if trigger else "actor", 'incumbent', **ca_slice_fields):
+		actor = action_or_actor.actor if trigger else action_or_actor
+		ret['actors'][actor.id]['actor'] = actor
+		ret['actors'][actor.id][str(incumbent)] += total
+		if trigger: ret['actors'][actor.id]['action'] = action_or_actor
+	ret['actors'] = sorted(ret['actors'].values(), key = lambda x : (-(x['True'] - x['False']), -x['True'], x['actor'].name_sort))
 
 	# Aggregates by incumbent/chalenger.
-	ret['by_incumb_chlngr'] = ContributionAggregate.get_slices('incumbent', **ca_slice_fields)
+	ret['by_incumb_chlngr'] = [
+		{
+			"incumbent": incumbent,
+			"count": count,
+			"total": total,
+		}
+		for ((incumbent,), (count, total))
+		in Contribution.aggregate('incumbent', **ca_slice_fields) ]
 
-	# Aggregates by party.
-	ret['by_party'] = ContributionAggregate.get_slices('party', **ca_slice_fields)
+	# Aggregates by party. Have to do this in two steps - first
+	# incumbents, then challengers, since the party is stored in
+	# separate places.
+	ret['by_party'] = defaultdict( lambda : [0, decimal.Decimal(0)] )
+	for ((party,), (count, total)) in Contribution.aggregate('action__party', action__isnull=False, **ca_slice_fields):
+		ret['by_party'][party][0] += count
+		ret['by_party'][party][1] += total
+	for ((party,), (count, total)) in Contribution.aggregate('recipient__party', action__isnull=True, **ca_slice_fields):
+		ret['by_party'][party][0] += count
+		ret['by_party'][party][1] += total
+	ret['by_party'] = [ { "party": party, "count": count, "total": total } for (party, (count, total)) in ret['by_party'].items() ]
+	ret['by_party'].sort(key = lambda item : item["total"], reverse=True)
 
 	# report
 	return ret

@@ -407,7 +407,7 @@ class ExecutionTestCase(TestCase):
 			self.assertEqual(p.trigger.execution.pledge_count_with_contribs, 0)
 			self.assertEqual(p.trigger.execution.num_contributions, 0)
 			self.assertEqual(p.trigger.execution.total_contributions, 0)
-			self.assertEqual(ContributionAggregate.objects.filter(trigger_execution=p.trigger.execution).count(), 0)
+			self.assertEqual(Contribution.aggregate(pledge_execution__trigger_execution=p.trigger.execution)[0], 0)
 			return
 
 		# Test more general properties.
@@ -416,8 +416,7 @@ class ExecutionTestCase(TestCase):
 		# Test that every Action lead to a Contribution.
 		expected_contrib_count = 0
 		expected_charge = 0
-		expected_aggregates_counts = dict()
-		expected_aggregates_totals = dict()
+		expected_aggregates = dict()
 		for action in t.execution.actions.all():
 			contrib = p.execution.contributions.filter(action=action).first()
 			if action.outcome is None:
@@ -439,16 +438,16 @@ class ExecutionTestCase(TestCase):
 				expected_contrib_count += 1
 				expected_charge += expected_contrib_amount
 
-				# What ContributionAggregates should we expect?
+				# What Contribution.aggregates should we check later?
 				def mkfields(**fields):
-					return tuple([ fields.get(k) for k in CONTRIBUTION_AGGREGATE_FIELDS ])
+					return tuple(sorted(fields.items()))
 				for fields in [
-						mkfields(trigger_execution=p.trigger.execution),
-						mkfields(trigger_execution=p.trigger.execution, outcome=desired_outcome),
-						mkfields(trigger_execution=p.trigger.execution, actor=action.actor, incumbent=(action.outcome == p.desired_outcome)),
-						mkfields(trigger_execution=p.trigger.execution, party=action.party if action.outcome == p.desired_outcome else recipient.party)]:
-					expected_aggregates_counts[fields] = expected_aggregates_counts.get(fields, 0) + 1
-					expected_aggregates_totals[fields] = expected_aggregates_totals.get(fields, 0) + expected_contrib_amount
+						mkfields(trigger=p.trigger),
+						mkfields(trigger=p.trigger, desired_outcome=desired_outcome),
+						mkfields(trigger=p.trigger, action__actor=action.actor, incumbent=(action.outcome == p.desired_outcome))]:
+					c = expected_aggregates.setdefault(fields, [0,0])
+					c[0] += 1
+					c[1] += expected_contrib_amount
 
 		# Test fees and no extra contributions.
 		expected_fees = (expected_charge * Decimal('.09') + Decimal('.20')).quantize(Decimal('.01'))
@@ -465,13 +464,26 @@ class ExecutionTestCase(TestCase):
 		self.assertEqual(p.trigger.execution.total_contributions, p.execution.charged-p.execution.fees)
 
 		# Test contribution aggregates.
-		for fields in expected_aggregates_counts:
-			key = dict(zip(CONTRIBUTION_AGGREGATE_FIELDS, fields))
-			ca = ContributionAggregate.get_slice(**key)
-			self.assertEqual(ca['count'], expected_aggregates_counts[fields])
-			self.assertEqual(ca['total'], expected_aggregates_totals[fields])
-		self.assertEqual(ContributionAggregate.get_slice(trigger_execution=p.trigger.execution)['total'], p.trigger.execution.total_contributions)
-		self.assertEqual(ContributionAggregate.get_slice(trigger_execution=p.trigger.execution)['count'], p.trigger.execution.num_contributions)
+
+		for (fields, (count, amount)) in expected_aggregates.items():
+			count_, amount_ = Contribution.aggregate(**dict(fields))
+			self.assertEqual(count_, count)
+			self.assertEqual(amount_, amount)
+		self.assertEqual(Contribution.aggregate(trigger=p.trigger)[1], p.trigger.execution.total_contributions)
+		self.assertEqual(Contribution.aggregate(trigger=p.trigger)[0], p.trigger.execution.num_contributions)
+		def agg(a, incumbent):
+			return Contribution.aggregate(trigger=p.trigger, action=a, incumbent=incumbent)
+		totals_by_action = { }
+		totals_by_actor = { }
 		for a in p.trigger.execution.actions.all():
-			self.assertEqual(ContributionAggregate.get_slice(trigger_execution=p.trigger.execution, actor=a.actor, incumbent=True)['total'], a.total_contributions_for)
-			self.assertEqual(ContributionAggregate.get_slice(trigger_execution=p.trigger.execution, actor=a.actor, incumbent=False)['total'], a.total_contributions_against)
+			aa = (agg(a, True), agg(a, False))
+			self.assertEqual(aa[0][1], a.total_contributions_for)
+			self.assertEqual(aa[1][1], a.total_contributions_against)
+			totals_by_action[a] = aa
+			totals_by_actor[a.actor] = aa
+		for a in Contribution.aggregate("action", trigger=p.trigger):
+			self.assertEqual(a[1][1], totals_by_action[a[0][0]][0][1] + totals_by_action[a[0][0]][1][1])
+		for a in Contribution.aggregate("action", "incumbent", trigger=p.trigger):
+			self.assertEqual(a[1][1], totals_by_action[a[0][0]][0 if a[0][1] else 1][1])
+		for a in Contribution.aggregate("actor", "incumbent", trigger=p.trigger):
+			self.assertEqual(a[1][1], totals_by_actor[a[0][0]][0 if a[0][1] else 1][1])
