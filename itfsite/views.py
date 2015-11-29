@@ -221,10 +221,18 @@ def campaign(request, id):
 def campaign_(request, campaign):
 	from contrib.models import TriggerStatus, TriggerCustomization, Pledge
 
-	# What trigger should the user take action on?
-	trigger = campaign.contrib_triggers.filter(status__in=(TriggerStatus.Open,TriggerStatus.Executed)).order_by('-created').first()
+	# What trigger should the user take action on? It's the most recently created
+	# trigger that is open or executed (since users can still take action on
+	# executed triggers). During drafting, also allow the user editing the page to
+	# see a draft trigger.
+	trigger_must_have_status = [TriggerStatus.Open, TriggerStatus.Executed]
+	if campaign.status == CampaignStatus.Draft: trigger_must_have_status.append(TriggerStatus.Draft)
+	trigger = campaign.contrib_triggers.filter(status__in=trigger_must_have_status).order_by('-created').first()
+
+	# Show customized trigger options when the campaign has an owner and that owner
+	# has a TriggerCustomization for the trigger.
 	tcust = None
-	if trigger and campaign.owner: # campaigns without an owner cannot have a trigger customization
+	if trigger and campaign.owner:
 		tcust = TriggerCustomization.objects.filter(trigger=trigger, owner=campaign.owner).first()
 
 	# Which letter-writing campaign should the user take action on?

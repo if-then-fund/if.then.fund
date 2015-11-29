@@ -116,6 +116,13 @@
 				border-color: #BBD;
 			}
 
+#draft-warning {
+	background-color: rgb(130, 30, 40);
+	padding: .5em 0;
+	color: #FFA;
+	text-align: center;
+}
+
 #story {
 	background-color: rgb(190, 80, 90);
 	padding: 3em 0;
@@ -233,6 +240,15 @@ form span.required:after {
 	</div>
   </div>
 </div>
+
+{% if campaign.status|stringformat:'s' == "CampaignStatus.Draft" %}
+<div id="draft-warning">
+	This campaign is still a draft.
+	{% if trigger.status|stringformat:'s' == "TriggerStatus.Draft" %}
+		The action <em>{{trigger.title}}</em> is also a draft and will not appear if the campaign is made live.
+	{% endif %}
+</div>
+{% endif %}
 
 <div id="story" class="invert-site-brand-ifthenfund">
 	<div class="container">

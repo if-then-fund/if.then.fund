@@ -205,6 +205,10 @@ def create_pledge(request):
 
 	# trigger
 	p.trigger = Trigger.objects.get(id=request.POST['trigger'])
+	if p.trigger.status == TriggerStatus.Draft:
+		raise HumanReadableValidationError("This trigger is still a draft. A contribution cannot yet be made.")
+	elif p.trigger.status not in (TriggerStatus.Open, TriggerStatus.Executed):
+		raise HumanReadableValidationError("This trigger is in the wrong state to make a contribution.")
 	p.made_after_trigger_execution = (p.trigger.status == TriggerStatus.Executed)
 
 	# ref_code (i.e. utm_campaign code) and Campaign ('via_campaign')
