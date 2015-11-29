@@ -190,7 +190,6 @@ def set_email_settings(request):
 	# Return something, but this is ignored.
 	return HttpResponse('OK', content_type='text/plain')
 
-@anonymous_view
 def campaign(request, id):
 	# get the object, make sure it is for the right brand that the user is viewing
 	campaign = get_object_or_404(Campaign, id=id, brand=get_branding(request)['BRAND_INDEX'])
@@ -201,6 +200,25 @@ def campaign(request, id):
 	if request.path != campaign.get_absolute_url():
 		return redirect(campaign.get_absolute_url()+qs)
 
+	# The rest of this view is handled in the next function.
+	f = campaign_
+
+	# Cache?
+	if campaign.status == CampaignStatus.Draft:
+		# When a campaign is in draft status, we won't
+		# cache the output to allow the user editing the
+		# campaign's settings to reload the page to see
+		# updated settings.
+		pass
+	else:
+		# As soon as the campaign exits draft status we'll
+		# mark the response as cachable so that the http
+		# layer strongly caches the output.
+		f = anonymous_view(f)
+
+	return f(request, campaign)
+
+def campaign_(request, campaign):
 	from contrib.models import TriggerStatus, TriggerCustomization, Pledge
 
 	# What trigger should the user take action on?
