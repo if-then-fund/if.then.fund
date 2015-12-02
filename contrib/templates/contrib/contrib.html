@@ -115,17 +115,3 @@
 
 {% endif %}
 
-{% if not pledge.execution and recommendations|length > 0 and pledge.trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
-<h2 style="margin: 2em 0 0 0">You might be interested in...</h2>
-<div class="row">
-	{% for t in recommendations %}
-		<div class="col-md-4">
-			<h3><a href="{{t.get_absolute_url}}" style="border: none">{{t.title}}</a></h3>
-			{{t.description|render_text:t.description_format|truncatewords_html:25}}
-			<p>{{t.total_pledged|currency}} committed so far</p>
-			<p><button onclick="window.location='{{t.get_absolute_url|escapejs}}'" class="btn btn-success">Take Action &raquo;</button></p>
-		</div>
-	{% endfor %}
-</div>
-{% endif %}
-

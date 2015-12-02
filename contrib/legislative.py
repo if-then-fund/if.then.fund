@@ -40,8 +40,6 @@ def create_congressional_vote_trigger(chamber, title, short_title):
 	chamber_name = { 's': 'Senate', 'h': 'House', 'x': 'Congress' }[chamber]
 	t.description = "The %s will soon vote on %s." % (chamber_name, short_title)
 	t.description_format = TextFormat.Markdown
-	t.execution_note = "Contributions will be made when the %s votes on the bill." % chamber_name
-	t.execution_note_format = TextFormat.Markdown
 
 	t.outcomes = [
 		{ "vote_key": "+", "label": "Yes on %s" % short_title, "object": "in favor of %s" % short_title },

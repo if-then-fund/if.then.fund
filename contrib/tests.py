@@ -27,8 +27,6 @@ def create_trigger(trigger_type, key, title):
 		trigger_type=trigger_type,
 		description="This is a test trigger.",
 		description_format=TextFormat.Markdown,
-		execution_note="The trigger will be executed during the test.",
-		execution_note_format=TextFormat.Markdown,
 		outcomes=[
 			{ "label": "Yes", "tip": "YesTip" },
 			{ "label": "No", "tip": "NoTip" },
@@ -152,8 +150,6 @@ class ExecutionTestCase(TestCase):
 			trigger_type=tt,
 			description="This is a test trigger.",
 			description_format=TextFormat.Markdown,
-			execution_note="The trigger will be executed during the test.",
-			execution_note_format=TextFormat.Markdown,
 			outcomes=[
 				{ "label": "Yes", },
 				{ "label": "No", },

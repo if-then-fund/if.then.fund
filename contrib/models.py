@@ -72,10 +72,8 @@ class Trigger(models.Model):
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
-	description = models.TextField(help_text="Description text in the format given by description_format.")
+	description = models.TextField(help_text="Describe what event will cause (or caused) contributions to be made. The text in the format given by description_format.")
 	description_format = EnumField(TextFormat, default=TextFormat.Markdown, help_text="The format of the description text.")
-	execution_note = models.TextField(default="n/a", help_text="Explanatory note about how this Trigger will be executed, in the format given by execution_note_format.")
-	execution_note_format = EnumField(TextFormat, default=TextFormat.Markdown, help_text="The format of the execution_note text.")
 	status = EnumField(TriggerStatus, default=TriggerStatus.Draft, help_text="The current status of the trigger: Open (accepting pledges), Paused (not accepting pledges), Executed (funds distributed), Vacated (existing pledges invalidated).")
 	outcomes = JSONField(
 		default=json.dumps([ # so the add form can be sensibly prepopulated --- default is a raw value for some reason
@@ -198,8 +196,6 @@ class Trigger(models.Model):
 			}})[0]
 		t.description = "n/a"
 		t.description_format = TextFormat.HTML
-		t.execution_note = "n/a"
-		t.execution_note_format = TextFormat.HTML
 		t.outcomes = self.outcomes
 		t.extra = self.extra
 		t.save()
