@@ -53,9 +53,9 @@ class Organization(models.Model):
 	description = models.TextField(help_text="Description text in the format given by description_format.")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
-	profile_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The square 'profile image' to display on the organization's page, and the default image for og_image.")
-	og_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The og:image to display for the organization's page and the default og:image for the organization's campaigns.")
-	banner_image = models.ImageField(upload_to='org-banner-image', blank=True, null=True, help_text="A raw image to display for this organization's banner image.")
+	profile_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The logo or headshot to display as the profile picture on the organization's page, and the default og:image (for Facebook and Twitter posts) if og_image is not provided. At least 120px x 120px and must be square.")
+	og_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The og:image (for Facebook and Twitter posts) for the organization's profile page and the default og:image for the organization's campaigns. At least 120px x 120px and must be square.")
+	banner_image = models.ImageField(upload_to='org-banner-image', blank=True, null=True, help_text="This organization's banner image. Should be about 1300px wide and at least 500px tall, but the image will be resized and cropped as necessary.")
 
 	website_url = models.URLField(max_length=256, blank=True, null=True, help_text="The URL to this organization's website.")
 	facebook_url = models.URLField(max_length=256, blank=True, null=True, help_text="The URL to this organization's Facebook Page.")
@@ -95,8 +95,8 @@ class Campaign(models.Model):
 
 	# Content
 	headline = models.CharField(max_length=256, help_text="Headline text for the page.")
-	og_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The og:image to display for the site.")
-	splash_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The big image to display behind the main call to action.")
+	og_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The og:image (for Facebook and Twitter posts) for the campaign. At least 120px x 120px and must be square. If not set and the campaign has an owner, then the owner's og:image is used.")
+	splash_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The big image to display behind the main call to action. Should be about 1300px wide and at least 500px tall, but the image will be resized and cropped as necessary.")
 	image_credit = models.TextField(blank=True, null=True, help_text="Image credit, in the same format as the subhead.")
 	body_text = models.TextField(help_text="Body text, in the format given by body_format.")
 	body_format = EnumField(TextFormat, default=TextFormat.Markdown, help_text="The format of the body_text field.")
