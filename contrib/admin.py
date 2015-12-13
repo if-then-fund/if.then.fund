@@ -80,12 +80,12 @@ class TriggerOutcomesWidget(forms.Widget):
         while True:
             n = escape_html(name) + "_" + str(i)
             if n + "_label" not in data: break # no more outcomes
-            outcome = json.loads(data[n + "_otherkeys"])
-            outcome.update({
-                "label": data[n + "_label"].strip(),
-                "tip": data[n + "_tip"].strip() or None, # turn empty string into null
-                "object": data[n + "_object"].strip(),
-            })
+            outcome = json.loads(data[n + "_otherkeys"]) # default data
+            for key in ("label", "tip", "object"):
+                # set if string is truthy - don't create key if value is empty
+                value = data[n + "_" + key].strip()
+                if value:
+                    outcome[key] = value
             outcomes.append(outcome)
             i += 1
 

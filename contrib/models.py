@@ -382,8 +382,14 @@ class TriggerCustomization(models.Model):
 
 	def outcome_strings(self):
 		if self.extra and self.extra.get('outcome_strings'):
-			return self.extra['outcome_strings']
+			# Merge keys from the outcome_strings here and the outcome strings of the trigger.
+			def merge_strings(a, b):
+				r = dict(a)
+				r.update(b)
+				return r
+			return [merge_strings(*pair) for pair in zip(self.trigger.outcome_strings(), self.extra['outcome_strings'])]
 		else:
+			# Use the outcome strings from the Trigger. No customization here.
 			return self.trigger.outcome_strings()
 
 	def get_outcome(self):
