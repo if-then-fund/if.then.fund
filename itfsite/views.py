@@ -255,7 +255,7 @@ def campaign_(request, campaign):
 		"trigger": trigger,
 		"tcust": tcust,
 		"trigger_outcome_strings": outcome_strings,
-		"suggested_pledge": 5,
+		"suggested_pledge": 10,
 		"alg": Pledge.current_algorithm(),
 
 		# for letter writing campaigns

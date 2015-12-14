@@ -383,7 +383,7 @@ class ContribTest(SeleniumTest):
 		time.sleep(.5)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You have scheduled a campaign contribution of $5.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote against H.R. 30, but if they vote in favor of H.R. 30 their part of your contribution will go to their next general election opponent.")
+			"You have scheduled a campaign contribution of $10.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote against H.R. 30, but if they vote in favor of H.R. 30 their part of your contribution will go to their next general election opponent.")
 
 	def _test_pledge_returning_user_logs_in_already_has_pledge(self, campaign, email, pw):
 		# Re-start pledge.
