@@ -673,8 +673,9 @@ function contribution_update_display_text() {
   $('#advanced-filters-toggle').prop('disabled', false);
 
   function fill_in(filter_elem, opponent) {
-    if (opponent) outcome_index = 1 - outcome_index; // assumes two options!
-    var text = trigger_outcomes[outcome_index];
+    var index = outcome_index;
+    if (opponent) index = 1 - index; // assumes two options!
+    var text = trigger_outcomes[index];
     $(filter_elem).parent().find('.fill-in').text(text);
   }
 
