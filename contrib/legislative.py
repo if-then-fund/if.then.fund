@@ -132,7 +132,7 @@ def load_govtrack_vote(trigger, govtrack_url, flip):
 	vote = requests.get(govtrack_url+'.json').json()
 
 	# Sanity check that the chamber of the vote matches the trigger type.
-	if trigger.trigger_type.key not in ('congress_floorvote_x', 'congress_floorvote_' + vote['chamber'][0], 'announced-positions'):
+	if trigger.trigger_type.key not in ('congress_floorvote_x', 'congress_floorvote_both', 'congress_floorvote_' + vote['chamber'][0], 'announced-positions'):
 		raise Exception("The trigger type doesn't match the chamber the vote ocurred in.")
 
 	# Parse the date, which is in US Eastern time. Must make it
@@ -191,26 +191,51 @@ def load_govtrack_vote(trigger, govtrack_url, flip):
 
 	return (vote, when, actor_outcomes)
 
-def execute_trigger_from_vote(trigger, govtrack_url, flip=False):
-	(vote, when, actor_outcomes) = load_govtrack_vote(trigger, govtrack_url, flip=flip)
+def execute_trigger_from_votes(trigger, votes):
+	if len(votes) == 0: raise ValueError("votes")
+
+	# Load all of the vote details from GovTrack.
+	votes = list(map(
+		lambda vote_dict :
+			# (vote, when, actor_outcomes)
+			load_govtrack_vote(trigger, vote_dict["url"], flip=vote_dict.get("flip", False)),
+		votes))
 
 	# Make a textual description of what happened.
-	description = """The {chamber} voted on this on {date}. For more details, see the [vote record on GovTrack.us]({link}).
-	""".format(
-		chamber=vote['chamber_label'],
-		date=when.strftime("%b. %d, %Y").replace(" 0", ""),
-		link=vote['link'],
-	)
+	if len(votes) == 1:
+		description = """The {chamber} voted on this on {date}. For more details, see the [vote record on GovTrack.us]({link}).
+		""".format(
+			chamber=votes[0][0]['chamber_label'],
+			date=votes[0][1].strftime("%b. %d, %Y").replace(" 0", ""),
+			link=votes[0][0]['link'],
+		)
+	else:
+		description = "See " + "; ".join(
+			"the [{chamber} vote on {date} at GovTrack.us]({link})".format(
+				chamber=vote['chamber_label'],
+				date=when.strftime("%b. %d, %Y").replace(" 0", ""),
+				link=vote['link'],
+			)
+			for vote, when, actor_outcomes in votes) \
+			+ "."
+
+	# Merge the actor_outcomes of the votes. Check that an actor doesn't appear
+	# in multiple votes.
+	actor_outcomes = { }
+	for vote, when, ao in votes:
+		for actor, outcome in ao.items():
+			if actor in actor_outcomes:
+				raise ValueError("Actor %s is present in multiple votes." % str(actor))
+			actor_outcomes[actor] = outcome
 
 	# Execute.
 	trigger.execute(
-		when,
+		min(when for vote, when, actor_outcomes in votes), # earliest vote date => Trigger.action_time
 		actor_outcomes,
 		description,
 		TextFormat.Markdown,
 		{
-			"govtrack_url": govtrack_url,
-			"govtrack_vote": vote,
+			"govtrack_votes": [vote for vote, when, actor_outcomes in votes],
 		})
 
 def load_govtrack_sponsors(trigger, govtrack_url, flip=False):
