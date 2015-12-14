@@ -1,0 +1,113 @@
+{
+ "category": "passage", 
+ "category_label": "Passage", 
+ "chamber": "house", 
+ "chamber_label": "House", 
+ "congress": 114, 
+ "created": "2015-01-08T16:16:00", 
+ "id": 116119, 
+ "link": "https://www.govtrack.us/congress/votes/114-2015/h14", 
+ "margin": 0.188679, 
+ "missing_data": false, 
+ "number": 14, 
+ "options": [
+  {
+   "id": 445007, 
+   "key": "+", 
+   "value": "Aye", 
+   "vote": 116119
+  }, 
+  {
+   "id": 445008, 
+   "key": "-", 
+   "value": "No", 
+   "vote": 116119
+  }, 
+  {
+   "id": 445009, 
+   "key": "P", 
+   "value": "Present", 
+   "vote": 116119
+  }, 
+  {
+   "id": 445010, 
+   "key": "0", 
+   "value": "Not Voting", 
+   "vote": 116119
+  }
+ ], 
+ "percent_plus": 0.587413, 
+ "question": "H.R. 30: Save American Workers Act of 2015", 
+ "question_details": "On Passage of the Bill in the House", 
+ "related_amendment": null, 
+ "related_bill": {
+  "bill_resolution_type": "bill", 
+  "bill_type": "house_bill", 
+  "bill_type_label": "H.R.", 
+  "congress": 114, 
+  "current_status": "pass_over_house", 
+  "current_status_date": "2015-01-08", 
+  "current_status_description": "This bill passed in the House on January 8, 2015 and goes to the Senate next for consideration.", 
+  "current_status_label": "Passed House", 
+  "display_number": "H.R. 30", 
+  "docs_house_gov_postdate": null, 
+  "id": 335452, 
+  "introduced_date": "2015-01-06", 
+  "is_alive": true, 
+  "is_current": true, 
+  "link": "https://www.govtrack.us/congress/bills/114/hr30", 
+  "lock_title": false, 
+  "major_actions": [
+   [
+    "datetime.datetime(2015, 1, 6, 0, 0)", 
+    2, 
+    "Referred to the Committee on Ways and Means, and in addition to the Committee on the Budget, for a period to be subsequently determined by the Speaker, in each case for consideration of such provisions as fall within the jurisdiction of the committee concerned.", 
+    "<action datetime=\"2015-01-06\" state=\"REFERRED\">\n      <text>Referred to the Committee on Ways and Means, and in addition to the Committee on the Budget, for a period to be subsequently determined by the Speaker, in each case for consideration of such provisions as fall within the jurisdiction of the committee concerned.</text>\n    </action>\n    "
+   ], 
+   [
+    "datetime.datetime(2015, 1, 8, 16, 17)", 
+    4, 
+    "On passage Passed by recorded vote: 252 - 172 (Roll no. 14).", 
+    "<vote how=\"roll\" type=\"vote\" roll=\"14\" datetime=\"2015-01-08T16:17:00-05:00\" where=\"h\" result=\"pass\" state=\"PASS_OVER:HOUSE\">\n      <text>On passage Passed by recorded vote: 252 - 172 (Roll no. 14).</text>\n      <reference ref=\"CR H125-126\" label=\"text\"/>\n    </vote>\n    "
+   ]
+  ], 
+  "noun": "bill", 
+  "number": 30, 
+  "senate_floor_schedule_postdate": null, 
+  "sliplawnum": null, 
+  "sliplawpubpriv": null, 
+  "source": "thomas-congproj", 
+  "source_link": null, 
+  "sponsor": 412428, 
+  "sponsor_role": 43541, 
+  "thomas_link": "http://thomas.loc.gov/cgi-bin/bdquery/z?d114:hr30:", 
+  "title": "H.R. 30: Save American Workers Act of 2015", 
+  "title_without_number": "Save American Workers Act of 2015", 
+  "titles": [
+   [
+    "short", 
+    "introduced", 
+    "Save American Workers Act of 2015"
+   ], 
+   [
+    "short", 
+    "passed house", 
+    "Save American Workers Act of 2015"
+   ], 
+   [
+    "official", 
+    "introduced", 
+    "To amend the Internal Revenue Code of 1986 to repeal the 30-hour threshold for classification as a full-time employee for purposes of the employer mandate in the Patient Protection and Affordable Care Act and replace it with 40 hours."
+   ]
+  ]
+ }, 
+ "required": "1/2", 
+ "result": "Passed", 
+ "session": "2015", 
+ "source": "house", 
+ "source_label": "house.gov", 
+ "total_minus": 172, 
+ "total_other": 5, 
+ "total_plus": 252, 
+ "vote_type": "On Passage of the Bill"
+}

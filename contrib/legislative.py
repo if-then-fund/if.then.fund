@@ -123,14 +123,15 @@ def map_outcome_indexes(trigger, flip):
 
 	return outcome_index
 
-def load_govtrack_vote(trigger, govtrack_url, flip):
-	import requests, lxml.etree
+def load_govtrack_vote(trigger, govtrack_url, flip, from_fixtures=False):
+	from contrib.utils import query_json_api
+	import lxml.etree
 
 	outcome_index = map_outcome_indexes(trigger, flip)
 
 	# Get vote metadata from GovTrack's API, via the undocumented
 	# '.json' extension added to vote pages.
-	vote = requests.get(govtrack_url+'.json').json()
+	vote = query_json_api(govtrack_url+'.json', {}, from_fixtures=from_fixtures)
 
 	# Sanity check that the chamber of the vote matches the trigger type.
 	if trigger.trigger_type.key not in ('congress_floorvote_x', 'congress_floorvote_both', 'congress_floorvote_' + vote['chamber'][0], 'announced-positions'):
@@ -148,7 +149,7 @@ def load_govtrack_vote(trigger, govtrack_url, flip):
 	# includes everything without limit/offset. The congress project vote
 	# JSON doesn't use GovTrack IDs, so it's more convenient to use GovTrack
 	# data.
-	r = requests.get(govtrack_url+'/export/xml').content
+	r = query_json_api(govtrack_url+'/export/xml', {}, raw=True, from_fixtures=from_fixtures)
 	dom = lxml.etree.fromstring(r)
 	actor_outcomes = { }
 	for voter in dom.findall('voter'):
@@ -192,14 +193,14 @@ def load_govtrack_vote(trigger, govtrack_url, flip):
 
 	return (vote, when, actor_outcomes)
 
-def execute_trigger_from_votes(trigger, votes):
+def execute_trigger_from_votes(trigger, votes, from_fixtures=False):
 	if len(votes) == 0: raise ValueError("votes")
 
 	# Load all of the vote details from GovTrack.
 	votes = list(map(
 		lambda vote_dict :
 			# (vote, when, actor_outcomes)
-			load_govtrack_vote(trigger, vote_dict["url"], flip=vote_dict.get("flip", False)),
+			load_govtrack_vote(trigger, vote_dict["url"], flip=vote_dict.get("flip", False), from_fixtures=from_fixtures),
 		votes))
 
 	# Make a textual description of what happened.

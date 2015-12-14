@@ -1,0 +1,115 @@
+<roll where="senate" session="114" year="2015" roll="14" source="senate.gov"
+  datetime="2015-01-22T16:30:00-05:00" updated="2015-01-22T18:15:28-05:00"
+  aye="54" nay="45" nv="1" present="0">
+  <category>amendment</category>
+  <type>On the Amendment</type>
+  <question>On the Amendment S.Amdt. 18 to S.Amdt. 2 to S. 1 (Keystone XL Pipeline Act)</question>
+  <required>3/5</required>
+  <result>Amendment Rejected</result>
+  <bill session="114" type="s" number="1"/>
+  <amendment ref="regular" session="114" number="s18"/>
+  <option key="+">Yea</option>
+  <option key="-">Nay</option>
+  <option key="P">Present</option>
+  <option key="0">Not Voting</option>
+  <voter id="300002" vote="+" value="Yea" state="TN"/>
+  <voter id="412251" vote="+" value="Yea" state="WY"/>
+  <voter id="400034" vote="+" value="Yea" state="MO"/>
+  <voter id="400040" vote="+" value="Yea" state="AR"/>
+  <voter id="400061" vote="+" value="Yea" state="WV"/>
+  <voter id="412269" vote="+" value="Yea" state="LA"/>
+  <voter id="402675" vote="+" value="Yea" state="IN"/>
+  <voter id="300023" vote="+" value="Yea" state="MS"/>
+  <voter id="412248" vote="+" value="Yea" state="TN"/>
+  <voter id="300027" vote="+" value="Yea" state="TX"/>
+  <voter id="412508" vote="+" value="Yea" state="AR"/>
+  <voter id="300030" vote="+" value="Yea" state="ID"/>
+  <voter id="412573" vote="+" value="Yea" state="TX"/>
+  <voter id="412549" vote="+" value="Yea" state="MT"/>
+  <voter id="300041" vote="+" value="Yea" state="WY"/>
+  <voter id="412667" vote="+" value="Yea" state="IA"/>
+  <voter id="412556" vote="+" value="Yea" state="NE"/>
+  <voter id="400134" vote="+" value="Yea" state="AZ"/>
+  <voter id="412406" vote="+" value="Yea" state="CO"/>
+  <voter id="300048" vote="+" value="Yea" state="IA"/>
+  <voter id="300052" vote="+" value="Yea" state="UT"/>
+  <voter id="412554" vote="+" value="Yea" state="ND"/>
+  <voter id="412218" vote="+" value="Yea" state="NV"/>
+  <voter id="412494" vote="+" value="Yea" state="ND"/>
+  <voter id="300055" vote="+" value="Yea" state="OK"/>
+  <voter id="400194" vote="+" value="Yea" state="GA"/>
+  <voter id="412496" vote="+" value="Yea" state="WI"/>
+  <voter id="412582" vote="+" value="Yea" state="VA"/>
+  <voter id="412545" vote="+" value="Yea" state="ME"/>
+  <voter id="400222" vote="+" value="Yea" state="IL"/>
+  <voter id="412464" vote="+" value="Yea" state="OK"/>
+  <voter id="412495" vote="+" value="Yea" state="UT"/>
+  <voter id="412391" vote="+" value="Yea" state="WV"/>
+  <voter id="300071" vote="+" value="Yea" state="AZ"/>
+  <voter id="300072" vote="+" value="Yea" state="KY"/>
+  <voter id="400284" vote="+" value="Yea" state="KS"/>
+  <voter id="300075" vote="+" value="Yea" state="AK"/>
+  <voter id="412492" vote="+" value="Yea" state="KY"/>
+  <voter id="412666" vote="+" value="Yea" state="GA"/>
+  <voter id="400325" vote="+" value="Yea" state="OH"/>
+  <voter id="412322" vote="+" value="Yea" state="ID"/>
+  <voter id="300083" vote="+" value="Yea" state="KS"/>
+  <voter id="412669" vote="+" value="Yea" state="SD"/>
+  <voter id="412491" vote="+" value="Yea" state="FL"/>
+  <voter id="412671" vote="+" value="Yea" state="NE"/>
+  <voter id="412471" vote="+" value="Yea" state="SC"/>
+  <voter id="300088" vote="+" value="Yea" state="AL"/>
+  <voter id="300089" vote="+" value="Yea" state="AL"/>
+  <voter id="412665" vote="+" value="Yea" state="AK"/>
+  <voter id="400546" vote="+" value="Yea" state="SD"/>
+  <voter id="412668" vote="+" value="Yea" state="NC"/>
+  <voter id="400408" vote="+" value="Yea" state="PA"/>
+  <voter id="400418" vote="+" value="Yea" state="LA"/>
+  <voter id="400432" vote="+" value="Yea" state="MS"/>
+  <voter id="412493" vote="-" value="Nay" state="NH"/>
+  <voter id="400013" vote="-" value="Nay" state="WI"/>
+  <voter id="412330" vote="-" value="Nay" state="CO"/>
+  <voter id="412490" vote="-" value="Nay" state="CT"/>
+  <voter id="412598" vote="-" value="Nay" state="NJ"/>
+  <voter id="300011" vote="-" value="Nay" state="CA"/>
+  <voter id="400050" vote="-" value="Nay" state="OH"/>
+  <voter id="400054" vote="-" value="Nay" state="NC"/>
+  <voter id="300018" vote="-" value="Nay" state="WA"/>
+  <voter id="400064" vote="-" value="Nay" state="MD"/>
+  <voter id="300019" vote="-" value="Nay" state="DE"/>
+  <voter id="412246" vote="-" value="Nay" state="PA"/>
+  <voter id="300025" vote="-" value="Nay" state="ME"/>
+  <voter id="412390" vote="-" value="Nay" state="DE"/>
+  <voter id="412205" vote="-" value="Nay" state="IN"/>
+  <voter id="300038" vote="-" value="Nay" state="IL"/>
+  <voter id="300043" vote="-" value="Nay" state="CA"/>
+  <voter id="412378" vote="-" value="Nay" state="MN"/>
+  <voter id="412223" vote="-" value="Nay" state="NY"/>
+  <voter id="300047" vote="-" value="Nay" state="SC"/>
+  <voter id="412281" vote="-" value="Nay" state="NM"/>
+  <voter id="412200" vote="-" value="Nay" state="HI"/>
+  <voter id="412242" vote="-" value="Nay" state="MN"/>
+  <voter id="300065" vote="-" value="Nay" state="VT"/>
+  <voter id="400253" vote="-" value="Nay" state="MA"/>
+  <voter id="412243" vote="-" value="Nay" state="MO"/>
+  <voter id="400272" vote="-" value="Nay" state="NJ"/>
+  <voter id="412325" vote="-" value="Nay" state="OR"/>
+  <voter id="300073" vote="-" value="Nay" state="MD"/>
+  <voter id="412194" vote="-" value="Nay" state="CT"/>
+  <voter id="300076" vote="-" value="Nay" state="WA"/>
+  <voter id="300078" vote="-" value="Nay" state="FL"/>
+  <voter id="412305" vote="-" value="Nay" state="MI"/>
+  <voter id="300081" vote="-" value="Nay" state="RI"/>
+  <voter id="400357" vote="-" value="Nay" state="VT"/>
+  <voter id="412507" vote="-" value="Nay" state="HI"/>
+  <voter id="300087" vote="-" value="Nay" state="NY"/>
+  <voter id="412323" vote="-" value="Nay" state="NH"/>
+  <voter id="300093" vote="-" value="Nay" state="MI"/>
+  <voter id="412244" vote="-" value="Nay" state="MT"/>
+  <voter id="400413" vote="-" value="Nay" state="NM"/>
+  <voter id="412321" vote="-" value="Nay" state="VA"/>
+  <voter id="412542" vote="-" value="Nay" state="MA"/>
+  <voter id="412247" vote="-" value="Nay" state="RI"/>
+  <voter id="300100" vote="-" value="Nay" state="OR"/>
+  <voter id="300082" vote="0" value="Not Voting" state="NV"/>
+</roll>

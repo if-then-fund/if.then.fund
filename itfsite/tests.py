@@ -272,7 +272,7 @@ class ContribTest(SeleniumTest):
 
 		# Execute the trigger.
 		from contrib.legislative import execute_trigger_from_votes
-		execute_trigger_from_votes(t, [{"url": vote_url }])
+		execute_trigger_from_votes(t, [{"url": vote_url }], from_fixtures=True)
 		t.refresh_from_db()
 		self.assertEqual(t.status, TriggerStatus.Executed)
 
