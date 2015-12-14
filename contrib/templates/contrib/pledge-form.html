@@ -688,19 +688,47 @@ function contribution_update_display_text() {
   // Human-readable explanation of the current filter choices.
   // This is mirrored in models.py's Pledge.targets_summary().
   var party = "";
-  if (getPartyFilterValue() == "D") party = "Democratic ";
-  if (getPartyFilterValue() == "R") party = "Republican ";
+  var pf = getPartyFilterValue();
+  if (pf == "D") party = "Democratic ";
+  if (pf == "R") party = "Republican ";
+
+  var ic = getIncumbentChallengerValue();
+
+  // Count up actual recipient counts;
+  var recip_counts = {{trigger_recips|safe}};
+  var total_recip = "";
+  var total_incumbent_recip = "";
+  var total_challenger_recip = "";
+  if (recip_counts) {
+    total_recip = 0;
+    total_incumbent_recip = 0;
+    total_challenger_recip = 0;
+    recip_counts = recip_counts[outcome_index];
+    for (var i = 0; i < recip_counts.length; i++) {
+      var c = recip_counts[i];
+      if (ic != 0 && ic != c.incumbent) continue;
+      if (pf.length == 1 && c.party != pf) continue;
+      total_recip += c.count;
+      if (c.incumbent == 1)
+        total_incumbent_recip += c.count;
+      else
+        total_challenger_recip += c.count;
+    }
+    total_recip += " ";
+    total_incumbent_recip += " ";
+    total_challenger_recip += " ";
+  }
+
 
   var who;
-  var ic = getIncumbentChallengerValue();
   if (ic == 1)
-    who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text();
+    who = total_recip + party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text();
   else if (ic == -1)
-    who = "the opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + (party ? (" if the opponent is in the " + party + "party") : "");
-  else if (party == "")
+    who = "the " + total_recip + "opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + (party ? (" if the opponent is in the " + party + "party") : "");
+  else if (party == "" && !recip_counts)
     who = "{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}up to {% endif %}{{trigger.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + ", their part of your contribution will go to their next general election opponent"
   else
-    who = party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + (party ? (" if the opponent is in the " + party + "party") : "");
+    who = total_incumbent_recip + party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + total_challenger_recip + "opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + (party ? (" if the opponent is in the " + party + "party") : "");
 
   $('#filter-summary span.text').text("We will split your contribution evenly across " + who + ".");
 }

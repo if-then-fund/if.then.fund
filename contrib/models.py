@@ -1081,7 +1081,7 @@ class PledgeExecution(models.Model):
 		# We don't delete PledgeExecutions because they are transactional
 		# records. And open Pledges will get executed again automatically,
 		# so we can't simply void an execution by deleting this record.
-		if not really:
+		if not really and self.charged > 0:
 			raise ValueError("Can't delete a PledgeExecution. (Set the 'really' flag internally.)")
 
 		# But maybe in debugging/testing we want to be able to delete

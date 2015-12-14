@@ -219,7 +219,9 @@ def campaign(request, id):
 	return f(request, campaign)
 
 def campaign_(request, campaign):
+	import json
 	from contrib.models import TriggerStatus, TriggerCustomization, Pledge
+	from contrib.bizlogic import get_pledge_recipient_breakdown
 
 	# What trigger should the user take action on? It's the most recently created
 	# trigger that is open or executed (since users can still take action on
@@ -257,6 +259,7 @@ def campaign_(request, campaign):
 		"trigger_outcome_strings": outcome_strings,
 		"suggested_pledge": 10,
 		"alg": Pledge.current_algorithm(),
+		"trigger_recips": json.dumps(get_pledge_recipient_breakdown(trigger) if trigger and trigger.status == TriggerStatus.Executed else None),
 
 		# for letter writing campaigns
 		"letters_campaign": letters_campaign,

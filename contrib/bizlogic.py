@@ -89,6 +89,28 @@ def run_authorization_test(pledge, ccnum, cccvc, aux_data):
 	pledge.profile.extra['billing']['authorization'] = de_txn
 	pledge.profile.extra['billing']['de_cc_token'] = de_txn['token']
 
+def get_pledge_recipient_breakdown(trigger):
+	# Compute how many recipients there are in each category for a hypothetical
+	# pledge.
+	counts = [{ } for outcome in trigger.outcomes]
+	for action in trigger.execution.actions.all().select_related('actor'):
+		# Actor did not take a counted action.
+		if action.outcome is None: continue
+
+		# Actor is no longer able to take contributions.
+		if action.actor.inactive_reason: continue
+
+		for outcome in range(len(trigger.outcomes)):
+			if action.outcome == outcome:
+				# incumbent and the actor's party
+				key = (1, action.party.name[0])
+			elif action.actor.challenger is not None: # should always be present but in testing...
+				# challenger and the challenger's party
+				key = (-1, action.actor.challenger.party.name[0])
+			counts[outcome][key] = counts[outcome].get(key, 0) + 1
+
+	return [ [ { "incumbent": key[0], "party": key[1], "count": count } for key, count in outcome.items()] for outcome in counts]
+
 def get_pledge_recipients(trigger, pledge):
 	# For pledge execution, figure out how to split the contribution
 	# across actual recipients.
