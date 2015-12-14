@@ -128,7 +128,7 @@ class Trigger(models.Model):
 		# Lock the trigger to prevent race conditions and make sure the Trigger
 		# is either Open or Paused.
 		trigger = Trigger.objects.select_for_update().filter(id=self.id).first()
-		if trigger.status not in (TriggerStatus.Open, TriggerStatus.Paused):
+		if trigger.status not in (TriggerStatus.Draft, TriggerStatus.Open, TriggerStatus.Paused):
 			raise ValueError("Trigger is in state %s." % str(trigger.status))
 
 		# Create TriggerExecution object.
