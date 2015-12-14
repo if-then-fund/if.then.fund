@@ -1,0 +1,166 @@
+{
+ "meta": {
+  "limit": 100, 
+  "offset": 0, 
+  "total_count": 1
+ }, 
+ "objects": [
+  {
+   "bill_resolution_type": "bill", 
+   "bill_type": "senate_bill", 
+   "bill_type_label": "S.", 
+   "congress": 114, 
+   "current_status": "vetoed_override_fail_originating_senate", 
+   "current_status_date": "2015-03-04", 
+   "current_status_description": "This bill was vetoed. The Senate attempted to override the veto on March 4, 2015 but failed.", 
+   "current_status_label": "Vetoed & Override Failed in Senate", 
+   "display_number": "S. 1", 
+   "docs_house_gov_postdate": null, 
+   "id": 335663, 
+   "introduced_date": "2015-01-06", 
+   "is_alive": false, 
+   "is_current": true, 
+   "link": "https://www.govtrack.us/congress/bills/114/s1", 
+   "lock_title": false, 
+   "major_actions": [
+    [
+     "datetime.datetime(2015, 1, 7, 0, 0)", 
+     3, 
+     "Read the second time. Placed on Senate Legislative Calendar under General Orders. Calendar No. 1.", 
+     "<calendar datetime=\"2015-01-07\" state=\"REPORTED\" calendar=\"Senate Legislative\" under=\"General Orders\" number=\"1\">\n      <text>Read the second time. Placed on Senate Legislative Calendar under General Orders. Calendar No. 1.</text>\n    </calendar>\n    "
+    ], 
+    [
+     "datetime.datetime(2015, 1, 29, 0, 0)", 
+     5, 
+     "Passed Senate with amendments by Yea-Nay Vote. 62 - 36. Record Vote Number: 49.", 
+     "<vote how=\"roll\" type=\"vote\" roll=\"49\" datetime=\"2015-01-29\" where=\"s\" result=\"pass\" state=\"PASS_OVER:SENATE\">\n      <text>Passed Senate with amendments by Yea-Nay Vote. 62 - 36. Record Vote Number: 49.</text>\n      <reference ref=\"CR S637-641\" label=\"text\"/>\n    </vote>\n    "
+    ], 
+    [
+     "datetime.datetime(2015, 2, 11, 17, 14)", 
+     9, 
+     "On passage Passed by the Yeas and Nays: 270 - 152 (Roll no. 75).", 
+     "<vote how=\"roll\" type=\"vote2\" roll=\"75\" datetime=\"2015-02-11T17:14:00-05:00\" where=\"h\" result=\"pass\" state=\"PASSED:BILL\">\n      <text>On passage Passed by the Yeas and Nays: 270 - 152 (Roll no. 75).</text>\n      <reference ref=\"CR H947-950\" label=\"text\"/>\n    </vote>\n    "
+    ], 
+    [
+     "datetime.datetime(2015, 2, 24, 0, 0)", 
+     15, 
+     "Vetoed by President.", 
+     "<vetoed datetime=\"2015-02-24\" state=\"PROV_KILL:VETO\">\n      <text>Vetoed by President.</text>\n      <reference ref=\"CR S1073\" label=\"text of veto message\"/>\n    </vetoed>\n    "
+    ], 
+    [
+     "datetime.datetime(2015, 3, 4, 0, 0)", 
+     25, 
+     "Failed of passage in Senate over veto by Yea-Nay Vote. 62 - 37. Record Vote Number: 68.", 
+     "<vote how=\"roll\" type=\"override\" roll=\"68\" datetime=\"2015-03-04\" where=\"s\" result=\"fail\" state=\"VETOED:OVERRIDE_FAIL_ORIGINATING:SENATE\">\n      <text>Failed of passage in Senate over veto by Yea-Nay Vote. 62 - 37. Record Vote Number: 68.</text>\n    </vote>\n    "
+    ]
+   ], 
+   "noun": "bill", 
+   "number": 1, 
+   "senate_floor_schedule_postdate": null, 
+   "sliplawnum": null, 
+   "sliplawpubpriv": null, 
+   "source": "thomas-congproj", 
+   "source_link": null, 
+   "sponsor": {
+    "bioguideid": "H001061", 
+    "birthday": "1957-03-13", 
+    "cspanid": 85233, 
+    "firstname": "John", 
+    "gender": "male", 
+    "gender_label": "Male", 
+    "id": 412494, 
+    "lastname": "Hoeven", 
+    "link": "https://www.govtrack.us/congress/members/john_hoeven/412494", 
+    "middlename": "", 
+    "name": "Sen. John Hoeven [R-ND]", 
+    "namemod": "", 
+    "nickname": "", 
+    "osid": "N00031688", 
+    "pvsid": "41788", 
+    "sortname": "Hoeven, John (Sen.) [R-ND]", 
+    "twitterid": "SenJohnHoeven", 
+    "youtubeid": "senatorjohnhoevennd"
+   }, 
+   "sponsor_role": {
+    "caucus": null, 
+    "congress_numbers": [
+     112, 
+     113, 
+     114
+    ], 
+    "current": true, 
+    "description": "Senior Senator from North Dakota", 
+    "district": null, 
+    "enddate": "2017-01-03", 
+    "extra": {
+     "address": "338 Russell Senate Office Building Washington DC 20510", 
+     "contact_form": "http://www.hoeven.senate.gov/public/index.cfm/email-the-senator", 
+     "fax": "202-224-7999", 
+     "office": "338 Russell Senate Office Building", 
+     "rss_url": "http://www.hoeven.senate.gov/public/index.cfm/rss/feed"
+    }, 
+    "id": 42048, 
+    "leadership_title": null, 
+    "party": "Republican", 
+    "person": 412494, 
+    "phone": "202-224-2551", 
+    "role_type": "senator", 
+    "role_type_label": "Senator", 
+    "senator_class": "class3", 
+    "senator_class_label": "Class 3", 
+    "senator_rank": "senior", 
+    "senator_rank_label": "Senior", 
+    "startdate": "2011-01-05", 
+    "state": "ND", 
+    "title": "Sen.", 
+    "title_long": "Senator", 
+    "website": "http://www.hoeven.senate.gov"
+   }, 
+   "thomas_link": "http://thomas.loc.gov/cgi-bin/bdquery/z?d114:s1:", 
+   "title": "S. 1: Keystone XL Pipeline Approval Act", 
+   "title_without_number": "Keystone XL Pipeline Approval Act", 
+   "titles": [
+    [
+     "short", 
+     "introduced", 
+     "Keystone XL Pipeline Act"
+    ], 
+    [
+     "short", 
+     "passed house", 
+     "Keystone XL Pipeline Approval Act"
+    ], 
+    [
+     "short-partial", 
+     "passed house", 
+     "Better Buildings Act of 2015"
+    ], 
+    [
+     "short-partial", 
+     "passed house", 
+     "Energy Efficiency Improvement Act of 2015"
+    ], 
+    [
+     "short", 
+     "passed senate", 
+     "Keystone XL Pipeline Approval Act"
+    ], 
+    [
+     "short-partial", 
+     "passed senate", 
+     "Better Buildings Act of 2015"
+    ], 
+    [
+     "short-partial", 
+     "passed senate", 
+     "Energy Efficiency Improvement Act of 2015"
+    ], 
+    [
+     "official", 
+     "introduced", 
+     "A bill to approve the Keystone XL Pipeline."
+    ]
+   ]
+  }
+ ]
+}

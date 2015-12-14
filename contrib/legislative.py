@@ -50,7 +50,7 @@ def create_congressional_vote_trigger(chamber, title, short_title):
 
 	return t
 
-def create_trigger_from_bill(bill_id, chamber):
+def create_trigger_from_bill(bill_id, chamber, from_fixtures=False):
 	import re
 
 	if bill_id.startswith("https://"):
@@ -74,7 +74,8 @@ def create_trigger_from_bill(bill_id, chamber):
 	# get bill data from GovTrack
 	from contrib.utils import query_json_api
 	bill_search = query_json_api("https://www.govtrack.us/api/v2/bill", {
-		"bill_type": bill_type, "number": bill_number, "congress": bill_congress })
+		"bill_type": bill_type, "number": bill_number, "congress": bill_congress },
+		from_fixtures=from_fixtures)
 	if len(bill_search['objects']) == 0: raise ValueError("Not a bill.")
 	if len(bill_search['objects']) > 1: raise ValueError("Matched multiple bills?")
 

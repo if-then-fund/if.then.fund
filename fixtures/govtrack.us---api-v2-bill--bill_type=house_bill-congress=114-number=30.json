@@ -1,0 +1,119 @@
+{
+ "meta": {
+  "limit": 100, 
+  "offset": 0, 
+  "total_count": 1
+ }, 
+ "objects": [
+  {
+   "bill_resolution_type": "bill", 
+   "bill_type": "house_bill", 
+   "bill_type_label": "H.R.", 
+   "congress": 114, 
+   "current_status": "pass_over_house", 
+   "current_status_date": "2015-01-08", 
+   "current_status_description": "This bill passed in the House on January 8, 2015 and goes to the Senate next for consideration.", 
+   "current_status_label": "Passed House", 
+   "display_number": "H.R. 30", 
+   "docs_house_gov_postdate": null, 
+   "id": 335452, 
+   "introduced_date": "2015-01-06", 
+   "is_alive": true, 
+   "is_current": true, 
+   "link": "https://www.govtrack.us/congress/bills/114/hr30", 
+   "lock_title": false, 
+   "major_actions": [
+    [
+     "datetime.datetime(2015, 1, 6, 0, 0)", 
+     2, 
+     "Referred to the Committee on Ways and Means, and in addition to the Committee on the Budget, for a period to be subsequently determined by the Speaker, in each case for consideration of such provisions as fall within the jurisdiction of the committee concerned.", 
+     "<action datetime=\"2015-01-06\" state=\"REFERRED\">\n      <text>Referred to the Committee on Ways and Means, and in addition to the Committee on the Budget, for a period to be subsequently determined by the Speaker, in each case for consideration of such provisions as fall within the jurisdiction of the committee concerned.</text>\n    </action>\n    "
+    ], 
+    [
+     "datetime.datetime(2015, 1, 8, 16, 17)", 
+     4, 
+     "On passage Passed by recorded vote: 252 - 172 (Roll no. 14).", 
+     "<vote how=\"roll\" type=\"vote\" roll=\"14\" datetime=\"2015-01-08T16:17:00-05:00\" where=\"h\" result=\"pass\" state=\"PASS_OVER:HOUSE\">\n      <text>On passage Passed by recorded vote: 252 - 172 (Roll no. 14).</text>\n      <reference ref=\"CR H125-126\" label=\"text\"/>\n    </vote>\n    "
+    ]
+   ], 
+   "noun": "bill", 
+   "number": 30, 
+   "senate_floor_schedule_postdate": null, 
+   "sliplawnum": null, 
+   "sliplawpubpriv": null, 
+   "source": "thomas-congproj", 
+   "source_link": null, 
+   "sponsor": {
+    "bioguideid": "Y000064", 
+    "birthday": "1972-08-24", 
+    "cspanid": 1033743, 
+    "firstname": "Todd", 
+    "gender": "male", 
+    "gender_label": "Male", 
+    "id": 412428, 
+    "lastname": "Young", 
+    "link": "https://www.govtrack.us/congress/members/todd_young/412428", 
+    "middlename": "C.", 
+    "name": "Rep. Todd Young [R-IN9]", 
+    "namemod": "", 
+    "nickname": "", 
+    "osid": "N00030670", 
+    "pvsid": "120345", 
+    "sortname": "Young, Todd (Rep.) [R-IN9]", 
+    "twitterid": "RepToddYoung", 
+    "youtubeid": "RepToddYoung"
+   }, 
+   "sponsor_role": {
+    "caucus": null, 
+    "congress_numbers": [
+     114
+    ], 
+    "current": true, 
+    "description": "Representative for Indiana's 9th congressional district", 
+    "district": 9, 
+    "enddate": "2017-01-03", 
+    "extra": {
+     "address": "1007 Longworth HOB; Washington DC 20515-1409", 
+     "contact_form": "https://toddyoungforms.house.gov/give-me-your-opinion", 
+     "fax": "202-226-6866", 
+     "office": "1007 Longworth House Office Building", 
+     "rss_url": "http://toddyoung.house.gov/common/rss//index.cfm?rss=49"
+    }, 
+    "id": 43541, 
+    "leadership_title": null, 
+    "party": "Republican", 
+    "person": 412428, 
+    "phone": "202-225-5315", 
+    "role_type": "representative", 
+    "role_type_label": "Representative", 
+    "senator_class": null, 
+    "senator_rank": null, 
+    "startdate": "2015-01-06", 
+    "state": "IN", 
+    "title": "Rep.", 
+    "title_long": "Representative", 
+    "website": "http://toddyoung.house.gov"
+   }, 
+   "thomas_link": "http://thomas.loc.gov/cgi-bin/bdquery/z?d114:hr30:", 
+   "title": "H.R. 30: Save American Workers Act of 2015", 
+   "title_without_number": "Save American Workers Act of 2015", 
+   "titles": [
+    [
+     "short", 
+     "introduced", 
+     "Save American Workers Act of 2015"
+    ], 
+    [
+     "short", 
+     "passed house", 
+     "Save American Workers Act of 2015"
+    ], 
+    [
+     "official", 
+     "introduced", 
+     "To amend the Internal Revenue Code of 1986 to repeal the 30-hour threshold for classification as a full-time employee for purposes of the employer mandate in the Patient Protection and Affordable Care Act and replace it with 40 hours."
+    ]
+   ]
+  }
+ ]
+}

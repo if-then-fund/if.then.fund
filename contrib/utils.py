@@ -4,10 +4,20 @@ from django.conf import settings
 from functools import wraps
 import json, datetime
 
-def query_json_api(base_url, params):
+def query_json_api(base_url, params, from_fixtures=False):
 	import urllib.request, urllib.parse, json
 	url = base_url + "?" + urllib.parse.urlencode(params)
-	req = urllib.request.urlopen(url)
+	if not from_fixtures:
+		req = urllib.request.urlopen(url)
+	else:
+		# For off-line testing, load JSON from fixtures path.
+		url = urllib.parse.urlparse(url)
+		fn = "fixtures/" + (
+			          url.hostname.replace("www.", "")
+			 + "--" + url.path
+			 + "--" + "-".join(k+"="+v[0] for (k, v) in sorted(urllib.parse.parse_qs(url.query).items()))
+			 ).replace("/", "-") + ".json"
+		req = open(fn, 'rb')
 	return json.loads(req.read().decode("utf-8"))
 
 def build_json_httpresponse(obj):

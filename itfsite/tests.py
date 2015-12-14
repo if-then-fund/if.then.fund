@@ -111,7 +111,7 @@ class ContribTest(SeleniumTest):
 		# Create a Trigger.
 		from contrib.models import Trigger, TriggerStatus, Pledge
 		from contrib.legislative import create_trigger_from_bill
-		t = create_trigger_from_bill(bill_num, chamber)
+		t = create_trigger_from_bill(bill_num, chamber, from_fixtures=True)
 		t.status = TriggerStatus.Open
 		t.save()
 

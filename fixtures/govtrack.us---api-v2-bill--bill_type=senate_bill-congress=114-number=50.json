@@ -1,0 +1,112 @@
+{
+ "meta": {
+  "limit": 100, 
+  "offset": 0, 
+  "total_count": 1
+ }, 
+ "objects": [
+  {
+   "bill_resolution_type": "bill", 
+   "bill_type": "senate_bill", 
+   "bill_type_label": "S.", 
+   "congress": 114, 
+   "current_status": "referred", 
+   "current_status_date": "2015-01-07", 
+   "current_status_description": "This bill was assigned to a congressional committee on January 7, 2015, which will consider it before possibly sending it on to the House or Senate as a whole.", 
+   "current_status_label": "Referred to Committee", 
+   "display_number": "S. 50", 
+   "docs_house_gov_postdate": null, 
+   "id": 335429, 
+   "introduced_date": "2015-01-07", 
+   "is_alive": true, 
+   "is_current": true, 
+   "link": "https://www.govtrack.us/congress/bills/114/s50", 
+   "lock_title": false, 
+   "major_actions": [
+    [
+     "datetime.datetime(2015, 1, 7, 0, 0)", 
+     2, 
+     "Read twice and referred to the Committee on Health, Education, Labor, and Pensions.", 
+     "<action datetime=\"2015-01-07\" state=\"REFERRED\">\n      <text>Read twice and referred to the Committee on Health, Education, Labor, and Pensions.</text>\n    </action>\n  "
+    ]
+   ], 
+   "noun": "bill", 
+   "number": 50, 
+   "senate_floor_schedule_postdate": null, 
+   "sliplawnum": null, 
+   "sliplawpubpriv": null, 
+   "source": "thomas-congproj", 
+   "source_link": null, 
+   "sponsor": {
+    "bioguideid": "V000127", 
+    "birthday": "1961-05-03", 
+    "cspanid": 60672, 
+    "firstname": "David", 
+    "gender": "male", 
+    "gender_label": "Male", 
+    "id": 400418, 
+    "lastname": "Vitter", 
+    "link": "https://www.govtrack.us/congress/members/david_vitter/400418", 
+    "middlename": "", 
+    "name": "Sen. David Vitter [R-LA]", 
+    "namemod": "", 
+    "nickname": "", 
+    "osid": "N00009659", 
+    "pvsid": "4615", 
+    "sortname": "Vitter, David (Sen.) [R-LA]", 
+    "twitterid": null, 
+    "youtubeid": "SenatorVitter"
+   }, 
+   "sponsor_role": {
+    "caucus": null, 
+    "congress_numbers": [
+     112, 
+     113, 
+     114
+    ], 
+    "current": true, 
+    "description": "Senior Senator from Louisiana", 
+    "district": null, 
+    "enddate": "2017-01-03", 
+    "extra": {
+     "address": "516 Hart Senate Office Building Washington DC 20510", 
+     "contact_form": "http://www.vitter.senate.gov/contact/email-senator-vitter", 
+     "fax": "202-228-5061", 
+     "office": "516 Hart Senate Office Building", 
+     "rss_url": "http://www.vitter.senate.gov/rss/feeds/?type=all"
+    }, 
+    "id": 3561, 
+    "leadership_title": null, 
+    "party": "Republican", 
+    "person": 400418, 
+    "phone": "202-224-4623", 
+    "role_type": "senator", 
+    "role_type_label": "Senator", 
+    "senator_class": "class3", 
+    "senator_class_label": "Class 3", 
+    "senator_rank": "senior", 
+    "senator_rank_label": "Senior", 
+    "startdate": "2011-01-05", 
+    "state": "LA", 
+    "title": "Sen.", 
+    "title_long": "Senator", 
+    "website": "http://www.vitter.senate.gov"
+   }, 
+   "thomas_link": "http://thomas.loc.gov/cgi-bin/bdquery/z?d114:s50:", 
+   "title": "S. 50: Abortion Non-Discrimination Act of 2015", 
+   "title_without_number": "Abortion Non-Discrimination Act of 2015", 
+   "titles": [
+    [
+     "short", 
+     "introduced", 
+     "Abortion Non-Discrimination Act of 2015"
+    ], 
+    [
+     "official", 
+     "introduced", 
+     "A bill to amend the Public Health Service Act to prohibit certain abortion-related discrimination in governmental activities."
+    ]
+   ]
+  }
+ ]
+}
