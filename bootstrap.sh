@@ -105,7 +105,7 @@ fi
 $PIP install --upgrade \
 	"pytz" \
 	"rtyaml" \
-	"django>=1.8" \
+	"django==1.8" \
 	"python3-memcached" \
 	"requests==2.6.0" \
 	"markdown2" \
@@ -114,7 +114,7 @@ $PIP install --upgrade \
 	"email_validator==0.1.0-rc1" \
 	"enum3field"
 
-$PIP install --upgrade -r \
+$PIP install -r \
 	ext/django-email-confirm-la/requirements.txt
 
 # Required by django-html-emailer. Need to get Python 3 fork.

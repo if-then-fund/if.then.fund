@@ -2,7 +2,10 @@
 import random
 from itfsite.models import *
 from contrib.models import *
+import contrib.legislative
 from contrib.legislative import create_trigger_from_bill, TriggerAlreadyExistsException
+
+contrib.legislative.ALLOW_DEAD_BILL = True
 
 # Create some triggers.
 for bill in ("hconres1-114", "hr22-114", "s30-114", "s31-114"):
