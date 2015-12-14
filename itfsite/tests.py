@@ -28,6 +28,9 @@ class SeleniumTest(StaticLiveServerTestCase):
 		import letters.views, votervoice
 		letters.views.votervoice = votervoice.VoterVoiceDummyAPIClient()
 
+		# Don't do email DNS checks so we can operate off-line.
+		settings.VALIDATE_EMAIL_DELIVERABILITY = False
+
 		# Make sure we're looking at the right branded site.
 		settings.DEFAULT_BRAND = "if.then.fund"
 

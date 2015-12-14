@@ -135,9 +135,12 @@ def validate_email(request):
 	email = request.POST['email'].strip()
 
 	# Validate the email address. If it is invalid, return the
-	# error message.
+	# error message. See create_pledge below - we repeat this
+	# as server-slide validation again.
 	try:
-		validate_email(email, allow_smtputf8=False) # DE does not accept internationalized addresses
+			 # DE does not accept internationalized addresses
+			 # during testing, don't check deliverability so that tests can operate off-line
+		validate_email(email, allow_smtputf8=False, check_deliverability=settings.VALIDATE_EMAIL_DELIVERABILITY)
 	except EmailNotValidError as e:
 		return HttpResponse(str(e), content_type="text/plain")
 
@@ -235,10 +238,10 @@ def create_pledge(request):
 			# Reuse this AnonymousUser instance.
 			p.anon_user = anon_user
 		else:
-			# Validate email.
+			# Validate email. See our function validate_email above.
 			from email_validator import validate_email, EmailNotValidError
 			try:
-				validate_email(email, allow_smtputf8=False)
+				validate_email(email, allow_smtputf8=False, check_deliverability=settings.VALIDATE_EMAIL_DELIVERABILITY)
 			except EmailNotValidError as e:
 				raise HumanReadableValidationError(str(e))
 

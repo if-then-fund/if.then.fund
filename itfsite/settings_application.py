@@ -47,6 +47,7 @@ FACEBOOK_ACCESS_TOKEN = environment['facebook_access_token']
 VOTERVOICE_API_KEY = environment.get('votervoice', {}).get('api_key')
 VOTERVOICE_ASSOCIATION = environment.get('votervoice', {}).get('association')
 CURRENT_ELECTION_CYCLE = 2016
+VALIDATE_EMAIL_DELIVERABILITY = True # turned off during tests
 
 DEFAULT_TEMPLATE_CONTEXT = {
 	"SITE_MODE": SITE_MODE,
