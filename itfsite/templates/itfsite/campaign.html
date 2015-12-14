@@ -396,7 +396,11 @@ took. After the {{trigger.trigger_type.strings.action_noun}}, we’ll charge you
 instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 </small>
 
-<p id="show_utm_tool" style="display: none;"><a href="#" onclick="$('#utm_tool').slideToggle(); utm_tool(); return false;" style="border: none">Create a link...</a></p>
+<p id="for_staff" style="display: none; font-size: 90%;">
+	<a href="#" onclick="$('#utm_tool').slideToggle(); utm_tool(); return false;">Create Link</a>
+	| <a href="/admin/itfsite/campaign/{{campaign.id}}">Edit Campaign</a>
+	{% if trigger %}| <a href="/admin/contrib/trigger/{{trigger.id}}">Edit Trigger</a>{% endif %}
+</p>
 <div id="utm_tool" style="display: none; max-width: 320px; font-size: 90%;">
 	<div class="row">
 		<div class="col-xs-6">
@@ -472,7 +476,7 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 <script>
 	$(function() {
 		if (the_page && the_page.show_utm_tool)
-			$('#show_utm_tool').show();
+			$('#for_staff').show();
 
 		// Show any actions the user already performed.
 		var can_write_letter = {% if letters_campaign %}true{% else %}false {% endif %};
