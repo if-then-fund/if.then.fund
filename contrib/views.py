@@ -263,21 +263,19 @@ def create_pledge(request):
 
 	# Field values & validation.
 
-	# integer fields that have the same field name as form element name
-	for field in ('algorithm', 'desired_outcome'):
+	def set_field(model_field, form_field, converter):
 		try:
-			setattr(p, field, int(request.POST[field]))
+			setattr(p, model_field, converter(request.POST[form_field]))
 		except ValueError:
-			raise Exception("%s is out of range" % field)
+			raise Exception("%s is out of range" % form_field)
 
-	# float fields that have the same field name as form element name
-	for field in ('amount', 'incumb_challgr'):
-		try:
-			setattr(p, field, float(request.POST[field]))
-		except ValueError:
-			raise Exception("%s is out of range" % field)
+	set_field('algorithm', 'algorithm', int)
+	set_field('desired_outcome', 'desired_outcome', int)
+	set_field('incumb_challgr', 'incumb_challgr', int) # -1, 0, 1 --- but one day we want a slider so model field is a float
+	set_field('amount', 'amount', decimal.Decimal)
+	if request.POST.get("contribTipOrg"):
+		set_field('tip_to_campaign_owner', 'tip_amount', decimal.Decimal)
 
-	# normalize the filter_party field
 	if request.POST['filter_party'] in ('DR', 'RD'):
 		p.filter_party = None # no filter
 	elif request.POST['filter_party'] == 'D':
@@ -297,12 +295,8 @@ def create_pledge(request):
 		raise Exception("incumb_challgr is out of range")
 	if p.filter_party == ActorParty.Independent:
 		raise Exception("filter_party is out of range")
-	if request.POST.get("contribTipOrg"):
-		try:
-			p.tip_to_campaign_owner = float(request.POST['tip_amount'])
-			if p.tip_to_campaign_owner < 0: raise ValueError()
-		except ValueError:
-			raise Exception("%s is out of range" % 'tip_amount')
+	if p.tip_to_campaign_owner < 0:
+		raise Exception("tip_to_campaign_owner is out of range")
 	if p.tip_to_campaign_owner > 0 and (not p.via_campaign.owner or not p.via_campaign.owner.de_recip_id):
 		raise Exception("tip_to_campaign_owner cannot be non-zero")
 
