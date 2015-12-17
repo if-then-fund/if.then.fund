@@ -57,12 +57,20 @@
 			color: rgba(255,255,255,.5);
 		}
 	}
+{% else %}
+	#splash {
+		border-bottom: 1px solid #DDD;
+	}
 {% endif %}
 
 #splash-text {
 	max-width: 40em;
 	padding-top: 1em;
+	{% if campaign.splash_image.name %}
 	padding-bottom: 75px;
+	{% else %}
+	padding-bottom: 1.5em;
+	{% endif %}
 	font-size: 20px;
 	line-height: 145%;
 	-webkit-font-smoothing: antialiased;
@@ -74,6 +82,9 @@
 	}
 	#splash-text h1 {
 		margin-top: 0;
+		{% if not campaign.splash_image.name %}
+		margin-bottom: .5em;
+		{% endif %}
 		font-family: Yanone Kaffeesatz;
 		font-size: 56px;
 	}
@@ -123,19 +134,18 @@
 	text-align: center;
 }
 
-#story {
-	background-color: rgb(190, 80, 90);
-	padding: 3em 0;
-	color: #FFF;
+h2 {
+  margin-top: 40px;
+  font-weight: bold;
 }
-	#story a {
-		color: #FFA;
-		border-color: #FFA;
-	}
-	#story hr {
-		border-color: #DBB;
-	}
 
+#story {
+	padding-top: 2em;
+	color: #555;
+}
+	@media screen and (min-width: 992px) {
+		#story { padding-left: 1em; }
+	}
 	#story dl {
 		margin-top: -.5em;
 	}
@@ -169,12 +179,10 @@ form span.required:after {
 	}
 
 #action-pane {
-	background-color: #F4F4C5;
-	padding: 3em 0;
-	color: #110;
 }
 
 #footer-container {
+	margin-top: 2em;
 	background-color: #EEE;
 	padding-top: 2em;
 }
@@ -250,10 +258,13 @@ form span.required:after {
 </div>
 {% endif %}
 
-<div id="story" class="invert-site-brand-ifthenfund">
-	<div class="container">
-	<div class="row">
-		<div class="col-sm-8">
+<div class="container">
+<div class="row">
+	<div class="col-md-5 col-md-push-7">
+
+		<div id="story">
+			<h2 class="visible-xs visible-sm" style="margin: .5em 0">About the {{trigger.trigger_type.strings.action_noun}}</h2>
+			{# body text #}
 			{% with body_text=campaign.body_text|render_text:campaign.body_format %}
 			{% with body_text_truncated=body_text|truncatewords_html:70 %}
 				{% if body_text == body_text_truncated %}
@@ -269,10 +280,10 @@ form span.required:after {
 				{% endif %}
 			{% endwith %}
 			{% endwith %}
-		</div>
-		<div class="col-sm-4">
+
+			{# activity summary #}
 			{% with totals=campaign.get_contrib_totals %}
-			<dl>
+			<dl style="margin-top: 2em">
 				{% if letters_campaign %}
 				<dt>{{letters_sent}}</dt>
 				<dd>letter{{letters_sent|pluralize}} written</dd>
@@ -349,39 +360,35 @@ form span.required:after {
 				</p>
 			{% endif %}
 			</small>
-		</div>
-	</div>
-	</div>
-</div>
+		</div> <!-- /story -->
+	</div> <!-- /column -->
 
-<div id="my-actions" class="hidden">
-	<div class="container">
-		<div class="actions-container" style="padding: 2em 0">
-			
+	<div class="col-md-7 col-md-pull-5">
+		<div id="my-actions" class="hidden">
+			<div class="actions-container">
+				
+			</div>
 		</div>
-	</div>
-</div>
 
-<div id="action-pane">
-	{% if letters_campaign %}
-	<div id="write-a-letter">
-		<div class="container">
-			{% include "letters/write-your-rep-form.html" %}
+		<div id="action-pane">
+			{% if letters_campaign %}
+			<div id="write-a-letter">
+					{% include "letters/write-your-rep-form.html" %}
+					{% if trigger %}
+						<p id="make-a-contribution-instead" style="margin-top: 1em"><small>Skip this and <a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(false);">make a contribution instead</a>.</small></p>
+					{% endif %}
+			</div>
+			{% endif %}
+
 			{% if trigger %}
-				<p id="make-a-contribution-instead" style="margin-top: 1em"><small>Skip this and <a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(false);">make a contribution instead</a>.</small></p>
+			<div id="make-a-contribution" {% if letters_campaign %}class="hidden"{% endif %}>
+				{% include "contrib/pledge-form.html" %}
+			</div>
 			{% endif %}
 		</div>
-	</div>
-	{% endif %}
-
-	{% if trigger %}
-	<div id="make-a-contribution" {% if letters_campaign %}class="hidden"{% endif %}>
-		<div class="container">
-			{% include "contrib/pledge-form.html" %}
-		</div>
-	</div>
-	{% endif %}
-</div>
+	</div> <!-- /column -->
+</div> <!-- /row -->
+</div> <!-- /container -->
 
 <div id="footer-container">
 <div class="container">
