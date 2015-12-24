@@ -22,6 +22,3 @@
 [submodule "ext/django-database-storage"]
 	path = ext/django-database-storage
 	url = https://github.com/if-then-fund/django-database-storage
-[submodule "branding/279forchange.us"]
-	path = branding/279forchange.us
-	url = https://github.com/if-then-fund/279forchange.us-branding

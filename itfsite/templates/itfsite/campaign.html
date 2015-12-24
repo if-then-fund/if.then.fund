@@ -233,11 +233,7 @@ form span.required:after {
 		<h1>{{campaign.headline}}</h1>
 
 		<div class="subhead">
-			{% if BRAND_ID == "279forchange.us" %}
-				{% include "itfsite/campaign-subhead-"|add:BRAND_ID|cut:"."|add:".html" %}
-			{% else %}
-				{{campaign.subhead|render_text:campaign.subhead_format}}
-			{% endif %}
+			{{campaign.subhead|render_text:campaign.subhead_format}}
 		</div>
 
 		{% if campaign.image_credit %}

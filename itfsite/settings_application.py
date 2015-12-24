@@ -20,7 +20,7 @@ INSTALLED_APPS += [
 
 MIDDLEWARE_CLASSES += ['twostream.middleware.CacheLogic',]
 
-TEMPLATES[0]['DIRS'] += [os.path.join(os.path.dirname(os.path.dirname(__file__)), 'branding/279forchange.us/templates')]
+TEMPLATES[0]['DIRS'] += [os.path.join(os.path.dirname(os.path.dirname(__file__)))]
 TEMPLATES[0]['OPTIONS']['context_processors'] += [
 	"itfsite.middleware.itfsite_template_context_processor",
 ]
