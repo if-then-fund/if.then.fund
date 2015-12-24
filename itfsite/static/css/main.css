@@ -35,23 +35,6 @@ small, .small {
 	line-height: 125%;
 }
 
-a, a:hover, a:link, a:visited, a:active {
-	color: #0f640f; /* accessibility requires high contrast */
-	text-decoration: none; /* border-bottom looks better than underline */
-	border-bottom: 1px solid #0f640f; /* accessibility requires a line */
-}
-	a:hover, a:active {
-		color: #0A0;
-		border-color: #0B0;
-	}
-	footer a, footer a:hover, footer a:link, footer a:visited, footer a:active {
-		color: #564;
-		border: none;
-	}
-		footer a:hover {
-			border-bottom: 1px solid #252;
-		}
-
 .modal p {
 	line-height: 133%;
 }
@@ -103,39 +86,6 @@ a, a:hover, a:link, a:visited, a:active {
 
 
 /* MASTER ELEMENTS */
-
-#nav-wrap {
-	background-color: #292929;
-	margin-bottom: 20px;
-}
-	.navbar {
-		margin: 0;
-		border: none;
-	}
-	.navbar .navbar-toggle .icon-bar {
-		background-color: #888;
-	}
-
-	.navbar a {
-		border: none !important;
-		text-decoration: none;
-		color: #E7E7E7;
-		font-size: 14px;
-	}
-		.navbar .nav a:hover {
-			background-color: #555;
-		}
-
-		.navbar .notifications-link a {
-			color: #AAA;
-		}
-		.navbar .notifications-link.has-new-notifications a {
-			color: #BC3;
-		}
-	.nav>li>a:hover, .nav>li>a:focus {
-		/* overriding default bootstrap theme */
-		background-color: inherit;
-	}
 
 #footer-social {
 	padding: 0;

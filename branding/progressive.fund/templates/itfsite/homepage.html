@@ -1,0 +1,118 @@
+{% extends "master.html" %}
+{% load itfsite_utils %}
+
+{% block title2 %}{{SITE_NAME}} - {% include2 "tagline.txt" %}{% endblock %}
+
+{% block head %}
+<meta property="og:title" content="{{SITE_NAME}}" />
+<meta name="description" content="{% include2 "tagline.txt" %}">
+<meta property="og:description" content="{% include2 "tagline.txt" %}">
+{% include "og_image.html" %}
+<meta name="twitter:card" content="summary" />
+
+<style>
+#homepage {
+	background: white;
+}
+.navbar {
+	background: none;
+	margin-bottom: 0;
+}
+	.navbar > .container {
+		padding-right: 0;
+		margin-right: 0;
+	}
+	.navbar-brand {
+		display: none;
+	}
+	.navbar a {
+		background: none;
+		color: #779;
+	}
+		.navbar .nav a:hover {
+			text-decoration: none;
+			background: white;
+		}
+
+#banner {
+	background-color: black;
+	margin-bottom: 50px;
+	cursor: default;
+	background-color: white;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	background-image: url('/static/branding/progressive.fund/capitol.jpg');
+	border-bottom: 1px solid #349;
+}
+	#banner > h1, #banner > #deck {
+		margin-left: 5vw;
+		margin-right: 4vw;
+	}
+
+	h1 {
+		margin-top: .5em;
+		margin-bottom: 0;
+		color: #334499;
+	}
+	
+
+	#deck {
+		margin-top: 1em;
+		margin-bottom: 40px;
+		max-width: 30em;
+	}
+
+#banner h2 {
+	color: white;
+	margin-bottom: 1em;
+}
+
+{% include "itfsite/campaign-bubble-styles.css" %}
+
+.campaign-bubble {
+	border: 2px solid rgba(30,30,30, .3);
+	background: white;
+}
+	
+
+</style>
+{% endblock %}
+
+{% block body-wide %}
+<div id="homepage" class="container-fluid">
+	<div id="banner" class="row">
+		{% include "navbar.html" %}
+
+		<h1>
+			Progressive.fund
+		</h1>
+
+		<div id="deck">
+			{% include2 "tagline.txt" %}
+		</div>
+	</div>
+
+	<div>
+
+		<div id="homepage-body" class="container">
+			<div class="col-xs-12">
+				{% if open_campaigns|length > 0 %}
+				<div class="row">
+					{% for c in open_campaigns %}
+						{% if forloop.counter0|divisibleby:2 %}<div class="clearfix visible-sm-block"></div>{% endif %}
+						{% if forloop.counter0|divisibleby:3 %}<div class="clearfix visible-md-block"></div><div class="clearfix visible-lg-block"></div>{% endif %}
+						<div class="col-sm-6 col-md-4">
+							{% include "itfsite/campaign-bubble.html" %}
+						</div>
+					{% endfor %}
+				</div>
+				{% endif %}
+
+			</div>
+		</div>
+	</div>
+
+	{# we leave two div's open in body-wide templates #}
+	<div>
+
+{% endblock %}

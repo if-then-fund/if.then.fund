@@ -1,22 +1,26 @@
 a, a:hover, a:link, a:visited, a:active {
-	color: #0f640f; /* accessibility requires high contrast */
+	color: #22A; /* accessibility requires high contrast */
 	text-decoration: none; /* border-bottom looks better than underline */
-	border-bottom: 1px solid #0f640f; /* accessibility requires a line */
+	border-bottom: 1px solid #22A; /* accessibility requires a line */
 }
 	a:hover, a:active {
 		color: #0A0;
 		border-color: #0B0;
 	}
+
 	footer a, footer a:hover, footer a:link, footer a:visited, footer a:active {
-		color: #564;
+		color: #446;
 		border: none;
 	}
 		footer a:hover {
-			border-bottom: 1px solid #252;
+			border-bottom: 1px solid #225;
 		}
 
 #nav-wrap {
-	background-color: #292929;
+	background-color: white;
+}
+
+#nav-wrap {
 	margin-bottom: 20px;
 }
 	.navbar {
@@ -30,11 +34,11 @@ a, a:hover, a:link, a:visited, a:active {
 	.navbar a {
 		border: none !important;
 		text-decoration: none;
-		color: #E7E7E7;
+		color: #446;
 		font-size: 14px;
 	}
 		.navbar .nav a:hover {
-			background-color: #555;
+			background-color: #EEF;
 		}
 
 		.navbar .notifications-link a {
@@ -50,7 +54,7 @@ a, a:hover, a:link, a:visited, a:active {
 
 .navbar a.navbar-brand {
 	margin-top: 10px;
-	background: url('/static/branding/if.then.fund/navbar-title.png');
+	background: url('/static/branding/progressive.fund/navbar-title.png');
 	width: 103px;
 	height: 30px;
 	text-indent: -99999em;
@@ -74,36 +78,18 @@ a, a:hover, a:link, a:visited, a:active {
 	}
 }
 
-#footer-social a {
-	color: #3c5e3c;
-}
-	#footer-social a:hover {
-		color: #3c5e3c;
-	}
-
-/* this is repeated in main.css so we can display the
- * main brand on other branded sites */
 @media screen {
 .site-brand {
-	display: inline-block;
-	background: url('/static/branding/if.then.fund/content-title.png') no-repeat;
-	background-size: 100%;
-	width: 4.866666667em;
-	height: 1em;
-	text-indent: -99999em;
-	overflow: hidden;
-	margin-left: 1px;
+	font-weight: bold;
 }
 }
 @media print {
 	.site-brand {
-		font-family: 'Times New Roman', serif;
-		font-weight: bold;
 	}
 }
 
 #page-fixed-header {
-	background: #333 url('/static/branding/if.then.fund/navbar-title.png') 10px 10px no-repeat;
+	background: #333 url('/static/branding/progressive.fund/navbar-title.png') 10px 10px no-repeat;
 	min-height: 50px;
 	color: white;
 }

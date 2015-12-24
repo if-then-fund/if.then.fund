@@ -60,4 +60,4 @@ DEFAULT_TEMPLATE_CONTEXT = {
 	"HIDE_REMOTE_EMBEDS": environment.get('hide_remote_embeds', False),
 }
 
-DEFAULT_BRAND = "if.then.fund"
+DEFAULT_BRAND = "progressive.fund"
