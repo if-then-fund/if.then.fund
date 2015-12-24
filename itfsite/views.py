@@ -11,15 +11,17 @@ from itfsite.middleware import get_branding
 from twostream.decorators import anonymous_view, user_view_for
 
 def render2(request, template, *args, **kwargs):
+	import os.path
 	from django.template import TemplateDoesNotExist
+	template1 = os.path.join('branding', get_branding(request)['BRAND_ID'], 'templates', template)
 	try:
-		return render(request, template, *args, **kwargs)
-	except TemplateDoesNotExist:
 		# Try a brand-specific template.
-		template = template.replace(".html",
-			"-"
-			+ get_branding(request)['BRAND_ID'].replace(".", "")
-			+ ".html")
+		return render(request, template1, *args, **kwargs)
+	except TemplateDoesNotExist as e:
+		# Raise if the template that doesn't exist is one that is loaded by an include tag.
+		if hasattr(e, 'django_template_source'):
+			raise
+		# Try a default template.
 		return render(request, template, *args, **kwargs)
 
 def homepage(request):

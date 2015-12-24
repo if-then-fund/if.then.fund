@@ -1,11 +1,12 @@
 {% extends "master.html" %}
+{% load itfsite_utils %}
 
-{% block title2 %}{{SITE_NAME}} - {% include "tagline.txt" %}{% endblock %}
+{% block title2 %}{{SITE_NAME}} - {% include2 "tagline.txt" %}{% endblock %}
 
 {% block head %}
 <meta property="og:title" content="{{SITE_NAME}}" />
-<meta name="description" content="{% include "tagline.txt" %}">
-<meta property="og:description" content="{% include "tagline.txt" %}">
+<meta name="description" content="{% include2 "tagline.txt" %}">
+<meta property="og:description" content="{% include2 "tagline.txt" %}">
 {% include "og_image.html" %}
 <meta name="twitter:card" content="summary" />
 

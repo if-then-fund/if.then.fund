@@ -54,3 +54,19 @@ def currency(value):
 @register.filter
 def objtype(obj):
 	return type(obj).__name__
+
+@register.tag
+def include2(parser, token):
+	# In order to multiplex on branding for {% include %} tags, we need
+	# a new tag. I tried to do this through a new template engine but
+	# that failed miserably in multiple ways.
+	template_name_var = template.Variable(token.split_contents()[1])
+	return Include2Node(template_name_var)
+
+class Include2Node(template.Node):
+	def __init__(self, template_name):
+		self.template_name = template_name
+
+	def render(self, context):
+		from itfsite.views import render2
+		return render2(context['request'], self.template_name.resolve(context), context=context).content
