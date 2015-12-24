@@ -29,6 +29,11 @@ AUTHENTICATION_BACKENDS += ['itfsite.betteruser.DirectLoginBackend']
 
 DEFAULT_FILE_STORAGE = 'dbstorage.storage.DatabaseStorage'
 
+STATICFILES_DIRS = [
+    ('branding/' + brandid, os.path.join('branding', brandid, "static")) # (virtual root within /static, path to static resources)
+    for brandid in os.listdir("branding")
+]
+
 # Local site settings.
 
 ADMINS = (("Joshua Tauberer", "josh@if.then.fund"),)
