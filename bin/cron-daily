@@ -20,3 +20,10 @@ python3 manage.py send_anonymous_user_email_confirmation_reminders
 # Execute daily cleanup scripts.
 python3 manage.py clearsessions
 python3 manage.py clear_expired_email_confirmations > /dev/null
+
+# Update TLS certificate from Let's Encrypt.
+cp /etc/ssl/local/le_certificate.crt /tmp/le_certificate.crt \
+	&& free_tls_certificate $(cat domain_names) /etc/ssl/local/ssl_certificate.key /tmp/le_certificate.crt /home/ubuntu/public_html /home/ubuntu/acme-le-account \
+	&& sudo mv /tmp/le_certificate.crt /etc/ssl/local/le_certificate.crt \
+	&& sudo service nginx restart
+rm -f /tmp/le_certificate.crt

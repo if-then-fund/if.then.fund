@@ -80,6 +80,11 @@ if [ "$1" == "--deployed" ]; then
 	sudo easy_install3 pip # http://stackoverflow.com/questions/27341064/how-do-i-fix-importerror-cannot-import-name-incompleteread
 	PIP="sudo pip3"
 
+	# Install TLS cert provisioning tool.
+	sudo apt-get install build-essential libssl-dev libffi-dev python3-dev python3-pip
+	sudo pip3 install free_tls_certificates
+	if [ ! -f domain_names ]; then echo "demo.if.then.fund demo.progressive.fund" > domain_names; fi
+
 	# Install cron jobs.
 	sudo rm -f /etc/cron.daily/local
 	sudo ln -s `pwd`/bin/cron-daily /etc/cron.daily/local
