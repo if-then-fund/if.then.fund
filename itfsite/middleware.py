@@ -32,7 +32,7 @@ def get_branding(request_or_brandid):
 		elif host in ("127.0.0.1", "localhost", "demo.if.then.fund"):
 			brandid = settings.DEFAULT_BRAND
 		else:
-			raise DisallowedHost(brandid)
+			raise DisallowedHost(host)
 
 	# Return a template context dictionary based on the branding settings.
 	brand = settings.BRANDS[brandid]
