@@ -7,7 +7,7 @@
 
 {% block head %}
 
-<meta property="og:title" content="{{campaign.title}} ({% if campaign.owner %}{{campaign.owner.name}} on {% endif %}{{SITE_NAME}})" />
+<meta property="og:title" content="{{campaign.title}} ({% if campaign.owner.is_real %}{{campaign.owner.name}} on {% endif %}{{SITE_NAME}})" />
 {% if trigger %}
 <meta property="og:description" content="Reshape Congress by making a contribution based on how {{trigger.trigger_type.strings.actors}} {{trigger.trigger_type.strings.action_vb_inf}}.">
 {% endif %}
@@ -201,7 +201,7 @@ form span.required:after {
 {% block body-wide %}
 <div id="page-fixed-header">
 	{{campaign.title}}
-	{% if campaign.owner %} &mdash; {{campaign.owner.name}}{% endif %}
+	{% if campaign.owner.is_real %} &mdash; {{campaign.owner.name}}{% endif %}
 </div>
 
 <div id="splash">
@@ -215,7 +215,7 @@ form span.required:after {
 
   <div class="container">
 
-	{% if campaign.owner %}
+	{% if campaign.owner.is_real %}
 	<div id="campaign-owner" style="float: right">
 		<a href="{{campaign.owner.get_absolute_url}}" title="{{campaign.owner.name}}">
 			{% if campaign.owner.profile_image.name %}
@@ -349,7 +349,7 @@ form span.required:after {
 			<hr>
 
 			<small>
-			<p>This page was added {% if campaign.owner %}by <a href="{{campaign.owner.get_absolute_url}}">{{campaign.owner.name}}</a>{% endif %} on {{campaign.created|date}}.</p>
+			<p>This page was added {% if campaign.owner.is_real %}by <a href="{{campaign.owner.get_absolute_url}}">{{campaign.owner.name}}</a>{% endif %} on {{campaign.created|date}}.</p>
 			{% if trigger.execution %}
 				<p>The {{trigger.trigger_type.strings.action_noun}} occurred on {{trigger.execution.action_time|date}}.
 				{% if trigger.execution.pledge_count_with_contribs %}Contributions began to be processed on {{trigger.execution.created|date}}.{% endif %}
@@ -390,7 +390,7 @@ form span.required:after {
 <div class="container">
 
 <small>
-{% if not campaign.owner %} {# the 'we' doesn't make sense if the page wasn't created by {{SITE_NAME}} #}
+{% if not campaign.owner.is_real %} {# the 'we' doesn't make sense if the page wasn't created by {{SITE_NAME}} #}
 <p>We aim to shift the balance of power to shape Congress away from concentrated wealth and toward small-dollar donors like you.</p>
 {% endif %}
 <p>You will be making a campaign contribution to {{trigger.trigger_type.strings.actors}} or their next opponent. Until the 

@@ -4,7 +4,7 @@
 			<div class="campaign-splash organization-banner" style="background-image: url('{% if c.splash_image.name %}{{c.splash_image.url}}{% else %}{{c.owner.banner_image.url}}{% endif %}?size=tb');">
 				<div class="wrapper">
 					<div class="campaign-title">{{c.title}}</div>
-					{% if c.owner %}
+					{% if c.owner.is_real %}
 						<div class="campaign-owner">{{c.owner.name}}</div>
 					{% endif %}
 				</div>

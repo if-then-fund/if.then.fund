@@ -27,17 +27,20 @@ class OrganizationType(enum.Enum):
 	User = 1 # any user can create an 'organization'
 	C4 = 2 # a 501c4
 	Company = 3 # a corporation/LLC
+	ItfBrand = 4 # us under one of our brands besides if.then.fund
 
 	def slug(self):
 		if self == OrganizationType.User: return "user"
 		if self == OrganizationType.C4: return "org"
 		if self == OrganizationType.Company: return "org"
+		if self == OrganizationType.ItfBrand: return "org"
 		raise ValueError()
 
 	def display(self):
 		if self == OrganizationType.User: return "User"
 		if self == OrganizationType.C4: return "Nonprofit Organization"
 		if self == OrganizationType.Company: return "Company"
+		if self == OrganizationType.ItfBrand: return "Company"
 		raise ValueError()
 
 class Organization(models.Model):
@@ -67,6 +70,10 @@ class Organization(models.Model):
 
 	def __str__(self):
 		return "%s [%d]" % (self.name, self.id)
+
+	@property
+	def is_real(self):
+		return self.orgtype != OrganizationType.ItfBrand
 
 	def get_absolute_url(self):
 		return "/%s/%d/%s" % (self.orgtype.slug(), self.id, self.slug)
@@ -116,7 +123,7 @@ class Campaign(models.Model):
 		return "Campaign(%d, %s)" % (self.id, repr(self.title))
 
 	def get_absolute_url(self):
-		return "/a/%d/%s%s" % (self.id, (self.owner.slug + "-") if self.owner else "", self.slug)
+		return "/a/%d/%s%s" % (self.id, (self.owner.slug + "-") if (self.owner and self.owner.is_real) else "", self.slug)
 
 	def get_short_url(self):
 		return settings.SITE_ROOT_URL + ("/a/%d" % self.id)
