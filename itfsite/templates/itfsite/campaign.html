@@ -393,10 +393,12 @@ form span.required:after {
 {% if not campaign.owner.is_real %} {# the 'we' doesn't make sense if the page wasn't created by {{SITE_NAME}} #}
 <p>We aim to shift the balance of power to shape Congress away from concentrated wealth and toward small-dollar donors like you.</p>
 {% endif %}
+{% if trigger %}
 <p>You will be making a campaign contribution to {{trigger.trigger_type.strings.actors}} or their next opponent. Until the 
 {{trigger.trigger_type.strings.action_noun}} occurs, <span class="site-brand">{{SITE_NAME}}</span> won't reveal to anyone what action you
 took. After the {{trigger.trigger_type.strings.action_noun}}, we’ll charge your card and split your contribution based on your
 instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
+{% endif %}
 </small>
 
 <p id="for_staff" style="display: none; font-size: 90%;">

@@ -18,6 +18,7 @@ class AnonymousUserAdmin(admin.ModelAdmin):
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ['slug', 'orgtype', 'id', 'name', 'created']
     search_fields = ['id', 'slug', 'name']
+    prepopulated_fields = {"slug": ("name",)}
 
 class TriggersInline(admin.TabularInline):
     model = Campaign.contrib_triggers.through
@@ -99,7 +100,7 @@ class CampaignAdmin(admin.ModelAdmin):
     search_fields = ['id', 'slug', 'title', 'owner__name', 'owner__slug']
     raw_id_fields = ['owner']
     inlines = [TriggersInline, LettersInline]
-    exclude = ['brand', 'contrib_triggers', 'letters']
+    exclude = ['contrib_triggers', 'letters']
     prepopulated_fields = {"slug": ("title",)}
 
 admin.site.register(User, UserAdmin)

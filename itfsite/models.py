@@ -54,7 +54,7 @@ class Organization(models.Model):
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
 	description = models.TextField(help_text="Description text in the format given by description_format.")
-	description_format = EnumField(TextFormat, help_text="The format of the description text.")
+	description_format = EnumField(TextFormat, default=TextFormat.Markdown, help_text="The format of the description text.")
 
 	profile_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The logo or headshot to display as the profile picture on the organization's page, and the default og:image (for Facebook and Twitter posts) if og_image is not provided. At least 120px x 120px and must be square.")
 	og_image = models.ImageField(blank=True, null=True, upload_to="campaign-media", help_text="The og:image (for Facebook and Twitter posts) for the organization's profile page and the default og:image for the organization's campaigns. At least 120px x 120px and must be square.")
