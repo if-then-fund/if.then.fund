@@ -779,9 +779,10 @@ function computeTipAmount(pledge_amount) {
 function do_pledge_start_next() {
   if (!contribution_start_validation(true)) return;
 
+  var amt = get_contribution_amount();
+
   {% if campaign.owner.de_recip_id %}
   // Set the tip-to-organization amount.
-  var amt = get_contribution_amount();
   var tip_amount = computeTipAmount(amt);
   $('#pledge-info input[name="tip_amount"]').val(tip_amount);
   $('#contribTipOrgAmt').text(tip_amount.toFixed(2));
