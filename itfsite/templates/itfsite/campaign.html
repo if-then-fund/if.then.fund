@@ -143,9 +143,19 @@ h2 {
 	padding-top: 2em;
 	color: #555;
 }
+{% if BRAND_ID != "279forchange.us" %}
 	@media screen and (min-width: 992px) {
 		#story { padding-left: 1em; }
 	}
+{% else %}
+	#story {
+		padding-bottom: 15px;
+		border-bottom: 1px solid #DDD;
+	}
+	#story hr {
+		display: none;
+	}
+{% endif %}
 	#story dl {
 		margin-top: -.5em;
 	}
@@ -233,7 +243,11 @@ form span.required:after {
 		<h1>{{campaign.headline}}</h1>
 
 		<div class="subhead">
-			{{campaign.subhead|render_text:campaign.subhead_format}}
+			{% if BRAND_ID == "279forchange.us" %}
+				{% include2 "itfsite/campaign-subhead.html" %}
+			{% else %}
+				{{campaign.subhead|render_text:campaign.subhead_format}}
+			{% endif %}
 		</div>
 
 		{% if campaign.image_credit %}
@@ -255,9 +269,10 @@ form span.required:after {
 {% endif %}
 
 <div class="container">
+{% if BRAND_ID != "279forchange.us" %}
 <div class="row">
 	<div class="col-md-5 col-md-push-7">
-
+{% endif %}
 		<div id="story">
 			<h2 class="visible-xs visible-sm" style="margin: .5em 0">About the {{trigger.trigger_type.strings.action_noun}}</h2>
 			{# body text #}
@@ -357,9 +372,12 @@ form span.required:after {
 			{% endif %}
 			</small>
 		</div> <!-- /story -->
+
+{% if BRAND_ID != "279forchange.us" %}
 	</div> <!-- /column -->
 
 	<div class="col-md-7 col-md-pull-5">
+{% endif %}
 		<div id="my-actions" class="hidden">
 			<div class="actions-container">
 				
@@ -382,8 +400,11 @@ form span.required:after {
 			</div>
 			{% endif %}
 		</div>
+
+{% if BRAND_ID != "279forchange.us" %}
 	</div> <!-- /column -->
 </div> <!-- /row -->
+{% endif %}
 </div> <!-- /container -->
 
 <div id="footer-container">
