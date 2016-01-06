@@ -2,6 +2,13 @@
 
 from .settings import *
 
+def get_brand_domains(brandid):
+	import json
+	with open(os.path.join("branding", brandid, "settings.json")) as f:
+		d = json.load(f)
+		return [d["site-domain"]] + d.get("alt-domains", [])
+ALLOWED_HOSTS = sum([get_brand_domains(brandid) for brandid in os.listdir("branding")], [])
+
 INSTALLED_APPS += [
 	'itfsite',
 	'contrib',
