@@ -12,7 +12,8 @@
 
 <style>
 #homepage {
-	background: white;
+	background-color: #4551a3;
+	color: white;
 }
 .navbar {
 	background: none;
@@ -27,18 +28,17 @@
 	}
 	.navbar a {
 		background: none;
-		color: #779;
+		color: #ddd;
 	}
 		.navbar .nav a:hover {
 			text-decoration: none;
-			background: white;
+			background: #8585c0;
 		}
 
 #banner {
-	background-color: black;
 	margin-bottom: 50px;
 	cursor: default;
-	background-color: white;
+	background-color: transparent;
 	background-repeat: no-repeat;
 	background-size: 100%;
 	background-image: url('/static/branding/progressive.fund/capitol.jpg');
@@ -50,14 +50,17 @@
 	}
 
 	h1 {
-		margin-top: .5em;
-		margin-bottom: 0;
-		color: #334499;
+		display: inline-block;
+		background: url('/static/branding/progressive.fund/homepage-title.png') no-repeat;
+		background-size: 100%;
+		width: 13em;
+		height: 3em;
+		text-indent: -99999em;
+		overflow: hidden;
 	}
 	
 
 	#deck {
-		margin-top: 1em;
 		margin-bottom: 40px;
 		max-width: 30em;
 	}
@@ -73,7 +76,10 @@
 	border: 2px solid rgba(30,30,30, .3);
 	background: white;
 }
-	
+
+footer {
+	background: white;
+}
 
 </style>
 {% endblock %}
@@ -113,6 +119,8 @@
 	</div>
 
 	{# we leave two div's open in body-wide templates #}
+	</div>
+	<div class="container-fluid">
 	<div>
 
 {% endblock %}

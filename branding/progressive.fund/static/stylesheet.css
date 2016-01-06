@@ -1,26 +1,23 @@
 a, a:hover, a:link, a:visited, a:active {
-	color: #22A; /* accessibility requires high contrast */
+	color: #4551a3; /* accessibility requires high contrast */
 	text-decoration: none; /* border-bottom looks better than underline */
-	border-bottom: 1px solid #22A; /* accessibility requires a line */
+	border-bottom: 1px solid #4551a3; /* accessibility requires a line, color should match text color */
 }
 	a:hover, a:active {
-		color: #0A0;
-		border-color: #0B0;
+		color: #656ab1;
+		border-color: #656ab1;
 	}
 
 	footer a, footer a:hover, footer a:link, footer a:visited, footer a:active {
-		color: #446;
+		color: #8585c0;
 		border: none;
 	}
 		footer a:hover {
-			border-bottom: 1px solid #225;
+			border-bottom: 1px solid #8585c0;
 		}
 
 #nav-wrap {
-	background-color: white;
-}
-
-#nav-wrap {
+	background-color: #4551a3;
 	margin-bottom: 20px;
 }
 	.navbar {
@@ -55,7 +52,7 @@ a, a:hover, a:link, a:visited, a:active {
 .navbar a.navbar-brand {
 	margin-top: 10px;
 	background: url('/static/branding/progressive.fund/navbar-title.png');
-	width: 103px;
+	width: 135px;
 	height: 30px;
 	text-indent: -99999em;
 	overflow: hidden;
@@ -80,11 +77,21 @@ a, a:hover, a:link, a:visited, a:active {
 
 @media screen {
 .site-brand {
-	font-weight: bold;
+	display: inline-block;
+	background: url('/static/branding/progressive.fund/content-title.png') no-repeat;
+	background-size: 100%;
+	width: 6.2em;
+	height: 1.5em;
+	text-indent: -99999em;
+	overflow: hidden;
+	margin-bottom: -.3em;
+	margin-left: 1px;
 }
 }
 @media print {
 	.site-brand {
+		font-family: 'Times New Roman', serif;
+		font-weight: bold;
 	}
 }
 
