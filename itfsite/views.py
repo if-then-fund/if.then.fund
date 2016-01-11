@@ -192,15 +192,20 @@ def set_email_settings(request):
 	# Return something, but this is ignored.
 	return HttpResponse('OK', content_type='text/plain')
 
-def campaign(request, id):
+def campaign(request, id, api_format_ext):
 	# get the object, make sure it is for the right brand that the user is viewing
 	campaign = get_object_or_404(Campaign, id=id, brand=get_branding(request)['BRAND_INDEX'])
 
 	# redirect to canonical URL if slug does not match
-	# (pass along any query string variables like utm_campaign)
+	# (pass along any query string variables like utm_campaign; when
+	# a .json page is requested, the canonical path omits the slug)
+	if not api_format_ext:
+		canonical_path = campaign.get_absolute_url() + (api_format_ext or "")
+	else:
+		canonical_path = "/a/%d%s" % (campaign.id, api_format_ext)
 	qs = (("?"+request.META['QUERY_STRING']) if request.META['QUERY_STRING'] else "")
-	if request.path != campaign.get_absolute_url():
-		return redirect(campaign.get_absolute_url()+qs)
+	if request.path != canonical_path:
+		return redirect(canonical_path+qs)
 
 	# The rest of this view is handled in the next function.
 	f = campaign_
@@ -218,9 +223,9 @@ def campaign(request, id):
 		# layer strongly caches the output.
 		f = anonymous_view(f)
 
-	return f(request, campaign)
+	return f(request, campaign, api_format_ext == ".json")
 
-def campaign_(request, campaign):
+def campaign_(request, campaign, is_json_api):
 	import json
 	from contrib.models import TriggerStatus, TriggerCustomization, Pledge
 	from contrib.bizlogic import get_pledge_recipient_breakdown
@@ -251,6 +256,33 @@ def campaign_(request, campaign):
 	else:
 		outcome_strings = []
 
+	# for .json calls, just return data in JSON format
+	if is_json_api:
+		from .utils import json_response, serialize_obj, mergedicts
+		brand = get_branding(request)
+		return json_response({
+			"site": {
+				"name": brand["SITE_NAME"],
+				"link": brand["ROOT_URL"],
+			},
+			"campaign": mergedicts(
+				serialize_obj(campaign, keys=("id", "created", "updated", "title", "headline", "subhead", "body_text"),
+						render_text_map={ "subhead": "subhead_format", "body_text": "body_format" }),
+				{
+					"link": request.build_absolute_uri(campaign.get_absolute_url()),
+				}),
+			"trigger": mergedicts(
+				serialize_obj(trigger, keys=("id", "created", "updated", "title", "description"),
+						render_text_map={ "description": "description_format" }),
+				{
+					"type": trigger.trigger_type.title,
+					"outcomes": outcome_strings,
+					"strings": trigger.trigger_type.strings,
+					"max_split": trigger.max_split(),
+				}) if trigger else None,
+			})
+
+
 	# render page
 	return render(request, "itfsite/campaign.html", {
 		"campaign": campaign,
@@ -272,7 +304,7 @@ def campaign_(request, campaign):
 		})
 	
 @user_view_for(campaign)
-def campaign_user_view(request, id):
+def campaign_user_view(request, id, api_format_ext):
 	from contrib.views import get_recent_pledge_defaults, get_user_pledges, render_pledge_template
 	from letters.views import get_recent_letter_defaults, get_user_letters, render_letter_template
 
