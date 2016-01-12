@@ -176,7 +176,7 @@
             {% if tcust.incumb_challgr or tcust.filter_party %}
             <p style="margin-bottom: 0; font-style: italic; font-size: 88%; color: #666;">Some of these options have been pre-set by {{tcust.owner.name}}.</p>
             {% endif %}
-          </div>
+          </div> <!-- /panel-body -->
           </div> <!-- /advnaced-filters -->
 
           <p id="filter-summary">
@@ -211,8 +211,8 @@
                   <p>You must be either a U.S. citizen or lawfully admitted permanent resident (i.e., a green card holder). You cannot be employed <i>directly</i> by the federal government as a contractor. You must make this contribution with your own funds, which were not provided to you by any other person or entity. You must use your own personal credit card, and not a corporate or business card or a card issued to another person.</p>
                   <p><strong>and requires us to collect and share information about you.</strong></p>
                   <p>The Federal Election Commission requires all contributors to federal campaigns to provide all of the information we ask for in this section, and if the {{trigger.trigger_type.strings.action_noun}} occurs in most cases it becomes a part of the public record and searchable in online databases (<a href="/about/how-it-works#isthisanonymous" target="_blank">more information</a>).</p>
-            </div>
-          </div>
+            </div> <!-- /panel-body -->
+          </div> <!-- panel -->
 
           <h3>About you</h3>
 
@@ -237,9 +237,9 @@
                       </div>
                       <div class="small" style="margin-top: 2px">Forgot your password? Uncheck the box above and continue.</div>
                       <p id="login-error" class="text-danger" style="display: none; padding-top: 1em"></p>
-                    </div>
-                  </div>
-                </div>
+                    </div> <!-- /emailPasswordDiv -->
+                  </div> <!-- /pledge-login -->
+                </div> <!-- contributor-email -->
 
                 <label>Name and Address</label>
                 <div class="row">
@@ -280,7 +280,7 @@
                     </div>
                   </div>
                 </div>
-                </div>
+                </div> <!-- /pledge-email-name-and-address-new -->
 
                 <div id="pledge-email-name-and-address-old" style="display: none">
                   <p>We&rsquo;ve got your name and address, but federal law requires that we collect some additional information.</p>
@@ -297,7 +297,7 @@
                   <p style="margin: .5em 2em 1.5em 2em">
                     <button id="pledge-email-name-and-address-old-update" href="#" class="btn btn-default btn-sm" onclick="$('#pledge-email-name-and-address-old').hide(); $('#pledge-email-name-and-address-new').show(); $('#contributor-new .focus-on-shown').focus(); return false;">Update</button>
                   </p>
-                </div>
+                </div> <!-- /pledge-email-name-and-address-old -->
 
                 <div class="row">
                   <div class="col-xs-12">
@@ -323,7 +323,7 @@
                 </div>
 
                 <p class="has-open-pledges" style="display: none;">We&rsquo;ll apply your update to your other scheduled contributions too.</p>
-              </div>
+              </div> <!-- contributor-new -->
 
 
               <div id="contributor-old" style="display: none">
@@ -345,7 +345,7 @@
                 <p style="margin: .5em 2em 1.5em 2em">
                   <button id="pledge-contributor-old-update" href="#" class="btn btn-default btn-sm" onclick="$('#pledge-info input[name=&quot;copyFromPledge&quot;]').val(''); $('#contributor-old, #payment-old').hide(); $('#contributor-new, #payment-new').show(); $('#contributor-new .focus-on-shown').focus(); return false;">Update</button>
                 </p>
-              </div>
+              </div> <!-- contributor-old -->
 
               <div class="buttons">
                 <button type="button" class="btn btn-default" onclick="do_contributor_cancel();">&lt; Back</button>        
@@ -380,13 +380,13 @@
                 </tr>
               </table>
               <p class="has-open-pledges" style="display: none; margin-bottom: 1.5em;">We&rsquo;ll apply this payment information to your other scheduled contributions too.</p>
-              </div>
+              </div> <!-- /payment-new -->
 
               <div id="payment-old" style="display: none">
                 <p>When the {{trigger.trigger_type.strings.action_noun}} occurs, we&rsquo;ll charge your credit card ending in <span class="cc-num"></span>.
                   <a href="#" onclick="$('#pledge-info input[name=&quot;copyFromPledge&quot;]').val(''); $('#payment-old').hide(); $('#payment-new').show(); $('#payment-new .focus-on-shown').focus(); return false;">Change card?</a>
                 </p>
-              </div>
+              </div> <!-- /payment-old -->
 
               {% if campaign.owner.de_recip_id %}
                 <p>
@@ -405,8 +405,8 @@
                   <p>You are about to schedule a campaign contribution for if and when the {{trigger.trigger_type.strings.action_noun}} occurs. Your contribution may be split up to {{trigger.max_split}} ways depending on the outcome of the {{trigger.trigger_type.strings.action_noun}}.</p>
                   <p>We will not charge your credit card until the {{trigger.trigger_type.strings.action_noun}} occurs, and you can cancel this contribution any time before then.</p>
                   <p>You may see a temporary $1 authorization from Democracy Engine, LLC on your credit card, which was our check that your credit card information is valid.</p>
-              </div>
-              </div>
+              </div> <!-- /panel-body -->
+              </div> <!-- /panel -->
 
               <div id="pledge-submit-buttons" class="buttons" style="margin: 1.5em 0">
                 <button type="button" class="btn btn-default" onclick="pledge_payment_cancel()">&lt; Back</button>
