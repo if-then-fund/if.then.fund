@@ -88,21 +88,21 @@
 		font-family: Yanone Kaffeesatz;
 		font-size: 56px;
 	}
-	#splash-text.invert-text {
+	.invert-text #splash-text {
 		color: white;
 		text-shadow: 2px 4px 4px rgba(0, 0, 0, .8);
 	}
-		#splash-text.invert-text a {
+		.invert-text #splash-text a {
 			color: #AAF;
 			border-color: #AAF;
 		}
 
-	#splash-text.invert-text.subhead-darken-bg .subhead {
+	.invert-text #splash-text.subhead-darken-bg .subhead {
 		background-color: rgba(20, 20, 20, .5);
 		margin-left: -1em;
 		padding: .75em 1em;
 	}
-		#splash-text.invert-text.subhead-darken-bg {
+		.invert-text #splash-text.subhead-darken-bg {
 			text-shadow: 1px 2px 2px rgb(0, 0, 0);
 		}
 		#splash-text.subhead-darken-bg .subhead p:last-child {
@@ -115,17 +115,29 @@
 		color: #555;
 		text-shadow: none;
 	}
-		#splash-text.invert-text .image-credit {
+		.invert-text #splash-text .image-credit {
 			color: #EEE;
 		}
 		#splash-text .image-credit a {
 			color: #336;
 			border-color: #336;
 		}	
-			#splash-text.invert-text .image-credit a {
+			.invert-text #splash-text .image-credit a {
 				color: #BBD;
 				border-color: #BBD;
 			}
+
+	#activity-stats {
+		padding: 1.1em 0 1.2em 0;
+		background-color: rgba(255,255,255, .5);
+	}
+		.invert-text #activity-stats {
+			background-color: rgba(0,0,0, .5);
+			color: white;
+		}
+		#activity-stats dl {
+			margin-bottom: 0;
+		}
 
 #draft-warning {
 	background-color: rgb(130, 30, 40);
@@ -156,15 +168,6 @@ h2 {
 		display: none;
 	}
 {% endif %}
-	#story dl {
-		margin-top: -.5em;
-	}
-	#story dl dt {
-		font-size: 130%;
-	}
-	#story dl dd {
-		margin-bottom: 1em;
-	}
 
 form label {
   font-weight: normal;
@@ -214,7 +217,7 @@ form span.required:after {
 	{% if campaign.owner.is_real %} &mdash; {{campaign.owner.name}}{% endif %}
 </div>
 
-<div id="splash">
+<div id="splash" class="{% if campaign.extra.style.splash.invert_text %}invert-text{% endif %}">
   <div id="nav-wrap">
 	<div class="container">
 	  <div class="row">
@@ -239,7 +242,7 @@ form span.required:after {
 	<div class="clearfix visible-xs"> </div>
 	{% endif %}
 
-	<div id="splash-text" class="{% if campaign.extra.style.splash.invert_text %}invert-text{% endif %}">
+	<div id="splash-text">
 		<h1>{{campaign.headline}}</h1>
 
 		<div class="subhead">
@@ -255,9 +258,98 @@ form span.required:after {
 				{{campaign.image_credit|render_text:campaign.subhead_format}}
 			</div>
 		{% endif %}
-	</div>
-  </div>
-</div>
+	</div> <!-- /splash-text -->
+  </div> <!-- /container -->
+
+  <div id="activity-stats">
+  	<div class="container">
+			{% with totals=campaign.get_contrib_totals %}
+				{% if letters_campaign %}
+				<dl>
+				<dt>{{letters_sent}}</dt>
+				<dd>letter{{letters_sent|pluralize}} written</dd>
+				</dl>
+				{% endif %}
+
+				{% if totals.contrib_total > 0 %}
+					{# has contributions #}
+					{% if totals.contrib_fixed_outcome_total > 0 %}
+						<dl>
+						<dt>{{totals.contrib_fixed_outcome_total|currency}}</dt>
+						<dd>
+							contributed by {{totals.contrib_user_count|intcomma}} contributor{{totals.contrib_user_count|pluralize}}
+							{% if totals.by_trigger|length == 1 %}
+							<small>(<a href="#" onclick="$('#modal_trigger_{{totals.by_trigger.0.trigger.id}}').modal(); return false;">details</a>)</small>
+							{% endif %}
+						</dd>
+						{% if totals.by_trigger|length > 1 %}
+						{% for trigger in totals.by_trigger %}
+							<p><small><a href="#" onclick="$('#modal_trigger_{{trigger.trigger.id}}').modal(); return false;">{{trigger.trigger.title}}</a></small></p>
+						{% endfor %}
+						{% endif %}
+						</dl>
+					
+					{% else %}
+						<h3 style="margin-top: 0;">Contributions made{% if trigger %} so far{% endif %}:</h3>
+						{% for trigger in totals.by_trigger %}
+							{% if totals.by_trigger|length > 1 %}
+								<p><b>{{trigger.trigger.title}}</b></p>
+							{% endif %}
+							<div class="row">
+							{% for outcome in trigger.aggregates.outcomes %}
+							<dl class="col-sm-3">
+								<dt>{{outcome.total|currency}}</dt>
+								<dd><em style="font-size: 90%">to</em> {{outcome.label}}</dd>
+							</dl>
+							{% endfor %}
+							<div class="col-sm-3">
+							<p style="float: right"><small><a href="#" onclick="$('#modal_trigger_{{trigger.trigger.id}}').modal(); return false;">Details</a></small></p>
+							</div>
+							</div> <!-- /row -->
+						{% endfor %}
+					{% endif %}
+
+				{% elif trigger.execution and not tcust and totals.pledged_total == 0 %}
+					{# show zeroes for the outcomes --- otherwise user is confused why we only show one total #}
+
+					<div class="row">
+					{% for outcome in trigger_outcome_strings %}
+						<dl class="col-sm-4">
+						<dt>{{0|currency}}</dt>
+						<dd><em style="font-size: 90%">to</em> {{outcome.label}} &mdash; be the first!</dd>
+						</dl>
+                	{% endfor %}
+					</div> <!-- /row -->
+
+				{% elif totals.pledged_total != None %}
+					{# just pledges, no contributions yet #}
+					<dl>
+					<dt>{{ totals.pledged_total|currency }}</dt>
+					<dd>committed {% if trigger %}so far{% endif %} by {{totals.pledged_user_count|intcomma}} contributor{{totals.pledged_user_count|pluralize}}</dd>
+					</dl>
+
+				{% elif totals.pledged_site_wide > 0 %}
+					<dl>
+					<dt><span class="itfbutton"> </span>{{ totals.pledged_site_wide|currency }}</dt>
+					<dd>committed on all sides of this issue*</dd>
+					<p style="font-size: 13px; line-height: 128%;">*Federal law prevents us from giving this campaign&rsquo;s total ahead of congressional action. Instead we show the total committed on both sides of this issue across all campaigns powered by <a href="https://if.then.fund"><span class="site-brand-ifthenfund">if.then.fund</span></a>.</p>
+					</dl>
+
+				{% else %}
+					{# there are no executed pledges and no pledges made prior to trigger execution to show in the meanwhile, so this is probably a trigger created after a vote that has not yet had any activity, and has a fixed outcome #}
+
+					<dl>
+					<dt>{{0|currency}}</dt>
+					<dd>
+						contributed so far &mdash; be the first!
+					</dd>
+					</dl>
+
+				{% endif %}
+			{% endwith %}
+		</div> <!-- /container -->
+	</div> <!-- /activity-stats -->
+</div> <!-- /splash -->
 
 {% if campaign.status|stringformat:'s' == "CampaignStatus.Draft" %}
 <div id="draft-warning">
@@ -290,75 +382,6 @@ form span.required:after {
 					</div>
 				{% endif %}
 			{% endwith %}
-			{% endwith %}
-
-			{# activity summary #}
-			{% with totals=campaign.get_contrib_totals %}
-			<dl style="margin-top: 2em">
-				{% if letters_campaign %}
-				<dt>{{letters_sent}}</dt>
-				<dd>letter{{letters_sent|pluralize}} written</dd>
-				{% endif %}
-
-				{% if totals.contrib_total > 0 %}
-					{# has contributions #}
-					{% if totals.contrib_fixed_outcome_total > 0 %}
-						<dt>{{totals.contrib_fixed_outcome_total|currency}}</dt>
-						<dd>
-							contributed by {{totals.contrib_user_count|intcomma}} contributor{{totals.contrib_user_count|pluralize}}
-							{% if totals.by_trigger|length == 1 %}
-							<small>(<a href="#" onclick="$('#modal_trigger_{{totals.by_trigger.0.trigger.id}}').modal(); return false;">details</a>)</small>
-							{% endif %}
-						</dd>
-						{% if totals.by_trigger|length > 1 %}
-						{% for trigger in totals.by_trigger %}
-							<p><small><a href="#" onclick="$('#modal_trigger_{{trigger.trigger.id}}').modal(); return false;">{{trigger.trigger.title}}</a></small></p>
-						{% endfor %}
-						{% endif %}
-					
-					{% else %}
-						<h3 style="margin-top: 0;">Contributions made{% if trigger %} so far{% endif %}:</h3>
-						{% for trigger in totals.by_trigger %}
-							{% if totals.by_trigger|length > 1 %}
-								<p><b>{{trigger.trigger.title}}</b></p>
-							{% endif %}
-							<p style="float: right"><small><a href="#" onclick="$('#modal_trigger_{{trigger.trigger.id}}').modal(); return false;">Details</a></small></p>
-							{% for outcome in trigger.aggregates.outcomes %}
-								<dt>{{outcome.total|currency}}</dt>
-								<dd><em style="font-size: 90%">to</em> {{outcome.label}}</dd>
-							{% endfor %}
-						{% endfor %}
-					{% endif %}
-
-				{% elif trigger.execution and not tcust and totals.pledged_total == 0 %}
-					{# show zeroes for the outcomes --- otherwise user is confused why we only show one total #}
-
-					{% for outcome in trigger_outcome_strings %}
-						<dt>{{0|currency}}</dt>
-						<dd><em style="font-size: 90%">to</em> {{outcome.label}} &mdash; be the first!</dd>
-                	{% endfor %}
-
-				{% elif totals.pledged_total != None %}
-					{# just pledges, no contributions yet #}
-					<dt>{{ totals.pledged_total|currency }}</dt>
-					<dd>committed {% if trigger %}so far{% endif %} by {{totals.pledged_user_count|intcomma}} contributor{{totals.pledged_user_count|pluralize}}</dd>
-
-				{% elif totals.pledged_site_wide > 0 %}
-					<dt><span class="itfbutton"> </span>{{ totals.pledged_site_wide|currency }}</dt>
-					<dd>committed on all sides of this issue*</dd>
-					<p style="font-size: 13px; line-height: 128%;">*Federal law prevents us from giving this campaign&rsquo;s total ahead of congressional action. Instead we show the total committed on both sides of this issue across all campaigns powered by <a href="https://if.then.fund"><span class="site-brand-ifthenfund">if.then.fund</span></a>.</p>
-
-				{% else %}
-					{# there are no executed pledges and no pledges made prior to trigger execution to show in the meanwhile, so this is probably a trigger created after a vote that has not yet had any activity, and has a fixed outcome #}
-
-					<dt>{{0|currency}}</dt>
-					<dd>
-						contributed so far &mdash; be the first!
-					</dd>
-
-				{% endif %}
-
-			</dl>
 			{% endwith %}
 
 			<hr>
