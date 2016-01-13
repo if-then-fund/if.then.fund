@@ -66,11 +66,6 @@
 #splash-text {
 	max-width: 40em;
 	padding-top: 1em;
-	{% if campaign.splash_image.name %}
-	padding-bottom: 75px;
-	{% else %}
-	padding-bottom: 1.5em;
-	{% endif %}
 	font-size: 20px;
 	line-height: 145%;
 	-webkit-font-smoothing: antialiased;
@@ -87,6 +82,9 @@
 		{% endif %}
 		font-family: Yanone Kaffeesatz;
 		font-size: 56px;
+	}
+	#splash-text .subhead {
+		padding-bottom: 1.5em;
 	}
 	.invert-text #splash-text {
 		color: white;
@@ -109,27 +107,32 @@
 			margin-bottom: 0;
 		}
 
-	#splash-text .image-credit {
-		margin-top: 1.5em;
-		font-size: 66%;
+	#splash .image-credit {
 		color: #555;
 		text-shadow: none;
+		text-align: right;
 	}
-		.invert-text #splash-text .image-credit {
+		#splash.invert-text .image-credit {
 			color: #EEE;
 		}
-		#splash-text .image-credit a {
+		#splash .image-credit a {
 			color: #336;
 			border-color: #336;
 		}	
-			.invert-text #splash-text .image-credit a {
+			#splash.invert-text .image-credit a {
 				color: #BBD;
 				border-color: #BBD;
 			}
 
 	#activity-stats {
 		padding: 1.1em 0 1.2em 0;
+		{% if campaign.splash_image.name %}
 		background-color: rgba(255,255,255, .5);
+		{% else %}
+		margin-top: 1em;
+		border-top: 1px solid #ddd;
+		background-color: #f5f5f5;
+		{% endif %}
 	}
 		.invert-text #activity-stats {
 			background-color: rgba(0,0,0, .5);
@@ -137,6 +140,9 @@
 		}
 		#activity-stats dl {
 			margin-bottom: 0;
+		}
+		#activity-stats dl dt {
+			font-size: 110%;
 		}
 
 #draft-warning {
@@ -152,46 +158,8 @@ h2 {
 }
 
 #story {
-	padding-top: 2em;
-	color: #555;
-}
-{% if BRAND_ID != "279forchange.us" %}
-	@media screen and (min-width: 992px) {
-		#story { padding-left: 1em; }
-	}
-{% else %}
-	#story {
-		padding-bottom: 15px;
-		border-bottom: 1px solid #DDD;
-	}
-	#story hr {
-		display: none;
-	}
-{% endif %}
-
-form label {
-  font-weight: normal;
-  font-size: 14px;
-  padding-right: .5em;
-}
-form p {
-  line-height: 137%;
-}
-
-form span.required:after {
-	content: '*';
-	color: #484;
-	font-size: 75%;
-	vertical-align: super;
-}
-
-	form label .tip {
-		padding-left: 1em;
-		font-size: 90%;
-		font-weight: normal;
-	}
-
-#action-pane {
+	margin-top: 3em;
+	padding-bottom: 15px;
 }
 
 #footer-container {
@@ -200,14 +168,24 @@ form span.required:after {
 	padding-top: 2em;
 }
 
-.table {
-	font-size: 90%;
+#action-buttons {
 }
-
-#action-pane .table>tbody>tr>td {
-    border: none;
-}
-
+  #action-buttons button {
+    margin: 0 1em 1em 0;
+    font-weight: bold;
+  }
+  #action-buttons button:first-child {
+    margin-left: 0;
+  }
+  #action-buttons button small {
+    display: block;
+    margin-top: 5px;
+    color: #555;
+    font-family: sans-serif; /* because of button sizing in javascript, prefer a font that is available immediately */
+    font-weight: normal;
+    white-space: normal; /* .btn sets it to nowrap */
+    max-width: 20vw;
+  }
 </style>
 {% endblock %}
 
@@ -252,23 +230,58 @@ form span.required:after {
 				{{campaign.subhead|render_text:campaign.subhead_format}}
 			{% endif %}
 		</div>
+	</div> <!-- /splash-text -->
+
+	<div id="action-buttons">
+	{% if trigger %}
+		<div id="make-a-contribution" {% if letters_campaign %}class="hidden"{% endif %}>
+            {% for outcome in trigger_outcome_strings %}
+		    {% if not tcust.has_fixed_outcome or tcust.outcome = forloop.counter0 %}
+                <button class="btn btn-lg btn-success" data-index="{{forloop.counter0}}" onclick="window.location = '{{campaign.get_absolute_url|escapejs}}/contribute?outcome={{forloop.counter0}}{% if request.GET.utm_campaign %}&utm_campaign={{request.GET.utm_campaign|urlencode|escapejs}}{% endif %}';">
+	                <span>{{outcome.label}} &raquo;</span>
+	                {% if outcome.tip %}<small>{{outcome.tip}}</small>{% endif %}
+                </button>
+            {% endif %}
+            {% endfor %}
+	        {% if letters_campaign %}
+	        	<p id="write-a-letter-instead"><small><a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(true);">Write a letter instead</a>.</small></p>
+	        {% endif %}
+	    </div>
+    {% endif %}
+
+	{% if letters_campaign %}
+		<div id="write-a-letter">
+			<button class="btn btn-lg btn-success" data-index="{{forloop.counter0}}" onclick="window.location = '{{campaign.get_absolute_url|escapejs}}/write-letter{% if request.GET.utm_campaign %}?utm_campaign={{request.GET.utm_campaign|urlencode|escapejs}}{% endif %}';">
+				Write a Letter &raquo;
+			</button>
+			{% if trigger %}
+				<p id="make-a-contribution-instead"><small>Skip this and <a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(false);">make a contribution instead</a>.</small></p>
+			{% endif %}
+		</div>
+	{% endif %}
+
+	</div> <!-- /action-buttons -->
 
 		{% if campaign.image_credit %}
 			<div class="image-credit">
 				{{campaign.image_credit|render_text:campaign.subhead_format}}
 			</div>
 		{% endif %}
-	</div> <!-- /splash-text -->
+
   </div> <!-- /container -->
 
   <div id="activity-stats">
   	<div class="container">
 			{% with totals=campaign.get_contrib_totals %}
 				{% if letters_campaign %}
+				<div class="row">
+				<div class="col-md-4">
 				<dl>
 				<dt>{{letters_sent}}</dt>
 				<dd>letter{{letters_sent|pluralize}} written</dd>
 				</dl>
+				</div>
+				<div class="col-md-8">
 				{% endif %}
 
 				{% if totals.contrib_total > 0 %}
@@ -290,7 +303,6 @@ form span.required:after {
 						</dl>
 					
 					{% else %}
-						<h3 style="margin-top: 0;">Contributions made{% if trigger %} so far{% endif %}:</h3>
 						{% for trigger in totals.by_trigger %}
 							{% if totals.by_trigger|length > 1 %}
 								<p><b>{{trigger.trigger.title}}</b></p>
@@ -332,7 +344,7 @@ form span.required:after {
 					<dl>
 					<dt><span class="itfbutton"> </span>{{ totals.pledged_site_wide|currency }}</dt>
 					<dd>committed on all sides of this issue*</dd>
-					<p style="font-size: 13px; line-height: 128%;">*Federal law prevents us from giving this campaign&rsquo;s total ahead of congressional action. Instead we show the total committed on both sides of this issue across all campaigns powered by <a href="https://if.then.fund"><span class="site-brand-ifthenfund">if.then.fund</span></a>.</p>
+					<p style="font-size: 90%; line-height: 125%; margin-top: .5em">*Federal law prevents us from giving this campaign&rsquo;s total ahead of congressional action. Instead we show the total committed on both sides of this issue across all campaigns powered by <a href="https://if.then.fund"><span class="site-brand-ifthenfund">if.then.fund</span></a>.</p>
 					</dl>
 
 				{% else %}
@@ -345,6 +357,11 @@ form span.required:after {
 					</dd>
 					</dl>
 
+				{% endif %}
+
+				{% if letters_campaign %}
+				</div> <!-- /col -->
+				</div> <!-- /row -->
 				{% endif %}
 			{% endwith %}
 		</div> <!-- /container -->
@@ -361,12 +378,14 @@ form span.required:after {
 {% endif %}
 
 <div class="container">
-{% if BRAND_ID != "279forchange.us" %}
-<div class="row">
-	<div class="col-md-5 col-md-push-7">
-{% endif %}
+		<div id="my-actions" class="hidden">
+			<div class="actions-container">
+				
+			</div>
+		</div>
+
 		<div id="story">
-			<h2 class="visible-xs visible-sm" style="margin: .5em 0">About the {{trigger.trigger_type.strings.action_noun}}</h2>
+			<h2 style="margin: .5em 0">About the {{trigger.trigger_type.strings.action_noun}}</h2>
 			{# body text #}
 			{% with body_text=campaign.body_text|render_text:campaign.body_format %}
 			{% with body_text_truncated=body_text|truncatewords_html:70 %}
@@ -396,38 +415,6 @@ form span.required:after {
 			</small>
 		</div> <!-- /story -->
 
-{% if BRAND_ID != "279forchange.us" %}
-	</div> <!-- /column -->
-
-	<div class="col-md-7 col-md-pull-5">
-{% endif %}
-		<div id="my-actions" class="hidden">
-			<div class="actions-container">
-				
-			</div>
-		</div>
-
-		<div id="action-pane">
-			{% if letters_campaign %}
-			<div id="write-a-letter">
-					{% include "letters/write-your-rep-form.html" %}
-					{% if trigger %}
-						<p id="make-a-contribution-instead" style="margin-top: 1em"><small>Skip this and <a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(false);">make a contribution instead</a>.</small></p>
-					{% endif %}
-			</div>
-			{% endif %}
-
-			{% if trigger %}
-			<div id="make-a-contribution" {% if letters_campaign %}class="hidden"{% endif %}>
-				{% include "contrib/pledge-form.html" %}
-			</div>
-			{% endif %}
-		</div>
-
-{% if BRAND_ID != "279forchange.us" %}
-	</div> <!-- /column -->
-</div> <!-- /row -->
-{% endif %}
 </div> <!-- /container -->
 
 <div id="footer-container">
@@ -520,10 +507,9 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static "js/jquery.payment.js" %}"> </script>
-<script src="{% static "js/mailcheck.min.js" %}"> </script>
 <script>
 	$(function() {
+		// Show administrative tools.
 		if (the_page && the_page.show_utm_tool)
 			$('#for_staff').show();
 
@@ -540,8 +526,7 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 			// If the user has already made a pledge on this trigger,
 			// show alternate content. Note that the user may not be
 			// logged in because we may have placed the pledge id into
-			// the user's session. Replace the form and return since
-			// everything else is about form validation.
+			// the user's session.
 			if (action.trigger == {{trigger.id}}) {
 				// The user already made a pledge on this. Totally destroy
 				// the form elements for making another pledge.
@@ -559,18 +544,28 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 			{% endif %}
 		}
 
-		if (can_write_letter)
-			letters_init();
-		else if (can_make_pledge)
-			pledge_init(); // only init once shown, b/c of dynamic button sizing
-		else // can't do anything
-			$('#action-pane').remove();
+		// Outcome buttons should be the same size. Because the text font may not be
+		// loaded yet, the size we set now may not be correct once the font is loaded.
+		// Re-set the size again after a period of time when we think all of the fonts
+		// should be loaded.
+		fixup_pledge_outcome_button_sizes();
+		setTimeout(fixup_pledge_outcome_button_sizes, 300);
+
+		{% if trigger %}
+		if (can_make_pledge)
+		  mixpanel.track("Pledge Form Shown", { 'trigger': {{trigger.id}}, 'funnelstate': 1 });
+		{% endif %}
 	})
+
+	function fixup_pledge_outcome_button_sizes() {
+		set_css_to_maximum($('#action-buttons button:visible'), 'width');
+		set_css_to_maximum($('#action-buttons button:visible'), 'height');
+	}
 
 	function make_a_contribution_or_write_a_letter_instead(mode) {
 		$('#write-a-letter').toggleClass('hidden', !mode);
 		$('#make-a-contribution').toggleClass('hidden', mode);
-		if (!mode) pledge_init();
+		fixup_pledge_outcome_button_sizes(); // some of the buttons were originally hidden, so re-size now that they are visible
 		return false; // cancel click
 	}
 

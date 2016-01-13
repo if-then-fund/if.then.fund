@@ -128,9 +128,35 @@ class Campaign(models.Model):
 	def get_short_url(self):
 		return settings.SITE_ROOT_URL + ("/a/%d" % self.id)
 
+	#
+
 	def get_active_letters_campaign(self):
 		from letters.models import CampaignStatus as LettersCampaignStatus
 		return self.letters.filter(status=LettersCampaignStatus.Open).order_by('-created').first()
+
+	def get_active_trigger(self):
+		# What trigger should the user take action on? It's the most recently created
+		# trigger that is open or executed (since users can still take action on
+		# executed triggers). During drafting, also allow the user editing the page to
+		# see a draft trigger.
+		
+		from contrib.models import Trigger, TriggerStatus, TriggerCustomization
+		
+		trigger_must_have_status = [TriggerStatus.Open, TriggerStatus.Executed]
+		if self.status == CampaignStatus.Draft:
+			trigger_must_have_status.append(TriggerStatus.Draft)
+		trigger = self.contrib_triggers\
+			.filter(status__in=trigger_must_have_status)\
+			.order_by('-created')\
+			.first()
+
+		# Show customized trigger options when the campaign has an owner and that owner
+		# has a TriggerCustomization for the trigger.
+		tcust = None
+		if trigger and self.owner:
+			tcust = TriggerCustomization.objects.filter(trigger=trigger, owner=self.owner).first()
+
+		return (trigger, tcust)
 
 	def contrib_triggers_with_tcust(self):
 		return [

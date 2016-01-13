@@ -185,8 +185,8 @@ class ContribTest(SeleniumTest):
 		self.assertRegex(self.browser.title, "Keystone XL")
 
 		# Click one of the outcome buttons.
-		self.browser.execute_script("$('#pledge-outcomes > button[data-index=0]').click()")
-		#self.browser.find_element_by_css_selector("#pledge-outcomes > button").click() # first button?
+		self.browser.execute_script("$('#action-buttons button[data-index=0]').click()")
+		#self.browser.find_element_by_css_selector("#action-buttons button").click() # first button?
 
 		# Enter pledge amount.
 		self.browser.execute_script("$('#pledge-amount input').val('12')")
@@ -305,7 +305,7 @@ class ContribTest(SeleniumTest):
 		self.assertRegex(self.browser.title, title)
 
 		# Click one of the outcome buttons.
-		self.browser.execute_script("$('#pledge-outcomes > button[data-index=1]').click()")
+		self.browser.execute_script("$('#action-buttons button[data-index=1]').click()")
 
 		# Use default pledge amount.
 		self.browser.find_element_by_css_selector("#contribution-start-next").click()
@@ -364,7 +364,7 @@ class ContribTest(SeleniumTest):
 		self.browser.get(self.build_test_url(campaign.get_absolute_url()))
 
 		# Click one of the outcome buttons.
-		self.browser.execute_script("$('#pledge-outcomes > button[data-index=1]').click()")
+		self.browser.execute_script("$('#action-buttons button[data-index=1]').click()")
 		self.browser.find_element_by_css_selector("#contribution-start-next").click() # Use default pledge amount
 
 		# Try to log in.
@@ -388,7 +388,7 @@ class ContribTest(SeleniumTest):
 	def _test_pledge_returning_user_logs_in_already_has_pledge(self, campaign, email, pw):
 		# Re-start pledge.
 		self.browser.get(self.build_test_url(campaign.get_absolute_url()))
-		self.browser.execute_script("$('#pledge-outcomes > button[data-index=1]').click()")
+		self.browser.execute_script("$('#action-buttons button[data-index=1]').click()")
 		self.browser.find_element_by_css_selector("#contribution-start-next").click() # Use default pledge amount.
 
 		# Try to log in.
@@ -603,7 +603,7 @@ class LettersTest(SeleniumTest):
 		self.assertRegex(self.browser.title, "Test Campaign")
 
 		# Click one of the outcome buttons.
-		self.browser.execute_script("$('#pledge-outcomes > button[data-index=0]').click()")
+		self.browser.execute_script("$('#action-buttons button').click()")
 
 		if not is_logged_in:
 			# Fill out address field.
@@ -650,7 +650,7 @@ class LettersTest(SeleniumTest):
 		if flow_one:
 			# Submitted?
 			time.sleep(.5)
-			self.assertIn("Thanks! Your letter to", self.browser.find_element_by_css_selector("#write-a-letter").text)
+			self.assertIn("You wrote a letter to", self.browser.find_element_by_css_selector("#write-a-letter").text)
 			
 			if not is_logged_in and not (with_existing_email and with_new_surname):
 				# Letter is written. Follow email confirmation. There is no email

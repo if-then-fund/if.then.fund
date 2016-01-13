@@ -780,8 +780,8 @@ def write_letter(request):
 
 	return {
 		"status": "ok",
-		#"html": render_letter_template(request, letter),
-		"sent_to": letter.indented_recipients,
+		"html": render_letter_template(request, letter.via_campaign, letter, is_response_page=True),
+		#"sent_to": letter.intended_recipients,
 	}
 
 def get_user_letters(user, request):
@@ -795,12 +795,14 @@ def get_user_letters(user, request):
 		filters |= Q(anon_user_id=anon_user)
 	return UserLetter.objects.filter(filters)
 
-def render_letter_template(request, letter, show_long_title=False):
+def render_letter_template(request, campaign, letter, show_long_title=False, is_response_page=False):
 	# Get the user's pledges, if any, on any trigger tied to this campaign.
 	import django.template
 	template = django.template.loader.get_template("letters/letter.html")
 	return template.render(django.template.RequestContext(request, {
+		"campaign": campaign,
 		"show_long_title": show_long_title,
+		"response_page": is_response_page,
 		"letter": letter,
 		"share_url": request.build_absolute_uri(letter.via_campaign.get_short_url()),
 	}))

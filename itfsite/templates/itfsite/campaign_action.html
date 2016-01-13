@@ -1,0 +1,146 @@
+{% extends "master.html" %}
+{% load static %}
+{% load humanize %}
+{% load itfsite_utils %}
+
+{% block title %}{{campaign.title}}{% endblock %}
+
+{% block head %}
+
+{% include "og_image.html" %}
+
+<style>
+header {
+	margin: -20px -15px 15px -15px;
+	padding: 15px;
+	background: #f5f5f5;
+    border: 1px solid #D9D9DE;
+	text-align: center;
+}
+
+h1 {
+	margin: 10px 0;
+}
+
+#action-pane {
+}
+
+/* letters campaigns */
+.table {
+	font-size: 90%;
+}
+#action-pane .table>tbody>tr>td {
+    border: none;
+    line-height: 125%;
+}
+
+h2 {
+  margin-top: 40px;
+  font-weight: bold;
+}
+
+form label {
+  font-weight: normal;
+  font-size: 14px;
+  padding-right: .5em;
+}
+form p {
+  line-height: 137%;
+}
+
+form span.required:after {
+	content: '*';
+	color: #484;
+	font-size: 75%;
+	vertical-align: super;
+}
+
+	form label .tip {
+		padding-left: 1em;
+		font-size: 90%;
+		font-weight: normal;
+	}
+</style>
+{% endblock %}
+
+{% block body %}
+<div id="page-fixed-header">
+	{{campaign.title}}
+	{% if campaign.owner.is_real %} &mdash; {{campaign.owner.name}}{% endif %}
+</div>
+
+{% if campaign.status|stringformat:'s' == "CampaignStatus.Draft" or trigger.status|stringformat:'s' == "TriggerStatus.Draft" %}
+<div id="draft-warning">
+	This campaign is still a draft.
+</div>
+{% endif %}
+
+<header>
+	{% if trigger %}
+		<h1>{{outcome_strings.label}}</h1>
+		<div class="subhead">
+			<p><strong>{{campaign.title}}</strong></p>
+		</div>
+	{% else %}
+		<h1>{{campaign.headline}}</h1>
+	{% endif %}
+	{% if campaign.owner.is_real %}<div>by {{campaign.owner.name}}</div>{% endif %}
+</header>
+
+<div id="action-pane">
+	{% if trigger %}
+	<div id="make-a-contribution" {% if letters_campaign %}class="hidden"{% endif %}>
+		{% include "contrib/pledge-form.html" %}
+	</div> <!-- /make-a-contribution -->
+	{% endif %}
+
+	{% if letters_campaign %}
+	<div id="write-a-letter">
+		{% include "letters/write-your-rep-form.html" %}
+	</div>
+	{% endif %}
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static "js/jquery.payment.js" %}"> </script>
+<script src="{% static "js/mailcheck.min.js" %}"> </script>
+<script>
+	$(function() {
+		// If the user already has an action on this thing, redirect back to
+		// the main campaign page.
+		for (var i = 0; i < (the_page ? the_page.actions.length : 0); i++) {
+			var action = the_page.actions[i];
+
+			{% if trigger %}
+			if (action.trigger == {{trigger.id}}) {
+				window.location = "{{campaign.get_absolute_url|escapejs}}";
+				return;
+			}
+			{% endif %}
+			
+			{% if letters_campaign %}
+			if (action.letterscampaign == {{letters_campaign.id}}) {
+				window.location = "{{campaign.get_absolute_url|escapejs}}";
+				return;
+			}
+			{% endif %}
+		}
+
+		// Ok, good to go.
+
+		{% if trigger %}
+		pledge_init();
+		pledge_begin({{outcome}});
+		{% endif %}
+
+		{% if letters_campaign %}
+		letters_init();
+		{% endif %}
+
+	})
+
+	</script>
+{% endblock %}

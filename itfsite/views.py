@@ -192,7 +192,7 @@ def set_email_settings(request):
 	# Return something, but this is ignored.
 	return HttpResponse('OK', content_type='text/plain')
 
-def campaign(request, id, api_format_ext):
+def campaign(request, id, action, api_format_ext):
 	# get the object, make sure it is for the right brand that the user is viewing
 	campaign = get_object_or_404(Campaign, id=id, brand=get_branding(request)['BRAND_INDEX'])
 
@@ -203,12 +203,23 @@ def campaign(request, id, api_format_ext):
 		canonical_path = campaign.get_absolute_url() + (api_format_ext or "")
 	else:
 		canonical_path = "/a/%d%s" % (campaign.id, api_format_ext)
+	if action:
+		canonical_path += "/" + action
 	qs = (("?"+request.META['QUERY_STRING']) if request.META['QUERY_STRING'] else "")
 	if request.path != canonical_path:
 		return redirect(canonical_path+qs)
 
-	# The rest of this view is handled in the next function.
-	f = campaign_
+	# The rest of this view is handled in the next two functions.
+	if action is None:
+		f = campaign_show
+	elif api_format_ext is not None:
+		raise Http404()
+	elif action == "contribute":
+		f = campaign_action_trigger
+	elif action == "write-letter":
+		f = campaign_action_letterscampaign
+	else:
+		raise Http404()
 
 	# Cache?
 	if campaign.status == CampaignStatus.Draft:
@@ -225,32 +236,15 @@ def campaign(request, id, api_format_ext):
 
 	return f(request, campaign, api_format_ext == ".json")
 
-def campaign_(request, campaign, is_json_api):
-	import json
-	from contrib.models import TriggerStatus, TriggerCustomization, Pledge
-	from contrib.bizlogic import get_pledge_recipient_breakdown
-
-	# What trigger should the user take action on? It's the most recently created
-	# trigger that is open or executed (since users can still take action on
-	# executed triggers). During drafting, also allow the user editing the page to
-	# see a draft trigger.
-	trigger_must_have_status = [TriggerStatus.Open, TriggerStatus.Executed]
-	if campaign.status == CampaignStatus.Draft: trigger_must_have_status.append(TriggerStatus.Draft)
-	trigger = campaign.contrib_triggers.filter(status__in=trigger_must_have_status).order_by('-created').first()
-
-	# Show customized trigger options when the campaign has an owner and that owner
-	# has a TriggerCustomization for the trigger.
-	tcust = None
-	if trigger and campaign.owner:
-		tcust = TriggerCustomization.objects.filter(trigger=trigger, owner=campaign.owner).first()
+def campaign_show(request, campaign, is_json_api):
+	# What Trigger and TriggerCustomization should we show?
+	trigger, tcust = campaign.get_active_trigger()
 
 	# Which letter-writing campaign should the user take action on?
-	from letters.models import UserLetter, VoterRegistrationStatus
-	from letters.views import state_abbrs
 	letters_campaign = campaign.get_active_letters_campaign()
 
 	if trigger:
-		outcome_strings = tcust.outcome_strings() if tcust else trigger.outcome_strings()
+		outcome_strings = (tcust or trigger).outcome_strings()
 	elif letters_campaign:
 		outcome_strings = [{ "label": "Contact Congress >" }]
 	else:
@@ -284,6 +278,7 @@ def campaign_(request, campaign, is_json_api):
 
 
 	# render page
+	from letters.models import UserLetter
 	return render(request, "itfsite/campaign.html", {
 		"campaign": campaign,
 
@@ -291,20 +286,66 @@ def campaign_(request, campaign, is_json_api):
 		"trigger": trigger,
 		"tcust": tcust,
 		"trigger_outcome_strings": outcome_strings,
+
+		# for letter writing campaigns
+		"letters_campaign": letters_campaign,
+		"letters_sent": UserLetter.objects.filter(letterscampaign__campaigns=campaign).aggregate(sum=Sum('delivered'))['sum'] or 0, # can be None if no letters written
+
+		})
+
+def campaign_action_trigger(request, campaign, is_json_api):
+	import json
+	from contrib.models import TriggerStatus, Pledge
+	from contrib.bizlogic import get_pledge_recipient_breakdown
+
+	# What Trigger and TriggerCustomization should we show?
+	trigger, tcust = campaign.get_active_trigger()
+	outcome_strings = (tcust or trigger).outcome_strings()
+
+	# What outcome is selected? Validate against trigger and
+	# trigger customization.
+	try:
+		outcome = int(request.GET.get("outcome"))
+		if outcome < 0 or outcome >= len(trigger.outcomes):
+			raise ValueError("outcome is out of range")
+		if tcust and tcust.has_fixed_outcome() and outcome != tcust.outcome:
+			raise ValueError("outcome does not match TriggerCustomization")
+	except (ValueError, TypeError):
+		raise Http404()
+
+	# render page
+	return render(request, "itfsite/campaign_action.html", {
+		"campaign": campaign,
+
+		"trigger": trigger,
+		"tcust": tcust,
+		"all_outcome_strings": outcome_strings,
+		"outcome": outcome,
+		"outcome_strings": outcome_strings[outcome],
 		"suggested_pledge": 10,
 		"alg": Pledge.current_algorithm(),
 		"trigger_recips": json.dumps(get_pledge_recipient_breakdown(trigger) if trigger and trigger.status == TriggerStatus.Executed else None),
 
-		# for letter writing campaigns
+		})
+
+def campaign_action_letterscampaign(request, campaign, is_json_api):
+	# Which letter-writing campaign should the user take action on?
+	letters_campaign = campaign.get_active_letters_campaign()
+
+	# render page
+	from letters.models import VoterRegistrationStatus
+	from letters.views import state_abbrs
+	return render(request, "itfsite/campaign_action.html", {
+		"campaign": campaign,
+
 		"letters_campaign": letters_campaign,
 		"state_abbrs": state_abbrs,
 		"voter_registration_options": [(v.value, v.name) for v in VoterRegistrationStatus],
-		"letters_sent": UserLetter.objects.filter(letterscampaign__campaigns=campaign).aggregate(sum=Sum('delivered'))['sum'] or 0, # can be None if no letters written
 
 		})
-	
+
 @user_view_for(campaign)
-def campaign_user_view(request, id, api_format_ext):
+def campaign_user_view(request, id, action, api_format_ext):
 	from contrib.views import get_recent_pledge_defaults, get_user_pledges, render_pledge_template
 	from letters.views import get_recent_letter_defaults, get_user_letters, render_letter_template
 
@@ -341,7 +382,7 @@ def campaign_user_view(request, id, api_format_ext):
 			"type": "letters.UserLetter",
 			"date": letter.created.isoformat(),
 			"letterscampaign": letter.letterscampaign.id,
-			"rendered": render_letter_template(request, letter, show_long_title=len(pledges)+len(letters) > 1),
+			"rendered": render_letter_template(request, campaign, letter, show_long_title=len(pledges)+len(letters) > 1),
 		} for letter in letters
 	]
 

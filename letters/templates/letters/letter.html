@@ -3,6 +3,12 @@
 <h2>Your letter {% if show_long_title %}for {{letter.letterscampaign.title}}{% endif %}</h2>
 
 <p class="letter-action-summary">
-	You wrote a letter to {{letter.indented_recipients}} on {{letter.created|date}}.
+	You wrote a letter to {{letter.intended_recipients}} on {{letter.created|date}}.
 	{% if letter.pending > 0 %}It is currently pending delivery.{% endif %}
 </p>
+
+{% if response_page %}
+	<div style="margin-top: 2em">
+		<p><a href="{{campaign.get_absolute_url}}" class="btn btn-primary" style="color: white">Back to {{campaign.title}} &raquo;</a></p>
+	</div>
+{% endif %}

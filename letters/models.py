@@ -126,7 +126,7 @@ class UserLetter(models.Model):
 	objects = NoMassDeleteManager()
 
 	def delete(self):
-		if self.delivered > 0:
+		if self.delivered > 0 and not settings.DEBUG:
 			raise ValueError("Cannot delete a UserLetter once any of its messages have been submitted for delivery.")
 		super(UserLetter, self).delete()	
 
@@ -154,7 +154,7 @@ class UserLetter(models.Model):
 			return "Pending"
 
 	@property
-	def indented_recipients(self):
+	def intended_recipients(self):
 		def nice_list(items):
 			if len(items) <= 1:
 				return "".join(items)

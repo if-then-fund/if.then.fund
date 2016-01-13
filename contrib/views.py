@@ -398,7 +398,7 @@ def create_pledge(request):
 	# Done.
 	return {
 		"status": "ok",
-		"html": render_pledge_template(request, p, p.via_campaign),
+		"html": render_pledge_template(request, p, p.via_campaign, response_page=True),
 	}
 
 @json_response
@@ -414,11 +414,12 @@ def cancel_pledge(request):
 	else:
 		return { "status": "error", "message": "You don't own that pledge." }
 
-def render_pledge_template(request, pledge, campaign, show_long_title=False):
+def render_pledge_template(request, pledge, campaign, show_long_title=False, response_page=False):
 	# Get the user's pledges, if any, on any trigger tied to this campaign.
 	import django.template
 	template = django.template.loader.get_template("contrib/contrib.html")
 	return template.render(django.template.RequestContext(request, {
+		"response_page": response_page,
 		"show_long_title": show_long_title,
 		"pledge": pledge,
 		"campaign": campaign,
@@ -482,7 +483,8 @@ def report_fetch_data(trigger, via_campaign):
 		ret["total"]["average"] = ret["total"]["total"] / ret["total"]["count"]
 
 	if trigger:
-		# Aggregates by outcome.
+		# Aggregates by outcome. Return in the same order as Trigger.outcomes
+		# (don't change that!).
 		ret['outcomes'] = []
 		outcome_totals = dict(Contribution.aggregate('desired_outcome', **ca_slice_fields))
 		for outcome_index, outcome_info in enumerate(trigger.outcomes):

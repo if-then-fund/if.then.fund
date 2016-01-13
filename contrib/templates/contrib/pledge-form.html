@@ -1,24 +1,4 @@
 <style>
-#pledge-outcomes {
-  margin-top: .5em;
-}
-  #pledge-outcomes button {
-    margin: 0 1em 1em 0;
-    font-weight: bold;
-  }
-  #pledge-outcomes button:first-child {
-    margin-left: 0;
-  }
-  #pledge-outcomes button small {
-    display: block;
-    margin-top: 5px;
-    color: #555;
-    font-family: sans-serif; /* because of button sizing in javascript, prefer a font that is available immediately */
-    font-weight: normal;
-    white-space: normal; /* .btn sets it to nowrap */
-    max-width: 20vw;
-  }
-
 #advanced-filters label div {
   margin-left: 1.5em;
   font-size: 85%;
@@ -60,35 +40,13 @@
 </style>
 
 <div id="make-pledge">
-    {% if not tcust.has_fixed_outcome %}
-        <h2>
-            {% if trigger.status|stringformat:'s' == 'TriggerStatus.Open' %}
-            How would you {{trigger.trigger_type.strings.action_vb_inf}}?
-            {% else %}
-            How would you have {{trigger.trigger_type.strings.action_vb_past}}?
-            {% endif %}
-        </h2>
-
-        <div id="pledge-outcomes">
-            {% for outcome in trigger_outcome_strings %}
-                <button class="btn btn-lg btn-default" onclick="pledge_begin(this)" data-index="{{forloop.counter0}}">
-                <span>{{outcome.label}}</span>
-                {% if outcome.tip %}<small>{{outcome.tip}}</small>{% endif %}
-                </button>
-            {% endfor %}
-        </div>
-
-    {% else %}
-      <h2>Make a contribution</h2>
-    {% endif %}
-
   <form id="pledge-info" onsubmit="return false;">
     
     <input type="hidden" name="trigger" value="{{trigger.id}}"/>
     <input type="hidden" name="ref_code" value="{{request.GET.utm_campaign}}"/>
     <input type="hidden" name="via_campaign" value="{{campaign.id}}"/>
     <input type="hidden" name="algorithm" value="{{alg.id}}"/>
-    <input type="hidden" name="desired_outcome" value="{% if not tcust.has_fixed_outcome %}?{% else %}{{tcust.outcome}}{% endif %}"/>
+    <input type="hidden" name="desired_outcome" value="?"/>
     <input type="hidden" name="amount" value="?"/>
     <input type="hidden" name="incumb_challgr" value="?"/>
     <input type="hidden" name="filter_party" value=""/>
@@ -100,11 +58,12 @@
     <div>
       <div>
         <div id="pledge-start">
-          <h3>
+          <h2>
             <label for="pledge-amount-field" style="margin: 0; padding: 0; font-size: inherit">
-              Contribution amount
+              How much can you contribute to candidates that agree with
+              {% if campaign.owner.is_real and tcust.has_fixed_outcome %}us{% else %}you{% endif %}?
             </label>
-          </h3>
+          </h2>
 
           <div id="pledge-amount" class="input-group">
             <div class="input-group-addon">$</div>
@@ -197,9 +156,6 @@
 
             <button id="contribution-start-next" type="button" class="btn btn-warning" onclick="do_pledge_start_next()">Next &gt;</button
             >
-            {% if letters_campaign %}
-             <p id="write-a-letter-instead" style="margin-top: 1em"><small><a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(true);">Write a letter instead</a>.</small></p>
-            {% endif %}
           </div>
         </div> <!-- /pledge-start -->
 
@@ -214,7 +170,7 @@
             </div> <!-- /panel-body -->
           </div> <!-- panel -->
 
-          <h3>About you</h3>
+          <h2>About you</h2>
 
               <div id="contributor-new">
                 <div id="pledge-email-name-and-address-new">
@@ -354,7 +310,7 @@
         </div> <!-- /pledge-contributor -->
 
         <div id="pledge-payment" style="display: none">
-          <h3>Payment information</h3>
+          <h2>Payment information</h2>
 
               <div id="payment-new">
               <p>Enter the credit card information that you would like us to charge when the {{trigger.trigger_type.strings.action_noun}} occurs.</p>
@@ -430,8 +386,6 @@ function pledge_init() {
   if (_pledge_init_done) return;
   _pledge_init_done= true;
 
-  var suggested_pledge = {{suggested_pledge}};
-
   // Don't let the user try to log in if they are logged in already.
   if (the_user) {
     $('#contributor-email, .contributor-existing-email').remove();
@@ -443,7 +397,6 @@ function pledge_init() {
 
     if (the_page.pledge_defaults['amount']) {
       $('#pledge-amount input').val(the_page.pledge_defaults['amount'].toFixed(2));
-      suggested_pledge = null; // don't record in mixpanel
     }
 
     {% if not tcust.incumb_challgr %}
@@ -478,17 +431,6 @@ function pledge_init() {
   $('input.cc-exp').payment('formatCardExpiry');
   $('input.cc-cvc').payment('formatCardCVC');
 
-  // Outcome buttons should be the same size. Because the text font may not be
-  // loaded yet, the size we set now may not be correct once the font is loaded.
-  // Re-set the size again after a period of time when we think all of the fonts
-  // should be loaded.
-  function set_button_sizes() {
-    set_css_to_maximum($('#pledge-outcomes button'), 'width');
-    set_css_to_maximum($('#pledge-outcomes button'), 'height');
-  }
-  set_button_sizes();
-  setTimeout(set_button_sizes, 300);
-
   // For testing, pre-fill form fields with demonstration values.
 
   if (window.location.hash == "#demo") {
@@ -510,8 +452,6 @@ function pledge_init() {
 
   contribution_update_display_text();
   contribution_start_validation();
-
-  mixpanel.track("Pledge Form Shown", { 'trigger': {{trigger.id}}, 'funnelstate': 1, 'suggested_pledge': suggested_pledge });
 }
 
 function setPledgeDefaults(pledge_defaults) {
@@ -565,21 +505,16 @@ function setPledgeDefaults(pledge_defaults) {
   if (pledge_defaults.open_pledges > 0) $('.has-open-pledges').show()
 }
 
-function pledge_begin(button_elem) {
-	// Which outcome was selected?
-	var outcome_index = $(button_elem).attr('data-index');
-
-	// Indicate chosen state.
-	$('#pledge-outcomes button').each(function() {
-		$(this).toggleClass('active btn-success', $(this).attr('data-index') == outcome_index);
-		$(this).toggleClass('inactive', $(this).attr('data-index') != outcome_index);
-	})
-
+function pledge_begin(outcome_index) {
 	// Set form field for submission.
-	$('#pledge-info input[name="desired_outcome"]').val($(button_elem).attr('data-index'))
+	$('#pledge-info input[name="desired_outcome"]').val(outcome_index)
 
 	// Track event.
-	mixpanel.track("Pledge Begin", { 'campaign': {{campaign.id}}, 'outcome_index': outcome_index });
+	mixpanel.track("Pledge Begin", {
+    'campaign': {{campaign.id}},
+    'outcome_index': outcome_index,
+    'suggested_pledge': get_contribution_amount() // suggested_pledge or last contribution amount
+  });
 
 	// Prepare form.
 	contribution_update_display_text();
@@ -635,7 +570,7 @@ function contribution_update_display_text() {
   // Fill in the user's choice in the checkbox fields for the filters for
   // who to give to.
   var trigger_outcomes = [
-    {% for outcome in trigger_outcome_strings %}
+    {% for outcome in all_outcome_strings %}
       "{% if outcome.object %}{{outcome.object|escapejs}}{% else %}{{outcome.label|escapejs}}{% endif %}"{% if not forloop.last %}, {% endif %}
     {% endfor %}
   ];
