@@ -36,7 +36,24 @@
   margin-top: 1.5em;
 }
 
-.panel-body p:last-child { margin: 0; }
+.responsive-side-panel {
+  font-size: 90%;
+  color: #331;
+}
+@media screen and (min-width: 768px) {
+  .responsive-side-panel {
+    margin-left: 2em;
+    border-left: 1px solid #775;
+    padding: .5em 0 .5em 1em;
+  }
+}
+@media screen and (max-width: 767px) {
+  .responsive-side-panel {
+    margin: 1em 0;
+    border: 1px solid #775;
+    padding: .5em;
+  }
+}
 </style>
 
 <div id="make-pledge">
@@ -70,7 +87,7 @@
             <input id="pledge-amount-field" class="form-control focus-on-shown" type="text" value="{{suggested_pledge|floatformat:2}}" pattern="^([0-9]+(,[0-9]{3})*)?(\.[0-9]{0,2})?$" onkeyup="contribution_start_validation()" onchange="contribution_start_validation()" title="Contribution">
           </div>
 
-          <div id="advanced-filters" style="display: none; margin-top: 2em" class="panel panel-default">
+          <div id="advanced-filters" style="display: none" class="panel panel-default">
             <div class="panel-heading">Who gets your contribution?</div>
             <div class="panel-body">
 
@@ -160,18 +177,18 @@
         </div> <!-- /pledge-start -->
 
         <div id="pledge-contributor" style="display: none">
+          <h2>About you</h2>
 
-          <div class="panel" style="margin: 2em 0;">
-            <div class="panel-body">
-                  <p><strong>Federal law restricts who can make campaign contributions</strong></p>
+          <div class="row">
+            <div class="col-sm-5 col-sm-push-7 col-md-6 col-md-push-6">
+              <div class="responsive-side-panel">
+                  <p><strong>Federal law restricts who can make campaign contributions:</strong></p>
                   <p>You must be either a U.S. citizen or lawfully admitted permanent resident (i.e., a green card holder). You cannot be employed <i>directly</i> by the federal government as a contractor. You must make this contribution with your own funds, which were not provided to you by any other person or entity. You must use your own personal credit card, and not a corporate or business card or a card issued to another person.</p>
                   <p><strong>and requires us to collect and share information about you.</strong></p>
                   <p>The Federal Election Commission requires all contributors to federal campaigns to provide all of the information we ask for in this section, and if the {{trigger.trigger_type.strings.action_noun}} occurs in most cases it becomes a part of the public record and searchable in online databases (<a href="/about/how-it-works#isthisanonymous" target="_blank">more information</a>).</p>
-            </div> <!-- /panel-body -->
-          </div> <!-- panel -->
-
-          <h2>About you</h2>
-
+              </div>
+            </div>
+            <div class="col-sm-7 col-sm-pull-5 col-md-6 col-md-pull-6">
               <div id="contributor-new">
                 <div id="pledge-email-name-and-address-new">
                 <div id="contributor-email" class="form-group">
@@ -303,15 +320,21 @@
                 </p>
               </div> <!-- contributor-old -->
 
+              <p>This information will become a part of the public record if the {{trigger.trigger_type.strings.action_noun}} occurs, as required by law.</p>
+
               <div class="buttons">
                 <button type="button" class="btn btn-default" onclick="do_contributor_cancel();">&lt; Back</button>        
                 <button id="contribution-contributorinfo-next" type="button" class="btn btn-warning" onclick="do_contributor_next()">Next &gt;</button>
               </div>
+            </div> <!-- /col -->
+          </div> <!-- /row -->
         </div> <!-- /pledge-contributor -->
 
         <div id="pledge-payment" style="display: none">
           <h2>Payment information</h2>
 
+          <div class="row">
+            <div class="col-sm-7 col-md-6">
               <div id="payment-new">
               <p>Enter the credit card information that you would like us to charge when the {{trigger.trigger_type.strings.action_noun}} occurs.</p>
 
@@ -355,19 +378,20 @@
 
               <p style="margin: 1.5em 0">By clicking next, you agree that you have reviewed the contributor requirements above and our <a href="/terms" target="_blank">terms of use</a>.</p>
 
-              <div class="panel" style="margin: 2em 0;">
-              <div class="panel-body">
-                <p><strong>What happens next...</strong></p>
-                  <p>You are about to schedule a campaign contribution for if and when the {{trigger.trigger_type.strings.action_noun}} occurs. Your contribution may be split up to {{trigger.max_split}} ways depending on the outcome of the {{trigger.trigger_type.strings.action_noun}}.</p>
-                  <p>We will not charge your credit card until the {{trigger.trigger_type.strings.action_noun}} occurs, and you can cancel this contribution any time before then.</p>
-                  <p>You may see a temporary $1 authorization from Democracy Engine, LLC on your credit card, which was our check that your credit card information is valid.</p>
-              </div> <!-- /panel-body -->
-              </div> <!-- /panel -->
-
               <div id="pledge-submit-buttons" class="buttons" style="margin: 1.5em 0">
                 <button type="button" class="btn btn-default" onclick="pledge_payment_cancel()">&lt; Back</button>
                 <button id="billing-next" type="button" class="btn btn-warning" onclick="pledge_submit()">Confirm</button>
               </div>
+            </div>
+            <div class="col-sm-5 col-md-6">
+              <div class="responsive-side-panel">
+                  <p><strong>What happens next...</strong></p>
+                  <p>You are about to schedule a campaign contribution for if and when the {{trigger.trigger_type.strings.action_noun}} occurs. Your contribution may be split up to {{trigger.max_split}} ways depending on the outcome of the {{trigger.trigger_type.strings.action_noun}}.</p>
+                  <p>We will not charge your credit card until the {{trigger.trigger_type.strings.action_noun}} occurs, and you can cancel this contribution any time before then.</p>
+                  <p>You may see a temporary $1 authorization from Democracy Engine, LLC on your credit card, which was our check that your credit card information is valid.</p>
+              </div>
+            </div>
+          </div>
         </div> <!-- /pledge-payment -->
 
       </div> <!-- nothing -->
