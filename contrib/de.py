@@ -9,11 +9,12 @@ class HumanReadableValidationError(Exception):
 class DemocracyEngineAPIClient(object):
 	de_meta_info = None
 
-	def __init__(self, api_baseurl, account_number, username, password):
+	def __init__(self, api_baseurl, account_number, username, password, fees_recipient_id):
 		self.api_baseurl = api_baseurl
 		self.account_number = account_number
 		self.username = username
 		self.password = password
+		self.fees_recipient_id = fees_recipient_id
 		self.debug = False
 
 	def __call__(self, method, post_data=None, argument=None, live_request=False, http_method=None):
@@ -146,3 +147,33 @@ class DemocracyEngineAPIClient(object):
 		digits = [str(d) for d in digits]
 		while len(digits) < 3: digits.insert(0, '0')
 		return "$%s.%s" % (''.join(digits[:-2]), ''.join(digits[-2:]))
+
+
+class DummyDemocracyEngineAPIClient(object):
+	"""A stand-in for the DE API for unit tests."""
+
+	fees_recipient_id = "DUMMY_RECIP_ID"
+
+	issued_tokens = set()
+
+	def create_donation(self, info):
+		if info.get('token_request'):
+			import random, hashlib
+			token = hashlib.md5(str(random.random()).encode('ascii')).hexdigest()
+			self.issued_tokens.add(token)
+			return {
+				"dummy_response": True,
+				"token": token,
+			}
+		else:
+			if not info['token'].startswith('_made_up_') and info['token'] not in self.issued_tokens:
+				raise Exception("Charge on an invalid token.")
+			return {
+				"dummy_response": True,
+			}
+
+	@staticmethod
+	def format_decimal(value):
+		return DemocracyEngineAPIClient.format_decimal(value)
+		
+

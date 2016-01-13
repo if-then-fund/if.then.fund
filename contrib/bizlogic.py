@@ -4,15 +4,21 @@ import rtyaml
 from django.conf import settings
 from django.utils.timezone import now
 
-from contrib.de import DemocracyEngineAPIClient, HumanReadableValidationError
+from contrib.de import DemocracyEngineAPIClient, HumanReadableValidationError, DummyDemocracyEngineAPIClient
 
 # Make a singleton instance of the DE client.
-DemocracyEngineAPI = DemocracyEngineAPIClient(
-	settings.DE_API['api_baseurl'],
-	settings.DE_API['account_number'],
-	settings.DE_API['username'],
-	settings.DE_API['password'],
-	)
+if settings.DE_API:
+	DemocracyEngineAPI = DemocracyEngineAPIClient(
+		settings.DE_API['api_baseurl'],
+		settings.DE_API['account_number'],
+		settings.DE_API['username'],
+		settings.DE_API['password'],
+		settings.DE_API['fees-recipient-id'],
+		)
+else:
+	# Testing only, obviously!
+	print("Using DummyDemocracyEngineAPI!!")
+	DemocracyEngineAPI = DummyDemocracyEngineAPIClient()
 
 def create_de_donation_basic_dict(pledge):
 	# Creates basic info for a Democracy Engine API call for creating
@@ -260,7 +266,7 @@ def create_pledge_donation(pledge, recipients):
 
 	# Create the line item for fees.
 	line_items.append({
-		"recipient_id": settings.DE_API['fees-recipient-id'],
+		"recipient_id": DemocracyEngineAPI.fees_recipient_id,
 		"amount": DemocracyEngineAPI.format_decimal(fees),
 		})
 
@@ -349,28 +355,3 @@ def void_pledge_transaction(txn_guid, allow_credit=False):
 
 	return ret
 
-class DummyDemocracyEngineAPI(object):
-	"""A stand-in for the DE API for unit tests."""
-
-	issued_tokens = set()
-
-	def create_donation(self, info):
-		if info.get('token_request'):
-			import random, hashlib
-			token = hashlib.md5(str(random.random()).encode('ascii')).hexdigest()
-			self.issued_tokens.add(token)
-			return {
-				"dummy_response": True,
-				"token": token,
-			}
-		else:
-			if not info['token'].startswith('_made_up_') and info['token'] not in self.issued_tokens:
-				raise Exception("Charge on an invalid token.")
-			return {
-				"dummy_response": True,
-			}
-
-	@staticmethod
-	def format_decimal(value):
-		return DemocracyEngineAPIClient.format_decimal(value)
-		

@@ -20,8 +20,8 @@ class SeleniumTest(StaticLiveServerTestCase):
 
 		# Replace the Democracy Engine API with our dummy class
 		# so we don't make time consuming remote API calls.
-		import contrib.bizlogic
-		contrib.bizlogic.DemocracyEngineAPI = contrib.bizlogic.DummyDemocracyEngineAPI()
+		import contrib.bizlogic, contrib.de
+		contrib.bizlogic.DemocracyEngineAPI = contrib.de.DummyDemocracyEngineAPIClient()
 
 		# Likewise VoterVoice, and expecially since we don't have
 		# a staging server to test against.

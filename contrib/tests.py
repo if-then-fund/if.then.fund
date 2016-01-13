@@ -125,8 +125,8 @@ class ExecutionTestCase(TestCase):
 	def setUp(self):
 		# Replace the Democracy Engine API with our dummy class
 		# so we don't make time consuming remote API calls.
-		import contrib.bizlogic
-		contrib.bizlogic.DemocracyEngineAPI = contrib.bizlogic.DummyDemocracyEngineAPI()
+		import contrib.bizlogic, contrib.de
+		contrib.bizlogic.DemocracyEngineAPI = contrib.de.DummyDemocracyEngineAPIClient()
 
 		# TriggerType
 	

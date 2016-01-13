@@ -53,7 +53,7 @@ EMAIL_CONFIRM_LA_CONFIRM_EXPIRE_SEC = 60 * 60 * 24 * 7  # 7 days (once it expire
 # Other local settings.
 
 SITE_MODE = environment.get("mode")
-DE_API = environment['democracyengine']
+DE_API = environment.get('democracyengine') if "NO_DE" not in os.environ else {}
 CDYNE_API_KEY = environment['cdyne_key']
 FACEBOOK_ACCESS_TOKEN = environment['facebook_access_token']
 VOTERVOICE_API_KEY = environment.get('votervoice', {}).get('api_key')
@@ -68,3 +68,4 @@ DEFAULT_TEMPLATE_CONTEXT = {
 }
 
 DEFAULT_BRAND = "progressive.fund"
+

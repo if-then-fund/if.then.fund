@@ -18,12 +18,6 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 		# Ensure this process does not run concurrently.
 		exclusive_process('itf-execute-pledges')
-
-		# For testing, we may want to decouple from the Democracy Engine testing API.
-		if settings.DEBUG and "NO_DE" in os.environ:
-			import contrib.bizlogic
-			contrib.bizlogic.DemocracyEngineAPI = contrib.bizlogic.DummyDemocracyEngineAPI()
-
 		self.do_execute_pledges()
 
 	def do_execute_pledges(self):
