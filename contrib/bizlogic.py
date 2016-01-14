@@ -17,7 +17,9 @@ if settings.DE_API:
 		)
 else:
 	# Testing only, obviously!
-	print("Using DummyDemocracyEngineAPI!!")
+	import os
+	if "NO_DE" not in os.environ:
+		print("Using DummyDemocracyEngineAPI!!")
 	DemocracyEngineAPI = DummyDemocracyEngineAPIClient()
 
 def create_de_donation_basic_dict(pledge):

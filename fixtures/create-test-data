@@ -1,3 +1,6 @@
+# Don't hit DemocracyEngine anywhere.
+export NO_DE=1
+
 # When starting with a fresh database, create the tables.
 ./manage.py migrate
 
@@ -18,9 +21,7 @@ fixtures/sample-triggers
 
 # Create a bunch of random pledges on triggers 1-2 (campaigns 1 through 8).
 for c in {1..8}; do
-	for x in {1..8}; do
-		fixtures/create-random-pledge $c
-	done
+	fixtures/create-random-pledge $c 8
 done
 
 # Execute triggers 2 through 4.
@@ -30,23 +31,18 @@ done
 
 # Create additional post-execution pledges on triggers 3 and 4 (campaigns 9 through 16).
 for c in {9..16}; do
-	for x in {1..4}; do
-		fixtures/create-random-pledge $c
-	done
+	fixtures/create-random-pledge $c 4
 done
 
 # Do what we need to do before we can execute pledges.
 ./manage.py send_pledge_emails
 
-# Execute pledges. Since we made up billing tokens we
-# disable Democracy Engine here.
-NO_DE=1 ./manage.py execute_pledges
+# Execute pledges.
+./manage.py execute_pledges
 
 # Create additional unexecuted post-execution pledges on trigger 4 (campaigns 13 through 16).
 for c in {13..16}; do
-	for x in {1..4}; do
-		fixtures/create-random-pledge $c
-	done
+	fixtures/create-random-pledge $c 4
 done
 
 # Make a superuser if one doesn't already exist.

@@ -5,17 +5,19 @@ from contrib.models import *
 
 campaign = Campaign.objects.get(id=sys.argv[1])
 trigger = campaign.contrib_triggers.first()
-user = User.objects.create(email="unit.test+%d@if.then.fund" % random.randint(100000, 900000))
-ci = ContributorInfo.createRandom()
-p = Pledge.objects.create(
-	user=user,
-	trigger=trigger,
-	via_campaign=campaign,
-	profile=ci,
-	algorithm=Pledge.current_algorithm()['id'],
-	desired_outcome=random.randint(0, len(trigger.outcomes)-1),
-	amount=random.randint(int(trigger.get_minimum_pledge()*100), 5500) / 100,
-	incumb_challgr=random.randint(-1, 1),
-	filter_party=random.choice([None, ActorParty.Democratic, ActorParty.Republican]),
-)
-p.run_post_confirm_steps()
+
+for i in range(int(sys.argv[2])):
+	user = User.objects.create(email="unit.test+%d@if.then.fund" % random.randint(100000, 900000))
+	ci = ContributorInfo.createRandom()
+	p = Pledge.objects.create(
+		user=user,
+		trigger=trigger,
+		via_campaign=campaign,
+		profile=ci,
+		algorithm=Pledge.current_algorithm()['id'],
+		desired_outcome=random.randint(0, len(trigger.outcomes)-1),
+		amount=random.randint(int(trigger.get_minimum_pledge()*100), 5500) / 100,
+		incumb_challgr=random.randint(-1, 1),
+		filter_party=random.choice([None, ActorParty.Democratic, ActorParty.Republican]),
+	)
+	p.run_post_confirm_steps()
