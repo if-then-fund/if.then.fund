@@ -9,11 +9,11 @@ a, a:hover, a:link, a:visited, a:active {
 	}
 
 	footer a, footer a:hover, footer a:link, footer a:visited, footer a:active {
-		color: #8585c0;
+		color: #77a;
 		border: none;
 	}
 		footer a:hover {
-			border-bottom: 1px solid #8585c0;
+			border-bottom: 1px solid #77a;
 		}
 
 #nav-wrap {
@@ -31,11 +31,11 @@ a, a:hover, a:link, a:visited, a:active {
 	.navbar a {
 		border: none !important;
 		text-decoration: none;
-		color: #446;
+		color: #EEF;
 		font-size: 14px;
 	}
 		.navbar .nav a:hover {
-			background-color: #EEF;
+			background-color: #349;
 		}
 
 		.navbar .notifications-link a {
@@ -99,4 +99,6 @@ a, a:hover, a:link, a:visited, a:active {
 	background: #333 url('/static/branding/progressive.fund/navbar-title.png') 10px 10px no-repeat;
 	min-height: 50px;
 	color: white;
+	padding-top: 17px;
+	padding-left: 160px;
 }
