@@ -386,22 +386,8 @@ h2 {
 
 		<div id="story">
 			<h2 style="margin: .5em 0">About the {{trigger.trigger_type.strings.action_noun}}</h2>
-			{# body text #}
-			{% with body_text=campaign.body_text|render_text:campaign.body_format %}
-			{% with body_text_truncated=body_text|truncatewords_html:70 %}
-				{% if body_text == body_text_truncated %}
-					{{body_text}}
-				{% else %}
-					{{body_text_truncated}}
-					<a href="#" onclick="return show_modal_confirm('About', $('#story-full>div').clone(), [null, 'Close'])">Read More</a>
-					<div id="story-full" class="hidden">
-						<div>
-							{{body_text}}
-						</div>
-					</div>
-				{% endif %}
-			{% endwith %}
-			{% endwith %}
+
+			{{campaign.body_text|render_text:campaign.body_format}}
 
 			<hr>
 
