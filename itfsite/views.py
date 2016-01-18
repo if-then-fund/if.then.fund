@@ -24,6 +24,7 @@ def render2(request, template, *args, **kwargs):
 		# Try a default template.
 		return render(request, template, *args, **kwargs)
 
+@anonymous_view
 def homepage(request):
 	# The site homepage.
 
