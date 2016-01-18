@@ -1,7 +1,7 @@
 <div class="campaign-bubble">
 	{% if c.splash_image.name or c.owner.banner_image.name %}
 		<a href="{{c.get_absolute_url}}">
-			<div class="campaign-splash organization-banner" style="background-image: url('{% if c.splash_image.name %}{{c.splash_image.url}}{% else %}{{c.owner.banner_image.url}}{% endif %}?size=tb');">
+			<div class="campaign-splash organization-banner" style="background-image: url('{% if c.splash_image.name %}{{c.splash_image.url}}{% else %}{{c.owner.banner_image.url}}{% endif %}?size=tb&blur=1&quality=low{% if c.extra.style.splash.brightness %}&brightness={{c.extra.style.splash.brightness}}{% endif %}');">
 				<div class="wrapper">
 					<div class="campaign-title">{{c.title}}</div>
 					{% if c.owner.is_real %}
