@@ -278,9 +278,21 @@ def campaign_show(request, campaign, is_json_api):
 
 
 	# render page
+
+	splash_image_qs = ""
+	try:
+		splash_image_qs += "&blur=" + ("1" if campaign.extra["style"]["splash"]["blur"] else "")
+	except:
+		pass
+	try:
+		splash_image_qs += "&brightness=" + str(campaign.extra["style"]["splash"]["brightness"] or "")
+	except:
+		pass
+
 	from letters.models import UserLetter
 	return render(request, "itfsite/campaign.html", {
 		"campaign": campaign,
+		"splash_image_qs": splash_image_qs,
 
 		# for contrib.Trigger actions
 		"trigger": trigger,

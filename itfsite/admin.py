@@ -37,17 +37,27 @@ class LettersInline(admin.TabularInline):
 
 class CampaignExtraWidget(forms.Widget):
     # Random things are stored in the 'extra' JSON field.
-    fields = [(
+    fields = [
+	(
             "style.splash.blur",
             "Blur splash image?",
             forms.CheckboxInput(),
             lambda v : True if v else None, # only store True in db
+            None,
+        ),
+	(
+            "style.splash.brightness",
+            "Image brightness",
+            forms.NumberInput(),
+            lambda v : float(v) if (v.strip() != "" and float(v) != 1.0) else None, # only store != 1.0 in db
+            "0 is black, 1 is keep unchanged, greater than 1 is lighter",
         ),
         (
             "style.splash.invert_text",
             "Invert text color?",
             forms.CheckboxInput(),
             lambda v : True if v else None, # only store True in db
+            None,
         )]
 
     @staticmethod
@@ -69,13 +79,15 @@ class CampaignExtraWidget(forms.Widget):
     def render(self, name, value, attrs=None):
         value = json.loads(value or "{}") or {}
         ret = ""
-        for path, label, widget, infunc in CampaignExtraWidget.fields:
+        for path, label, widget, infunc, help_text in CampaignExtraWidget.fields:
             ret += """<div style="clear: both; padding-top: .5em">
                 <label for="id_%s">%s:</label>
-            %s</div>""" % (
+            %s
+            <div class="help">%s</div></div>""" % (
             escape_html(name) + "_" + path,
             escape_html(label),
             widget.render(name + "_" + path, CampaignExtraWidget.get_dict_value(value, path)),
+            escape_html(help_text or ""),
             )
         ret += """<input type="hidden" name="%s" value="%s">""" % (
             escape_html(name) + "__base", escape_html(json.dumps(value)))
@@ -83,7 +95,7 @@ class CampaignExtraWidget(forms.Widget):
 
     def value_from_datadict(self, data, files, name):
         value = json.loads(data[name + "__base"])
-        for path, label, widget, infunc in CampaignExtraWidget.fields:
+        for path, label, widget, infunc, help_text in CampaignExtraWidget.fields:
             CampaignExtraWidget.set_dict_value(value, path, infunc(data.get(name + "_" + path)))
         return json.dumps(value)
 
