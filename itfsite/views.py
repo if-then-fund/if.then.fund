@@ -27,13 +27,28 @@ def render2(request, template, *args, **kwargs):
 def homepage(request):
 	# The site homepage.
 
-	open_campaigns = Campaign.objects\
-		.filter(
-			status=CampaignStatus.Open,
-			brand=get_branding(request)['BRAND_INDEX'],
-		)\
-		.order_by('-created')\
-		[0:16]
+	# What campaigns *can* we show (logically)? Open campaigns for the brand we're looking at.
+	open_campaigns = Campaign.objects.filter(status=CampaignStatus.Open, brand=get_branding(request)['BRAND_INDEX'])
+
+	# Actually show recent campaigns + top performing campaigns.
+	#
+	# To efficiently query top performing campaigns we order by the sum of total_pledged (which only contains
+	# Pledges made prior to trigger execution) and total_contributions (which only exists after the trigger
+	# has been executed), since we don't have a field that just counts a simple total (ugh).
+	open_campaigns = set( # uniqify
+		  list(open_campaigns.order_by('-created')[0:10]) \
+		+ list(open_campaigns.annotate(total = Sum('contrib_triggers__total_pledged')+Sum('contrib_triggers__execution__total_contributions')).exclude(total=None).order_by("-total")[0:10])
+		)
+	if len(open_campaigns) > 0:
+		# Order by a mix of recency and popularity. Prefer recency a bit.
+		from math import sqrt
+		newest = max(c.created for c in open_campaigns)
+		oldest = min(c.created for c in open_campaigns)
+		max_t = max(float(getattr(c, 'total', 0)) for c in open_campaigns) or 1.0 # Decimal => float
+		open_campaigns = sorted(open_campaigns, key = lambda campaign:
+			    1.1 - 1.1*(newest-campaign.created).total_seconds()/(newest-oldest).total_seconds()
+			  + sqrt(float(getattr(campaign, 'total', 0)) / max_t)
+			, reverse=True)[0:12]
 
 	return render2(request, "itfsite/homepage.html", {
 		"open_campaigns": open_campaigns,

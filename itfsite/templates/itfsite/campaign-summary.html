@@ -15,7 +15,7 @@
 			{% else %}
 				{# report totals by outcome for the most recent trigger #}
 				<p>{% for outcome in totals.by_trigger.0.aggregates.outcomes %}
-					{{outcome.label}}: {{outcome.total|currency}}<br>
+					{{outcome.total|currency}} <i>for</i> {{outcome.label}}<br>
 				{% endfor %}</p>
 			{% endif %}
 		{% elif totals.pledged_total %}
