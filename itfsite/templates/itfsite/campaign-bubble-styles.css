@@ -30,9 +30,9 @@
 	.campaign-description {
 		font-size: 90%;
 		line-height: 130%;
+		margin-bottom: .75em;
 	}
 	.campaign-take-action {
-		margin-top: .5em;
 	}
 		.campaign-take-action a {
 			font-weight: bold;
