@@ -24,6 +24,10 @@
 
 <h1>Press Clips</h1>
 
+{% if BRAND_ID != "if.then.fund" %}
+<p style="margin-bottom: 2em"><span class="site-brand">{{SITE_NAME}}</span> is powered by <a href="https://if.then.fund" style="border: none"><span class="site-brand-ifthenfund">if.then.fund</span></a>. These are press clips about <a href="https://if.then.fund" style="border: none"><span class="site-brand-ifthenfund">if.then.fund</span></a>.</p>
+{% endif %}
+
 <ul id="press-clips">
 	<li>Jun 11, 2015. <a href="http://www.washingtonpost.com/news/powerpost/wp/2015/06/11/ifthenfund/">The Washington Post (Power Post): This Web site allows political donors to give money based on how lawmakers vote. Just don’t call it bribery.</a>
 		<blockquote>
