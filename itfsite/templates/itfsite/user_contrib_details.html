@@ -27,7 +27,7 @@
 		<td>{{item.when|date}}</td>
 		<td>${{item.amount|floatformat:2}}</td>
 		<td>{{item.recipient}}</td>
-		<td><a href="{{item.trigger.get_absolute_url}}">{{item.trigger.title|truncatewords:6}}</a></td>
+		<td><a href="{{item.campaign.get_absolute_url}}">{{item.campaign.title|truncatewords:6}}</a></td>
 	</tr>
 {% empty %}
 	<tr><td colspan=6>You have not yet made a campaign contribution.</td></tr>

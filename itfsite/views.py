@@ -115,14 +115,19 @@ def user_contribution_details(request):
 	items = []
 
 	# Contributions.
+	brand = get_branding(request) # only looking at contributions made on the site the user is looking at
 	from contrib.models import Contribution
-	contribs = Contribution.objects.filter(pledge_execution__pledge__user=request.user).select_related('pledge_execution', 'recipient', 'action', 'pledge_execution__trigger_execution__trigger')
+	contribs = Contribution.objects.filter(
+		pledge_execution__pledge__user=request.user,
+		pledge_execution__pledge__via_campaign__brand=brand['BRAND_INDEX'])\
+		.select_related('pledge_execution', 'recipient', 'action', 'pledge_execution__trigger_execution__trigger')
 	def contrib_line_item(c):
 		return {
 			'when': c.pledge_execution.created,
 			'amount': c.amount,
 			'recipient': c.name_long(),
 			'trigger': c.pledge_execution.trigger_execution.trigger,
+			'campaign': c.pledge_execution.pledge.via_campaign,
 			'sort': (c.pledge_execution.created, 1, c.recipient.is_challenger, c.id),
 		}
 	items.extend([contrib_line_item(c) for c in contribs])
@@ -132,11 +137,15 @@ def user_contribution_details(request):
 		return {
 			'when': p.created,
 			'amount': p.fees,
-			'recipient': 'if.then.fund fees',
+			'recipient': '%s fees' % brand['SITE_NAME'],
 			'trigger': p.trigger_execution.trigger,
+			'campaign': p.pledge.via_campaign,
 			'sort': (p.created, 0),
 		}
-	items.extend([fees_line_item(p) for p in PledgeExecution.objects.filter(pledge__user=request.user).select_related('trigger_execution__trigger')])
+	items.extend([fees_line_item(p) for p in PledgeExecution.objects.filter(
+		pledge__user=request.user,
+		pledge__via_campaign__brand=brand['BRAND_INDEX'])\
+		.select_related('trigger_execution__trigger')])
 
 	# Sort all together.
 	items.sort(key = lambda x : x['sort'], reverse=True)
@@ -153,13 +162,14 @@ def user_contribution_details(request):
 		from io import StringIO
 		buf = StringIO()
 		writer = csv.writer(buf)
-		writer.writerow(['date', 'amount', 'recipient', 'action'])
+		writer.writerow(['date', 'amount', 'recipient', 'action', 'link'])
 		for item in items:
 			writer.writerow([
 				item['when'].isoformat(),
 				item['amount'],
 				item['recipient'],
-				request.build_absolute_uri(item['trigger'].get_absolute_url()),
+				item['campaign'].title,
+				item['campaign'].get_short_url(),
 				])
 		buf = buf.getvalue().encode('utf8')
 
