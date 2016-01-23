@@ -58,9 +58,9 @@ small, .small {
 		margin-right: 0;
 	}
 
-/* This is repeated in ifthenfund.css to style brand elements
- * that appear on the main if.then.fund site. This is only for
- * if.then.fund branding that appears on all multi-brand sites.
+/* This is repeated from ifthenfund.css to style brand elements
+ * that appear on the other brands when we want to refer to the
+ * parent brand.
  */
 @media screen {
 .site-brand-ifthenfund {
@@ -73,7 +73,10 @@ small, .small {
 	overflow: hidden;
 	margin-left: 1px;
 }
-	.invert-site-brand-ifthenfund .site-brand-ifthenfund {
+	a:link.site-brand-ifthenfund {
+		border: none;
+	}
+	.invert-text .site-brand-ifthenfund {
 		background-image: url('/static/branding/if.then.fund/content-title-light.png');
 	}
 }
