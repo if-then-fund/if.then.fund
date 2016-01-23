@@ -19,7 +19,7 @@ from itfsite.utils import JSONField
 #
 #####################################################################
 
-from .middleware import load_brandings
+from .middleware import load_brandings, get_branding
 load_brandings()
 
 @django_enum
@@ -123,10 +123,17 @@ class Campaign(models.Model):
 		return "Campaign(%d, %s)" % (self.id, repr(self.title))
 
 	def get_absolute_url(self):
+		# Because Campaigns appear on only one brand, this function
+		# must only be called for views for URLs that are definitely
+		# on the same brand as this Campaign displays on.
 		return "/a/%d/%s%s" % (self.id, (self.owner.slug + "-") if (self.owner and self.owner.is_real) else "", self.slug)
 
 	def get_short_url(self):
-		return settings.SITE_ROOT_URL + ("/a/%d" % self.id)
+		# Returns an absolute URL for this Campaign, which can be used
+		# in place of get_absolute_url when we're not sure the Campaign
+		# is for the same brand as the page we're looking at, or if this
+		# is for a public link.
+		return get_branding(self.brand)['ROOT_URL'] + ("/a/%d" % self.id)
 
 	#
 

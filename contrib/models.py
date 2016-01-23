@@ -1043,9 +1043,11 @@ class IncompletePledge(models.Model):
 		return campaign
 
 	def get_return_url(self):
-		# Construct URL of the trigger with the utm_campaign query string argument.
+		# Construct URL of the Campaign the user was on with a utm_campaign
+		# query string argument put in that indicates the user was coming back
+		# from an IncompletePledge email. Returns a full URL.
 		import urllib.parse
-		return self.via_campaign.get_absolute_url() \
+		return self.via_campaign.get_short_url() \
 			+ "?" + urllib.parse.urlencode({ "utm_campaign": self.get_utm_campaign_string() })
 
 @django_enum

@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import Select
 import re
 import time
 import random
+import urllib.parse
 from datetime import timedelta
 from decimal import Decimal
 
@@ -57,8 +58,7 @@ class SeleniumTest(StaticLiveServerTestCase):
 		self.browser.delete_all_cookies()
 
 	def build_test_url(self, path):
-		from urllib.parse import urljoin
-		return urljoin(self.live_server_url, path)
+		return urllib.parse.urljoin(self.live_server_url, path)
 
 	def follow_email_confirmation_link(self, test_string, already_has_account=False):
 		# Get the email confirmation URL that we need to hit to confirm the user.
@@ -66,8 +66,7 @@ class SeleniumTest(StaticLiveServerTestCase):
 		m = re.search(r"(http:\S*/ev/key/\S*/)", msg, re.S)
 		self.assertTrue(m)
 		conf_url = m.group(1)
-		self.assertTrue(conf_url.startswith(settings.SITE_ROOT_URL))
-		conf_url = conf_url.replace(settings.SITE_ROOT_URL + "/", "/")
+		conf_url = urllib.parse.urlsplit(conf_url).path
 		self.browser.get(self.build_test_url(conf_url))
 
 		# Now we're at the "give a password" page.
@@ -175,10 +174,13 @@ class ContribTest(SeleniumTest):
 			url += "?utm_campaign=" + utm_campaign
 
 		# When testing an IncompletePledge, grab the return URL that it gives
-		# which includes a utm_campaign string.
+		# which includes a utm_campaign string. It's also a full URL but we
+		# need to redirect to localhost, so just get the path out of it.
 		if return_from_incomplete_pledge:
 			utm_campaign = return_from_incomplete_pledge.get_utm_campaign_string()
 			url = return_from_incomplete_pledge.get_return_url()
+			url = urllib.parse.urlsplit(url)
+			url = url.path + (("?" + url.query) if url.query else "")
 
 		# Load in browser. Check title.
 		self.browser.get(self.build_test_url(url))
@@ -499,7 +501,7 @@ class ContribTest(SeleniumTest):
 
 		# Check that the email has the correct URL.
 		msg = pop_email().body
-		self.assertIn(settings.SITE_ROOT_URL + ip.get_return_url(), msg)
+		self.assertIn(ip.get_return_url(), msg)
 
 		# Start a pledge again
 		self._test_pledge_simple(campaign, return_from_incomplete_pledge=ip)

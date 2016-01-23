@@ -96,7 +96,7 @@ class Command(BaseCommand):
 			context.update(get_branding(ip.via_campaign.brand))
 			context.update({
 				"incomplete_pledge": ip,
-				"url": settings.SITE_ROOT_URL + ip.get_return_url(),
+				"url": ip.get_return_url(),
 				"trigger": ip.trigger,
 			})
 
