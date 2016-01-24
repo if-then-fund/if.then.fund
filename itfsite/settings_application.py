@@ -45,6 +45,7 @@ STATICFILES_DIRS = [
 
 ADMINS = (("Joshua Tauberer", "josh@if.then.fund"),)
 SERVER_EMAIL = 'if.then.fund error <errors@mail.if.then.fund>'
+TIME_ZONE = 'America/New_York' # default for templates/views, esp. since we say "The vote occurred on ___."
 
 # 3rd party app settings.
 
