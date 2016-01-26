@@ -307,6 +307,11 @@ def campaign_show(request, campaign, is_json_api):
 				}) if trigger else None,
 			})
 
+	try:
+		pref_outcome = int(request.GET["outcome"])
+		if pref_outcome < 0 or pref_outcome >= len(outcome_strings): raise ValueError()
+	except:
+		pref_outcome = -1 # it's hard to distinguish 0 from None in templates
 
 	# render page
 
@@ -329,6 +334,7 @@ def campaign_show(request, campaign, is_json_api):
 		"trigger": trigger,
 		"tcust": tcust,
 		"trigger_outcome_strings": outcome_strings,
+		"pref_outcome": pref_outcome,
 
 		# for letter writing campaigns
 		"letters_campaign": letters_campaign,
