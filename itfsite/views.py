@@ -284,6 +284,9 @@ def campaign_show(request, campaign, is_json_api):
 			"site": {
 				"name": brand["SITE_NAME"],
 				"link": brand["ROOT_URL"],
+				"logo": {
+					"w500": brand["ROOT_URL"] + "/static/branding/" + brand["BRAND_ID"] + "/logo.png",
+				}
 			},
 			"campaign": mergedicts(
 				serialize_obj(campaign, keys=("id", "created", "updated", "title", "headline", "subhead", "body_text"),
