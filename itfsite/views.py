@@ -271,6 +271,7 @@ def campaign_show(request, campaign, is_json_api):
 
 	if trigger:
 		outcome_strings = (tcust or trigger).outcome_strings()
+		for i, os in enumerate(outcome_strings): os["id"] = i
 	elif letters_campaign:
 		outcome_strings = [{ "label": "Contact Congress >" }]
 	else:
@@ -302,6 +303,7 @@ def campaign_show(request, campaign, is_json_api):
 					"outcomes": outcome_strings,
 					"strings": trigger.trigger_type.strings,
 					"max_split": trigger.max_split(),
+					"desired_outcome": outcome_strings[tcust.outcome] if tcust else None,
 				}) if trigger else None,
 			})
 
