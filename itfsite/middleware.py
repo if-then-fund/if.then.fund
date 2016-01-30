@@ -46,6 +46,7 @@ def get_branding(request_or_brandid):
 		"MAIL_FROM_EMAIL": '%s <no.reply@mail.%s>' % (brand['site-name'], email_domain),
 		"CONTACT_EMAIL": '%s <hello@%s>' % (brand['site-name'], email_domain),
 		"TWITTER_HANDLE": brand.get('twitter-handle'),
+		"FACEBOOK_APP_ID": brand.get('facebook-app-id'),
 		"COPYRIGHT": brand['copyright'],
 	}
 
