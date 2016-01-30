@@ -4,7 +4,7 @@
 {% block title %}{{org.name}}{% endblock %}
 
 {% block head %}
-{# for Twitter summary card, min size 120x120 and less than 1MB #}
+{# 200x200 and less than 1MB (Facebook rq. 200x200; Twitter suggests 280x150px, rq lt 1MB #}
 {% if org.og_image.name %}
 <meta property="og:image" content="{{ROOT_URL}}{{org.og_image.url}}?size=tb" />
 {% elif org.profile_image.name %}
