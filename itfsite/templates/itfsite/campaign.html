@@ -9,7 +9,7 @@
 
 <meta property="og:title" content="{{campaign.title}} ({% if campaign.owner.is_real %}{{campaign.owner.name}} on {% endif %}{{SITE_NAME}})" />
 {% if trigger %}
-<meta property="og:description" content="Reshape Congress by making a contribution based on how {{trigger.trigger_type.strings.actors}} {{trigger.trigger_type.strings.action_vb_inf}}.">
+<meta property="og:description" content="{% include2 "itfsite/campaign-meta-description.html" %}">
 {% endif %}
 
 {# for Twitter summary card, min size 120x120 and less than 1MB #}
