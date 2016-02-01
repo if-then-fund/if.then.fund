@@ -33,7 +33,12 @@ def create_de_donation_basic_dict(pledge):
 		"donor_city": pledge.profile.extra['contributor']['contribCity'],
 		"donor_state": pledge.profile.extra['contributor']['contribState'],
 		"donor_zip": pledge.profile.extra['contributor']['contribZip'],
-		"donor_email": pledge.get_email(),
+
+		# Campaigns like to sign up the user to their mail list. Since
+		# we make lots of microcontributions, we got users signed up
+		# to dozens of mail lists unexpectedly. Don't pass the email
+		# to DE so that DE doesn't pass it on to campaigns.
+		#"donor_email": pledge.get_email(),
 
 		"compliance_employer": pledge.profile.extra['contributor']['contribEmployer'],
 		"compliance_occupation": pledge.profile.extra['contributor']['contribOccupation'],
