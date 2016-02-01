@@ -371,7 +371,7 @@ def campaign_action_trigger(request, campaign, is_json_api):
 		"all_outcome_strings": outcome_strings,
 		"outcome": outcome,
 		"outcome_strings": outcome_strings[outcome],
-		"suggested_pledge": 10,
+		"suggested_pledge": trigger.get_suggested_pledge(),
 		"alg": Pledge.current_algorithm(),
 		"trigger_recips": json.dumps(get_pledge_recipient_breakdown(trigger) if trigger and trigger.status == TriggerStatus.Executed else None),
 

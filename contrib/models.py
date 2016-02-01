@@ -104,6 +104,10 @@ class Trigger(models.Model):
 		return self.outcomes
 
 	def get_minimum_pledge(self):
+		# What's the minimum pledge size for this trigger?
+		# It's at least Pledge.current_algorithm.min_contrib
+		# and at least the amount we need to do one cent per
+		# possible recipient, plus fees.
 		alg = Pledge.current_algorithm()
 		m1 = alg['min_contrib']
 		m2 = 0
@@ -113,6 +117,20 @@ class Trigger(models.Model):
 			m2 = decimal.Decimal('0.01') * max_split * (1 + alg['fees_percent']) + alg['fees_fixed']
 			m2 = m2.quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_UP)
 		return max(m1, m2)
+
+	def get_suggested_pledge(self):
+		# What's a nice round number to suggest the user pledge?
+		# It's the smallest of these pre-set numbers that's greater
+		# than the minimum.
+		# NOTE: Don't offer anything larger than Pledge.current_algorithm.max_contrib!
+		m = self.get_minimum_pledge()
+		for amt_str in ('2.50', '4', '5', '10', '15'):
+			amt = decimal.Decimal(amt_str)
+			if amt >= m:
+				return amt
+		# None of our nice rounded amounts are greater, so just offer
+		# the minimum. This should never really happen.
+		return m
 
 	def max_split(self):
 		if self.status != TriggerStatus.Executed:
