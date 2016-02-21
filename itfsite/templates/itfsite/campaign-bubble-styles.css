@@ -23,9 +23,14 @@
 	}
 	.campaign-title {
 		font-size: 22px;
+		line-height: 125%;
 	}
 		.campaign-title a {
 			border: none;
+		}
+		.campaign-splash .campaign-title span {
+			background-color: rgba(0,0,0,.3);
+			padding: 1px 2px;
 		}
 	.campaign-description {
 		font-size: 90%;
