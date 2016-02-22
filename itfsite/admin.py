@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django import forms
+from django.http import HttpResponse
 from django.utils.html import escape as escape_html
 from itfsite.models import *
 from contrib.models import Trigger, TriggerStatus, TriggerCustomization, TextFormat
@@ -10,6 +11,25 @@ import json
 class UserAdmin(admin.ModelAdmin):
     list_display = ['email', 'id', 'is_active', 'is_staff', 'is_superuser', 'date_joined']
     search_fields = ['id', 'email']
+
+    def get_urls(self):
+        # Add a view at /admin/itfsite/user/all-emails.
+        from django.conf.urls import patterns
+        urls = super(UserAdmin, self).get_urls()
+        return patterns('',
+            (r'^all-emails$', self.admin_site.admin_view(self.dump_user_emails)),
+        ) + urls
+
+    def dump_user_emails(self, request):
+        # Handle /admin/itfsite/user/all-emails --- dump the email address
+        # of each user who has not turned off getting emails from us.
+        if not request.user.has_perm('user.see_user_emails'): return HttpResponse("not authorized")
+        from itfsite.models import User, NotificationsFrequency
+        dump = User.objects\
+            .exclude(notifs_freq=NotificationsFrequency.NoNotifications)\
+            .order_by('-date_joined')\
+            .values_list("email", flat=True)
+        return HttpResponse("\n".join(dump) + "\n", content_type="text/plain")
 
 class AnonymousUserAdmin(admin.ModelAdmin):
     list_display = ['email', 'id', 'created', 'confirmed_user']

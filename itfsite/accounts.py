@@ -30,6 +30,11 @@ class User(UserBase):
 	objects = UserManager() # override with derived class
 	notifs_freq  = EnumField(NotificationsFrequency, default=NotificationsFrequency.DailyNotifications, help_text="Now often the user wants to get non-obligatory notifications.")
 
+	class Meta:
+		permissions = (
+			("see_user_emails", "Can see the email addresses of our users"),
+		)
+
 	def twostream_data(self):
 		from itfsite.models import Notification
 		notifs = Notification.objects.filter(user=self).order_by('-created')[0:30]
