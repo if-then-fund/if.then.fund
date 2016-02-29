@@ -23,7 +23,8 @@ class UserAdmin(admin.ModelAdmin):
     def dump_user_emails(self, request):
         # Handle /admin/itfsite/user/all-emails --- dump the email address
         # of each user who has not turned off getting emails from us.
-        if not request.user.has_perm('user.see_user_emails'): return HttpResponse("not authorized")
+        print(request.user.get_all_permissions())
+        if not request.user.has_perm('itfsite.see_user_emails'): return HttpResponse("not authorized")
         from itfsite.models import User, NotificationsFrequency
         dump = User.objects\
             .exclude(notifs_freq=NotificationsFrequency.NoNotifications)\
