@@ -23,14 +23,25 @@ class UserAdmin(admin.ModelAdmin):
     def dump_user_emails(self, request):
         # Handle /admin/itfsite/user/all-emails --- dump the email address
         # of each user who has not turned off getting emails from us.
-        print(request.user.get_all_permissions())
         if not request.user.has_perm('itfsite.see_user_emails'): return HttpResponse("not authorized")
         from itfsite.models import User, NotificationsFrequency
-        dump = User.objects\
+        from contrib.models import ContributorInfo
+        import csv, io
+        buf = io.StringIO()
+        w = csv.writer(buf)
+        w.writerow(["userid", "date_joined", "email", "firstname", "lastname"])
+        for user in User.objects\
             .exclude(notifs_freq=NotificationsFrequency.NoNotifications)\
-            .order_by('-date_joined')\
-            .values_list("email", flat=True)
-        return HttpResponse("\n".join(dump) + "\n", content_type="text/plain")
+            .order_by('-date_joined'):
+            profile = ContributorInfo.objects.filter(pledges__user=user).order_by('-created').first()
+            w.writerow([
+                user.id,
+                user.date_joined,
+                user.email,
+                profile.extra["contributor"]["contribNameFirst"] if profile else None,
+                profile.extra["contributor"]["contribNameLast"] if profile else None
+                ])
+        return HttpResponse(buf.getvalue(), content_type="text/plain")
 
 class AnonymousUserAdmin(admin.ModelAdmin):
     list_display = ['email', 'id', 'created', 'confirmed_user']
