@@ -47,7 +47,7 @@ def homepage(request):
 		oldest = min(c.created for c in open_campaigns)
 		max_t = max(float(getattr(c, 'total', 0)) for c in open_campaigns) or 1.0 # Decimal => float
 		open_campaigns = sorted(open_campaigns, key = lambda campaign:
-			    1.1 - 1.1*(newest-campaign.created).total_seconds()/(newest-oldest).total_seconds()
+			    1.1 - 1.1*(newest-campaign.created).total_seconds()/((newest-oldest).total_seconds() or 1)
 			  + sqrt(float(getattr(campaign, 'total', 0)) / max_t)
 			, reverse=True)[0:12]
 
