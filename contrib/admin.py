@@ -121,8 +121,8 @@ class TriggerAdmin(admin.ModelAdmin):
         for t in queryset.filter():
             t.execute_empty()
     def draft_to_open(modeladmin, request, queryset):
-        queryset.filter(status=TriggerStatus.Draft).update(status=TriggerStatus.Open)
-    draft_to_open.short_description = "Draft => Open"
+        queryset.filter(status__in=(TriggerStatus.Draft, TriggerStatus.Paused)).update(status=TriggerStatus.Open)
+    draft_to_open.short_description = "Draft/Paused => Open"
     def open_to_draft(modeladmin, request, queryset):
         queryset.filter(status=TriggerStatus.Open).update(status=TriggerStatus.Draft)
     open_to_draft.short_description = "Open => Draft"
