@@ -1,5 +1,6 @@
 from contrib.models import Trigger, TextFormat, TriggerType, Actor
 from django.conf import settings
+from django.utils import timezone
 
 ALLOW_DEAD_BILL = False
 
@@ -193,51 +194,55 @@ def load_govtrack_vote(trigger, govtrack_url, flip, from_fixtures=False):
 
 	return (vote, when, actor_outcomes)
 
-def execute_trigger_from_votes(trigger, votes, from_fixtures=False):
-	if len(votes) == 0: raise ValueError("votes")
+def execute_trigger_from_data_urls(trigger, url_specs, from_fixtures=False):
+	if len(url_specs) == 0: raise ValueError("url_specs")
 
-	# Load all of the vote details from GovTrack.
-	votes = list(map(
-		lambda vote_dict :
-			# (vote, when, actor_outcomes)
-			load_govtrack_vote(trigger, vote_dict["url"], flip=vote_dict.get("flip", False), from_fixtures=from_fixtures),
-		votes))
+	# Load all of the data details.
+	for url_spec in url_specs:
+		if "/votes/" in url_spec["url"]:
+			(vote, when, actor_outcomes) = load_govtrack_vote(trigger, url_spec["url"], flip=url_spec.get("flip", False), from_fixtures=from_fixtures)
+			url_spec["noun"] = vote['chamber_label'] + " vote on " + when.strftime("%b. %d, %Y").replace(" 0", " ")
+			url_spec["link"] = vote['link']
+			url_spec["vote"] = vote
+			url_spec["when"] = when
+			url_spec["actor_outcomes"] = actor_outcomes
+		elif "/bills/" in url_spec["url"]:
+			(bill, actor_outcomes) = load_govtrack_sponsors(trigger, url_spec["url"], flip=url_spec.get("flip"))
+			url_spec["noun"] = "sponsors as of " + timezone.now().strftime("%b. %d, %Y").replace(" 0", " ")
+			url_spec["link"] = bill['link']
+			url_spec["bill"] = bill
+			url_spec["when"] = timezone.now()
+			url_spec["actor_outcomes"] = actor_outcomes
+		else:
+			raise ValueError("unrecognized URL type")
 
 	# Make a textual description of what happened.
-	if len(votes) == 1:
-		description = """The {chamber} voted on this on {date}. For more details, see the [vote record on GovTrack.us]({link}).
-		""".format(
-			chamber=votes[0][0]['chamber_label'],
-			date=votes[0][1].strftime("%b. %d, %Y").replace(" 0", ""),
-			link=votes[0][0]['link'],
+	description = "See " + "; ".join(
+		"the [{noun} at GovTrack.us]({link})".format(
+			noun=url_spec["noun"],
+			link=url_spec['link'],
 		)
-	else:
-		description = "See " + "; ".join(
-			"the [{chamber} vote on {date} at GovTrack.us]({link})".format(
-				chamber=vote['chamber_label'],
-				date=when.strftime("%b. %d, %Y").replace(" 0", ""),
-				link=vote['link'],
-			)
-			for vote, when, actor_outcomes in votes) \
-			+ "."
+		for url_spec in url_specs) \
+		+ "."
 
 	# Merge the actor_outcomes of the votes. Check that an actor doesn't appear
 	# in multiple votes.
 	actor_outcomes = { }
-	for vote, when, ao in votes:
-		for actor, outcome in ao.items():
+	for url_spec in url_specs:
+		for actor, outcome in url_spec["actor_outcomes"].items():
 			if actor in actor_outcomes:
-				raise ValueError("Actor %s is present in multiple votes." % str(actor))
+				raise ValueError("Actor %s is present in multiple data URLs." % str(actor))
 			actor_outcomes[actor] = outcome
 
 	# Execute.
 	trigger.execute(
-		min(when for vote, when, actor_outcomes in votes), # earliest vote date => Trigger.action_time
+		min(url_spec["when"] for url_spec in url_specs), # earliest vote date => Trigger.action_time
 		actor_outcomes,
 		description,
 		TextFormat.Markdown,
 		{
-			"govtrack_votes": [vote for vote, when, actor_outcomes in votes],
+			"govtrack_votes": [url_spec["vote"] for url_spec in url_specs if "vote" in url_spec],
+			"govtrack_bills": [url_spec["bill"] for url_spec in url_specs if "bill" in url_spec],
 		})
 
 def load_govtrack_sponsors(trigger, govtrack_url, flip=False):
@@ -248,6 +253,10 @@ def load_govtrack_sponsors(trigger, govtrack_url, flip=False):
 	# Get bill metadata from GovTrack's API, via the undocumented
 	# '.json' extension added to bill pages.
 	bill = requests.get(govtrack_url+'.json').json()
+
+	# Sanity check that the chamber of the vote matches the trigger type.
+	if trigger.trigger_type.key not in ('congress_sponsors_both', 'congress_sponsors_' + bill['bill_type'][0].lower(), 'announced-positions'):
+		raise Exception("The trigger type isn't one about bill sponsors or is for the wrong chamber.")
 
 	actor_outcomes = { }
 	for person in [bill.get('sponsor')] + bill.get('cosponsors', []):

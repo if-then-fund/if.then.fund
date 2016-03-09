@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
 from contrib.models import Trigger
-from contrib.legislative import execute_trigger_from_votes
+from contrib.legislative import execute_trigger_from_data_urls
 
 class Command(BaseCommand):
 	args = 'trigger_id [-]vote_url [[-]vote_url...]'
@@ -14,8 +14,8 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 		args = list(args)
 		if len(args) < 2:
-			print("Usage: ./manage.my execute_trigger trigger_id [[-]vote_url...]")
-			print("Precede a vote URL with a minus sign to flip its valence.")
+			print("Usage: ./manage.my execute_trigger trigger_id [[-]govtrack_url...]")
+			print("Paste GovTrack vote URLs or bill URLs (to pull cosponsors). Precede a URL with a minus sign to flip its valence.")
 			return
 		
 		# What trigger to execute.	
@@ -34,7 +34,7 @@ class Command(BaseCommand):
 			})
 
 		# Go!
-		execute_trigger_from_votes(t, votes)
+		execute_trigger_from_data_urls(t, votes)
 
 		# Show what happened.
 		import pprint
