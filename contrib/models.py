@@ -449,6 +449,23 @@ class TriggerExecution(models.Model):
 	def most_recent_pledge_execution(self):
 		return self.pledges.order_by('-created').first()
 
+	def get_sorted_actions(self):
+		ret = list(self.actions.order_by('outcome', 'name_sort'))
+		ret.sort(key = lambda x : (x.outcome is None, x.outcome, x.reason_for_no_outcome))
+		return ret
+
+
+	def get_outcome_summary(self):
+		counts = list(self.actions.values("outcome", "reason_for_no_outcome").annotate(count=models.Count('id')))
+		counts.sort(key = lambda x : (x["outcome"] is None, x["outcome"], x["reason_for_no_outcome"]))
+		for count in counts:
+			if count['outcome'] is None:
+				count['label'] = count['reason_for_no_outcome']
+			else:
+				count.update(self.trigger.outcome_strings()[count['outcome']])
+		return counts
+
+
 #####################################################################
 #
 # Actors

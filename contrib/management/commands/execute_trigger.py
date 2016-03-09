@@ -35,3 +35,8 @@ class Command(BaseCommand):
 
 		# Go!
 		execute_trigger_from_votes(t, votes)
+
+		# Show what happened.
+		import pprint
+		print(t.execution.description)
+		pprint.pprint(t.execution.get_outcome_summary())
