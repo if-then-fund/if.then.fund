@@ -349,6 +349,7 @@ def campaign_action_trigger(request, campaign, is_json_api):
 
 	# What Trigger and TriggerCustomization should we show?
 	trigger, tcust = campaign.get_active_trigger()
+	if not trigger: raise Http404()
 	outcome_strings = (tcust or trigger).outcome_strings()
 
 	# What outcome is selected? Validate against trigger and
