@@ -152,7 +152,7 @@ def load_govtrack_vote(trigger, govtrack_url, flip, from_fixtures=False):
 	# data.
 	r = query_json_api(govtrack_url+'/export/xml', {}, raw=True, from_fixtures=from_fixtures)
 	dom = lxml.etree.fromstring(r)
-	actor_outcomes = { }
+	actor_outcomes = [ ]
 	for voter in dom.findall('voter'):
 		# Validate.
 		if not voter.get('id'):
@@ -190,7 +190,10 @@ def load_govtrack_vote(trigger, govtrack_url, flip, from_fixtures=False):
 			else:
 				raise ValueError("Invalid vote option key: " + str(voter.get('vote')))
 
-		actor_outcomes[actor] = outcome
+		actor_outcomes.append({
+			"actor": actor,
+			"outcome": outcome,
+		})
 
 	return (vote, when, actor_outcomes)
 
@@ -227,12 +230,14 @@ def execute_trigger_from_data_urls(trigger, url_specs, from_fixtures=False):
 
 	# Merge the actor_outcomes of the votes. Check that an actor doesn't appear
 	# in multiple votes.
-	actor_outcomes = { }
+	actor_outcomes = [ ]
+	seen_actors = set()
 	for url_spec in url_specs:
-		for actor, outcome in url_spec["actor_outcomes"].items():
-			if actor in actor_outcomes:
+		for actor_outcome in url_spec["actor_outcomes"]:
+			if actor_outcome["actor"] in seen_actors:
 				raise ValueError("Actor %s is present in multiple data URLs." % str(actor))
-			actor_outcomes[actor] = outcome
+			actor_outcomes.append(actor_outcome)
+			seen_actors.add(actor_outcome["actor"])
 
 	# Execute.
 	trigger.execute(
@@ -258,8 +263,9 @@ def load_govtrack_sponsors(trigger, govtrack_url, flip=False):
 	if trigger.trigger_type.key not in ('congress_sponsors_both', 'congress_sponsors_' + bill['bill_type'][0].lower(), 'announced-positions'):
 		raise Exception("The trigger type isn't one about bill sponsors or is for the wrong chamber.")
 
-	actor_outcomes = { }
+	actor_outcomes = [ ]
 	for person in [bill.get('sponsor')] + bill.get('cosponsors', []):
+		# Convert GovTrack ID to Actor object.
 		if person is None: continue # empty sponsor
 		try:
 			actor = Actor.objects.get(govtrack_id=person.get('id'))
@@ -269,7 +275,10 @@ def load_govtrack_sponsors(trigger, govtrack_url, flip=False):
 
 		# Sponsors and cosponsors are all "pro".
 		outcome = outcome_index.get("+")
-		actor_outcomes[actor] = outcome
+		actor_outcomes.append({
+			"actor": actor,
+			"outcome": outcome,
+		})
 
 	return (bill, actor_outcomes)
 

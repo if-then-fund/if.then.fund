@@ -222,11 +222,13 @@ class ExecutionTestCase(TestCase):
 		"""Tests the execution of the trigger"""
 
 		# Build actor outcomes.
-		actor_outcomes = { }
+		actor_outcomes = []
 		for i, actor in enumerate(Actor.objects.all()):
-			actor_outcomes[actor] = i % 3
-			if actor_outcomes[actor] == 2:
-				actor_outcomes[actor] = "Reason for not having an outcome."
+			actor_outcomes.append({
+				"actor": actor,
+				"outcome": (i % 3) if (i % 3 < 2) else "Reason for not having an outcome.",
+			})
+		actor_outcomes_map = { item["actor"]: item["outcome"] for item in actor_outcomes }
 
 		# Execute.
 		from django.utils.timezone import now
@@ -259,12 +261,12 @@ class ExecutionTestCase(TestCase):
 			if action.actor.inactive_reason is not None:
 				self.assertEqual(action.outcome, None)
 				self.assertEqual(action.reason_for_no_outcome, action.actor.inactive_reason)
-			elif isinstance(actor_outcomes[action.actor], int):
-				self.assertEqual(action.outcome, actor_outcomes[action.actor])
+			elif isinstance(actor_outcomes_map[action.actor], int):
+				self.assertEqual(action.outcome, actor_outcomes_map[action.actor])
 				self.assertEqual(action.reason_for_no_outcome, None)
 			else:
 				self.assertEqual(action.outcome, None)
-				self.assertEqual(action.reason_for_no_outcome, actor_outcomes[action.actor])
+				self.assertEqual(action.reason_for_no_outcome, actor_outcomes_map[action.actor])
 			self.assertEqual(action.name_long, action.actor.name_long)
 			self.assertEqual(action.name_short, action.actor.name_short)
 			self.assertEqual(action.name_sort, action.actor.name_sort)

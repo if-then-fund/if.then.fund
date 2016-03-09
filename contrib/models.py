@@ -164,14 +164,14 @@ class Trigger(models.Model):
 		# or None if the Actor didn't properly participate or a string
 		# meaning the Actor didn't participate and the string gives
 		# the reason_for_no_outcome value.
-		for actor, outcome in actor_outcomes.items():
+		for actor_outcome in actor_outcomes:
 			# If an Actor has an inactive_reason set, then we ignore
 			# any outcome supplied to us and replace it with that.
 			# Probably 'Not running for reelection.'.
-			if actor.inactive_reason:
-				outcome = actor.inactive_reason
+			if actor_outcome["actor"].inactive_reason:
+				actor_outcome["outcome"] = actor_outcome["actor"].inactive_reason
 
-			ac = Action.create(te, actor, outcome)
+			ac = Action.create(te, actor_outcome["actor"], actor_outcome["outcome"], actor_outcome.get("action_time"))
 
 		# Mark as executed.
 		trigger.status = TriggerStatus.Executed
@@ -227,7 +227,7 @@ class Trigger(models.Model):
 		if self.status == TriggerStatus.Draft:
 			self.status = TriggerStatus.Open # so we can execute it
 			self.save()
-		self.execute(self.created, { }, "Empty.", TextFormat.HTML, { })
+		self.execute(self.created, [], "Empty.", TextFormat.HTML, { })
 
 class TriggerStatusUpdate(models.Model):
 	"""A status update about the Trigger providing further information to users looking at the Trigger that was not known when the Trigger was created."""
@@ -539,7 +539,7 @@ class Action(models.Model):
 		return "N/A"
 
 	@staticmethod
-	def create(execution, actor, outcome):
+	def create(execution, actor, outcome, action_time):
 		# outcome can be an integer giving the Trigger's outcome index
 		# that the Actor did . . .
 		if isinstance(outcome, int):
@@ -557,7 +557,7 @@ class Action(models.Model):
 		a.execution = execution
 		a.actor = actor
 		a.outcome = outcome_index
-		a.action_time = execution.action_time
+		a.action_time = action_time or execution.action_time
 		a.reason_for_no_outcome = reason_for_no_outcome
 
 		# Copy fields that may change on the Actor but that we want to know what they were

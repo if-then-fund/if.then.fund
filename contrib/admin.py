@@ -253,16 +253,16 @@ class TriggerExecutionAdmin(admin.ModelAdmin):
                                 "trigger": trigger,
                                 "error": str(e),
                             })
-                        for actor, outcome in ao.items():
-                            if actor.office and isinstance(outcome, int):
+                        for actor_outcome in ao:
+                            if actor_outcome['actor'].office and isinstance(outcome, int):
                                 # Include only actors known to currently be in office
                                 # and those that had an aye/no vote.
-                                actor_outcomes[actor] = outcome
+                                actor_outcomes[actor_outcome['actor']] = actor_outcome['outcome']
                             else:
                                 # Clear out the positions of any actor mentioned in the
                                 # vote that does not have a current office or that voted
                                 # present/not-voting.
-                                actor_outcomes[actor] = "null"
+                                actor_outcomes[actor_outcome['actor']] = "null"
 
                     elif k.startswith("actor_"):
                         actor = Actor.objects.get(id=k[6:])
