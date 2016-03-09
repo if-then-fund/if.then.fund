@@ -91,6 +91,7 @@
             <div class="panel-heading">Who gets your contribution?</div>
             <div class="panel-body">
 
+            {% if not trigger.trigger_type.extra.monovalent %}
             <div> {# scopes the text-danger #}
               {% if tcust.incumb_challgr != -1 %}
               <div class="control-group">
@@ -118,6 +119,7 @@
 
               <p class="text-danger" style="display: none">You must choose at least one.</p>
             </div>
+            {% endif %}
 
             <p style="margin-bottom: 0"><strong>Only make contributions to:</strong></p>
 
@@ -573,6 +575,16 @@ function get_contribution_amount() {
 }
 
 function getIncumbentChallengerValue() {
+  {% if trigger.trigger_type.extra.monovalent %}
+  // With a monovalent trigger, Actors only ever take outcome zero.
+  // The incumbent/challenger filter doesn't make sense because for
+  // each desired outcome, only one filter is possible. i.e. It's
+  // not possible to have desired outcome 0 and also contribute only
+  // to challengers, because no actor will have an action with an
+  // outcome other than zero.
+  return 0;
+  {% endif %}
+
   if ($('#filterIncumbents').prop('checked') && $('#filterChallengers').prop('checked'))
     return 0;
   if ($('#filterIncumbents').prop('checked'))
@@ -599,29 +611,22 @@ function contribution_update_display_text() {
     {% endfor %}
   ];
 
+  // What is the user's desired outcome?
   var outcome_index = $('#pledge-info input[name="desired_outcome"]').val();
 
+  // This block isn't relevant right now.
   if (outcome_index == "?") {
     $('#filter-summary span.text').text("We will split your contribution across {% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}up to {% endif %}{{trigger.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}.");
     $('#advanced-filters-toggle').prop('disabled', true);
     return;
   }
-
   $('#advanced-filters-toggle').prop('disabled', false);
 
-  function fill_in(filter_elem, opponent) {
-    var index = outcome_index;
-    if (opponent) index = 1 - index; // assumes two options!
-    var text = trigger_outcomes[index];
-    $(filter_elem).parent().find('.fill-in').text(text);
-  }
-
-  // Fill in the incumbents via the user's choice.
-  fill_in('#filterIncumbents');
-
-  // Fill in the challengers via the button that the user didn't choose.
-  // If there is more than one option in the future, this will need to be revised.
-  fill_in('#filterChallengers', true);
+  // Text strings.
+  var desired_action_text = trigger_outcomes[outcome_index];
+  var opposed_action_text = trigger_outcomes[1-outcome_index];
+  $('#filterIncumbents').parent().find('.fill-in').text(desired_action_text);
+  $('#filterChallengers').parent().find('.fill-in').text(opposed_action_text);
 
   // Human-readable explanation of the current filter choices.
   // This is mirrored in models.py's Pledge.targets_summary().
@@ -634,11 +639,9 @@ function contribution_update_display_text() {
 
   // Count up actual recipient counts;
   var recip_counts = {{trigger_recips|safe}};
-  var total_recip = "";
   var total_incumbent_recip = "";
   var total_challenger_recip = "";
   if (recip_counts) {
-    total_recip = 0;
     total_incumbent_recip = 0;
     total_challenger_recip = 0;
     recip_counts = recip_counts[outcome_index];
@@ -646,27 +649,39 @@ function contribution_update_display_text() {
       var c = recip_counts[i];
       if (ic != 0 && ic != c.incumbent) continue;
       if (pf.length == 1 && c.party != pf) continue;
-      total_recip += c.count;
       if (c.incumbent == 1)
         total_incumbent_recip += c.count;
       else
         total_challenger_recip += c.count;
     }
-    total_recip += " ";
     total_incumbent_recip += " ";
     total_challenger_recip += " ";
   }
-
+  {% if trigger.trigger_type.extra.monovalent %}
+  else {
+    // With monovalent triggers, we know that there are definitely
+    // no recipients in certain cases:
+    if (outcome_index == 0) total_challenger_recip = "0 ";
+    if (outcome_index  > 0) total_incumbent_recip = "0 ";
+  }
+  {% endif %}
 
   var who;
-  if (ic == 1)
-    who = total_recip + party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text();
-  else if (ic == -1)
-    who = "the " + total_recip + "opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + (party ? (" if the opponent is in the " + party + "party") : "");
-  else if (party == "" && !recip_counts)
-    who = "{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}up to {% endif %}{{trigger.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + ". But if they {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + ", their part of your contribution will go to their next general election opponent"
-  else
-    who = total_incumbent_recip + party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterIncumbents').parent().find('.fill-in').text() + " and the " + total_challenger_recip + "opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + $('#filterChallengers').parent().find('.fill-in').text() + (party ? (" if the opponent is in the " + party + "party") : "");
+  if (ic == 0 && party == "" && !recip_counts && {% if not trigger.trigger_type.extra.monovalent %}1{% else %}0{% endif %})
+    // This is the really simple case when there are no filters, no known counts of recipients, and the trigger is not monovalent.
+    who = "{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}up to {% endif %}{{trigger.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.verb|escapejs}} " + desired_action_text + ". But if they {{trigger.verb|escapejs}} " + opposed_action_text + ", their part of your contribution will go to their next general election opponent"
+  else {
+    var who1 = total_incumbent_recip + party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + desired_action_text;
+    var who2 = total_challenger_recip + "opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + opposed_action_text + (party ? (" if the opponent is in the " + party + "party") : "");
+    if (total_challenger_recip == "0 " || ic == 1)
+      // known to be no challengers, so only display incumbents
+      who = who1;
+    else if (total_incumbent_recip == "0 " || ic == -1)
+      // known to be no incumbents, so only display challengers
+      who = who2;
+    else // both > 0
+      who = who1 + " and the " + who2;
+  }
 
   $('#filter-summary span.text').text("We will split your contribution evenly across " + who + ".");
 }

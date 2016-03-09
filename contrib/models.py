@@ -830,12 +830,13 @@ class Pledge(models.Model):
 
 		noun = self.trigger.trigger_type.strings['actors']
 		verb = self.trigger.verb
+		is_monovalent = (self.trigger.trigger_type.extra or {}).get("monovalent")
 
-		if self.incumb_challgr == 1:
+		if self.incumb_challgr == 1 or (is_monovalent and self.desired_outcome == 0):
 			# "keep em in"
 			return "%s%s who %s %s" \
 				% (party_filter, noun, verb, desired_outcome_label)
-		elif self.incumb_challgr == -1:
+		elif self.incumb_challgr == -1 or (is_monovalent and self.desired_outcome > 0):
 			# "throw em out"
 			return "the opponents in the next general election of %s who %s %s%s" \
 				% (noun, verb, antidesired_outcome_label, ((" if the opponent is in the %sparty" % party_filter) if party_filter else ""))

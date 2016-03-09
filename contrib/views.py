@@ -299,6 +299,12 @@ def create_pledge(request):
 		raise Exception("tip_to_campaign_owner is out of range")
 	if p.tip_to_campaign_owner > 0 and (not p.via_campaign.owner or not p.via_campaign.owner.de_recip_id):
 		raise Exception("tip_to_campaign_owner cannot be non-zero")
+	if (p.trigger.trigger_type.extra or {}).get("monovalent") and p.incumb_challgr != 0:
+		# With a monovalent trigger, Actors only ever take outcome zero.
+		# Therefore not all filters make sense. A pledge cannot be filtered
+		# to incumbents who take action 1 or to the opponents of actors
+		# who do not take action 0.
+		raise Exception("monovalent triggers do not permit an incumbent/challenger filter")
 
 	tcust = TriggerCustomization.objects.filter(owner=p.via_campaign.owner, trigger=p.trigger).first()
 	if tcust and tcust.incumb_challgr and p.incumb_challgr != tcust.incumb_challgr:
