@@ -1151,8 +1151,8 @@ class PledgeExecution(models.Model):
 	@property
 	def problem_text(self):
 		if self.problem == PledgeExecutionProblem.EmailUnconfirmed:
-			return "Your contribution was not made because you did not confirm your email address prior to the %s." \
-				% self.pledge.trigger.trigger_type.strings['action_noun']
+			return "Your contribution was not made because you did not confirm your email address before %s." \
+				% self.pledge.trigger.trigger_type.strings['retrospective_vp']
 		if self.problem == PledgeExecutionProblem.TransactionFailed:
 			return "There was a problem charging your credit card and making the contribution: %s. Your contribution could not be made." \
 				% self.pledge.execution.extra['exception']

@@ -397,7 +397,7 @@ h2 {
 			<small>
 			<p>This page was added {% if campaign.owner.is_real %}by <a href="{{campaign.owner.get_absolute_url}}">{{campaign.owner.name}}</a>{% endif %} on {{campaign.created|date}}.</p>
 			{% if trigger.execution %}
-				<p>The {{trigger.trigger_type.strings.action_noun}} occurred on {{trigger.execution.action_time|date}}.
+				<p>{{trigger.trigger_type.strings.retrospective_vp|capfirst}} on {{trigger.execution.action_time|date}}.
 				{% if trigger.execution.pledge_count_with_contribs %}Contributions began to be processed on {{trigger.execution.created|date}}.{% endif %}
 				</p>
 			{% endif %}
@@ -414,9 +414,8 @@ h2 {
 <p>We aim to shift the balance of power to shape Congress away from concentrated wealth and toward small-dollar donors like you.</p>
 {% endif %}
 {% if trigger %}
-<p>You will be making a campaign contribution to {{trigger.trigger_type.strings.actors}} or their next opponent. Until the 
-{{trigger.trigger_type.strings.action_noun}} occurs, <span class="site-brand">{{SITE_NAME}}</span> won't reveal to anyone what action you
-took. After the {{trigger.trigger_type.strings.action_noun}}, we’ll charge your card and split your contribution based on your
+<p>You will be making a campaign contribution to {{trigger.trigger_type.strings.actors}} or their next opponent. Until {{trigger.trigger_type.strings.prospective_vp}}, <span class="site-brand">{{SITE_NAME}}</span> won't reveal to anyone what action you
+took. After {{trigger.trigger_type.strings.prospective_vp}}, we’ll charge your card and split your contribution based on your
 instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 {% endif %}
 </small>
@@ -451,9 +450,9 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
           <div class="modal-body">
           	{{trigger.trigger.execution.description|render_text:trigger.trigger.execution.description_format}}
 
-            <h5 style="margin-top: 2em">Contributions By {{trigger.trigger.trigger_type.strings.action_noun.title}}</h5>
+            <h5 style="margin-top: 2em">Contributions By Position of Donor</h5>
             <table class="table" style="width: auto">
-            <tr><th>{{trigger.trigger.trigger_type.strings.action_noun.title}}</th> <th>Total Contributions</th></tr>
+            <tr><th>Position</th> <th>Total Contributions</th></tr>
             {% for outcome in trigger.aggregates.outcomes %}
             	<tr><td>{{outcome.label}}</td> <td>{{outcome.total|currency}}</td></tr>
             {% endfor %}
@@ -471,7 +470,7 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
             <table class="table">
             <tr>
             	<th>{{trigger.trigger.trigger_type.strings.actor.title}}</th>
-            	<th>{{trigger.trigger.trigger_type.strings.action_noun.title}}</th>
+            	<th>Position</th>
             	<th>Contributions to<br>{{trigger.trigger.trigger_type.strings.actor.title}}</th>
             	<th>Contributions to<br>Opponent</th>
             </tr>

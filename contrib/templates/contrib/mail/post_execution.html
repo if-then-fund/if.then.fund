@@ -2,7 +2,7 @@
 
 {% block content %}
 {% if pledge.is_from_long_ago %}
-<p>On {{pledge.created|date}} you asked us to schedule campaign contributions depending on the outcome of a {{pledge.trigger.trigger_type.strings.action_noun}}. That {{pledge.trigger.trigger_type.strings.action_noun}} occurred, so we have now processed your contributions. Here is what happened:</p>
+<p>On {{pledge.created|date}} you asked us to schedule campaign contributions depending on the outcome of a {{pledge.trigger.trigger_type.strings.action_noun}}. {{pledge.trigger.trigger_type.strings.retrospective_vp|capfirst}}, so we have now processed your contributions. Here is what happened:</p>
 {% endif %}
 
 {% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}

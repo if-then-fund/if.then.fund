@@ -4,7 +4,7 @@
 {% if not pledge.is_from_long_ago %}
 <p>We are about to make your campaign contributions to {{pledge.targets_summary}}.</p>
 {% else %}
-<p>On {{pledge.created|date}} you asked us to schedule campaign contributions depending on the outcome of a {{pledge.trigger.trigger_type.strings.action_noun}}. That {{pledge.trigger.trigger_type.strings.action_noun}} has now occurred. Here is what happens next:</p>
+<p>On {{pledge.created|date}} you asked us to schedule campaign contributions depending on the outcome of a {{pledge.trigger.trigger_type.strings.action_noun}}. {{pledge.trigger.trigger_type.strings.retrospective_vp|capfirst}}. Here is what happens next:</p>
 <p>We will be charging your credit card and distributing your contributions shortly. Your contributions will go to {{pledge.targets_summary}}.</p>
 {% endif %}
 

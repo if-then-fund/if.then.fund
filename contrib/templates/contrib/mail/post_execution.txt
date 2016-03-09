@@ -1,6 +1,6 @@
 {% extends "email_template.txt" %}
 {% block content %}
-{% if pledge.is_from_long_ago %}On {{pledge.created|date}} you asked us to schedule campaign contributions depending on the outcome of a {{pledge.trigger.trigger_type.strings.action_noun}}. That {{pledge.trigger.trigger_type.strings.action_noun}} occurred, so we have now processed your contributions. Here is what happened:
+{% if pledge.is_from_long_ago %}On {{pledge.created|date}} you asked us to schedule campaign contributions depending on the outcome of a {{pledge.trigger.trigger_type.strings.action_noun}}. {{pledge.trigger.trigger_type.strings.retrospective_vp|capfirst}}, so we have now processed your contributions. Here is what happened:
 
 {% endif %}{% if pledge.execution.problem|stringformat:'s' == 'PledgeExecutionProblem.NoProblem' %}Your campaign contributions totalling ${{pledge.execution.charged|floatformat:2}} were made to {{pledge.targets_summary}}.
 

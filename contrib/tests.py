@@ -54,6 +54,8 @@ class PledgeTestCase(TestCase):
 				"action_vb_inf": "ACT",
 				"action_vb_pres_s": "ACTS",
 				"action_vb_past": "ACTED",
+				"prospective_vp": "THE ACTION OCCURS",
+				"retrospective_vp": "THE ACTION OCURRED",
 			},
 			extra={
 				"max_split": 100,
@@ -139,6 +141,8 @@ class ExecutionTestCase(TestCase):
 				"action_vb_inf": "ACT",
 				"action_vb_pres_s": "ACTS",
 				"action_vb_past": "ACTED",
+				"prospective_vp": "THE ACTION OCCURS",
+				"retrospective_vp": "THE ACTION OCURRED",
 			})
 
 		# Trigger

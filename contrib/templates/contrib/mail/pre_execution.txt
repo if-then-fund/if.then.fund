@@ -1,6 +1,6 @@
 {% extends "email_template.txt" %}
 {% block content %}
-{% if not pledge.is_from_long_ago %}We are about to make your campaign contributions to {{pledge.targets_summary}}.{% else %}On {{pledge.created|date}} you asked us to schedule campaign contributions depending on the outcome of a {{pledge.trigger.trigger_type.strings.action_noun}}. That {{pledge.trigger.trigger_type.strings.action_noun}} has now occurred. Here is what happens next:
+{% if not pledge.is_from_long_ago %}We are about to make your campaign contributions to {{pledge.targets_summary}}.{% else %}On {{pledge.created|date}} you asked us to schedule campaign contributions depending on the outcome of a {{pledge.trigger.trigger_type.strings.action_noun}}. {{pledge.trigger.trigger_type.strings.retrospective_vp|capfirst}}. Here is what happens next:
 
 We will be charging your credit card and distributing your contributions shortly. Your contributions will go to {{pledge.targets_summary}}.{% endif %}
 

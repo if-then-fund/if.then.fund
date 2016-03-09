@@ -22,6 +22,8 @@ def get_trigger_type(chamber):
 			"action_vb_inf": "vote",
 			"action_vb_pres_s": "votes",
 			"action_vb_past": "voted",
+			"prospective_vp": "the vote occurs",
+			"retrospective_vp": "the vote ocurred",
 		},
 		"extra": {
 			"max_split":  { 's': 100, 'h': 435, 'x': 435 }[chamber],

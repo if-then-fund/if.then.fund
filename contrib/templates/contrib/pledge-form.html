@@ -187,7 +187,7 @@
                   <p><strong>Federal law restricts who can make campaign contributions:</strong></p>
                   <p>You must be either a U.S. citizen or lawfully admitted permanent resident (i.e., a green card holder). You cannot be employed <i>directly</i> by the federal government as a contractor. You must make this contribution with your own funds, which were not provided to you by any other person or entity. You must use your own personal credit card, and not a corporate or business card or a card issued to another person.</p>
                   <p><strong>and requires us to collect and share information about you.</strong></p>
-                  <p>The Federal Election Commission requires all contributors to federal campaigns to provide all of the information we ask for in this section, and if the {{trigger.trigger_type.strings.action_noun}} occurs in most cases it becomes a part of the public record and searchable in online databases (<a href="/about/how-it-works#isthisanonymous" target="_blank">more information</a>).</p>
+                  <p>The Federal Election Commission requires all contributors to federal campaigns to provide all of the information we ask for in this section, and {% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}if {{trigger.trigger_type.strings.prospective_vp}} {% endif %}in most cases it becomes a part of the public record and searchable in online databases (<a href="/about/how-it-works#isthisanonymous" target="_blank">more information</a>).</p>
               </div>
             </div>
             <div class="col-sm-7 col-sm-pull-5 col-md-6 col-md-pull-6">
@@ -322,7 +322,7 @@
                 </p>
               </div> <!-- contributor-old -->
 
-              <p>This information will become a part of the public record if the {{trigger.trigger_type.strings.action_noun}} occurs, as required by law.</p>
+              <p>This information may become a part of the public record{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %} if {{trigger.trigger_type.strings.prospective_vp}}{% endif %}, as required by law.</p>
 
               <div class="buttons">
                 <button type="button" class="btn btn-default" onclick="do_contributor_cancel();">&lt; Back</button>        
@@ -338,7 +338,7 @@
           <div class="row">
             <div class="col-sm-7 col-md-6">
               <div id="payment-new">
-              <p>Enter the credit card information that you would like us to charge when the {{trigger.trigger_type.strings.action_noun}} occurs.</p>
+              <p>Enter the credit card information that you would like us to charge{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %} when {{trigger.trigger_type.strings.prospective_vp}}{% endif %}.</p>
 
               <table class="input-table">
                 <tr>
@@ -364,7 +364,7 @@
               </div> <!-- /payment-new -->
 
               <div id="payment-old" style="display: none">
-                <p>When the {{trigger.trigger_type.strings.action_noun}} occurs, we&rsquo;ll charge your credit card ending in <span class="cc-num"></span>.
+                <p>{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}When {{trigger.trigger_type.strings.prospective_vp}} w{% else %}W{% endif %}e&rsquo;ll charge your credit card ending in <span class="cc-num"></span>.
                   <a href="#" onclick="$('#pledge-info input[name=&quot;copyFromPledge&quot;]').val(''); $('#payment-old').hide(); $('#payment-new').show(); $('#payment-new .focus-on-shown').focus(); return false;">Change card?</a>
                 </p>
               </div> <!-- /payment-old -->
@@ -388,8 +388,8 @@
             <div class="col-sm-5 col-md-6">
               <div class="responsive-side-panel">
                   <p><strong>What happens next...</strong></p>
-                  <p>You are about to schedule a campaign contribution for if and when the {{trigger.trigger_type.strings.action_noun}} occurs. Your contribution may be split up to {{trigger.max_split}} ways depending on the outcome of the {{trigger.trigger_type.strings.action_noun}}.</p>
-                  <p>We will not charge your credit card until the {{trigger.trigger_type.strings.action_noun}} occurs, and you can cancel this contribution any time before then.</p>
+                  {% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}<p>You are about to schedule a campaign contribution for if and when {{trigger.trigger_type.strings.prospective_vp}}. You can cancel this contribution any time before then.</p>{% endif %} 
+                  <p>Your contribution {% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}may{% else %}will{% endif %} be split up to {{trigger.max_split}} ways depending on {% if not trigger.trigger_type.extra.monovalent %}how{% else %}which{% endif %} {{trigger.trigger_type.strings.actors}} {{trigger.trigger_type.strings.action_vb_inf}}.</p>
                   <p>You may see a temporary $1 authorization from Democracy Engine, LLC on your credit card, which was our check that your credit card information is valid.</p>
               </div>
             </div>
