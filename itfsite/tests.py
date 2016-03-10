@@ -367,7 +367,10 @@ class ContribTest(SeleniumTest):
 
 		# Click one of the outcome buttons.
 		self.browser.execute_script("$('#action-buttons button[data-index=1]').click()")
-		self.browser.find_element_by_css_selector("#contribution-start-next").click() # Use default pledge amount
+
+		# Use default pledge amount.
+		pledge_amount = campaign.get_active_trigger()[0].get_suggested_pledge()
+		self.browser.find_element_by_css_selector("#contribution-start-next").click()
 
 		# Try to log in.
 		self.browser.execute_script("$('#emailEmail').val('%s')" % email)
@@ -385,7 +388,8 @@ class ContribTest(SeleniumTest):
 		time.sleep(.5)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			"You have scheduled a campaign contribution of $10.00 for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote against H.R. 30, but if they vote in favor of H.R. 30 their part of your contribution will go to their next general election opponent.")
+			"You have scheduled a campaign contribution of $%0.2f for this vote. It will be split among up to 100 senators, each getting a part of your contribution if they vote against H.R. 30, but if they vote in favor of H.R. 30 their part of your contribution will go to their next general election opponent."
+				% pledge_amount)
 
 	def _test_pledge_returning_user_logs_in_already_has_pledge(self, campaign, email, pw):
 		# Re-start pledge.
@@ -398,7 +402,7 @@ class ContribTest(SeleniumTest):
 		self.browser.find_element_by_css_selector("#emailEmailYesPassword").click()
 		self.browser.find_element_by_css_selector("#emailPassword").send_keys(pw)
 		self.browser.find_element_by_css_selector("#login-next").click()
-		time.sleep(3)
+		time.sleep(4)
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#login-error").text,
 			"You have already scheduled a contribution for this vote. Please log in to see details.")
