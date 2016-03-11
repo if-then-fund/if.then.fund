@@ -411,9 +411,9 @@ h2 {
 
 <small>
 {% if not campaign.owner.is_real %} {# the 'we' doesn't make sense if the page wasn't created by {{SITE_NAME}} #}
-<p>We aim to shift the balance of power to shape Congress away from concentrated wealth and toward small-dollar donors like you.</p>
+<p>We aim to shift the balance of power in Congress away from concentrated wealth and toward small-dollar donors like you.</p>
 {% endif %}
-{% if trigger %}
+{% if trigger and trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}
 <p>You will be making a campaign contribution to {{trigger.trigger_type.strings.actors}} or their next opponent. Until {{trigger.trigger_type.strings.prospective_vp}}, <span class="site-brand">{{SITE_NAME}}</span> won't reveal to anyone what action you
 took. After {{trigger.trigger_type.strings.prospective_vp}}, we’ll charge your card and split your contribution based on your
 instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
