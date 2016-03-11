@@ -12,14 +12,16 @@
 <style>
 header {
 	margin: -20px -15px 15px -15px;
-	padding: 15px;
+	padding: 35px 15px 30px 15px;
 	background: #f5f5f5;
-    border: 1px solid #D9D9DE;
-	text-align: center;
+    border-bottom: 1px solid #E0E0E0;
 }
+	header div {
+	}
 
 h1 {
-	margin: 10px 0;
+	font-weight: bold;
+	margin: 0;
 }
 
 #action-pane {
@@ -60,6 +62,8 @@ form span.required:after {
 		font-size: 90%;
 		font-weight: normal;
 	}
+
+p { max-width: 40em; }
 </style>
 {% endblock %}
 
@@ -77,10 +81,10 @@ form span.required:after {
 
 <header>
 	{% if trigger %}
-		<h1>{{outcome_strings.label}}</h1>
-		<div class="subhead">
+		<div>
 			<p><strong>{{campaign.title}}</strong></p>
 		</div>
+		<h1>{{outcome_strings.label}}</h1>
 	{% else %}
 		<h1>{{campaign.headline}}</h1>
 	{% endif %}

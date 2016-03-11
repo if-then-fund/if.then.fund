@@ -72,15 +72,16 @@
     <input type="hidden" name="copyFromPledge" value=""/>
     <input type="hidden" name="tip_amount" value="0"/>
 
+    <h2>Take action</h2>
+
+    <p>Make a contribution below to support {{trigger.trigger_type.strings.actors}} that agree with {% if campaign.owner.is_real and tcust.has_fixed_outcome %}us{% else %}you{% endif %}, or throw out those who don&rsquo;t, <strong>based on {% if not trigger.trigger_type.extra.monovalent %}how{% else %}which{% endif %} {{trigger.trigger_type.strings.actors}} {{trigger.verb}}.</strong></p>
+
+    <p>Your contribution &mdash; based on what politicians actually do rather than what they promise &mdash; will shape the next Congress.</p>
+
     <div>
       <div>
         <div id="pledge-start">
-          <h2>
-            <label for="pledge-amount-field" style="margin: 0; padding: 0; font-size: inherit">
-              How much can you contribute to candidates that agree with
-              {% if campaign.owner.is_real and tcust.has_fixed_outcome %}us{% else %}you{% endif %}?
-            </label>
-          </h2>
+          <h2>Amount</h2>
 
           <div id="pledge-amount" class="input-group">
             <div class="input-group-addon">$</div>
