@@ -9,15 +9,17 @@ register = template.Library()
 @register.filter(is_safe=True)
 @stringfilter
 def render_text(value, format):
-	if str(format) in 'TextFormat.Markdown':
-		return safestring.mark_safe(markdown2.markdown(value, safe_mode=True))
+	if str(format) == 'TextFormat.Markdown':
+		# Render Markdown to HTML.
+		value = markdown2.markdown(value, safe_mode=True)
 	return safestring.mark_safe(value)
 
 @register.filter
 @stringfilter
 def render_text_plain(value, format):
-	if str(format) in 'TextFormat.Markdown':
-		return value
+	if str(format) == 'TextFormat.Markdown':
+		# Render Markdown to HTML, then strip it tags.
+		value = markdown2.markdown(value, safe_mode=True)
 	return strip_tags(value)
 
 @register.filter(is_safe=True)
