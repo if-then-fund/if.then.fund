@@ -109,6 +109,7 @@ def get_pledge_recipient_breakdown(trigger):
 	# Compute how many recipients there are in each category for a hypothetical
 	# pledge.
 	counts = [{ } for outcome in trigger.outcomes]
+	if len(trigger.outcomes) != 2: raise ValueError("counting assumes two outcomes")
 	for action in trigger.execution.actions.all().select_related('actor'):
 		# Actor did not take a counted action.
 		if action.outcome is None: continue
@@ -120,7 +121,12 @@ def get_pledge_recipient_breakdown(trigger):
 			if action.outcome == outcome:
 				# incumbent and the actor's party
 				key = (1, action.party.name[0])
-			elif action.actor.challenger is not None: # should always be present but in testing...
+			else:
+				if action.actor.challenger is None: # should always be present but in testing...
+					if settings.DEBUG:
+						continue # don't warn
+					else:
+						raise ValueError("Missing challenger for %s." % str(action.actor))
 				# challenger and the challenger's party
 				key = (-1, action.actor.challenger.party.name[0])
 			counts[outcome][key] = counts[outcome].get(key, 0) + 1
