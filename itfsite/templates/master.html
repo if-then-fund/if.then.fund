@@ -194,6 +194,49 @@
         <script>window._fbq = [];</script>
         {% endif %}
 
+        {% if not HIDE_REMOTE_EMBEDS and SITE_MODE == "production" %}
+        {# google adwords display network conversion/remarketing tracking #}
+        <script type="text/javascript">
+          /* <![CDATA[ */
+          goog_snippet_vars = function(conversion_value) {
+            var w = window;
+            w.google_conversion_id = 942927972;
+            w.google_conversion_label = "HV3-CLWn4GQQ5ODPwQM";
+            w.google_conversion_value = conversion_value;
+            w.google_conversion_currency = "USD";
+            w.google_remarketing_only = false;
+          }
+          goog_report_conversion = function(conversion_value, url) {
+            goog_snippet_vars();
+            window.google_conversion_format = "3";
+            var opt = new Object();
+            opt.onload_callback = function() {
+              if (typeof(url) != 'undefined') {
+                window.location = url;
+              }
+            }
+            var conv_handler = window['google_trackConversion'];
+            if (typeof(conv_handler) == 'function') {
+              conv_handler(opt);
+            }
+          }
+        /* ]]> */
+        </script>
+        <script type="text/javascript" src="https://www.googleadservices.com/pagead/conversion_async.js">
+        </script>
+        {% else %}
+        <script>
+        goog_report_conversion = function(conversion_value, url) {
+            // stub, just redirect if requested
+            console.log("AdWords Conversion", conversion_value);
+            if (typeof(url) != 'undefined') {
+              window.location = url;
+            }
+        }
+        </script>
+        {% endif %}
+
+
         <script src="{% static "js/bootstrap-helpers.js" %}"></script>
         <script src="{% static "js/main.js" %}"></script>
 

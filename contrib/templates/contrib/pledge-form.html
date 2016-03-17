@@ -1000,6 +1000,10 @@ function pledge_submit() {
 
   // Facebook "Pledge Made" conversion.
   window._fbq.push(['track', '6023688411930', {'value': get_contribution_amount(), 'currency':'USD'}]);
+
+  // Google AdWords Remarketing/Conversion. Value is the fees portion
+  // of the expected transaction.
+  goog_report_conversion(.04 * get_contribution_amount());
 }
 
 function pledge_payment_cancel() {
