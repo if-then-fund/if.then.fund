@@ -538,7 +538,6 @@ function pledge_begin(outcome_index) {
 
 	// Track event.
 	mixpanel.track("Pledge Begin", {
-    'campaign': {{campaign.id}},
     'outcome_index': outcome_index,
     'suggested_pledge': get_contribution_amount() // suggested_pledge or last contribution amount
   });

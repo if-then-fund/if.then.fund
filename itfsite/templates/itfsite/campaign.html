@@ -541,7 +541,11 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 
 		{% if trigger %}
 		if (can_make_pledge)
-		  mixpanel.track("Pledge Form Shown", { 'trigger': {{trigger.id}}, 'funnelstate': 1 });
+		  mixpanel.track("Pledge Form Shown", {
+		    'campaign': {{campaign.id}},
+		    'trigger': {{trigger.id}},
+		    'funnelstate': 1
+		  });
 		{% endif %}
 	})
 
