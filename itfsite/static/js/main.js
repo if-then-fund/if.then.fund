@@ -20,9 +20,15 @@ function set_login_state() {
 		else
 			$('.if-logged-in').removeClass('hidden')
 		if (window.location.pathname != '/' && window.location.pathname != '/accounts/login') {
-			// on the home and login page, dont redirect back to those pages after a login but instead go to the users account page
+			// Set the "next" parameter in the URLs on the log in & log out buttons. Form
+			// a relative URL using location.pathname + location.search.
+			// On the home and login page, dont redirect back to those pages after a login but
+			// instead go to the users account page.
 			$('.log-inout-link a').each(function() {
-					$(this).attr('href', $(this).attr('href') + '?next=' + encodeURIComponent(window.location.pathname));
+					$(this).attr('href',
+						   $(this).attr('href')
+						 + '?next='
+						 + encodeURIComponent(window.location.pathname + window.location.search));
 				});
 		}
 
