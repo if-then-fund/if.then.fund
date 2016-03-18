@@ -146,12 +146,12 @@ def validate_email(request):
 
 	if not User.objects.filter(email=email).exists():
 		# Store for later, if this is not a user already with an account.
-		# Only have at most one of these records per trigger-email address pair.
+		# We store a max of one per email address.
 		IncompletePledge.objects.get_or_create(
-			trigger=Trigger.objects.get(id=request.POST['trigger']),
-			via_campaign=Campaign.objects.get(id=request.POST['via_campaign']),
 			email=email,
 			defaults={
+				"trigger": Trigger.objects.get(id=request.POST['trigger']),
+				"via_campaign": Campaign.objects.get(id=request.POST['via_campaign']),
 				"extra": {
 					"desired_outcome": request.POST['desired_outcome'],
 					"ref_code": get_sanitized_ref_code(request),

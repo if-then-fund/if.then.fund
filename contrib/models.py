@@ -1062,11 +1062,11 @@ class CancelledPledge(models.Model):
 		cp.save()
 
 class IncompletePledge(models.Model):
-	"""Records email addresses users enter. Deleted when they finish a Pledge."""
+	"""Records email addresses users enter. Deleted when they finish a Pledge. Max one per email address."""
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	trigger = models.ForeignKey(Trigger, on_delete=models.CASCADE, help_text="The Trigger that the pledge was for.")
 	via_campaign = models.ForeignKey('itfsite.Campaign', blank=True, null=True, on_delete=models.CASCADE, help_text="The Campaign that this Pledge was made via.")
-	email = models.EmailField(max_length=254, db_index=True, help_text="An email address.")
+	email = models.EmailField(max_length=254, db_index=True, unique=True, help_text="An email address.")
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
 	sent_followup_at = models.DateTimeField(blank=True, null=True, db_index=True, help_text="If we've sent a follow-up email, the date and time we sent it.")
 	completed_pledge = models.ForeignKey(Pledge, blank=True, null=True, on_delete=models.CASCADE, help_text="If the user came back and finished a Pledge, that pledge.")
