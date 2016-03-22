@@ -233,7 +233,10 @@ def campaign(request, id, action, api_format_ext):
 		canonical_path += "/" + action
 	qs = (("?"+request.META['QUERY_STRING']) if request.META['QUERY_STRING'] else "")
 	if request.path != canonical_path:
-		return redirect(canonical_path+qs)
+		@anonymous_view
+		def redirector(request):
+			return redirect(canonical_path+qs)
+		return redirector(request)
 
 	# The rest of this view is handled in the next two functions.
 	if action is None:
