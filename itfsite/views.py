@@ -261,7 +261,7 @@ def campaign(request, id, action, api_format_ext):
 		# As soon as the campaign exits draft status we'll
 		# mark the response as cachable so that the http
 		# layer strongly caches the output.
-		f = anonymous_view(f)
+		pass # f = anonymous_view(f)
 
 	return f(request, campaign, api_format_ext == ".json")
 
@@ -328,8 +328,12 @@ def campaign_show(request, campaign, is_json_api):
 	except:
 		pass
 
+	# a/b testing
+	import random
+	experimental_condition = random.choice([1, 2])
+
 	from letters.models import UserLetter
-	return render(request, "itfsite/campaign.html", {
+	return render(request, "itfsite/campaign_exp%d.html" % experimental_condition, {
 		"campaign": campaign,
 		"splash_image_qs": splash_image_qs,
 
@@ -343,6 +347,8 @@ def campaign_show(request, campaign, is_json_api):
 		"letters_campaign": letters_campaign,
 		"letters_sent": UserLetter.objects.filter(letterscampaign__campaigns=campaign).aggregate(sum=Sum('delivered'))['sum'] or 0, # can be None if no letters written
 
+		# for a/b testing
+		"experiment": experimental_condition,
 		})
 
 def campaign_action_trigger(request, campaign, is_json_api):

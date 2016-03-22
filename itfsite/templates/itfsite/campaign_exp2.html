@@ -127,7 +127,8 @@
 			}
 
 	#activity-stats {
-		padding: 1.1em 0 1.2em 0;
+		padding: .5em 0 .5em 0;
+		font-size: 90%;
 		{% if campaign.splash_image.name %}
 		background-color: rgba(255,255,255, .5);
 		{% else %}
@@ -198,7 +199,18 @@ h2 {
 	{% if campaign.owner.is_real %} &mdash; {{campaign.owner.name}}{% endif %}
 </div>
 
+{% if not campaign.splash_image.name %}
+<div id="nav-wrap" class="container-fluid">
+	<div class="container">
+	  <div class="row">
+		  {% include "navbar.html" %}
+	  </div>
+	</div>
+</div>
+{% endif %}
+
 <div id="splash" class="{% if campaign.extra.style.splash.invert_text %}invert-text{% endif %}">
+  {% if campaign.splash_image.name %}
   <div id="nav-wrap">
 	<div class="container">
 	  <div class="row">
@@ -206,8 +218,9 @@ h2 {
 	  </div>
 	</div>
   </div>
+  {% endif %}
 
-  <div class="container">
+  <div class="container" {% if campaign.splash_image.name %}style="min-height: 330px; min-height: 33vw;"{% endif %}>
 
 	{% if campaign.owner.is_real %}
 	<div id="campaign-owner" style="float: right">
@@ -222,48 +235,6 @@ h2 {
 	</div>
 	<div class="clearfix visible-xs"> </div>
 	{% endif %}
-
-	<div id="splash-text">
-		<h1>{{campaign.headline}}</h1>
-
-		<div class="subhead">
-			{% if BRAND_ID == "279forchange.us" %}
-				{% include2 "itfsite/campaign-subhead.html" %}
-			{% else %}
-				{{campaign.subhead|render_text:campaign.subhead_format}}
-			{% endif %}
-		</div>
-	</div> <!-- /splash-text -->
-
-	<div id="action-buttons">
-	{% if trigger %}
-		<div id="make-a-contribution" {% if letters_campaign %}class="hidden"{% endif %}>
-            {% for outcome in trigger_outcome_strings %}
-		    {% if not tcust.has_fixed_outcome or tcust.outcome = forloop.counter0 %}
-                <button class="btn btn-lg {% if pref_outcome == -1 or pref_outcome == forloop.counter0 %}btn-success{% else %}btn-default{% endif %}" data-index="{{forloop.counter0}}" onclick="window.location = '{{campaign.get_absolute_url|escapejs}}/contribute?outcome={{forloop.counter0}}{% if request.GET.utm_campaign %}&utm_campaign={{request.GET.utm_campaign|urlencode|escapejs}}{% endif %}';">
-	                <span>{{outcome.label}} &raquo;</span>
-	                {% if outcome.tip %}<small>{{outcome.tip}}</small>{% endif %}
-                </button>
-            {% endif %}
-            {% endfor %}
-	        {% if letters_campaign %}
-	        	<p id="write-a-letter-instead"><small><a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(true);">Write a letter instead</a>.</small></p>
-	        {% endif %}
-	    </div>
-    {% endif %}
-
-	{% if letters_campaign %}
-		<div id="write-a-letter">
-			<button class="btn btn-lg btn-success" data-index="{{forloop.counter0}}" onclick="window.location = '{{campaign.get_absolute_url|escapejs}}/write-letter{% if request.GET.utm_campaign %}?utm_campaign={{request.GET.utm_campaign|urlencode|escapejs}}{% endif %}';">
-				Write a Letter &raquo;
-			</button>
-			{% if trigger %}
-				<p id="make-a-contribution-instead"><small>Skip this and <a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(false);">make a contribution instead</a>.</small></p>
-			{% endif %}
-		</div>
-	{% endif %}
-
-	</div> <!-- /action-buttons -->
 
 		{% if campaign.image_credit %}
 			<div class="image-credit">
@@ -381,11 +352,56 @@ h2 {
 {% endif %}
 
 <div class="container">
+
+	<div id="splash-text">
+		<h1>{{campaign.headline}}</h1>
+
+		<div class="subhead">
+			{% if BRAND_ID == "279forchange.us" %}
+				{% include2 "itfsite/campaign-subhead.html" %}
+			{% else %}
+				{{campaign.subhead|render_text:campaign.subhead_format}}
+			{% endif %}
+		</div>
+	</div> <!-- /splash-text -->
+
+	<div id="action-buttons">
+	{% if trigger %}
+		<div id="make-a-contribution" {% if letters_campaign %}class="hidden"{% endif %}>
+            {% for outcome in trigger_outcome_strings %}
+		    {% if not tcust.has_fixed_outcome or tcust.outcome = forloop.counter0 %}
+                <button class="btn btn-lg {% if pref_outcome == -1 or pref_outcome == forloop.counter0 %}btn-success{% else %}btn-default{% endif %}" data-index="{{forloop.counter0}}" onclick="window.location = '{{campaign.get_absolute_url|escapejs}}/contribute?outcome={{forloop.counter0}}{% if request.GET.utm_campaign %}&utm_campaign={{request.GET.utm_campaign|urlencode|escapejs}}{% endif %}';">
+	                <span>{{outcome.label}} &raquo;</span>
+	                {% if outcome.tip %}<small>{{outcome.tip}}</small>{% endif %}
+                </button>
+            {% endif %}
+            {% endfor %}
+	        {% if letters_campaign %}
+	        	<p id="write-a-letter-instead"><small><a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(true);">Write a letter instead</a>.</small></p>
+	        {% endif %}
+	    </div>
+    {% endif %}
+
+	{% if letters_campaign %}
+		<div id="write-a-letter">
+			<button class="btn btn-lg btn-success" data-index="{{forloop.counter0}}" onclick="window.location = '{{campaign.get_absolute_url|escapejs}}/write-letter{% if request.GET.utm_campaign %}?utm_campaign={{request.GET.utm_campaign|urlencode|escapejs}}{% endif %}';">
+				Write a Letter &raquo;
+			</button>
+			{% if trigger %}
+				<p id="make-a-contribution-instead"><small>Skip this and <a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(false);">make a contribution instead</a>.</small></p>
+			{% endif %}
+		</div>
+	{% endif %}
+
+	</div> <!-- /action-buttons -->
+
 		<div id="my-actions" class="hidden">
 			<div class="actions-container">
 				
 			</div>
 		</div>
+
+		<hr>
 
 		<div id="story">
 			<h2 style="margin: .5em 0">About the {{trigger.trigger_type.strings.action_noun}}</h2>
