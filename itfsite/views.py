@@ -330,7 +330,7 @@ def campaign_show(request, campaign, is_json_api):
 
 	# a/b testing
 	import random
-	experimental_condition = random.choice([1, 3])
+	experimental_condition = random.choice([1])
 
 	from letters.models import UserLetter
 	return render(request, "itfsite/campaign_exp%d.html" % experimental_condition, {
