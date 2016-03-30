@@ -1,7 +1,7 @@
 import decimal
 import json
 import requests
-from requests.auth import HTTPDigestAuth
+from requests.auth import HTTPBasicAuth
 
 class HumanReadableValidationError(Exception):
 	pass
@@ -62,7 +62,7 @@ class DemocracyEngineAPIClient(object):
 		# issue request
 		r = urlopen(
 			url,
-			auth=HTTPDigestAuth(self.username, self.password),
+			auth=HTTPBasicAuth(self.username, self.password),
 			data=payload,
 			headers=headers,
 			timeout=30 if not live_request else 20,
