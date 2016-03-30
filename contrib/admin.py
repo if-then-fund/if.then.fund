@@ -383,9 +383,12 @@ class CancelledPledgeAdmin(admin.ModelAdmin):
 
 @no_delete_action
 class PledgeExecutionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'action', 'user_or_email', 'charged', 'created']
+    list_display = ['id', 'pledge_', 'user_or_email', 'charged', 'created', 'action']
     readonly_fields = ['pledge', 'charged', 'fees']
     search_fields = ['id'] + ['pledge__'+f for f in PledgeAdmin.search_fields]
+    def pledge_(self, obj):
+        return obj.pledge_id
+    pledge_.short_description = "Pledge ID"
     def user_or_email(self, obj):
         p = obj.pledge
         return p.user if p.user else (p.anon_user.email + " (?)")
