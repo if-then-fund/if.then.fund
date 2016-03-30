@@ -123,6 +123,9 @@ class DemocracyEngineAPIClient(object):
 	def donations(self, live_request=False):
 		return self(method="donations", live_request=live_request)
 
+	def get_donation(self, id, live_request=False):
+		return self(method="donation", argument=('donation_id', id), live_request=live_request)
+
 	def create_donation(self, info):
 		return self(
 			method="donation_process",
