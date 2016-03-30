@@ -86,6 +86,7 @@ if [ "$1" == "--deployed" ]; then
 	if [ ! -f domain_names ]; then echo "demo.if.then.fund demo.progressive.fund" > domain_names; fi
 
 	# Install cron jobs.
+	# TODO: Edit the time that cron.daily runs so that it's not when DE is running its batch processing.
 	sudo rm -f /etc/cron.daily/local
 	sudo ln -s `pwd`/bin/cron-daily /etc/cron.daily/local
 fi
