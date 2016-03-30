@@ -120,6 +120,9 @@ class DemocracyEngineAPIClient(object):
 	def credit_transaction(self, id):
 		return self(method="transaction_credit", argument=('transaction_id', id), http_method="put")
 
+	def donations(self, live_request=False):
+		return self(method="donations", live_request=live_request)
+
 	def create_donation(self, info):
 		return self(
 			method="donation_process",
