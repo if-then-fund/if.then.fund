@@ -392,6 +392,16 @@ h2 {
 
 			{{campaign.body_text|render_text:campaign.body_format}}
 
+			{% if trigger %}
+			{% if trigger.status|stringformat:'s' != "TriggerStatus.Executed" %}
+				<h2>What triggers my donation?</h2>
+	          	{{trigger.description|render_text:trigger.description_format}}
+			{% else %}
+				<h2>Where does my donation go?</h2>
+	          	{{trigger.execution.description|render_text:trigger.execution.description_format}}
+			{% endif %}
+			{% endif %}
+
 			<hr>
 
 			<small>

@@ -41,7 +41,7 @@ def create_congressional_vote_trigger(chamber, title, short_title):
 	t.title = title[0:200]
 
 	chamber_name = { 's': 'Senate', 'h': 'House', 'x': 'Congress' }[chamber]
-	t.description = "The %s will soon vote on %s." % (chamber_name, short_title)
+	t.description = "Your contribution will be distributed depending on how the %s votes on %s." % (chamber_name, short_title)
 	t.description_format = TextFormat.Markdown
 
 	t.outcomes = [
@@ -222,8 +222,8 @@ def execute_trigger_from_data_urls(trigger, url_specs, from_fixtures=False):
 			raise ValueError("unrecognized URL type")
 
 	# Make a textual description of what happened.
-	description = "See " + "; ".join(
-		"the [{noun} at GovTrack.us]({link})".format(
+	description = "Contributions are being made based on " + "; ".join(
+		"the [{noun}]({link})".format(
 			noun=url_spec["noun"],
 			link=url_spec['link'],
 		)

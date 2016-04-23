@@ -72,7 +72,7 @@ class Trigger(models.Model):
 	created = models.DateTimeField(auto_now_add=True, db_index=True)
 	updated = models.DateTimeField(auto_now=True, db_index=True)
 
-	description = models.TextField(help_text="Describe what event will cause (or caused) contributions to be made. The text in the format given by description_format.")
+	description = models.TextField(help_text="Describe what event will cause contributions to be made. Use the second person and future tense, e.g. by starting with \"Your contribution will...\". The text is in the format given by description_format.")
 	description_format = EnumField(TextFormat, default=TextFormat.Markdown, help_text="The format of the description text.")
 	status = EnumField(TriggerStatus, default=TriggerStatus.Draft, help_text="The current status of the trigger: Open (accepting pledges), Paused (not accepting pledges), Executed (funds distributed), Vacated (existing pledges invalidated).")
 	outcomes = JSONField(
@@ -425,7 +425,7 @@ class TriggerExecution(models.Model):
 
 	cycle = models.IntegerField(help_text="The election cycle (year) that the trigger was executed in.")
 
-	description = models.TextField(help_text="Once a trigger is executed, additional text added to explain how funds were distributed.")
+	description = models.TextField(help_text="Describe how contriutions are being distributed. Use the passive voice and present progressive tense, e.g. by starting with \"Contributions are being distributed...\".")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
 	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges executed. This counts pledges from anonymous users that do not result in contributions. Used to check when a Trigger is done executing.")
