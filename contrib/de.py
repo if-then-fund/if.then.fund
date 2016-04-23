@@ -65,7 +65,7 @@ class DemocracyEngineAPIClient(object):
 			auth=HTTPBasicAuth(self.username, self.password),
 			data=payload,
 			headers=headers,
-			timeout=30 if not live_request else 20,
+			timeout=60 if not live_request else 20,
 			verify=True, # check SSL cert (is default, actually)
 			)
 
