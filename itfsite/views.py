@@ -31,13 +31,16 @@ def homepage(request):
 	# What campaigns *can* we show (logically)? Open campaigns for the brand we're looking at.
 	open_campaigns = Campaign.objects.filter(status=CampaignStatus.Open, brand=get_branding(request)['BRAND_INDEX'])
 
+	# How many to show?
+	count = 12 if not settings.DEBUG else 100
+
 	# Actually show recent campaigns + top performing campaigns.
 	#
 	# To efficiently query top performing campaigns we order by the sum of total_pledged (which only contains
 	# Pledges made prior to trigger execution) and total_contributions (which only exists after the trigger
 	# has been executed), since we don't have a field that just counts a simple total (ugh).
 	open_campaigns = set( # uniqify
-		  list(open_campaigns.order_by('-created')[0:10]) \
+		  list(open_campaigns.order_by('-created')[0:count]) \
 		+ list(open_campaigns.annotate(total = Sum('contrib_triggers__total_pledged')+Sum('contrib_triggers__execution__total_contributions')).exclude(total=None).order_by("-total")[0:10])
 		)
 	if len(open_campaigns) > 0:
@@ -49,7 +52,7 @@ def homepage(request):
 		open_campaigns = sorted(open_campaigns, key = lambda campaign:
 			    1.1 - 1.1*(newest-campaign.created).total_seconds()/((newest-oldest).total_seconds() or 1)
 			  + sqrt(float(getattr(campaign, 'total', 0)) / max_t)
-			, reverse=True)[0:12]
+			, reverse=True)[0:count]
 
 	return render2(request, "itfsite/homepage.html", {
 		"open_campaigns": open_campaigns,
