@@ -188,11 +188,12 @@ def get_pledge_recipients(trigger, pledge):
 				continue
 
 			# Get the Recipient object.
-			r = action.actor.challenger
-			if r is None:
+			try:
+				r = action.actor.challenger
+			except Recipient.DoesNotExist:
 				# We don't have a challenger Recipient associated. There should always
 				# be a challenger Recipient assigned.
-				raise ValueError("Actor has no challenger: %s" % action)
+				raise Recipient.DoesNotExist(str(action.actor) + " has no challenger recipient assigned, while executing " + str(trigger) + ".")
 
 			# Party filtering is based on the party on the recipient object.
 			party = r.party
