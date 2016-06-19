@@ -150,13 +150,34 @@ def validate_email(request):
 @require_http_methods(['POST'])
 @json_response
 def submit(request):
-	# In order to return something in an error condition, we
-	# have to wrap the transaction *inside* a try/except and
-	# form the response based on the exception.
 	try:
-		return create_pledge(request)
+		# Create an un-saved Pledge instance.
+		p = create_pledge_object(request)
+
+		# Get contributor info, save, and run a credit card
+		# authorization.
+		if not reuse_authorized_contributorinfo(p, request):
+			save_and_authorize_contributorinfo(p, request)
+
 	except HumanReadableValidationError as e:
 		return { "status": "error", "message": str(e) }
+	except AlreadyPledgedError as e:
+		return { "status": "already-pledged" }
+
+	# If the user is anonymous...
+	if not p.user:
+		# The pledge needs to get confirmation of the user's email address,
+		# which will lead to account creation.
+		p.anon_user.send_email_confirmation()
+
+		# Wipe the IncompletePledge because the user finished the form.
+		IncompletePledge.objects.filter(email=p.anon_user.email, trigger=p.trigger).delete()
+
+	# Done.
+	return {
+		"status": "ok",
+		"html": render_pledge_template(request, p, p.via_campaign, response_page=True),
+	}
 
 def get_sanitized_ref_code(request):
 	ref_code = request.POST['ref_code']
@@ -166,60 +187,82 @@ def get_sanitized_ref_code(request):
 	return ref_code
 
 @transaction.atomic
-def update_pledge_profiles(pledges, new_profile):
-	# The user is updating their ContributorInfo profile. Set
-	# the profile of any open pledges to the new instance. Delete
-	# any ContributorInfo objects no longer needed.
+def update_pledge_profiles(newest_pledge):
+	# When a Pledge is created with new profile information, all
+	# of the user's still-open Pledges are updated to use the new
+	# profile.
+
+	# Get all of the user's open pledges, excluding p.
+	pledges = Pledge.objects\
+		.filter(status=PledgeStatus.Open)\
+		.exclude(id=newest_pledge.id)
+	if newest_pledge.user:
+		pledges = pledges.filter(user=newest_pledge.user)
+	else:
+		pledges = pledges.filter(anon_user=newest_pledge.anon_user)
 
 	# Lock.
 	pledges = pledges.select_for_update()
 
-	# Sanity check that we do not update a pledge that is not open.
-	if pledges.exclude(status=PledgeStatus.Open).exists():
-		raise ValueError('pledges should be a QuerySet of only open pledges')
-
 	# Get existing ContributorInfos on those pledges.
 	prev_profiles = set(p.profile for p in pledges)
 
-	# Update pledges to new profile.
-	pledges.update(profile=new_profile)
+	# Update the open pledges to new profile.
+	pledges.update(profile=newest_pledge.profile)
 
 	# Delete any of the previous ContributorInfos that are no longer needed.
+	# (Some may be used on non-open Pledges and cannot be deleted.)
 	for ci in prev_profiles:
 		if ci.can_delete():
 			ci.delete()
 
-@transaction.atomic
-def create_pledge(request):
+class InvalidArgumentError(Exception):
+	pass
+
+class AlreadyPledgedError(Exception):
+	def __init__(self, existing_pledge):
+		self.existing_pledge = existing_pledge
+
+def create_pledge_object(request):
+	# Creates an un-saved Pledge instance.
+	#
+	# Raises an AlreadyPledgedError if the user has already made a Pledge
+	# for the specified Trigger.
+
 	p = Pledge()
 
 	# trigger
-	p.trigger = Trigger.objects.get(id=request.POST['trigger'])
+
+	try:
+		p.trigger = Trigger.objects.get(id=request.POST['trigger'])
+	except Trigger.DoesNotExist:
+		raise InvalidArgumentError("The trigger ID is invalid.")
 	if p.trigger.status == TriggerStatus.Draft:
-		raise HumanReadableValidationError("This trigger is still a draft. A contribution cannot yet be made.")
+		raise InvalidArgumentError("This trigger is still a draft. A contribution cannot yet be made.")
 	elif p.trigger.status not in (TriggerStatus.Open, TriggerStatus.Executed):
-		raise HumanReadableValidationError("This trigger is in the wrong state to make a contribution.")
+		raise InvalidArgumentError("This trigger is in the wrong state to make a contribution.")
+
 	p.made_after_trigger_execution = (p.trigger.status == TriggerStatus.Executed)
 
 	# ref_code (i.e. utm_campaign code) and Campaign ('via_campaign')
+
 	from itfsite.models import Campaign, AnonymousUser
 	p.ref_code = get_sanitized_ref_code(request)
 	p.via_campaign = Campaign.objects.get(id=request.POST['via_campaign'])
 
-	# Set user from logged in state.
+	# user / anon_user
+
 	if request.user.is_authenticated():
 		# This is an authentiated user.
 		p.user = request.user
 		exists_filters = { 'user': p.user }
 
-	# Anonymous user.
-	# Will do email verification below, but validate it early.
-	# (should have already been validated client side).
 	else:
+		# This is an anonymous user.
 		email = request.POST.get('email').strip()
 
 		# If the user makes multiple actions anonymously, we'll associate
-		# a single AnonymousUser instance.
+		# a single AnonymousUser instance with all of the Pledges.
 		anon_user = AnonymousUser.objects.filter(id=request.session.get("anonymous-user")).first()
 		if anon_user and anon_user.email == email:
 			# Reuse this AnonymousUser instance.
@@ -246,7 +289,7 @@ def create_pledge(request):
 	# synchronization problem. Just redirect to that pledge.
 	p_exist = Pledge.objects.filter(trigger=p.trigger, **exists_filters).first()
 	if p_exist is not None:
-		return { "status": "already-pledged" }
+		raise AlreadyPledgedError(p_exist)
 
 	# Field values & validation.
 
@@ -254,7 +297,7 @@ def create_pledge(request):
 		try:
 			setattr(p, model_field, converter(request.POST[form_field]))
 		except ValueError:
-			raise Exception("%s is out of range" % form_field)
+			raise InvalidArgumentError("%s is out of range" % form_field)
 
 	set_field('algorithm', 'algorithm', int)
 	set_field('desired_outcome', 'desired_outcome', int)
@@ -265,42 +308,49 @@ def create_pledge(request):
 
 	if request.POST['filter_party'] in ('DR', 'RD'):
 		p.filter_party = None # no filter
-	elif request.POST['filter_party'] == 'D':
-		p.filter_party = ActorParty.Democratic
-	elif request.POST['filter_party'] == 'R':
-		p.filter_party = ActorParty.Republican
+	else:
+		p.filter_party = ActorParty.from_letter(request.POST['filter_party'])
 
 	# Validation. Some are checked client side, so errors are internal
 	# error conditions and not validation problems to show the user.
 	if p.algorithm != Pledge.current_algorithm()["id"]:
-		raise Exception("algorithm is out of range")
+		raise InvalidArgumentError("algorithm is out of range")
 	if not (0 <= p.desired_outcome < len(p.trigger.outcomes)):
-		raise Exception("desired_outcome is out of range")
+		raise InvalidArgumentError("desired_outcome is out of range")
 	if not (p.trigger.get_minimum_pledge() <= p.amount <= Pledge.current_algorithm()["max_contrib"]):
-		raise Exception("amount is out of range")
+		raise InvalidArgumentError("amount is out of range")
 	if p.incumb_challgr not in (-1, 0, 1):
-		raise Exception("incumb_challgr is out of range")
+		raise InvalidArgumentError("incumb_challgr is out of range")
 	if p.filter_party == ActorParty.Independent:
-		raise Exception("filter_party is out of range")
+		raise InvalidArgumentError("filter_party is out of range")
 	if p.tip_to_campaign_owner < 0:
-		raise Exception("tip_to_campaign_owner is out of range")
+		raise InvalidArgumentError("tip_to_campaign_owner is out of range")
 	if p.tip_to_campaign_owner > 0 and (not p.via_campaign.owner or not p.via_campaign.owner.de_recip_id):
-		raise Exception("tip_to_campaign_owner cannot be non-zero")
+		raise InvalidArgumentError("tip_to_campaign_owner cannot be non-zero")
 	if (p.trigger.trigger_type.extra or {}).get("monovalent") and p.incumb_challgr != 0:
 		# With a monovalent trigger, Actors only ever take outcome zero.
 		# Therefore not all filters make sense. A pledge cannot be filtered
 		# to incumbents who take action 1 or to the opponents of actors
 		# who do not take action 0.
-		raise Exception("monovalent triggers do not permit an incumbent/challenger filter")
+		raise InvalidArgumentError("monovalent triggers do not permit an incumbent/challenger filter")
 
 	tcust = TriggerCustomization.objects.filter(owner=p.via_campaign.owner, trigger=p.trigger).first()
 	if tcust and tcust.incumb_challgr and p.incumb_challgr != tcust.incumb_challgr:
-		raise Exception("incumb_challgr is out of range (campaign customization)")
+		raise InvalidArgumentError("incumb_challgr is out of range (campaign customization)")
 	if tcust and tcust.filter_party and p.filter_party != tcust.filter_party:
-		raise Exception("filter_party is out of range (campaign customization)")
+		raise InvalidArgumentError("filter_party is out of range (campaign customization)")
 
-	# Get a ContributorInfo to assign to the Pledge.
-	if not request.POST["copyFromPledge"]:
+	return p
+
+def save_and_authorize_contributorinfo(p, request):
+	# Save the user's information to a ContributorInfo object, save the Pledge,
+	# and run a credit card authorization to get a token that we can use to
+	# make a charge later.
+
+	# If the credit card authorization fails, roll back and don't save the Pledge
+	# or the ContributorInfo.
+	with transaction.atomic():
+
 		# Create a new ContributorInfo record from the submitted info.
 		contribdata = { }
 
@@ -315,7 +365,7 @@ def create_pledge(request):
 		# Validate & store the billing fields.
 		#
 		# (Including the expiration date so that we can know that a
-		# card has expired prior to using the DE token.)
+		# card has expired prior to using the DE token at a later time.)
 		ccnum = request.POST['billingCCNum'].replace(" ", "").strip() # Stripe's javascript inserts spaces
 		ccexpmonth = int(request.POST['billingCCExpMonth'])
 		ccexpyear = int(request.POST['billingCCExpYear'])
@@ -335,6 +385,11 @@ def create_pledge(request):
 		# Save. We need a Pledge ID to form an authorization test.
 		p.profile = ci
 		p.save()
+
+		# If the user has other open pledges, update their profiles to the new
+		# ContributorInfo instance --- i.e. update their contributor and payment
+		# info.
+		update_pledge_profiles(p)
 
 		# For logging:
 		# Add information from the HTTP request in case we need to
@@ -358,10 +413,11 @@ def create_pledge(request):
 		# Re-save the ContributorInfo instance now that it has the CC token.
 		ci.save(override_immutable_check=True)
 
-		# If the user has other open pledges, update their profiles to the new
-		# ContributorInfo instance --- i.e. update their contributor and payment
-		# info.
-		update_pledge_profiles(get_user_pledges(p.user, request).filter(status=PledgeStatus.Open), ci)
+def reuse_authorized_contributorinfo(p, request):
+	# See if the user wants to re-use an existing ContributorInfo that
+	# has a credit card token already in it that we can use.
+	if not request.POST["copyFromPledge"]:
+		return False
 
 	else:
 		# This is a returning user and we are re-using info from a previous pledge.
@@ -371,23 +427,10 @@ def create_pledge(request):
 		# a pledge tied to the account.
 		prev_p = Pledge.objects.get(id=request.POST["copyFromPledge"])
 		if not get_user_pledges(p.user, request).filter(id=prev_p.id).exists():
-			raise Exception("copyFromPledge is set to a pledge ID that the user did not create or is no longer stored in their session.")
+			raise InvalidArgumentError("copyFromPledge is set to a pledge ID that the user did not create or is no longer stored in their session.")
 		p.profile = prev_p.profile
 		p.save()
-
-	if not p.user:
-		# The pledge needs to get confirmation of the user's email address,
-		# which will lead to account creation.
-		p.anon_user.send_email_confirmation()
-
-		# Wipe the IncompletePledge because the user finished the form.
-		IncompletePledge.objects.filter(email=p.anon_user.email, trigger=p.trigger).delete()
-
-	# Done.
-	return {
-		"status": "ok",
-		"html": render_pledge_template(request, p, p.via_campaign, response_page=True),
-	}
+		return True
 
 @json_response
 def cancel_pledge(request):

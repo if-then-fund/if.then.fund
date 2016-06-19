@@ -24,10 +24,19 @@ class ActorParty(enum.Enum):
 	Republican = 2
 	Independent = 3
 
+	@staticmethod
+	def from_letter(letter):
+		if letter == "D":
+			return ActorParty.Democratic
+		if letter == "R":
+			return ActorParty.Republican
+		raise ValueError(letter)
+
 	def opposite(self):
 		if self == ActorParty.Democratic: return ActorParty.Republican
 		if self == ActorParty.Republican: return ActorParty.Democratic
 		raise ValueError("%s does not have an opposite party." % str(self))
+
 
 #####################################################################
 #
