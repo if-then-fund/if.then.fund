@@ -7,11 +7,10 @@ from django.conf import settings
 from django.http import Http404
 
 from itfsite.accounts import User, NotificationsFrequency, AnonymousUser
-from contrib.models import TextFormat
 
 import enum
 from enum3field import EnumField, django_enum
-from itfsite.utils import JSONField
+from itfsite.utils import JSONField, TextFormat
 
 #####################################################################
 #
