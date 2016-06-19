@@ -7,9 +7,6 @@
 [submodule "ext/twostream"]
 	path = ext/twostream
 	url = https://github.com/govtrack/twostream
-[submodule "ext/django-html-emailer"]
-	path = ext/django-html-emailer
-	url = https://github.com/if-then-fund/django-html-emailer
 [submodule "ext/django-betteruser"]
 	path = ext/django-betteruser
 	url = https://github.com/if-then-fund/django-betteruser

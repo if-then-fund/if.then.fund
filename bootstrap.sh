@@ -110,21 +110,19 @@ fi
 # Install dependencies.
 $PIP install --upgrade \
 	"pytz" \
-	"rtyaml" \
-	"django==1.8" \
+	"django==1.9.7" \
 	"python3-memcached" \
 	"requests==2.6.0" \
 	"markdown2" \
 	"jsonfield" \
 	"tqdm==1.0" \
+	"rtyaml" \
 	"email_validator==0.1.0-rc1" \
+	"git+https://github.com/JoshData/commonmark-py-plaintext" "git+https://github.com/if-then-fund/django-html-emailer" \
 	"enum3field"
 
 $PIP install -r \
 	ext/django-email-confirm-la/requirements.txt
-
-# Required by django-html-emailer. Need to get Python 3 fork.
-$PIP install git+https://github.com/dcramer/pynliner@python3
 
 # LOCAL ONLY
 if [ "$1" == "--local" ]; then
