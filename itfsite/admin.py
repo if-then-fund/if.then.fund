@@ -13,11 +13,11 @@ class UserAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         # Add a view at /admin/itfsite/user/all-emails.
-        from django.conf.urls import patterns
+        from django.conf.urls import  url
         urls = super(UserAdmin, self).get_urls()
-        return patterns('',
-            (r'^all-emails$', self.admin_site.admin_view(self.dump_user_emails)),
-        ) + urls
+        return [
+            url(r'^all-emails$', self.admin_site.admin_view(self.dump_user_emails)),
+        ] + urls
 
     def dump_user_emails(self, request):
         # Handle /admin/itfsite/user/all-emails --- dump the email address

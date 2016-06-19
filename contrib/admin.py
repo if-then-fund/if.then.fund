@@ -211,11 +211,11 @@ class TriggerExecutionAdmin(admin.ModelAdmin):
     pledge_count_.short_description = "pledges (exct'd/contrib'd)"
 
     def get_urls(self):
-        from django.conf.urls import patterns
+        from django.conf.urls import  url
         urls = super(TriggerExecutionAdmin, self).get_urls()
-        return patterns('',
-            (r'^([0-9]+)/actions$', self.admin_site.admin_view(self.edit_actions)),
-        ) + urls
+        return [
+            url(r'^([0-9]+)/actions$', self.admin_site.admin_view(self.edit_actions)),
+        ] + urls
 
     def edit_actions(self, request, trigger_execution_id):
         from django.shortcuts import render, get_object_or_404

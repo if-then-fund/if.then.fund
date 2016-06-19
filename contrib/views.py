@@ -449,7 +449,8 @@ def render_pledge_template(request, pledge, campaign, show_long_title=False, res
 	# Get the user's pledges, if any, on any trigger tied to this campaign.
 	import django.template
 	template = django.template.loader.get_template("contrib/contrib.html")
-	return template.render(django.template.RequestContext(request, {
+	
+	ctx = {
 		"response_page": response_page,
 		"show_long_title": show_long_title,
 		"pledge": pledge,
@@ -457,7 +458,12 @@ def render_pledge_template(request, pledge, campaign, show_long_title=False, res
 		"execution": PledgeExecution.objects.filter(pledge=pledge).first(),
 		"contribs": sorted(Contribution.objects.filter(pledge_execution__pledge=pledge).select_related("action"), key=lambda c : (c.recipient.is_challenger, c.action.name_sort)),
 		"share_url": request.build_absolute_uri(pledge.via_campaign.get_short_url()),
-	}))
+	}
+
+	from itfsite.middleware import get_branding
+	ctx.update(get_branding(request))
+	
+	return template.render(ctx)
 
 @anonymous_view
 def report(request):
