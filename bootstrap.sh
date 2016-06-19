@@ -137,6 +137,7 @@ if [ "$1" == "--local" ]; then
 	fixtures/create-test-data
 
 	# For testing only.
+	sudo apt-get install chromium-chromedriver
 	pip install selenium
 fi
 

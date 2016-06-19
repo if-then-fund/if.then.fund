@@ -31,7 +31,9 @@ class SeleniumTest(StaticLiveServerTestCase):
 		settings.DEFAULT_BRAND = "if.then.fund"
 
 		# Start a headless browser.
-		cls.browser = selenium.webdriver.Firefox()
+		import os
+		os.environ['PATH'] += ":/usr/lib/chromium-browser"
+		cls.browser = selenium.webdriver.Chrome()
 
 		# We have a lot of AJAX that dynamically shows elements. Rather than
 		# hard-coding time.sleep()'s, let Selenium poll for the element's
@@ -310,6 +312,7 @@ class ContribTest(SeleniumTest):
 		if not change_profile:
 			# Use default contributor, billing info
 			self.browser.find_element_by_css_selector("#contribution-contributorinfo-next").click()
+			time.sleep(1)
 		else:
 			# Click 'Update'.
 			self.browser.find_element_by_css_selector("#pledge-contributor-old-update").click()
