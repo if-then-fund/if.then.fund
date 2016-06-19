@@ -12,7 +12,6 @@ ALLOWED_HOSTS = sum([get_brand_domains(brandid) for brandid in os.listdir("brand
 INSTALLED_APPS += [
 	'itfsite',
 	'contrib',
-	'letters',
 	'itf_vendor_static_resources',
 
 	'twostream',

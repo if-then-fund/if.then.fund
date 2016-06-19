@@ -30,28 +30,4 @@
 			<a href="{{c.get_absolute_url}}">Take Action &raquo;</a>
 		</div>
 	</div>
-
-	{% if BRAND_ID == "279forchange.us" %}
-		{% with counts=c.twoseventyninecounts %}
-		{% if counts %}
-			<div class="twoseventyninecounts">
-			<p>{{counts.total_needed}} more needed to become law:</p>
-			<div class="row">
-				<div class="col-xs-4">
-		                        <div class="num">{{counts.house_needed}}</div>
-                		        <div class="descr">congresspersons</div>
-				</div>
-				<div class="col-xs-4">
-		                        <div class="num">{{counts.senate_needed}}</div>
-                		        <div class="descr">senators</div>
-				</div>
-				<div class="col-xs-4">
-		                        <div class="num">{{counts.president_needed}}</div>
-                		        <div class="descr">the President</div>
-				</div>
-			</div>
-			</div>
-		{% endif %}
-		{% endwith %}
-	{% endif %}
 </div>

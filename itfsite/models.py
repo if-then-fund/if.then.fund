@@ -110,7 +110,6 @@ class Campaign(models.Model):
 
 	# Actions.
 	contrib_triggers = models.ManyToManyField('contrib.Trigger', blank=True, related_name="campaigns", help_text="Triggers to offer the user to take action on (or to show past actions).")
-	letters = models.ManyToManyField('letters.LettersCampaign', blank=True, related_name="campaigns", help_text="LettersCampaigns to offer the user to take action on (or to show past actions).")
 
 	# Additional data.
 	extra = JSONField(blank=True, help_text="Additional information stored with this object.")
@@ -136,10 +135,6 @@ class Campaign(models.Model):
 		return get_branding(self.brand)['ROOT_URL'] + ("/a/%d" % self.id)
 
 	#
-
-	def get_active_letters_campaign(self):
-		from letters.models import CampaignStatus as LettersCampaignStatus
-		return self.letters.filter(status=LettersCampaignStatus.Open).order_by('-created').first()
 
 	def get_active_trigger(self):
 		# What trigger should the user take action on? It's the most recently created
@@ -257,27 +252,6 @@ class Campaign(models.Model):
 
 		return ret
 
-	def twoseventyninecounts(self):
-		# How many more ELOs does this issue need to pass?
-		lc = self.get_active_letters_campaign()
-		if not lc: return None
-		if not lc.body_toggles_on: return None
-		te = lc.body_toggles_on.execution # can raise TriggerExecution.DoesNotExist but template eats it
-		actions = te.actions.filter(outcome=0) # actors that have the desired position
-		ret = {
-			"house": min(218, actions.filter(office__startswith="H-").count()),
-			"senate": min(60, actions.filter(office__startswith="S-").count()),
-			"president": actions.filter(office="P").count(), # max 1!
-		}
-		ret.update({
-			"total": ret["house"] + ret["senate"] + ret["president"], # each category must be capped
-
-			"house_needed": 218-ret["house"],
-			"senate_needed": 60-ret["senate"],
-			"president_needed": 1-ret["president"],
-			"total_needed": 279-(ret["house"] + ret["senate"] + ret["president"]) # each category must be capped
-		})
-		return ret
 
 #####################################################################
 #

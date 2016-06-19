@@ -11,9 +11,7 @@ urlpatterns = patterns('',
 
 	url(r'^', include('contrib.urls')),
 	url(r'^(user|org)/(\d+)/([^/]+)$', 'itfsite.views.org_landing_page'),
-	url(r'a/(?P<id>\d+)(?:/[a-z0-9_-]+)?(?:/(?P<action>contribute|write-letter))?(?P<api_format_ext>\.json)?$', 'itfsite.views.campaign'),
-
-	url(r'^letters/', include('letters.urls')),
+	url(r'a/(?P<id>\d+)(?:/[a-z0-9_-]+)?(?:/(?P<action>contribute))?(?P<api_format_ext>\.json)?$', 'itfsite.views.campaign'),
 
 	url(r'^accounts/login$', auth_views.login),
 	url(r'^accounts/logout$', auth_views.logout, { 'next_page': '/' } ),

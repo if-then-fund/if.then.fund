@@ -33,9 +33,6 @@ class Command(BaseCommand):
 		# Load and parse current Members of Congress YAML.
 		r = load_yaml_from_url("https://raw.githubusercontent.com/unitedstates/congress-legislators/master/legislators-current.yaml")
 
-		# For 279 Project, also load in the current president.
-		r += filter_current_presidnet(load_yaml_from_url("https://raw.githubusercontent.com/unitedstates/congress-legislators/master/executive.yaml"))
-
 		# Pre-load all of the Democracy Engine recipients and build a map.
 		de_recips = DemocracyEngineAPI.recipients()
 		de_recips = { r['recipient_id']: r for r in de_recips }
@@ -43,7 +40,7 @@ class Command(BaseCommand):
 		# Create Actor instances.
 		seen_actors = set()
 		for p in r:
-			# The last term is the Member of Congress/President's current term.
+			# The last term is the Member of Congress's current term.
 			term = p['terms'][-1]
 			del p['terms']
 			p['term'] = term
@@ -59,8 +56,6 @@ class Command(BaseCommand):
 				office = ["H", term['state'], "%02d" % term['district']]
 			elif term['type'] == 'sen':
 				office = ["S", term['state'], "%02d" % term['class']]
-			elif term['type'] == 'prez':
-				office = ["P"]
 			else:
 				raise ValueError()
 
@@ -171,9 +166,7 @@ def build_name(p, t, mode):
 		lastname += ' ' + p['name']['suffix']
 
 	# Title.
-	if t['type'] == "prez":
-		title = "President"
-	elif t['type'] == "sen":
+	if t['type'] == "sen":
 		title = "Sen."
 	elif t['state'] == "PR":
 		# Puerto Rico's delegate is a Resident Commissioner. Currently delegates
@@ -191,9 +184,7 @@ def build_name(p, t, mode):
 	# Using an en dash to separate the party from the state
 	# and a U+2006 SIX-PER-EM SPACE to separate state from
 	# district. Will that appear ok/reasonable?
-	if t['type'] == "prez":
-		role = ""
-	elif t.get('district') in (None, 0):
+	if t.get('district') in (None, 0):
 		role = " (%s–%s)" % (t['party'][0], t['state'])
 	else:
 		role = " (%s–%s %d)" % (t['party'][0], t['state'], t['district'])
@@ -206,9 +197,7 @@ def build_name(p, t, mode):
 		raise ValueError(mode)
 
 def build_title(p, t):
-	if t['type'] == "prez":
-		return "President"
-	elif t['type'] == "sen":
+	if t['type'] == "sen":
 		return t['state_rank'][0].upper() + t['state_rank'][1:] + " Senator from " + statenames[t['state']]
 	elif t['state'] == "PR":
 		return "Resident Commissioner for Puerto Rico"
@@ -223,7 +212,3 @@ def load_yaml_from_url(url):
 	r = requests.get(url)
 	r = rtyaml.load(r.content)
 	return r
-
-def filter_current_presidnet(actors):
-	# Let's just assume the last record is the current president.
-	return [actors[-1]]

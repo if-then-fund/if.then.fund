@@ -4,7 +4,6 @@ from django.http import HttpResponse
 from django.utils.html import escape as escape_html
 from itfsite.models import *
 from contrib.models import Trigger, TriggerStatus, TriggerCustomization, TextFormat
-from letters.models import LettersCampaign, CampaignStatus as LettersCampaignStatus
 
 import json
 
@@ -58,14 +57,6 @@ class TriggersInline(admin.TabularInline):
     raw_id_fields = ('trigger',)
     verbose_name = 'Trigger'
     show_change_link = True
-
-class LettersInline(admin.TabularInline):
-    model = Campaign.letters.through
-    extra = 1
-    raw_id_fields = ('letterscampaign',)
-    verbose_name = 'Letter Campaigns'
-    show_change_link = True
-
 
 class CampaignExtraWidget(forms.Widget):
     # Random things are stored in the 'extra' JSON field.
@@ -143,8 +134,8 @@ class CampaignAdmin(admin.ModelAdmin):
     list_display = ['slug', 'owner', 'id', 'title', 'created']
     search_fields = ['id', 'slug', 'title', 'owner__name', 'owner__slug']
     raw_id_fields = ['owner']
-    inlines = [TriggersInline, LettersInline]
-    exclude = ['contrib_triggers', 'letters']
+    inlines = [TriggersInline]
+    exclude = ['contrib_triggers']
     prepopulated_fields = {"slug": ("title",)}
 
 admin.site.register(User, UserAdmin)

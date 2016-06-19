@@ -1,3 +1,0 @@
-{% autoescape off %}
-Confirm Your Account
-{% endautoescape %}

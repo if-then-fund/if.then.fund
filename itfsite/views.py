@@ -67,13 +67,11 @@ def simplepage(request, pagename):
 @login_required
 def user_home(request):
 	from contrib.models import Pledge, PledgeStatus
-	from letters.models import UserLetter
 
 	# Get the user's actions that took place on the brand site that the user is actually on.
 	brand_filter = { "via_campaign__brand": get_branding(request)['BRAND_INDEX'] }
 	pledges = Pledge.objects.filter(user=request.user, **brand_filter).prefetch_related()
-	letters = UserLetter.objects.filter(user=request.user, **brand_filter).prefetch_related()
-	actions = list(pledges) + list(letters)
+	actions = list(pledges)
 	actions.sort(key = lambda obj : obj.created, reverse=True)
 	
 	# Get the user's total amount of open pledges, i.e. their total possible
@@ -103,7 +101,6 @@ def user_home(request):
 
 		'profiles': profiles,
 
-		'letters_written': letters.count(),
 		'total_pledged': total_pledged,
 		'total_contribs': total_contribs,
 
@@ -248,8 +245,6 @@ def campaign(request, id, action, api_format_ext):
 		raise Http404()
 	elif action == "contribute":
 		f = campaign_action_trigger
-	elif action == "write-letter":
-		f = campaign_action_letterscampaign
 	else:
 		raise Http404()
 
@@ -272,14 +267,9 @@ def campaign_show(request, campaign, is_json_api):
 	# What Trigger and TriggerCustomization should we show?
 	trigger, tcust = campaign.get_active_trigger()
 
-	# Which letter-writing campaign should the user take action on?
-	letters_campaign = campaign.get_active_letters_campaign()
-
 	if trigger:
 		outcome_strings = (tcust or trigger).outcome_strings()
 		for i, os in enumerate(outcome_strings): os["id"] = i
-	elif letters_campaign:
-		outcome_strings = [{ "label": "Contact Congress >" }]
 	else:
 		outcome_strings = []
 
@@ -335,7 +325,6 @@ def campaign_show(request, campaign, is_json_api):
 	import random
 	experimental_condition = random.choice([1])
 
-	from letters.models import UserLetter
 	return render(request, "itfsite/campaign_exp%d.html" % experimental_condition, {
 		"campaign": campaign,
 		"splash_image_qs": splash_image_qs,
@@ -345,10 +334,6 @@ def campaign_show(request, campaign, is_json_api):
 		"tcust": tcust,
 		"trigger_outcome_strings": outcome_strings,
 		"pref_outcome": pref_outcome,
-
-		# for letter writing campaigns
-		"letters_campaign": letters_campaign,
-		"letters_sent": UserLetter.objects.filter(letterscampaign__campaigns=campaign).aggregate(sum=Sum('delivered'))['sum'] or 0, # can be None if no letters written
 
 		# for a/b testing
 		"experiment": experimental_condition,
@@ -390,26 +375,10 @@ def campaign_action_trigger(request, campaign, is_json_api):
 
 		})
 
-def campaign_action_letterscampaign(request, campaign, is_json_api):
-	# Which letter-writing campaign should the user take action on?
-	letters_campaign = campaign.get_active_letters_campaign()
-
-	# render page
-	from letters.models import VoterRegistrationStatus
-	from letters.views import state_abbrs
-	return render(request, "itfsite/campaign_action.html", {
-		"campaign": campaign,
-
-		"letters_campaign": letters_campaign,
-		"state_abbrs": state_abbrs,
-		"voter_registration_options": [(v.value, v.name) for v in VoterRegistrationStatus],
-
-		})
 
 @user_view_for(campaign)
 def campaign_user_view(request, id, action, api_format_ext):
 	from contrib.views import get_recent_pledge_defaults, get_user_pledges, render_pledge_template
-	from letters.views import get_recent_letter_defaults, get_user_letters, render_letter_template
 
 	campaign = get_object_or_404(Campaign, id=id)
 
@@ -418,7 +387,6 @@ def campaign_user_view(request, id, action, api_format_ext):
 
 	# What actions has the user already taken?
 	pledges = get_user_pledges(request.user, request).filter(trigger__campaigns=campaign).order_by('-created')
-	letters = get_user_letters(request.user, request).filter(letterscampaign__campaigns=campaign).order_by('-created')
 
 	# CONTRIB
 
@@ -431,21 +399,8 @@ def campaign_user_view(request, id, action, api_format_ext):
 			"type": "contrib.Pledge",
 			"date": pledge.created.isoformat(),
 			"trigger": pledge.trigger.id,
-			"rendered": render_pledge_template(request, pledge, campaign, show_long_title=len(pledges)+len(letters) > 1),
+			"rendered": render_pledge_template(request, pledge, campaign, show_long_title=len(pledges) > 1),
 		} for pledge in pledges
-	]
-
-	# LETTERS
-
-	ret["letter_defaults"] = get_recent_letter_defaults(request.user, request)
-
-	ret["actions"] += [
-		{
-			"type": "letters.UserLetter",
-			"date": letter.created.isoformat(),
-			"letterscampaign": letter.letterscampaign.id,
-			"rendered": render_letter_template(request, campaign, letter, show_long_title=len(pledges)+len(letters) > 1),
-		} for letter in letters
 	]
 
 	# Other stuff.

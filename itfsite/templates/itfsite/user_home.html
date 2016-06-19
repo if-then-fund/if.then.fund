@@ -92,7 +92,6 @@ function save_email_settings() {
 <h2>Your Actions</h2>
 
 <table id="action-summary" class="table">
-<tr><td>Letters Written:</td> <td>{{letters_written|intcomma}}</td></tr>
 <tr><td>Scheduled Contributions:</td> <td>${{total_pledged|floatformat:2}}</td></tr>
 <tr><td>Past Contributions:</td> <td>${{total_contribs|floatformat:2}} {% if total_contribs > 0 %}(<a href="{% url 'user_contrib_details' %}">view details</a>){% endif %}</td></tr>
 </table>
@@ -134,26 +133,6 @@ function save_email_settings() {
 		</td>
 		<td>
 			{{pledge.get_nice_status}}
-		</td>
-	</tr>
-	{% endwith %}
-	{% endif %}
-
-	{% if action|objtype == 'UserLetter' %}
-	{% with letter=action %}
-	<tr>
-		<td class="icon"><i class="glyphicon glyphicon-file" style="color: #757"></i></td>
-		<td>
-			<a href="{{letter.get_absolute_url}}" style="border: none">{{ letter.letterscampaign.title }}</a>
-			<p class="text-muted" style="margin: .1em 0 0 0; font-size: 90%">
-				Written on {{letter.created|date}}.
-			</p>
-		</td>
-		<td class="text-muted">
-			n/a
-		</td>
-		<td>
-			{{letter.submission_status_short}}
 		</td>
 	</tr>
 	{% endwith %}

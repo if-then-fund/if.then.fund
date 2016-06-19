@@ -237,7 +237,7 @@ h2 {
 
 	<div id="action-buttons">
 	{% if trigger %}
-		<div id="make-a-contribution" {% if letters_campaign %}class="hidden"{% endif %}>
+		<div id="make-a-contribution">
             {% for outcome in trigger_outcome_strings %}
 		    {% if not tcust.has_fixed_outcome or tcust.outcome = forloop.counter0 %}
                 <button class="btn btn-lg {% if pref_outcome == -1 or pref_outcome == forloop.counter0 %}btn-success{% else %}btn-default{% endif %}" data-index="{{forloop.counter0}}" onclick="window.location = '{{campaign.get_absolute_url|escapejs}}/contribute?outcome={{forloop.counter0}}{% if request.GET.utm_campaign %}&utm_campaign={{request.GET.utm_campaign|urlencode|escapejs}}{% endif %}';">
@@ -246,22 +246,8 @@ h2 {
                 </button>
             {% endif %}
             {% endfor %}
-	        {% if letters_campaign %}
-	        	<p id="write-a-letter-instead"><small><a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(true);">Write a letter instead</a>.</small></p>
-	        {% endif %}
 	    </div>
     {% endif %}
-
-	{% if letters_campaign %}
-		<div id="write-a-letter">
-			<button class="btn btn-lg btn-success" data-index="{{forloop.counter0}}" onclick="window.location = '{{campaign.get_absolute_url|escapejs}}/write-letter{% if request.GET.utm_campaign %}?utm_campaign={{request.GET.utm_campaign|urlencode|escapejs}}{% endif %}';">
-				Write a Letter &raquo;
-			</button>
-			{% if trigger %}
-				<p id="make-a-contribution-instead"><small>Skip this and <a href="#" onclick="return make_a_contribution_or_write_a_letter_instead(false);">make a contribution instead</a>.</small></p>
-			{% endif %}
-		</div>
-	{% endif %}
 
 	</div> <!-- /action-buttons -->
 
@@ -276,17 +262,6 @@ h2 {
   <div id="activity-stats">
   	<div class="container">
 			{% with totals=campaign.get_contrib_totals %}
-				{% if letters_campaign %}
-				<div class="row">
-				<div class="col-md-4">
-				<dl>
-				<dt>{{letters_sent}}</dt>
-				<dd>letter{{letters_sent|pluralize}} written</dd>
-				</dl>
-				</div>
-				<div class="col-md-8">
-				{% endif %}
-
 				{% if totals.contrib_total > 0 %}
 					{# has contributions #}
 					{% if totals.contrib_fixed_outcome_total > 0 %}
@@ -360,11 +335,6 @@ h2 {
 					</dd>
 					</dl>
 
-				{% endif %}
-
-				{% if letters_campaign %}
-				</div> <!-- /col -->
-				</div> <!-- /row -->
 				{% endif %}
 			{% endwith %}
 		</div> <!-- /container -->
@@ -512,7 +482,6 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 			$('#for_staff').show();
 
 		// Show any actions the user already performed.
-		var can_write_letter = {% if letters_campaign %}true{% else %}false {% endif %};
 		var can_make_pledge = {% if trigger %}true{% else %}false{% endif %};
 		for (var i = 0; i < (the_page ? the_page.actions.length : 0); i++) {
 			var action = the_page.actions[i];
@@ -528,16 +497,8 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 			if (action.trigger == {{trigger.id}}) {
 				// The user already made a pledge on this. Totally destroy
 				// the form elements for making another pledge.
-				$('#make-a-contribution, #make-a-contribution-instead').remove();
+				$('#make-a-contribution').remove();
 				can_make_pledge = false;
-			}
-			{% endif %}
-			
-			{% if letters_campaign %}
-			if (action.letterscampaign == {{letters_campaign.id}}) {
-				$('#write-a-letter, #write-a-letter-instead').remove();
-				$('#make-a-contribution').removeClass('hidden');
-				can_write_letter = false;
 			}
 			{% endif %}
 		}
@@ -562,13 +523,6 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
 	function fixup_pledge_outcome_button_sizes() {
 		set_css_to_maximum($('#action-buttons button:visible'), 'width');
 		set_css_to_maximum($('#action-buttons button:visible'), 'height');
-	}
-
-	function make_a_contribution_or_write_a_letter_instead(mode) {
-		$('#write-a-letter').toggleClass('hidden', !mode);
-		$('#make-a-contribution').toggleClass('hidden', mode);
-		fixup_pledge_outcome_button_sizes(); // some of the buttons were originally hidden, so re-size now that they are visible
-		return false; // cancel click
 	}
 
 	function utm_tool() {

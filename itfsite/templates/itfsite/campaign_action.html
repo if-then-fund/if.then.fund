@@ -27,14 +27,6 @@ h1 {
 #action-pane {
 }
 
-/* letters campaigns */
-.table {
-	font-size: 90%;
-}
-#action-pane .table>tbody>tr>td {
-    border: none;
-    line-height: 125%;
-}
 
 h2 {
   margin-top: 40px;
@@ -93,17 +85,10 @@ p { max-width: 40em; }
 
 <div id="action-pane">
 	{% if trigger %}
-	<div id="make-a-contribution" {% if letters_campaign %}class="hidden"{% endif %}>
+	<div id="make-a-contribution">
 		{% include "contrib/pledge-form.html" %}
 	</div> <!-- /make-a-contribution -->
 	{% endif %}
-
-	{% if letters_campaign %}
-	<div id="write-a-letter">
-		{% include "letters/write-your-rep-form.html" %}
-	</div>
-	{% endif %}
-
 </div>
 
 {% endblock %}
@@ -124,13 +109,6 @@ p { max-width: 40em; }
 				return;
 			}
 			{% endif %}
-			
-			{% if letters_campaign %}
-			if (action.letterscampaign == {{letters_campaign.id}}) {
-				window.location = "{{campaign.get_absolute_url|escapejs}}";
-				return;
-			}
-			{% endif %}
 		}
 
 		// Ok, good to go.
@@ -139,11 +117,6 @@ p { max-width: 40em; }
 		pledge_init();
 		pledge_begin({{outcome}});
 		{% endif %}
-
-		{% if letters_campaign %}
-		letters_init();
-		{% endif %}
-
 	})
 
 	</script>

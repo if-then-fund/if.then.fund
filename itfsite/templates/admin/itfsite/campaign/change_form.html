@@ -24,17 +24,6 @@
     </div>
 {% endfor %}
 
-{% for letters in original.letters.all %}
-    {% if forloop.first %}<h4>Letters Campaigns</h4>{% endif %}
-    <div>
-        <p><a href="/admin/letters/letterscampaign/{{letters.id}}" target="_blank">{{letters.title}}</a></p>
-        {% if letters.body_toggles_on %}
-            <p>&mdash; <a href="/admin/contrib/trigger/{{letters.body_toggles_on.id}}" target="_blank">{{letters.body_toggles_on.title}}</a></p>
-            <p>&mdash; <a href="/admin/contrib/trigger/{{letters.body_toggles_on.execution.id}}/actions" target="_blank">edit</a></p>
-        {% endif %}
-    </div>
-{% endfor %}
-
 </div>
 </fieldset>
 

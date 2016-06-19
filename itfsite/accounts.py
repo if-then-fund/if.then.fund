@@ -104,22 +104,13 @@ class AnonymousUser(models.Model):
 			if timezone.now() - ec.sent_at <  timedelta(seconds=60*20):
 				return
 
-		# What can we say this email is for? Only choose actions that we
-		# can link to, so the campaign must be open. Choose the most recent
-		# action, so if the user takes multiple actions we show the one
-		# the user is most familiar with --- probably the action that
-		# led to this call (since this is called synchronously with making
-		# a pledge/writing a letter).
-		#
 		# For when we re-send confirmation emails later, ensure we choose
 		# an action that isn't already confirmed and wasn't created so long
 		# ago that the user will have forgotten what this is about. For
 		# Pledges, also don't try to confirm one that is already executed.
 		from itfsite.models import CampaignStatus
 		from contrib.models import Pledge, PledgeStatus
-		from letters.models import UserLetter
 		def filter_objs(qs):
-			# The same filters apply to Pledges and UserLetters.
 			return qs.filter(
 				user=None,
 				anon_user=self,
@@ -128,17 +119,12 @@ class AnonymousUser(models.Model):
 				.order_by('-created')
 		profile = None
 		pledge = filter_objs(Pledge.objects.filter(status=PledgeStatus.Open)).first()
-		letter = filter_objs(UserLetter.objects).first()
 		if pledge:
 			template = "contrib/mail/confirm_email"
 			profile = pledge.profile
 			brand_id = pledge.via_campaign.brand
-		elif letter:
-			template = "letters/mail/confirm_email"
-			profile = letter.profile
-			brand_id = letter.via_campaign.brand
 		else:
-			raise ValueError("AnonymousUser is not associated with a Pledge or UserLetter on an open campaign.")
+			raise ValueError("AnonymousUser is not associated with a Pledge on an open campaign.")
 
 		# Use a custom mailer function so we can send through our
 		# HTML emailer app.
@@ -149,7 +135,6 @@ class AnonymousUser(models.Model):
 			context.update({
 				"profile": profile, # used in salutation in email_template
 				"pledge": pledge,
-				"letter": letter,
 				"first_try": not self.sentConfirmationEmail,
 			})
 			
@@ -201,11 +186,6 @@ class AnonymousUser(models.Model):
 		from contrib.models import Pledge
 		for pledge in Pledge.objects.filter(anon_user=self):
 			pledge.set_confirmed_user(user, request)
-
-		# Confirm all associated letters.
-		from letters.models import UserLetter
-		for letter in UserLetter.objects.filter(anon_user=self):
-			letter.set_confirmed_user(user, request)
 
 		return user
 
