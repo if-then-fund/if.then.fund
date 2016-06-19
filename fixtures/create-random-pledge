@@ -20,4 +20,3 @@ for i in range(int(sys.argv[2])):
 		incumb_challgr=random.randint(-1, 1),
 		filter_party=random.choice([None, ActorParty.Democratic, ActorParty.Republican]),
 	)
-	p.run_post_confirm_steps()

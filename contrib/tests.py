@@ -79,7 +79,6 @@ class PledgeTestCase(TestCase):
 			incumb_challgr=incumb_challgr,
 			filter_party=filter_party,
 		)
-		p.run_post_confirm_steps()
 		self.assertEqual(p.made_after_trigger_execution, False)
 		self.assertEqual(p.targets_summary, expected_value)
 
@@ -100,25 +99,6 @@ class PledgeTestCase(TestCase):
 
 	def test_pledge_throwemout_partyfilter(self):
 		self._test_pledge(0, -1, ActorParty.Democratic, "the opponents in the next general election of ACTORS who ACT No if the opponent is in the Democratic party")
-
-	def test_recommendation(self):
-		# Set up a recommendation.
-		t1 = self.trigger
-		c, t2 = create_trigger(self.trigger_type, 'test2', 'Another Trigger')
-		TriggerRecommendation.objects.create(trigger1=t1, trigger2=t2)
-
-		# Create a pledge.
-		self.test_pledge_simple()
-
-		# Was a notification created?
-		from itfsite.models import Notification, NotificationType
-		def notifs(): return Notification.objects.filter(user=self.user, notif_type=NotificationType.TriggerRecommendation)
-		self.assertEqual(notifs().count(), 1)
-
-		# Create another notification on the trigger the user already took action on.
-		c, t3 = create_trigger(self.trigger_type, 'test3', 'Yet Another Trigger')
-		TriggerRecommendation.objects.create(trigger1=t1, trigger2=t3).create_initial_notifications()
-		self.assertEqual(notifs().count(), 2)
 
 
 class ExecutionTestCase(TestCase):

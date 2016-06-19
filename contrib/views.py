@@ -388,12 +388,7 @@ def create_pledge(request):
 		p.profile = prev_p.profile
 		p.save()
 
-	if p.user:
-		# The pledge is immediately confirmed for this user. Run all steps
-		# that happen once the pledge is confirmed.
-		p.run_post_confirm_steps()
-		
-	else:
+	if not p.user:
 		# The pledge needs to get confirmation of the user's email address,
 		# which will lead to account creation.
 		p.anon_user.send_email_confirmation()

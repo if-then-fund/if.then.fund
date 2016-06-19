@@ -135,12 +135,7 @@ class TriggerRecommendationAdmin(admin.ModelAdmin):
     raw_id_fields = ['trigger1', 'trigger2']
     readonly_fields = ['notifications_created']
     list_display = ['id', 'trigger1', 'trigger2', 'symmetric', 'notifications_created']
-    actions = ['create_initial_notifications']
     search_fields = ['id', 'trigger1__id', 'trigger2__id']
-    def create_initial_notifications(modeladmin, request, queryset):
-        for tr in queryset.filter(notifications_created=False):
-            tr.create_initial_notifications()
-
 
 class TriggerCustomizationExtraWidget(forms.Widget):
     # We store overridden outcome strings within the JSON extra field.

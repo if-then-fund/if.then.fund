@@ -414,15 +414,10 @@ class ContribTest(SeleniumTest):
 		# Create the triggers and a TriggerRecommendation.
 		t1, c1 = self.create_test_campaign("s1-114", "h")
 		t2, c2 = self.create_test_campaign("s1-114", "s")
-		TriggerRecommendation.objects.create(trigger1=t1, trigger2=t2)\
-			.create_initial_notifications()
 
 		# Test the creation of a Pledge. (Does not execute the pledge.)
 		email, pw = self._test_pledge_simple(c1)
 		self.assertEqual(ContributorInfo.objects.count(), 1)
-
-		# The user should now have a Notification.
-		self.assertEqual(Notification.objects.filter(notif_type=NotificationType.TriggerRecommendation).count(), 1)
 
 		# Now that the user is logged in, try another pledge with fields pre-filled.
 		# Also tests the execution of that Pledge.
