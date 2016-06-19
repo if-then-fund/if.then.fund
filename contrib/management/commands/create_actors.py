@@ -69,6 +69,12 @@ class Command(BaseCommand):
 				'office': "-".join(office),
 			}
 
+			# Kick a former legislator out of office.
+			former_officeholder = Actor.objects.filter(office=fields["office"]).exclude(govtrack_id=p["id"]["govtrack"])
+			if former_officeholder.exists():
+				self.stdout.write('%s now marked as out of office.' % ", ".join([actor.name_long for actor in former_officeholder]))
+				former_officeholder.update(office=None, challenger=None)
+
 			# Create or update.
 			actor, is_new = Actor.objects.get_or_create(
 				govtrack_id = p["id"]["govtrack"],
@@ -136,7 +142,7 @@ class Command(BaseCommand):
 
 		# Mark all other actors, i.e. ones not in legislators-current, as not-current
 		# by un-setting the 'office' and 'challenger' attributes.
-		for actor in Actor.objects.exclude(id__in=seen_actors).exclude(office=None):
+		for actor in Actor.objects.exclude(id__in=seen_actors).exclude(office=None, challenger=None):
 			self.stdout.write('%s now marked as out of office.' % actor.name_long)
 			actor.office = None
 			actor.challenger = None
