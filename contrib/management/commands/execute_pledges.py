@@ -21,18 +21,11 @@ class Command(BaseCommand):
 		self.do_execute_pledges()
 
 	def do_execute_pledges(self):
-		# Open pledges on executed triggers can be executed.
+		# Get the set of pledges to execute. Do some database filtering
+		# but the real test for whether it can be executed is in the method call.
 		pledges_to_execute = Pledge.objects.filter(status=PledgeStatus.Open, trigger__status=TriggerStatus.Executed)\
 			.select_related('trigger')
-
-		# Skip recent pledges with unconfirmed email addresses to give the user
-		# time to confirm their address. For new trigger executions, this may
-		# delay executing all of the triggers. For pledges on already-executed
-		# triggers, give the pledge sort of a time-out before marking it as
-		# executed with a problem (unconfirmed email).
-		pledges_to_execute = [p for p in pledges_to_execute
-			if p.user
-				or p.created < timezone.now() - timedelta(days=1) ]
+		pledges_to_execute = [p for p in pledges_to_execute if p.can_execute()]
 
 		# Loop through them.
 		if sys.stdout.isatty(): pledges_to_execute = tqdm.tqdm(pledges_to_execute)

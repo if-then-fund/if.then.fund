@@ -795,7 +795,38 @@ class Pledge(models.Model):
 
 		return True
 
-	@transaction.atomic
+	def can_execute(self):
+		# Returns whether a Pledge can be executed.
+
+		# Check Pledge and Trigger state.
+		if self.status != PledgeStatus.Open:
+			return False
+		if self.trigger.status != TriggerStatus.Executed:
+			return False
+		if self.algorithm != Pledge.current_algorithm()['id']:
+			return False
+
+		# Don't execute until the user is confirmed.
+		# (We used to execute but mark the PledgeExecutionProblem as EmailUnconfirmed.)
+		if not self.user:
+			return False
+
+		# Check that a pre-execution email has been sent, if necessary.
+		if self.pre_execution_email_sent_at is None:
+			if self.needs_pre_execution_email():
+				# Not all pledges require the pre-exeuction email (see that function
+				# for details, but it's users who confirm their email address too late).
+				return False
+		
+		# The pre-execution email is sent, and now we give the user time to cancel
+		# their pledge prior to executing it.
+		elif (timezone.now() - self.pre_execution_email_sent_at) < Pledge.current_algorithm()['pre_execution_warn_time'][0] \
+				and not settings.DEBUG and Pledge.ENFORCE_EXECUTION_EMAIL_DELAY:
+			return False
+
+		return True
+
+	@transaction.atomic # needed b/c of select_for_update
 	def execute(self):
 		# Lock the Pledge and the Trigger to prevent race conditions.
 		pledge = Pledge.objects.select_for_update().filter(id=self.id).first()
@@ -803,12 +834,8 @@ class Pledge(models.Model):
 		trigger_execution = trigger.execution
 
 		# Validate state.
-		if pledge.status != PledgeStatus.Open:
-			raise ValueError("Pledge cannot be executed in status %s." % pledge.status)
-		if trigger.status != TriggerStatus.Executed:
-			raise ValueError("Pledge cannot be executed when trigger is in status %s." % trigger.status)
-		if pledge.algorithm != Pledge.current_algorithm()['id']:
-			raise ValueError("Pledge has an invalid algorithm.")
+		if not pledge.can_execute():
+			raise ValueError("Pledge cannot be executed.")
 
 		# Default values.
 		problem = PledgeExecutionProblem.NoProblem
@@ -818,56 +845,32 @@ class Pledge(models.Model):
 		total_charge = 0
 		de_don = None
 
-		if pledge.user is None:
-			# We do not make contributions for pledges from unconfirmed email
-			# addresses, since we can't let them know that we're about to
-			# execute the pledge. But we execute it so that our data model
-			# is consistent: All Pledges associated with an executed Trigger
-			# are executed.
-			problem = PledgeExecutionProblem.EmailUnconfirmed
+		# Get the intended recipients of the pledge, as a list of tuples of
+		# (Recipient, Action). The pledge filters may result in there being
+		# no actual recipients.
+		recipients = get_pledge_recipients(trigger, pledge)
+
+		if len(recipients) == 0:
+			# If there are no matching recipients, we don't make a credit card chage.
+			problem = PledgeExecutionProblem.FiltersExcludedAll
 
 		else:
-			# Get the actual recipients of the pledge, as a list of tuples of
-			# (Recipient, Action). The pledge filters may result in there being
-			# no actual recipients.
-			recipients = get_pledge_recipients(trigger, pledge)
+			# Make the donation (an authorization, since Democracy Engine does a capture later).
+			#
+			# (The transaction records created by the donation are not immediately
+			# available, so we know success but can't get further details.)
+			try:
+				recip_contribs, fees, total_charge, de_don = \
+					create_pledge_donation(pledge, recipients)
 
-			if len(recipients) == 0:
-				# If there are no matching recipients, we don't make a credit card chage.
-				problem = PledgeExecutionProblem.FiltersExcludedAll
+			# Catch typical exceptions and log them in the PledgeExecutionObject.
+			except HumanReadableValidationError as e:
+				problem = PledgeExecutionProblem.TransactionFailed
+				exception = str(e)
 
-			else:
-				# Additional checks that don't apply to failed executions for reasons above.
-				if pledge.pre_execution_email_sent_at is None:
-					if pledge.needs_pre_execution_email():
-						# Not all pledges require the pre-exeuction email (see that function
-						# for details, but it's users who confirm their email address too late).
-						raise ValueError("User %s has not yet been sent the pre-execution email." % pledge.user)
-				elif (timezone.now() - pledge.pre_execution_email_sent_at) < Pledge.current_algorithm()['pre_execution_warn_time'][0] \
-						and not settings.DEBUG and Pledge.ENFORCE_EXECUTION_EMAIL_DELAY:
-					raise ValueError("User %s has not yet been given enough time to cancel the pledge." % pledge.user)
-
-				# Make the donation (an authorization, since Democracy Engine does a capture later).
-				#
-				# (The transaction records created by the donation are not immediately
-				# available, so we know success but can't get further details.)
-				try:
-					recip_contribs, fees, total_charge, de_don = \
-						create_pledge_donation(pledge, recipients)
-
-				# Catch typical exceptions and log them in the PledgeExecutionObject.
-				except HumanReadableValidationError as e:
-					problem = PledgeExecutionProblem.TransactionFailed
-					exception = str(e)
-
-		# From here on, if there is a problem then we need to print DE API donation
-		# information before we lose track of it, since nothing will be written to
-		# the database on an error.
+		# From here on, if there is a problem, then the transaction will have gone
+		# through but we won't have a record of it.
 		try:
-			# Sanity check.
-			if len(recip_contribs) == 0 and problem == PledgeExecutionProblem.NoProblem:
-				raise Exception("Pledge executing with no recipients but no problem.")
-
 			# Create PledgeExecution object.
 			pe = PledgeExecution()
 			pe.pledge = pledge
