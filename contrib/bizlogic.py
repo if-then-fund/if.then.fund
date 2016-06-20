@@ -173,7 +173,7 @@ def get_pledge_recipients(trigger, pledge):
 			try:
 				r = Recipient.objects.get(actor=action.actor)
 			except Recipient.DoesNotExist:
-				raise Recipient.DoesNotExist("There is no recipient for " + str(action.actor) + " while executing " + str(trigger) + ".")
+				raise Recipient.DoesNotExist("There is no recipient for " + str(action.actor) + " while executing " + str(pledge.trigger) + ".")
 
 		else:
 			# The incumbent did something other than what the user wanted, so the
@@ -190,10 +190,10 @@ def get_pledge_recipients(trigger, pledge):
 			# Get the Recipient object.
 			try:
 				r = action.actor.challenger
-			except Recipient.DoesNotExist:
+			except Actor.DoesNotExist:
 				# We don't have a challenger Recipient associated. There should always
 				# be a challenger Recipient assigned.
-				raise Recipient.DoesNotExist(str(action.actor) + " has no challenger recipient assigned, while executing " + str(trigger) + ".")
+				raise Actor.DoesNotExist(str(action.actor) + " has no challenger recipient assigned, while executing " + str(pledge.trigger) + ".")
 
 			# Party filtering is based on the party on the recipient object.
 			party = r.party

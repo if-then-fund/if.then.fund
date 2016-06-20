@@ -913,10 +913,9 @@ class Pledge(models.Model):
 					x = rtyaml.dump(de_don)
 				except:
 					x = repr(de_don)
-				raise Exception("Something went wrong saving a pledge execution to the database (%s). The database transaction is about to be rolled back. But the DE transaction was already made.\n\n%s" % (str(e), x))
+				raise Exception("Something went wrong saving a pledge execution to the database (%s) but the DemocracyEngine transaction was already submitted.\n\n%s" % (str(e), x))
 			else:
 				raise
-
 
 
 class CancelledPledge(models.Model):
