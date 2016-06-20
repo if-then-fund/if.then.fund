@@ -239,7 +239,7 @@ h2 {
 	{% if trigger %}
 		<div id="make-a-contribution">
             {% for outcome in trigger_outcome_strings %}
-		    {% if not tcust.has_fixed_outcome or tcust.outcome = forloop.counter0 %}
+		    {% if not tcust.has_fixed_outcome or tcust.outcome == forloop.counter0 %}
                 <button class="btn btn-lg {% if pref_outcome == -1 or pref_outcome == forloop.counter0 %}btn-success{% else %}btn-default{% endif %}" data-index="{{forloop.counter0}}" onclick="window.location = '{{campaign.get_absolute_url|escapejs}}/contribute?outcome={{forloop.counter0}}{% if request.GET.utm_campaign %}&utm_campaign={{request.GET.utm_campaign|urlencode|escapejs}}{% endif %}';">
 	                <span>{{outcome.label}} &raquo;</span>
 	                {% if outcome.tip %}<small>{{outcome.tip}}</small>{% endif %}
