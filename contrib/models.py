@@ -830,8 +830,8 @@ class Pledge(models.Model):
 	def execute(self):
 		# Lock the Pledge and the Trigger to prevent race conditions.
 		pledge = Pledge.objects.select_for_update().filter(id=self.id).first()
-		trigger = Trigger.objects.select_for_update().filter(id=pledge.trigger.id).first()
-		trigger_execution = trigger.execution
+		pledge.trigger = Trigger.objects.select_for_update().filter(id=pledge.trigger.id).first()
+		trigger_execution = pledge.trigger.execution
 
 		# Validate state.
 		if not pledge.can_execute():
@@ -848,7 +848,7 @@ class Pledge(models.Model):
 		# Get the intended recipients of the pledge, as a list of tuples of
 		# (Recipient, Action). The pledge filters may result in there being
 		# no actual recipients.
-		recipients = get_pledge_recipients(trigger, pledge)
+		recipients = get_pledge_recipients(pledge)
 
 		if len(recipients) == 0:
 			# If there are no matching recipients, we don't make a credit card chage.

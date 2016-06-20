@@ -58,7 +58,7 @@ class Command(BaseCommand):
 
 	def send_pledge_email(self, pre_or_post, pledge):
 		# What will happen when the pledge is executed?
-		recipients = get_pledge_recipients(pledge.trigger, pledge)
+		recipients = get_pledge_recipients(pledge)
 		if len(recipients) == 0:
 			# This pledge will result in nothing happening. There is
 			# no need to email.

@@ -133,7 +133,7 @@ def get_pledge_recipient_breakdown(trigger):
 
 	return [ [ { "incumbent": key[0], "party": key[1], "count": count } for key, count in outcome.items()] for outcome in counts]
 
-def get_pledge_recipients(trigger, pledge):
+def get_pledge_recipients(pledge):
 	# For pledge execution, figure out how to split the contribution
 	# across actual recipients.
 
@@ -141,7 +141,7 @@ def get_pledge_recipients(trigger, pledge):
 
 	recipients = []
 
-	for action in trigger.execution.actions.all().select_related('actor'):
+	for action in pledge.trigger.execution.actions.all().prefetch_related('actor', 'actor__challenger'):
 		# Skip actions with null outcomes, meaning the Actor didn't really
 		# take an action and so no contribution for or against is made.
 
