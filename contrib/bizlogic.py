@@ -312,8 +312,8 @@ def create_pledge_donation(pledge, recipients):
 			"trigger": pledge.trigger.id,
 			"campaign": pledge.via_campaign.id,
 			"pledge": pledge.id,
-			"user": pledge.user.id,
-			"email": pledge.user.email,
+			"user": pledge.user.id if pledge.user else None,
+			"email": pledge.get_email(),
 			"pledge_created": pledge.created,
 			})
 		})

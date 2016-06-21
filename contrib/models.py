@@ -806,11 +806,6 @@ class Pledge(models.Model):
 		if self.algorithm != Pledge.current_algorithm()['id']:
 			return False
 
-		# Don't execute until the user is confirmed.
-		# (We used to execute but mark the PledgeExecutionProblem as EmailUnconfirmed.)
-		if not self.user:
-			return False
-
 		# Check that a pre-execution email has been sent, if necessary.
 		if self.pre_execution_email_sent_at is None:
 			if self.needs_pre_execution_email():
