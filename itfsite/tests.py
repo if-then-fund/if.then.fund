@@ -150,8 +150,9 @@ class ContribTest(SeleniumTest):
 
 	def _test_pledge_simple(self, campaign,
 			verb="vote",
-			pledge_summary="You have scheduled a campaign contribution of $12.00 for this vote. It will be split among up to COUNT representatives, each getting a part of your contribution if they VERB in favor of S. 1, but if they VERB against S. 1 their part of your contribution will go to their next general election opponent.",
+			pledge_summary="You MAINVERB a campaign contribution of AMOUNT for this vote. It will be split among up to COUNT representatives, each getting a part of your contribution if they VERB in favor of S. 1, but if they VERB against S. 1 their part of your contribution will go to their next general election opponent.",
 			pledge_summary_count=435,
+			pledge_summary_amount="$12.00",
 			with_utm_campaign=False,
 			break_after_email=False, return_from_incomplete_pledge=None,
 			break_before_confirmation=False,
@@ -235,9 +236,9 @@ class ContribTest(SeleniumTest):
 		self.browser.execute_script("$('#billingCCCVC').val('123')")
 		time.sleep(3)
 		self.browser.find_element_by_css_selector("#billing-next").click()
-		time.sleep(.5)
 
-		# The IncompletePledge should now be gone.
+		# The IncompletePledge should be gone once the pledge is executed.
+		time.sleep(2)
 		self.assertFalse(IncompletePledge.objects.filter(email=email, trigger=trigger).exists())
 
 		# Get the pledge and check its fields.
@@ -255,10 +256,18 @@ class ContribTest(SeleniumTest):
 		pw = self.follow_email_confirmation_link("has been confirmed")
 
 		# We're back at the Trigger page, and after the user data is loaded
-		# the user sees an explanation of the pledge.
+		# the user sees an explanation of the pledge. If the trigger was
+		# already executed, then the user's pledge was executed immediately.
+		from contrib.models import TriggerStatus
 		self.assertEqual(
 			self.browser.find_element_by_css_selector("#pledge-explanation").text,
-			pledge_summary.replace("VERB", verb).replace("COUNT", str(pledge_summary_count)))
+			pledge_summary\
+				.replace("MAINVERB", "have scheduled" if (trigger.status != TriggerStatus.Executed) else "made")
+				.replace("AMOUNT", pledge_summary_amount)\
+				.replace("will be split", "will be split" if (trigger.status != TriggerStatus.Executed) else "was split")
+				.replace("VERB", verb)\
+				.replace("up to COUNT", "up to COUNT" if (trigger.status != TriggerStatus.Executed) else "COUNT")
+				.replace("COUNT", str(pledge_summary_count)))
 
 		return email, pw
 
@@ -507,23 +516,16 @@ class ContribTest(SeleniumTest):
 		self.test_incomplete_pledge(with_utm_campaign=True)
 
 	def test_post_execution_pledge(self):
-		# Create the trigger, add a plege we don't care about, and execute it.
-		# We include a pledge here because a trigger with no pledges used to
-		# display differently.
+		# Create the trigger and execute it.
 		t, campaign = self.create_test_campaign("s1-114", "h")
-		self._test_pledge_simple(campaign)
-		self._test_trigger_execution(t, 1, Decimal('12'), "https://www.govtrack.us/congress/votes/114-2015/h14")
+		self._test_trigger_execution(t, 0, Decimal(0), "https://www.govtrack.us/congress/votes/114-2015/h14")
 
-		# Test the creation of a Pledge.
+		# Test the creation of a Pledge. It will be executed immediately.
 		self.browser.get(self.build_test_url("/accounts/logout"))
-		email, pw = self._test_pledge_simple(campaign, verb="voted", pledge_summary_count=424)
-
-		# Execute it.
-		from contrib.management.commands.execute_pledges import Command as execute_pledges
-		execute_pledges().do_execute_pledges()
-
-		# Test that it appears executed on the site.
-		self._test_pledge_simple_execution(campaign)
+		email, pw = self._test_pledge_simple(campaign,
+			verb="voted",
+			pledge_summary_count=424,
+			pledge_summary_amount="$9.44")
 
 	def test_triggercustomization_pledge(self):
 		# Create a customized trigger.

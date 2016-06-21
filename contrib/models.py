@@ -707,6 +707,10 @@ class Pledge(models.Model):
 			return "Failed"
 
 	@property
+	def is_executed(self):
+		return self.status == PledgeStatus.Executed
+
+	@property
 	def targets_summary(self):
 		# This is mirrored in pledge_form.html.
 

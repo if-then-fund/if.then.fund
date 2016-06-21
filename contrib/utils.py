@@ -64,6 +64,7 @@ def json_response(f):
 
 		# Catch simple errors.
 		except ValueError as e:
+			print(e)
 			return HttpResponse(json.dumps({ "status": "fail", "msg": str(e) }),
 				content_type="application/json")
 

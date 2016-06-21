@@ -135,7 +135,10 @@ def get_pledge_recipient_breakdown(trigger):
 
 def get_pledge_recipients(pledge):
 	# For pledge execution, figure out how to split the contribution
-	# across actual recipients.
+	# across actual recipients. We also use this during Pledge creation
+	# validation, when the trigger is already executed, so we can
+	# stop the user from making a Pledge that will have no recipients.
+	# In that case, pledge may be an unsaved Pledge instance.
 
 	from contrib.models import ActorParty, Recipient
 

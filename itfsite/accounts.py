@@ -118,7 +118,7 @@ class AnonymousUser(models.Model):
 				via_campaign__status=CampaignStatus.Open)\
 				.order_by('-created')
 		profile = None
-		pledge = filter_objs(Pledge.objects.filter(status=PledgeStatus.Open)).first()
+		pledge = filter_objs(Pledge.objects).first()
 		if pledge:
 			template = "contrib/mail/confirm_email"
 			profile = pledge.profile

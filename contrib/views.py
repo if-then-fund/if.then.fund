@@ -151,8 +151,17 @@ def validate_email(request):
 @json_response
 def submit(request):
 	try:
-		# Create an un-saved Pledge instance.
+		# Create an un-saved Pledge instance. If the user is anonymous,
+		# it may create an AnonymousUser instance and associate with the
+		# user's session.
 		p = create_pledge_object(request)
+
+		# If the Trigger is executed, validate that there are going
+		# to be any recipients.
+		if p.trigger.status == TriggerStatus.Executed:
+			from contrib.bizlogic import get_pledge_recipients
+			if len(get_pledge_recipients(p)) == 0:
+				return { "status": "error", "message": "The filters you chose have eliminated all possible recipients!" }
 
 		# Get contributor info, save, and run a credit card
 		# authorization.
@@ -164,10 +173,20 @@ def submit(request):
 	except AlreadyPledgedError as e:
 		return { "status": "already-pledged" }
 
+	# If the Trigger has been executed and possibly other conditions are met, then we
+	# can execute the Pledge immediately.
+	if p.can_execute():
+		# refresh the object - it's confused now because we pulled it
+		# out of a transaction? lots of weird errors with Sqlite
+		p = Pledge.objects.get(id=p.id)
+		p.execute()
+
 	# If the user is anonymous...
 	if not p.user:
 		# The pledge needs to get confirmation of the user's email address,
-		# which will lead to account creation.
+		# which will lead to account creation. We must do this after pledge
+		# execution so that the email that is sent knows the status of the
+		# pledge.
 		p.anon_user.send_email_confirmation()
 
 		# Wipe the IncompletePledge because the user finished the form.
