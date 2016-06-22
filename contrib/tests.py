@@ -396,17 +396,19 @@ class ExecutionTestCase(TestCase):
 		# Test more general properties.
 		self.assertEqual(p.execution.problem, PledgeExecutionProblem.NoProblem)
 
-		# Test that every Action lead to a Contribution.
+		# Test that every Action lead to exactly one Contribution, unless the
+		# Action has a null outcome in which case it should have no corresponding Contribution.
 		expected_contrib_count = 0
 		expected_charge = 0
 		expected_aggregates = dict()
 		for action in t.execution.actions.all():
-			contrib = p.execution.contributions.filter(action=action).first()
+			contrib = p.execution.contributions.filter(action=action)
 			if action.outcome is None:
 				# We expect no contribution in this case.
-				self.assertIsNone(contrib)
+				self.assertIsNone(contrib.first())
 			else:
-				# What Contribution should we expect?
+				# What Contribution should we expect? Skip over
+				# Actions that are filtered such that no one got a contribution.
 				if action.outcome == p.desired_outcome:
 					if p.incumb_challgr == -1: continue
 					recipient = Recipient.objects.get(actor=action.actor)
@@ -415,7 +417,9 @@ class ExecutionTestCase(TestCase):
 					if p.incumb_challgr == +1: continue
 					recipient = action.actor.challenger
 					if p.filter_party and recipient.party != filter_party: continue
-				self.assertIsNotNone(contrib)
+
+				# Expect a single contribution.
+				contrib = contrib.get() # raises if not exists and unique
 				self.assertEqual(contrib.recipient, recipient)
 				self.assertEqual(contrib.amount, expected_contrib_amount)
 				expected_contrib_count += 1
@@ -446,14 +450,18 @@ class ExecutionTestCase(TestCase):
 		self.assertEqual(p.trigger.execution.num_contributions, expected_contrib_count)
 		self.assertEqual(p.trigger.execution.total_contributions, p.execution.charged-p.execution.fees)
 
-		# Test contribution aggregates.
+		# Test contribution aggregates match totals.
+		ca_count, ca_sum = Contribution.aggregate(trigger=p.trigger)
+		self.assertEqual(ca_count, p.trigger.execution.num_contributions)
+		self.assertEqual(ca_sum,   p.trigger.execution.total_contributions)
 
+		# Test contribution aggregate slices that we pre-computed.
 		for (fields, (count, amount)) in expected_aggregates.items():
 			count_, amount_ = Contribution.aggregate(**dict(fields))
 			self.assertEqual(count_, count)
 			self.assertEqual(amount_, amount)
-		self.assertEqual(Contribution.aggregate(trigger=p.trigger)[1], p.trigger.execution.total_contributions)
-		self.assertEqual(Contribution.aggregate(trigger=p.trigger)[0], p.trigger.execution.num_contributions)
+
+		# Test contribution aggregate slices that yield value-by-value aggregates (Django 'annotation's).
 		def agg(a, incumbent):
 			return Contribution.aggregate(trigger=p.trigger, action=a, recipient_type=ContributionRecipientType.Incumbent if incumbent else ContributionRecipientType.GeneralChallenger)
 		totals_by_action = { }
@@ -464,9 +472,9 @@ class ExecutionTestCase(TestCase):
 			self.assertEqual(aa[1][1], a.total_contributions_against)
 			totals_by_action[a] = aa
 			totals_by_actor[a.actor] = aa
-		for a in Contribution.aggregate("action", trigger=p.trigger):
-			self.assertEqual(a[1][1], totals_by_action[a[0][0]][0][1] + totals_by_action[a[0][0]][1][1])
-		for a in Contribution.aggregate("action", "recipient_type", trigger=p.trigger):
-			self.assertEqual(a[1][1], totals_by_action[a[0][0]][0 if a[0][1] == ContributionRecipientType.Incumbent else 1][1])
-		for a in Contribution.aggregate("actor", "recipient_type", trigger=p.trigger):
-			self.assertEqual(a[1][1], totals_by_actor[a[0][0]][0 if a[0][1] == ContributionRecipientType.Incumbent else 1][1])
+		for ((action,), (count, amount)) in Contribution.aggregate("action", trigger=p.trigger):
+			self.assertEqual(amount, totals_by_action[action][0][1] + totals_by_action[action][1][1])
+		for ((action, recipient_type), (count, amount)) in Contribution.aggregate("action", "recipient_type", trigger=p.trigger):
+			self.assertEqual(amount, totals_by_action[action][0 if recipient_type == ContributionRecipientType.Incumbent else 1][1])
+		for ((actor, recipient_type), (count, amount)) in Contribution.aggregate("actor", "recipient_type", trigger=p.trigger):
+			self.assertEqual(amount, totals_by_actor[actor][0 if recipient_type == ContributionRecipientType.Incumbent else 1][1])
