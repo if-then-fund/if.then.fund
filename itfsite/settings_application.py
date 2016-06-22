@@ -9,6 +9,15 @@ def get_brand_domains(brandid):
 		return [d["site-domain"]] + d.get("alt-domains", [])
 ALLOWED_HOSTS = sum([get_brand_domains(brandid) for brandid in os.listdir("branding")], [])
 
+# Remove 'allauth' and put back our own user model and login pages.
+for app in ('allauth', 'allauth.account', 'allauth.socialaccount'):
+	INSTALLED_APPS.remove(app)
+AUTHENTICATION_BACKENDS.remove('allauth.account.auth_backends.AuthenticationBackend')
+AUTH_USER_MODEL = 'itfsite.User'
+LOGIN_URL = '/accounts/login'
+LOGIN_REDIRECT_URL = '/home'
+
+# Add other apps.
 INSTALLED_APPS += [
 	'itfsite',
 	'contrib',
