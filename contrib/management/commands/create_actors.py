@@ -108,11 +108,16 @@ class Command(BaseCommand):
 				recipient, is_new = Recipient.objects.get_or_create(
 					actor=actor,
 					office_sought=None,
-					party=None,
-					defaults={ "de_id": de_id }
-					)
+					defaults={
+						"de_id": de_id,
+						"party": actor.party,
+					})
 				if is_new:
 					self.stdout.write('Added recipient for: %s (%s)' % (actor.name_long, de_recips[de_id]['name']))
+				elif recipient.party != actor.party:
+					self.stdout.write('Updating party of recipient %s to %s.' % (recipient, actor.party))
+					recipient.party = actor.party
+					recipient.save()
 				self.update_recipient_active(recipient, de_recips)
 
 			# Create a challenger for the Actor if one is not yet set

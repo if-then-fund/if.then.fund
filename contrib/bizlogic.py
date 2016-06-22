@@ -169,9 +169,6 @@ def get_pledge_recipients(pledge):
 			if pledge.incumb_challgr == -1:
 				continue
 
-			# Party filtering is based on the party of the incumbent at the time of the action.
-			party = action.party
-
 			# Get the Recipient object.
 			try:
 				r = Recipient.objects.get(actor=action.actor)
@@ -198,9 +195,6 @@ def get_pledge_recipients(pledge):
 				# be a challenger Recipient assigned.
 				raise Actor.DoesNotExist(str(action.actor) + " has no challenger recipient assigned, while executing " + str(pledge.trigger) + ".")
 
-			# Party filtering is based on the party on the recipient object.
-			party = r.party
-
 		# The Recipient may not be currently taking contributions.
 		# This condition should be filtered out earlier in the creation
 		# of Action objects --- it should have a null outcome with
@@ -211,7 +205,7 @@ def get_pledge_recipients(pledge):
 
 		# Filter by party.
 
-		if pledge.filter_party is not None and party != pledge.filter_party:
+		if pledge.filter_party is not None and r.party != pledge.filter_party:
 			continue
 
 		# If we got here, then r is an acceptable recipient.

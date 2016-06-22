@@ -182,6 +182,7 @@ class ExecutionTestCase(TestCase):
 				Recipient.objects.create(
 					de_id="p%d" % actor_counter,
 					actor=actor,
+					party=party,
 					)
 
 		# Create one more inactive Actor.
