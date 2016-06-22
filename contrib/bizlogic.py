@@ -140,7 +140,7 @@ def get_pledge_recipients(pledge):
 	# stop the user from making a Pledge that will have no recipients.
 	# In that case, pledge may be an unsaved Pledge instance.
 
-	from contrib.models import ActorParty, Recipient
+	from contrib.models import ActorParty, Recipient, ContributionRecipientType
 
 	recipients = []
 
@@ -160,14 +160,13 @@ def get_pledge_recipients(pledge):
 		if action.actor.inactive_reason:
 			continue
 
-		# Get a recipient object.
+		# Get recipient_type and the Recipient object.
 
 		if action.outcome == pledge.desired_outcome:
 			# The incumbent did what the user wanted, so the incumbent is the recipient.
 
-			# Filter if the pledge is for challengers only.
-			if pledge.incumb_challgr == -1:
-				continue
+			# Get what sort of recipient this is.
+			recipient_type = ContributionRecipientType.Incumbent
 
 			# Get the Recipient object.
 			try:
@@ -183,9 +182,8 @@ def get_pledge_recipients(pledge):
 			# That might be different from the challenger at the time the Trigger was
 			# executed.
 
-			# Filter if the pledge is for incumbents only.
-			if pledge.incumb_challgr == 1:
-				continue
+			# Get what sort of recipient this is.
+			recipient_type = ContributionRecipientType.GeneralChallenger
 
 			# Get the Recipient object.
 			try:
@@ -203,13 +201,22 @@ def get_pledge_recipients(pledge):
 		if not r.active:
 			raise ValueError("Recipient is inactive: %s => %s" % (action, r))
 
+		# Filter if the pledge is for incumbents or for challengers only.
+
+		if recipient_type == ContributionRecipientType.Incumbent \
+			 and pledge.incumb_challgr == -1:
+			continue
+		if recipient_type == ContributionRecipientType.GeneralChallenger \
+			 and pledge.incumb_challgr == 1:
+			continue
+
 		# Filter by party.
 
 		if pledge.filter_party is not None and r.party != pledge.filter_party:
 			continue
 
 		# If we got here, then r is an acceptable recipient.
-		recipients.append( (r, action) )
+		recipients.append( (action, recipient_type, r) )
 
 	return recipients
 
@@ -243,7 +250,7 @@ def compute_charge(pledge, recipients):
 		raise HumanReadableValidationError("The amount is not enough to divide evenly across %d recipients." % len(recipients))
 
 	# Make a list of line items.
-	recip_contribs = [(recipient, action, recip_contrib) for (recipient, action) in recipients]
+	recip_contribs = [(action, recipient_type, recipient, recip_contrib) for (action, recipient_type, recipient) in recipients]
 
 	# Multiply out to create the total before fees.
 	contrib_total = len(recipients) * recip_contrib
@@ -285,7 +292,7 @@ def create_pledge_donation(pledge, recipients):
 		})
 
 	# Create the line items for campaign recipients.
-	for recipient, action, amount in recip_contribs:
+	for action, recipient_type, recipient, amount in recip_contribs:
 		line_items.append({
 			"recipient_id": recipient.de_id,
 			"amount": DemocracyEngineAPI.format_decimal(amount),

@@ -55,9 +55,9 @@ h3 + table { margin-top: 1em; }
 		<table class="table table-bordered">
 		<thead><tr><th>Recipient Type</th> <th>Total</th></thead>
 		<tbody>
-		{% for rec in by_incumb_chlngr %}
+		{% for rec in by_recipient_type %}
 			<tr>
-				<td>{% if rec.incumbent %}Incumbent{% else %}Opponent{% endif %}</td>
+				<td>{{rec.recipient_type}}</td>
 				<td>{{rec.total|currency}}</td>
 			</tr>
 		{% endfor %}
@@ -95,8 +95,8 @@ h3 + table { margin-top: 1em; }
 	{% for rec in actors %}
 		<tr>
 			<td>{{rec.actor.name_long}}</td>
-			<td class="{% if rec.True %}text-success{% else %}text-muted{% endif %}">{{rec.True|currency}}</td>
-			<td class="{% if rec.False %}text-danger{% else %}text-muted{% endif %}">{{rec.False|currency}}</td>
+			<td class="{% if rec.Incumbent %}text-success{% else %}text-muted{% endif %}">{{rec.Incumbent|currency}}</td>
+			<td class="{% if rec.GeneralChallenger %}text-danger{% else %}text-muted{% endif %}">{{rec.GeneralChallenger|currency}}</td>
 		</tr>
 	{% endfor %}
 	</tbody>

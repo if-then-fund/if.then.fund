@@ -458,8 +458,8 @@ instructions. More on <a href="/about/how-it-works">how it works</a>.</p>
             	<tr>
             		<td>{{actor.actor}}</td>
             		<td>{{actor.action.outcome_label}}</td>
-            		<td class="{% if actor.True > 0 %}text-success{% else %}text-muted{% endif %}">{{actor.True|currency}}</td>
-            		<td class="{% if actor.False > 0 %}text-danger{% else %}text-muted{% endif %}">{{actor.False|currency}}</td>
+            		<td class="{% if actor.Incumbent > 0 %}text-success{% else %}text-muted{% endif %}">{{actor.Incumbent|currency}}</td>
+            		<td class="{% if actor.GeneralChallenger > 0 %}text-danger{% else %}text-muted{% endif %}">{{actor.GeneralChallenger|currency}}</td>
             	</tr>
             {% endfor %}
             </table>

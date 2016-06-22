@@ -475,7 +475,7 @@ def render_pledge_template(request, pledge, campaign, show_long_title=False, res
 		"pledge": pledge,
 		"campaign": campaign,
 		"execution": PledgeExecution.objects.filter(pledge=pledge).first(),
-		"contribs": sorted(Contribution.objects.filter(pledge_execution__pledge=pledge).select_related("action"), key=lambda c : (c.recipient.is_challenger, c.action.name_sort)),
+		"contribs": sorted(Contribution.objects.filter(pledge_execution__pledge=pledge).select_related("action", "recipient"), key=lambda c : (c.recipient_type.value, c.action.name_sort)),
 		"share_url": request.build_absolute_uri(pledge.via_campaign.get_short_url()),
 	}
 
@@ -555,22 +555,22 @@ def report_fetch_data(trigger, via_campaign):
 	# Aggregates by actor.
 	from collections import defaultdict
 	ret['actors'] = defaultdict(lambda : defaultdict( lambda : decimal.Decimal(0) ))
-	for ((action_or_actor, incumbent), (count, total)) in Contribution.aggregate('action' if trigger else "actor", 'incumbent', **ca_slice_fields):
+	for ((action_or_actor, recipient_type), (count, total)) in Contribution.aggregate('action' if trigger else "actor", 'recipient_type', **ca_slice_fields):
 		actor = action_or_actor.actor if trigger else action_or_actor
 		ret['actors'][actor.id]['actor'] = actor
-		ret['actors'][actor.id][str(incumbent)] += total
+		ret['actors'][actor.id][recipient_type.name] += total
 		if trigger: ret['actors'][actor.id]['action'] = action_or_actor
-	ret['actors'] = sorted(ret['actors'].values(), key = lambda x : (-(x['True'] - x['False']), -x['True'], x['actor'].name_sort))
+	ret['actors'] = sorted(ret['actors'].values(), key = lambda x : (-(x['Incumbent'] - x['GeneralChallenger']), -x['Incumbent'], x['actor'].name_sort))
 
 	# Aggregates by incumbent/chalenger.
-	ret['by_incumb_chlngr'] = [
+	ret['by_recipient_type'] = [
 		{
-			"incumbent": incumbent,
+			"recipient_type": recipient_type.name,
 			"count": count,
 			"total": total,
 		}
-		for ((incumbent,), (count, total))
-		in Contribution.aggregate('incumbent', **ca_slice_fields) ]
+		for ((recipient_type,), (count, total))
+		in Contribution.aggregate('recipient_type', **ca_slice_fields) ]
 
 	# Aggregates by party. Have to do this in two steps - first
 	# incumbents, then challengers, since the party is stored in

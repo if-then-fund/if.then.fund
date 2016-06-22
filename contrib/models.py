@@ -884,10 +884,11 @@ class Pledge(models.Model):
 			pe.save()
 
 			# Create Contribution objects.
-			for recipient, action, amount in recip_contribs:
+			for action, recipient_type, recipient, amount in recip_contribs:
 				c = Contribution()
 				c.pledge_execution = pe
 				c.action = action
+				c.recipient_type = recipient_type
 				c.recipient = recipient
 				c.amount = amount
 				c.de_id = recipient.de_id
@@ -1249,11 +1250,18 @@ class Recipient(models.Model):
 	def is_challenger(self):
 		return self.actor is None
 
+@django_enum
+class ContributionRecipientType(enum.Enum):
+	Null = 0
+	Incumbent = 1 # the Actor that took the Action, i.e. the incumbent
+	GeneralChallenger = 2 # the Actor's general election challenger
+
 class Contribution(models.Model):
 	"""A fully executed campaign contribution."""
 
 	pledge_execution = models.ForeignKey(PledgeExecution, related_name="contributions", on_delete=models.PROTECT, help_text="The PledgeExecution this execution information is about.")
 	action = models.ForeignKey(Action, on_delete=models.PROTECT, help_text="The Action this contribution was made in reaction to.")
+	recipient_type = EnumField(ContributionRecipientType, default=ContributionRecipientType.Null, help_text="The logical specification of the recipient, i.e. the Actor (incumbent) or a general election challenger of the Actor.")
 	recipient = models.ForeignKey(Recipient, related_name="contributions", on_delete=models.PROTECT, help_text="The Recipient this contribution was sent to.")
 	amount = models.DecimalField(max_digits=6, decimal_places=2, help_text="The amount of the contribution, in dollars.")
 	refunded_time = models.DateTimeField(blank=True, null=True, help_text="If the contribution was refunded to the user, the time that happened.")
@@ -1271,7 +1279,7 @@ class Contribution(models.Model):
 		return "$%0.2f to %s for %s" % (self.amount, self.recipient, self.pledge_execution)
 
 	def name_long(self):
-		if not self.recipient.is_challenger:
+		if self.recipient_type == ContributionRecipientType.Incumbent:
 			# is an incumbent
 			return self.action.name_long
 		else:
@@ -1295,7 +1303,7 @@ class Contribution(models.Model):
 	def update_aggregates(self, factor=1, updater=None):
 		# Increment the totals on the Action instance. This excludes fees because
 		# this is based on transaction line items.
-		if not self.recipient.is_challenger:
+		if self.recipient_type == ContributionRecipientType.Incumbent:
 			# Contribution was to the Actor.
 			field = 'total_contributions_for'
 		else:
@@ -1318,7 +1326,10 @@ class Contribution(models.Model):
 			"trigger":         ("pledge_execution__trigger_execution",       lambda v : v.execution, lambda v : v.trigger),
 			"desired_outcome": ("pledge_execution__pledge__desired_outcome", lambda v : v,           lambda v : v),
 			"actor":           ("action__actor",                             lambda v : v,           lambda v : v),
-			"incumbent":       ("recipient__actor__isnull",                  lambda v : not v,       lambda v : v == 0),
+
+			# recipient_type needs a mapping from integers (returned by .values())
+			# back to enum members.
+			"recipient_type":  ("recipient_type",                            lambda v : v,           lambda v : ContributionRecipientType(v)),
 		}
 		def getalias(a): return aliases.get(a, (a, lambda v : v, lambda v : v))
 		original_across = across
