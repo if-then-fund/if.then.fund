@@ -1,6 +1,7 @@
 from decimal import Decimal
 from itertools import product
 
+from django.db.models import Sum
 from django.test import TestCase
 
 from itfsite.models import User, Campaign
@@ -203,16 +204,21 @@ class ExecutionTestCase(TestCase):
 		self.assertEqual(t.pledge_count, 0)
 		self.assertEqual(t.total_pledged, 0)
 
-	def test_trigger_execution(self):
-		"""Tests the execution of the trigger"""
-
-		# Build actor outcomes.
+	def build_actor_outcomes(self):
 		actor_outcomes = []
 		for i, actor in enumerate(Actor.objects.all()):
 			actor_outcomes.append({
 				"actor": actor,
 				"outcome": (i % 3) if (i % 3 < 2) else "Reason for not having an outcome.",
 			})
+		return actor_outcomes
+
+
+	def test_trigger_execution(self):
+		"""Tests the execution of the trigger"""
+
+		# Build actor outcomes.
+		actor_outcomes = self.build_actor_outcomes()
 		actor_outcomes_map = { item["actor"]: item["outcome"] for item in actor_outcomes }
 
 		# Execute.
@@ -308,6 +314,7 @@ class ExecutionTestCase(TestCase):
 			expected_contrib_amount=Decimal('0.33'), made_after_trigger_execution=True)
 
 	def _pledge_execution(self, desired_outcome, amount, incumb_challgr, filter_party, expected_contrib_amount,
+		multitrigger_desired_outcomes=None,
 		expected_problem=None, expected_problem_string=None, made_after_trigger_execution=False):
 
 		# Create a user.
@@ -329,7 +336,7 @@ class ExecutionTestCase(TestCase):
 				'contribEmployer': 'EMPLOYER',
 			},
 			'billing': {
-				'cc_num': cc_num,
+				'cc_num': cc_num, # (is cleared in set_from, only used to compute hash)
 				'cc_exp_month': '01',
 				'cc_exp_year': '2020',
 			},
@@ -365,9 +372,27 @@ class ExecutionTestCase(TestCase):
 			self.assertEqual(t.pledge_count, 0)
 			self.assertEqual(t.total_pledged, 0)
 
-		# Execute the trigger.
-		self.test_trigger_execution()
+		if not multitrigger_desired_outcomes:
+			# Execute the trigger.
+			self.test_trigger_execution()
+			all_actions = lambda : t.execution.actions.all()
+			desired_outcome = { t.id: p.desired_outcome }
+		else:
+			# The main trigger is executed without any Actions.
+			t.execute_empty()
 
+			# The sub-trigger desired outcomes are recorded on the pledge.
+			p.extra = {
+				"triggers": multitrigger_desired_outcomes
+			}
+
+			# The actions come from the sub-triggers.
+			# Make multitrigger_desired_outcomes a dict from Trigger id to desired outcome.
+			desired_outcome = dict(multitrigger_desired_outcomes)
+			all_actions = lambda : sum([list(Trigger.objects.get(id=t).execution.actions.all()) for t in desired_outcome.keys()], [])
+
+		# Pretend we sent the pre-execution email (which isn't necessary anyway
+		# if we are creating the pledge after the trigger was executed).
 		from django.utils.timezone import now
 		p.pre_execution_email_sent_at = now()
 		p.save()
@@ -398,10 +423,11 @@ class ExecutionTestCase(TestCase):
 
 		# Test that every Action lead to exactly one Contribution, unless the
 		# Action has a null outcome in which case it should have no corresponding Contribution.
+		all_actions = all_actions() # run db query only after the pledge is executed so that the Action objects have contribution totals
 		expected_contrib_count = 0
 		expected_charge = 0
 		expected_aggregates = dict()
-		for action in t.execution.actions.all():
+		for action in all_actions:
 			contrib = p.execution.contributions.filter(action=action)
 			if action.outcome is None:
 				# We expect no contribution in this case.
@@ -409,7 +435,7 @@ class ExecutionTestCase(TestCase):
 			else:
 				# What Contribution should we expect? Skip over
 				# Actions that are filtered such that no one got a contribution.
-				if action.outcome == p.desired_outcome:
+				if action.outcome == desired_outcome[action.execution.trigger.id]:
 					if p.incumb_challgr == -1: continue
 					recipient = Recipient.objects.get(actor=action.actor)
 					if p.filter_party and action.party != filter_party: continue
@@ -428,10 +454,12 @@ class ExecutionTestCase(TestCase):
 				# What Contribution.aggregates should we check later?
 				def mkfields(**fields):
 					return tuple(sorted(fields.items()))
-				for fields in [
+				fieldsets = [
 						mkfields(trigger=p.trigger),
-						mkfields(trigger=p.trigger, desired_outcome=desired_outcome),
-						mkfields(trigger=p.trigger, action__actor=action.actor, recipient_type=ContributionRecipientType.Incumbent if (action.outcome == p.desired_outcome) else ContributionRecipientType.GeneralChallenger)]:
+						mkfields(trigger=p.trigger, desired_outcome=p.desired_outcome), # when there are subtriggers, we still use p.desired_outcome to match how Contribution.aggregate works
+						mkfields(trigger=p.trigger, action__actor=action.actor, recipient_type=ContributionRecipientType.Incumbent if (action.outcome == desired_outcome[action.execution.trigger_id]) else ContributionRecipientType.GeneralChallenger),
+					]
+				for fields in fieldsets:
 					c = expected_aggregates.setdefault(fields, [0,0])
 					c[0] += 1
 					c[1] += expected_contrib_amount
@@ -442,13 +470,20 @@ class ExecutionTestCase(TestCase):
 		self.assertEqual(p.execution.charged, expected_charge + expected_fees)
 		self.assertEqual(p.execution.contributions.count(), expected_contrib_count)
 		self.assertTrue(p.execution.charged < p.amount)
-		self.assertTrue(p.execution.charged > p.amount - expected_contrib_amount)
+		self.assertTrue(p.execution.charged > p.amount - expected_fees - expected_contrib_amount)
 
 		# Test trigger.
 		self.assertEqual(p.trigger.execution.pledge_count, 1)
 		self.assertEqual(p.trigger.execution.pledge_count_with_contribs, 1)
 		self.assertEqual(p.trigger.execution.num_contributions, expected_contrib_count)
 		self.assertEqual(p.trigger.execution.total_contributions, p.execution.charged-p.execution.fees)
+		if multitrigger_desired_outcomes:
+			# The contributions are recorded in two places. Once as above, and also
+			# in the particular TriggerExecutions.
+			tes = TriggerExecution.objects.filter(trigger_id__in=desired_outcome)
+			self.assertEqual(tes.count(), len(desired_outcome))
+			self.assertEqual(tes.aggregate(agg=Sum('num_contributions'))['agg'], expected_contrib_count)
+			self.assertEqual(tes.aggregate(agg=Sum('total_contributions'))['agg'], p.execution.charged-p.execution.fees)
 
 		# Test contribution aggregates match totals.
 		ca_count, ca_sum = Contribution.aggregate(trigger=p.trigger)
@@ -466,15 +501,65 @@ class ExecutionTestCase(TestCase):
 			return Contribution.aggregate(trigger=p.trigger, action=a, recipient_type=ContributionRecipientType.Incumbent if incumbent else ContributionRecipientType.GeneralChallenger)
 		totals_by_action = { }
 		totals_by_actor = { }
-		for a in p.trigger.execution.actions.all():
+		for a in all_actions:
 			aa = (agg(a, True), agg(a, False))
 			self.assertEqual(aa[0][1], a.total_contributions_for)
 			self.assertEqual(aa[1][1], a.total_contributions_against)
 			totals_by_action[a] = aa
-			totals_by_actor[a.actor] = aa
+			if a.actor not in totals_by_actor:
+				totals_by_actor[a.actor] = aa
+			else:
+				# With multi-trigger Pledges, we may see actors more than once.
+				# Do a pair-of-pairs-wise sum over the count and amounts for
+				# the incumbent-challenger totals.
+				totals_by_actor[a.actor] = ((totals_by_actor[a.actor][0][0] + aa[0][0], totals_by_actor[a.actor][0][1] + aa[0][1]),
+				                           (totals_by_actor[a.actor][1][0] + aa[1][0], totals_by_actor[a.actor][1][1] + aa[1][1]))
 		for ((action,), (count, amount)) in Contribution.aggregate("action", trigger=p.trigger):
 			self.assertEqual(amount, totals_by_action[action][0][1] + totals_by_action[action][1][1])
 		for ((action, recipient_type), (count, amount)) in Contribution.aggregate("action", "recipient_type", trigger=p.trigger):
 			self.assertEqual(amount, totals_by_action[action][0 if recipient_type == ContributionRecipientType.Incumbent else 1][1])
 		for ((actor, recipient_type), (count, amount)) in Contribution.aggregate("actor", "recipient_type", trigger=p.trigger):
 			self.assertEqual(amount, totals_by_actor[actor][0 if recipient_type == ContributionRecipientType.Incumbent else 1][1])
+
+	def test_multitrigger_execution(self):
+		"""Tests the execution of a Pledge that involves multiple Triggers."""
+
+		# The main Trigger created in setUp will be where the Pledge is attached.
+		# We'll create five other executed Triggers that hold the Actions.
+
+		# Sub-triggers.
+		main_trigger = Trigger.objects.get(key="test")
+		desired_outcomes = []
+		for ti in range(6):
+			t = Trigger.objects.create(
+				key=main_trigger.key + ":" + str(ti),
+				title=main_trigger.title + ":" + str(ti),
+				owner=None,
+				trigger_type=main_trigger.trigger_type,
+				description="This is a test sub-trigger.",
+				description_format=TextFormat.Markdown,
+				outcomes=[
+					{ "label": "Yes" },
+					{ "label": "No" },
+				],
+				extra={ }
+				)
+
+			# Execute it.
+			actor_outcomes = self.build_actor_outcomes()
+			from django.utils.timezone import now
+			t.execute(
+				now(),
+				actor_outcomes,
+				"The trigger has been executed.",
+				TextFormat.Markdown,
+				{ })
+
+			# Pick a desired outcome for this sub-trigger.
+			desired_outcomes.append( (t.id, ti % 2) )
+
+		# Create a pledge, execute it, and test that it executed correctly.
+		self._pledge_execution(
+			desired_outcome=-999, amount=50, incumb_challgr=0, filter_party=None,
+			multitrigger_desired_outcomes=desired_outcomes,
+			expected_contrib_amount=Decimal('0.28'))

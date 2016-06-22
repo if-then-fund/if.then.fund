@@ -322,8 +322,17 @@ class TriggerExecution(models.Model):
 	description = models.TextField(help_text="Describe how contriutions are being distributed. Use the passive voice and present progressive tense, e.g. by starting with \"Contributions are being distributed...\".")
 	description_format = EnumField(TextFormat, help_text="The format of the description text.")
 
+	# The pledge_count and pledge_count_with_contribs fields count up the total
+	# number of Pledges (& executed with at least one contribution) where the
+	# Pledge's trigger's execution is this instance. cf. the next fields.
 	pledge_count = models.IntegerField(default=0, help_text="A cached count of the number of pledges executed. This counts pledges from anonymous users that do not result in contributions. Used to check when a Trigger is done executing.")
 	pledge_count_with_contribs = models.IntegerField(default=0, help_text="A cached count of the number of pledges executed with actual contributions made.")
+
+	# The num_contributions and total_contributions fields count up the total
+	# contributions for this TriggerExeuction. When a Pledge executes over multiple
+	# Triggers, then the contributions are double-counted: once in the Pledge's trigger's
+	# exeuction and ones in the Action's TriggerExecution. So don't aggregate these
+	# fields across Triggers!
 	num_contributions = models.IntegerField(default=0, db_index=True, help_text="A cached total number of campaign contributions executed.")
 	total_contributions = models.DecimalField(max_digits=6, decimal_places=2, default=0, db_index=True, help_text="A cached total amount of campaign contributions executed, excluding fees.")
 
@@ -1273,7 +1282,10 @@ class Contribution(models.Model):
 	objects = NoMassDeleteManager()
 
 	class Meta:
-		unique_together = [('pledge_execution', 'action'), ('pledge_execution', 'recipient')]
+		# Each PledgeExecution can have at most one Contribution for an Action,
+		# but because a PledgeExecution can include Actions from multiple TriggerExecutions
+		# there may be repeated Recipients for the same PledgeExecution.
+		unique_together = [('pledge_execution', 'action')]
 
 	def __str__(self):
 		return "$%0.2f to %s for %s" % (self.amount, self.recipient, self.pledge_execution)
@@ -1313,18 +1325,28 @@ class Contribution(models.Model):
 		self.action.save(update_fields=[field])
 
 		# Increment the TriggerExecution's total_contributions. Likewise, it
-		# excludes fees.
-		self.action.execution.total_contributions = models.F('total_contributions') + self.amount*factor
-		self.action.execution.num_contributions = models.F('num_contributions') + 1*factor
-		self.action.execution.save(update_fields=['total_contributions', 'num_contributions'])
+		# excludes fees. When a Pledge uses the Actions of multiple Triggers,
+		# then self.pledge_execution.execution != self.action.execution (both
+		# a TriggerExecution). In that case, we (double-)count the totals in
+		# each.
+		triggerexecutions = [self.pledge_execution.trigger_execution]
+		if triggerexecutions[0] != self.action.execution:
+			triggerexecutions.append(self.action.execution)
+		for te in triggerexecutions:
+			te.total_contributions = models.F('total_contributions') + self.amount*factor
+			te.num_contributions = models.F('num_contributions') + 1*factor
+			te.save(update_fields=['total_contributions', 'num_contributions'])
 
 	@staticmethod
 	def aggregate(*across, **kwargs):
 		# Expand field aliases. Each alias is a tuple of:
 		#  ((field, lookup), to-database-value, from-database-value)
 		aliases = {
+			# trigger and desired_outcome work off of the PledgeExecution's pledge. For multi-trigger
+			# Pledges, this is the Trigger that the Pledge is mainly tied to, not the sub-triggers.
 			"trigger":         ("pledge_execution__trigger_execution",       lambda v : v.execution, lambda v : v.trigger),
 			"desired_outcome": ("pledge_execution__pledge__desired_outcome", lambda v : v,           lambda v : v),
+			
 			"actor":           ("action__actor",                             lambda v : v,           lambda v : v),
 
 			# recipient_type needs a mapping from integers (returned by .values())

@@ -135,16 +135,52 @@ def get_pledge_recipient_breakdown(trigger):
 
 def get_pledge_recipients(pledge):
 	# For pledge execution, figure out how to split the contribution
-	# across actual recipients. We also use this during Pledge creation
+	# across actual recipients.
+	#
+	# This function returns a list of tuples of recipient information.
+	# The pledge amount is going to be evenly split across the list elements.
+	#
+	# Note that some Pledges yield Actions from multiple Triggers. In that
+	# case we may return a list with repeated (non-unique) recipients, but
+	# each entry across a single recipient will have a different Action.
+	#
+	# We also use this during Pledge creation
 	# validation, when the trigger is already executed, so we can
 	# stop the user from making a Pledge that will have no recipients.
 	# In that case, pledge may be an unsaved Pledge instance.
 
-	from contrib.models import ActorParty, Recipient, ContributionRecipientType
+	from contrib.models import Trigger, ActorParty, Action, Recipient, ContributionRecipientType
+
+	# What trigger(s) does this Pledge execute actions from?
+	if not pledge.extra or not pledge.extra.get("triggers"):
+		# The usual case is that the Pledge uses the Actions of its Trigger.
+		# There is only one desired outcome, but we make a simple mapping to it.
+		triggers = [pledge.trigger]
+		desired_outcome = { pledge.trigger.id: pledge.desired_outcome }
+		error_descr = lambda action : str(pledge)
+
+	else:
+		# If the extra.triggers key is specified, then it is a list of
+		# pairs of trigger IDs and desired outcomes.
+		desired_outcome = dict(pledge.extra["triggers"])
+
+		# And this Pledge uses the Actions listed for the executions of those triggers
+		# rather than its own trigger.
+		triggers = Trigger.objects.in_bulk(desired_outcome.keys())
+
+		# For error messages...
+		error_descr = lambda action : str(action) + " for " + str(pledge)
+
+	# What Actions occurred as a part of all of these triggers?
+	actions = Action.objects\
+		.filter(execution__trigger__in=triggers)\
+		.prefetch_related('actor', 'actor__challenger', 'execution')
+
+	# Build the recipient list.
 
 	recipients = []
 
-	for action in pledge.trigger.execution.actions.all().prefetch_related('actor', 'actor__challenger'):
+	for action in actions:
 		# Skip actions with null outcomes, meaning the Actor didn't really
 		# take an action and so no contribution for or against is made.
 
@@ -162,7 +198,7 @@ def get_pledge_recipients(pledge):
 
 		# Get recipient_type and the Recipient object.
 
-		if action.outcome == pledge.desired_outcome:
+		if action.outcome == desired_outcome[action.execution.trigger_id]:
 			# The incumbent did what the user wanted, so the incumbent is the recipient.
 
 			# Get what sort of recipient this is.
@@ -172,7 +208,7 @@ def get_pledge_recipients(pledge):
 			try:
 				r = Recipient.objects.get(actor=action.actor)
 			except Recipient.DoesNotExist:
-				raise Recipient.DoesNotExist("There is no recipient for " + str(action.actor) + " while executing " + str(pledge.trigger) + ".")
+				raise Recipient.DoesNotExist("There is no recipient for " + str(action.actor) + " while executing " + error_descr(action) + ".")
 
 		else:
 			# The incumbent did something other than what the user wanted, so the
@@ -191,7 +227,7 @@ def get_pledge_recipients(pledge):
 			except Actor.DoesNotExist:
 				# We don't have a challenger Recipient associated. There should always
 				# be a challenger Recipient assigned.
-				raise Actor.DoesNotExist(str(action.actor) + " has no challenger recipient assigned, while executing " + str(pledge.trigger) + ".")
+				raise Actor.DoesNotExist(str(action.actor) + " has no challenger recipient assigned, while executing " + error_descr(action) + ".")
 
 		# The Recipient may not be currently taking contributions.
 		# This condition should be filtered out earlier in the creation
