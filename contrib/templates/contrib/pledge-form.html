@@ -74,7 +74,7 @@
 
     <h2>Take action</h2>
 
-    <p>Make a contribution below to support {{trigger.trigger_type.strings.actors}} that agree with {% if campaign.owner.is_real and tcust.has_fixed_outcome %}us{% else %}you{% endif %}, or throw out those who don&rsquo;t, <strong>based on {% if not trigger.trigger_type.extra.monovalent %}how{% else %}which{% endif %} {{trigger.trigger_type.strings.actors}} {{trigger.verb}}.</strong></p>
+    <p>Make a contribution below to support {{trigger.trigger_type.strings.actors}} that agree with {% if campaign.owner.is_real and tcust.has_fixed_outcome %}us{% else %}you{% endif %}, or throw out those who don&rsquo;t, <strong>based on {% if not trigger.trigger_type.extra.monovalent %}how{% else %}which{% endif %} {{trigger.trigger_type.strings.actors}} {{trigger.verb}}{% if trigger.trigger_type.extra.monovalent %} {{trigger.outcomes.0.object}}{% endif %}.</strong></p>
 
     <p>Your contribution &mdash; based on what politicians actually do rather than what they promise &mdash; will shape the next Congress.</p>
 
@@ -390,7 +390,7 @@
               <div class="responsive-side-panel">
                   <p><strong>What happens next...</strong></p>
                   {% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}<p>You are about to schedule a campaign contribution for if and when {{trigger.trigger_type.strings.prospective_vp}}. You can cancel this contribution any time before then.</p>{% endif %} 
-                  <p>Your contribution {% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}may{% else %}will{% endif %} be split up to {{trigger.max_split}} ways depending on {% if not trigger.trigger_type.extra.monovalent %}how{% else %}which{% endif %} {{trigger.trigger_type.strings.actors}} {{trigger.trigger_type.strings.action_vb_inf}}.</p>
+                  <p>Your contribution {% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}may{% else %}will{% endif %} be split up to {{trigger.max_split}} ways depending on {% if not trigger.trigger_type.extra.monovalent %}how{% else %}which{% endif %} {{trigger.trigger_type.strings.actors}} {% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}{{trigger.trigger_type.strings.action_vb_inf}}{% else %}{{trigger.trigger_type.strings.action_vb_past}}{% endif %}{% if trigger.trigger_type.extra.monovalent %} {{trigger.outcomes.0.object}}{% endif %}.</p>
                   <p>You may see a temporary $1 authorization from Democracy Engine, LLC on your credit card, which was our check that your credit card information is valid.</p>
               </div>
             </div>
