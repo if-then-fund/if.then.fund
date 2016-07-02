@@ -149,7 +149,7 @@ def get_pledge_recipients(pledge):
 	# stop the user from making a Pledge that will have no recipients.
 	# In that case, pledge may be an unsaved Pledge instance.
 
-	from contrib.models import Trigger, ActorParty, Action, Recipient, ContributionRecipientType
+	from contrib.models import Trigger, ActorParty, Actor, Action, Recipient, ContributionRecipientType
 
 	# What trigger(s) does this Pledge execute actions from?
 	if not pledge.extra or not pledge.extra.get("triggers"):
@@ -208,6 +208,8 @@ def get_pledge_recipients(pledge):
 			try:
 				r = Recipient.objects.get(actor=action.actor)
 			except Recipient.DoesNotExist:
+				if settings.DEBUG:
+					continue
 				raise Recipient.DoesNotExist("There is no recipient for " + str(action.actor) + " while executing " + error_descr(action) + ".")
 
 		else:
@@ -222,12 +224,13 @@ def get_pledge_recipients(pledge):
 			recipient_type = ContributionRecipientType.GeneralChallenger
 
 			# Get the Recipient object.
-			try:
-				r = action.actor.challenger
-			except Actor.DoesNotExist:
+			r = action.actor.challenger
+			if not r:
 				# We don't have a challenger Recipient associated. There should always
 				# be a challenger Recipient assigned.
-				raise Actor.DoesNotExist(str(action.actor) + " has no challenger recipient assigned, while executing " + error_descr(action) + ".")
+				if settings.DEBUG:
+					continue
+				raise Recipient.DoesNotExist(str(action.actor) + " has no challenger recipient assigned, while executing " + error_descr(action) + ".")
 
 		# The Recipient may not be currently taking contributions.
 		# This condition should be filtered out earlier in the creation
