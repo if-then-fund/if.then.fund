@@ -672,7 +672,7 @@ function contribution_update_display_text() {
     who = "{% if trigger.status|stringformat:'s' != 'TriggerStatus.Executed' %}up to {% endif %}{{trigger.max_split}} {{trigger.trigger_type.strings.actors|escapejs}}. Each will get a part of your contribution if they {{trigger.verb|escapejs}} " + desired_action_text + ". But if they {{trigger.verb|escapejs}} " + opposed_action_text + ", their part of your contribution will go to their next general election opponent"
   else {
     var who1 = total_incumbent_recip + party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + desired_action_text;
-    var who2 = total_challenger_recip + "opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + opposed_action_text + (party ? (" if the opponent is in the " + party + "party") : "");
+    var who2 = total_challenger_recip + party + "opponents in the next general election of {{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + opposed_action_text;
     if (total_challenger_recip == "0 " || ic == 1)
       // known to be no challengers, so only display incumbents
       who = who1;
