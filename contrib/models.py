@@ -1377,12 +1377,7 @@ class Contribution(models.Model):
 			# `across`, in the same order. The keyword arguments are passed
 			# directly to Contribution.objects.filter.
 
-			from django.db.models.expressions import RawSQL
-			qs = contribs
-			for i, f in enumerate(across):
-				if f == "recipient__actor__isnull":
-					qs = qs.annotate(**{ f: RawSQL("(select actor_id is null from contrib_recipient where contrib_recipient.id=recipient_id)", []) })
-			qs = qs\
+			qs = contribs\
 				.values(*across)\
 				.annotate(count=models.Count('id'), amount=models.Sum('amount'))
 
@@ -1392,6 +1387,8 @@ class Contribution(models.Model):
 				actions = Action.objects.select_related('actor', 'execution', 'execution__trigger').in_bulk(item["action"] for item in qs)
 			if "actor" in original_across:
 				actors = Actor.objects.in_bulk(item["action__actor"] for item in qs)
+			if "recipient" in original_across:
+				recipients = Recipient.objects.in_bulk(item["recipient"] for item in qs)
 
 			# map IDs to object instances or, for aliases, apply the
 			# alias inverse function
@@ -1400,6 +1397,8 @@ class Contribution(models.Model):
 					return actions[value]
 				elif field == "actor":
 					return actors[value]
+				elif field == "recipient":
+					return recipients[value]
 				elif field in ("action__party", "recipient__party"):
 					return ActorParty(value)
 				else:

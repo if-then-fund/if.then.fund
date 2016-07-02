@@ -572,16 +572,11 @@ def report_fetch_data(trigger, via_campaign):
 		for ((recipient_type,), (count, total))
 		in Contribution.aggregate('recipient_type', **ca_slice_fields) ]
 
-	# Aggregates by party. Have to do this in two steps - first
-	# incumbents, then challengers, since the party is stored in
-	# separate places.
+	# Aggregates by party.
 	ret['by_party'] = defaultdict( lambda : [0, decimal.Decimal(0)] )
-	for ((party,), (count, total)) in Contribution.aggregate('action__party', action__isnull=False, **ca_slice_fields):
-		ret['by_party'][party][0] += count
-		ret['by_party'][party][1] += total
-	for ((party,), (count, total)) in Contribution.aggregate('recipient__party', action__isnull=True, **ca_slice_fields):
-		ret['by_party'][party][0] += count
-		ret['by_party'][party][1] += total
+	for ((recipient,), (count, total)) in Contribution.aggregate('recipient', **ca_slice_fields):
+		ret['by_party'][recipient.party][0] += count
+		ret['by_party'][recipient.party][1] += total
 	ret['by_party'] = [ { "party": party, "count": count, "total": total } for (party, (count, total)) in ret['by_party'].items() ]
 	ret['by_party'].sort(key = lambda item : item["total"], reverse=True)
 
