@@ -377,7 +377,10 @@ h2 {
 			<small>
 			<p>This page was added {% if campaign.owner.is_real %}by <a href="{{campaign.owner.get_absolute_url}}">{{campaign.owner.name}}</a>{% endif %} on {{campaign.created|date}}.</p>
 			{% if trigger.execution %}
-				<p>{{trigger.trigger_type.strings.retrospective_vp|capfirst}} on {{trigger.execution.action_time|date}}.
+				<p>
+				{% if trigger.trigger_type.strings.retrospective_vp %}
+					{{trigger.trigger_type.strings.retrospective_vp|capfirst}} on {{trigger.execution.action_time|date}}.
+				{% endif %}
 				{% if trigger.execution.pledge_count_with_contribs %}Contributions began to be processed on {{trigger.execution.created|date}}.{% endif %}
 				</p>
 			{% endif %}

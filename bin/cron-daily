@@ -3,6 +3,9 @@
 # Move into project root directory.
 cd $(dirname $(dirname $(readlink $0)))
 
+# Update cosponsorship data.
+python3 manage.py update_cosponsors
+
 # Execute any pledges ready to be executed.
 # Log this to a file because these errors are critical. Redirect stderr
 # to stdout before piping to tee so that exceptions get logged too.

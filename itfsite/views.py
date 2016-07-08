@@ -408,3 +408,64 @@ def campaign_user_view(request, id, action, api_format_ext):
 	ret["show_utm_tool"] = (request.user.is_authenticated() and request.user.is_staff)
 
 	return ret
+
+def create_automatic_campaign_from_trigger(trigger, slug_prefix, subhead):
+	# Create/update a Campaign
+	if trigger.extra.get('auto-campaign'):
+		campaign = Campaign.objects.get(id=trigger.extra['auto-campaign'])
+	else:
+		# Create a new empty campaign - details are filled in below.
+		campaign = Campaign.objects.create(
+			brand=1,
+			owner=None,
+			status=CampaignStatus.Open,
+			extra={},
+			# other fields set below
+		)
+
+		# Associate this Campaign with the Trigger.
+		trigger.extra['auto-campaign'] = campaign.id
+		trigger.save()
+
+	if not campaign.extra: campaign.extra = { }
+	campaign.extra['auto'] = "create_automatic_campaign_from_trigger"
+
+	# Update the campaign based on the info in the trigger.
+	from contrib.models import TriggerStatus
+	from itfsite.utils import TextFormat
+	from django.template.defaultfilters import slugify
+	campaign.title = trigger.title
+	campaign.slug = slugify(slug_prefix + " " + trigger.title)
+	campaign.subhead = subhead
+	campaign.subhead_format = TextFormat.Markdown
+	campaign.headline = trigger.title
+	campaign.body_text = trigger.description
+	campaign.body_format = trigger.description_format
+	campaign.status = CampaignStatus.Open
+	campaign.save()
+
+	if trigger not in campaign.contrib_triggers.all():
+		campaign.contrib_triggers.add(trigger)
+
+	return campaign
+
+@anonymous_view
+def redirect_for_bill_cosponsors(request, bill_id):
+	# Redirect to an automaticallg generated campaign for the cosponsors
+	# of the given bill.
+	from contrib.legislative import create_trigger_for_sponsors
+	try:
+		# Get the trigger. If it's already created, don't update it
+		# so that we don't have to wait on the GovTrack API to continue.
+		trigger = create_trigger_for_sponsors(bill_id, update=True) # TODO Set to False.
+	except ValueError:
+		raise Http404()
+
+	# Get/update the campaign.
+	campaign = create_automatic_campaign_from_trigger(
+		trigger,
+		"sponsors of " + str(trigger.extra['bill_info']['congress']),
+		"Support or oppose the sponsors of the %s." % trigger.extra['bill_info']['noun'])
+
+	# Redirect.
+	return redirect(campaign.get_absolute_url())

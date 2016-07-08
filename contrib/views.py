@@ -180,6 +180,7 @@ def submit(request):
 		# out of a transaction? lots of weird errors with Sqlite
 		p = Pledge.objects.get(id=p.id)
 		p.execute()
+		p = Pledge.objects.get(id=p.id) # refresh again
 
 	# If the user is anonymous...
 	if not p.user:

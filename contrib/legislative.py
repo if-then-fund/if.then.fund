@@ -1,13 +1,20 @@
 from contrib.models import Trigger, TextFormat, TriggerType, Actor
 from django.conf import settings
-from django.utils import timezone
+from django.utils.timezone import now
 
 ALLOW_DEAD_BILL = False
+
+def parse_uscapitol_local_time(dt):
+	from django.utils.timezone import make_aware
+	import dateutil.parser, dateutil.tz
+	if not hasattr(parse_uscapitol_local_time, 'tz'):
+		parse_uscapitol_local_time.tz = dateutil.tz.tzfile('/usr/share/zoneinfo/EST5EDT')
+	return make_aware(dateutil.parser.parse(dt), parse_uscapitol_local_time.tz)
 
 class TriggerAlreadyExistsException(Exception):
 	pass
 
-def get_trigger_type(chamber):
+def get_trigger_type_for_vote(chamber):
 	# get/create TriggerType for 'h' 's' or 'x' votes
 	# (in production the object should always exist, but in testing it
 	# needs to be created)
@@ -36,7 +43,7 @@ def create_congressional_vote_trigger(chamber, title, short_title):
 
 	t.owner = None
 	
-	t.trigger_type = get_trigger_type(chamber)
+	t.trigger_type = get_trigger_type_for_vote(chamber)
 	
 	t.title = title[0:200]
 
@@ -86,8 +93,7 @@ def create_trigger_from_bill(bill_id, chamber, from_fixtures=False):
 	if not bill['is_alive'] and not ALLOW_DEAD_BILL: raise ValueError("Bill is not alive.")
 
 	# we're going to cache the bill info, so add a timestamp for the retreival date
-	import datetime
-	bill['as_of'] = datetime.datetime.now().isoformat()
+	bill['as_of'] = now().isoformat()
 
 	# create object
 
@@ -142,11 +148,7 @@ def load_govtrack_vote(trigger, govtrack_url, flip, from_fixtures=False):
 
 	# Parse the date, which is in US Eastern time. Must make it
 	# timezone-aware to store in our database.
-	from django.utils.timezone import make_aware
-	import dateutil.parser, dateutil.tz
-	when = dateutil.parser.parse(vote['created'])
-	z = dateutil.tz.tzfile('/usr/share/zoneinfo/EST5EDT')
-	when = make_aware(when, z)
+	when = parse_uscapitol_local_time(vote['created'])
 
 	# Then get how Members of Congress voted via the XML, which conveniently
 	# includes everything without limit/offset. The congress project vote
@@ -200,6 +202,8 @@ def load_govtrack_vote(trigger, govtrack_url, flip, from_fixtures=False):
 	return (vote, when, actor_outcomes)
 
 def execute_trigger_from_data_urls(trigger, url_specs, from_fixtures=False):
+	import requests
+
 	if len(url_specs) == 0: raise ValueError("url_specs")
 
 	# Load all of the data details.
@@ -212,11 +216,14 @@ def execute_trigger_from_data_urls(trigger, url_specs, from_fixtures=False):
 			url_spec["when"] = when
 			url_spec["actor_outcomes"] = actor_outcomes
 		elif "/bills/" in url_spec["url"]:
+			# Get bill metadata from GovTrack's API, via the undocumented
+			# '.json' extension added to bill pages.
+			bill = requests.get(url_spec["url"]+'.json').json()
 			(bill, actor_outcomes) = load_govtrack_sponsors(trigger, url_spec["url"], flip=url_spec.get("flip"))
-			url_spec["noun"] = "sponsors as of " + timezone.now().strftime("%b. %d, %Y").replace(" 0", " ")
+			url_spec["noun"] = "sponsors as of " + now().strftime("%b. %d, %Y").replace(" 0", " ")
 			url_spec["link"] = bill['link']
 			url_spec["bill"] = bill
-			url_spec["when"] = timezone.now()
+			url_spec["when"] = now()
 			url_spec["actor_outcomes"] = actor_outcomes
 		else:
 			raise ValueError("unrecognized URL type")
@@ -252,14 +259,8 @@ def execute_trigger_from_data_urls(trigger, url_specs, from_fixtures=False):
 			"govtrack_bills": [url_spec["bill"] for url_spec in url_specs if "bill" in url_spec],
 		})
 
-def load_govtrack_sponsors(trigger, govtrack_url, flip=False):
-	import requests, lxml.etree
-
+def load_govtrack_sponsors(trigger, bill, flip=False):
 	outcome_index = map_outcome_indexes(trigger, flip)
-
-	# Get bill metadata from GovTrack's API, via the undocumented
-	# '.json' extension added to bill pages.
-	bill = requests.get(govtrack_url+'.json').json()
 
 	# Sanity check that the chamber of the vote matches the trigger type.
 	if trigger.trigger_type.key not in ('congress_sponsors_both', 'congress_sponsors_' + bill['bill_type'][0].lower(), 'announced-positions'):
@@ -284,11 +285,247 @@ def load_govtrack_sponsors(trigger, govtrack_url, flip=False):
 
 	return (bill, actor_outcomes)
 
+
+def get_trigger_type_for_sponsors(chamber):
+	# get/create TriggerType for House ('h') or Senate ('s') sponsors of a bill.
+	# (A bill can only have sponsors in its originating chamber.)
+	# (in production the object should always exist, but in testing it
+	# needs to be created)
+	trigger_type, is_new = TriggerType.objects.get_or_create(
+		key = "congress_sponsors_%s" % chamber,
+		title = { 's': 'Senate', 'h': 'House' }[chamber] + ' Sponsors/Cosponsors',
+		defaults = {
+		"strings": {
+			"actor": { 's': 'senator', 'h': 'representative' }[chamber],
+			"actors": { 's': 'senators', 'h': 'representatives' }[chamber],
+			"action_noun": "bill",
+			"action_vb_inf": "sponsor",
+			"action_vb_past": "sponsored",
+			"action_vb_pres_s": "sponsors",
+			"prospective_vp": None,
+			"retrospective_vp": None,
+		},
+		"extra": {
+			# There is only one Action outcome for these sorts of Triggrs.
+			# Either a Member of Congress sponsors/cosponsors the bill or
+			# they took no action on it.
+			"monovalent": True,
+
+			# This is not used since these Triggers are always immediately executed
+			# and then the actual split is known. But for completeness we'll include
+			# the info. House delegates can cosponsor bills, so 441 for the House
+			# rather than the usual 435.
+			"max_split":  { 's': 100, 'h': 441 }[chamber],
+		}
+		})
+	return trigger_type
+
+def create_trigger_for_sponsors(bill_id, update=True):
+	# Gets or creates a Trigger that is immediately executed according to
+	# the sponsor and cosponsors of a federal bill. If the Trigger already
+	# exists, the Actions are updated according to the latest (co)sponsor
+	# information.
+	#
+	# bill_id is a congress-project-style bill ID like hr1024-114.
+
+	import re, requests
+	from .models import TriggerExecution, TriggerStatus
+
+	# Validate that this is a valid-looking bill ID.
+	m = re.match("^([a-z]+)(\d+)-(\d+)$", bill_id)
+	if not m: raise ValueError("'%s' is not a bill ID, e.g. hr1234-114." % bill_id)
+	govtrack_api_url = 'https://www.govtrack.us/congress/bills/%s/%s%s.json' \
+		% (m.group(3), m.group(1), m.group(2))
+	chamber = bill_id[0] # chamber 'h' or 's' is first character
+
+	existing_trigger = Trigger.objects.filter(key="usbill:sponsors:" + bill_id).first()
+	if not existing_trigger:
+		# We don't have a Trigger for it yet.
+		#
+		# Get bill metadata from GovTrack's API, via the undocumented
+		# '.json' extension added to bill pages -- so that we don't have
+		# to query the API to get a numeric bill ID first.
+		bill = requests.get(govtrack_api_url).json()
+
+		# Validate that we can create a new Trigger for this bill.
+		# Guard against an attack that generates Triggers for the ~200,000
+		# bills on GovTrack.
+		if bill['congress'] < 114:
+			raise ValueError("Bills before the 114th are blocked.")
+
+		# Create the trigger.
+		t = Trigger()
+		t.owner = None
+		t.key = "usbill:sponsors:" + bill_id
+		t.trigger_type = get_trigger_type_for_sponsors(chamber)
+		t.outcomes = [] # set below
+		t.extra = { }
+		t.save()
+
+	else:
+		# Update an existing trigger.
+		t = existing_trigger
+		if not update and t.status == TriggerStatus.Executed:
+			return t
+
+		# If the caller wants us to update the information, then
+		# fetch bill metadata from the API.
+		bill = requests.get(govtrack_api_url).json()
+
+	# Execute the trigger. (Paused could mean there is or isn't a TriggerExecution.)
+	if not TriggerExecution.objects.filter(trigger=t).exists():
+		t.execute_empty()
+
+	# Update metadata.
+	t.title = bill["title"][0:200]
+
+	t.description = "Make a campaign contribution to the sponsors and cosponsors of %s if you support the %s or to their opponents if you oppose it." % (bill["display_number"], bill["noun"])
+	t.description_format = TextFormat.Markdown
+
+	# This is a monovalent trigger type --- the only outcome that Actors can take
+	# is the first one. But users can choose either side.
+	t.outcomes = [
+		{ "label": "Support %s" % bill["display_number"],
+		  "object": bill["display_number"],
+		},
+		{ "label": "Oppose %s" % bill["display_number"],
+		  "object": None, # only the first outcome's 'object' should ever be used in a monovalent trigger
+		},
+	]
+
+	t.extra.update({
+		"type": "sponsors",
+		"bill_id": bill_id,
+		"govtrack_bill_id": bill["id"],
+		"bill_info": bill,
+	})
+	t.save()
+
+	# Get a current list of the bill's sponsor and cosponsors, with the date
+	# each joined.
+
+	# Start with the sponsor.
+	sponsors = []
+	if bill.get("sponsor"):
+		# Not all bills have a sponsor.
+		sponsors.append({
+			"id": bill['sponsor']['id'],
+			"joined": parse_uscapitol_local_time(bill.get('introduced_date')),
+			"withdrawn": None,
+			"is_primary_sponsor": True,
+		})
+
+	# Add cosponsors.
+	cosponsors = requests.get('https://www.govtrack.us/api/v2/cosponsorship?bill=%d'
+		% bill['id']).json()['objects']
+	for cosponsor in cosponsors:
+		sponsors.append({
+			"id": cosponsor['person'],
+			"joined": parse_uscapitol_local_time(cosponsor['joined']),
+			"withdrawn": parse_uscapitol_local_time(cosponsor['withdrawn']) if cosponsor['withdrawn'] else None,
+		})
+
+
+	# Update the TriggerExecution's Actions.
+	from .models import Action
+	execution = t.execution
+	seen_actions = set()
+	count = 0
+	primary_sponsor_action = None
+	for record in sponsors:
+		# Convert GovTrack ID to Actor object.
+		try:
+			actor = Actor.objects.get(govtrack_id=record['id'])
+		except Actor.DoesNotExist:
+			# Slilently skip person if we aren't yet in sync with Actors for all
+			# possible (co)sponsors.
+			continue
+
+		# There are a few reasons why an Action would be marked as not having an outcome.
+		if actor.inactive_reason:
+			# The Actor is not currently a candidate for office.
+			reason_for_no_outcome = actor.inactive_reason
+		elif record['withdrawn']:
+			# The cosponsor withdrew.
+			reason_for_no_outcome = "Cosponsorship withdrawn on " + record["withdrawn"].strftime("%x") + "."
+		else:
+			# All good. Get a total count of real actions.
+			reason_for_no_outcome = None
+			count += 1
+
+		# Update Actions.
+		action = Action.objects.filter(execution=execution, actor=actor).first()
+		if not action:
+			# Create an Action. It's always outcome zero. If the cosponsor is already
+			# withdrawn or isn't running for re-election, then they get that reason
+			# which replaces the outcome integer index.
+			if not reason_for_no_outcome:
+				action = Action.create(execution, actor, 0, record['joined'])
+			else:
+				action = Action.create(execution, actor, reason_for_no_outcome, record['withdrawn'])
+		else:
+			# Update an existing action.
+			if not reason_for_no_outcome:
+				action.outcome = 0
+				action.reason_for_no_outcome = None
+			else:
+				action.outcome = None
+				action.reason_for_no_outcome = reason_for_no_outcome
+			action.save()
+
+		if record.get('is_primary_sponsor'):
+			primary_sponsor_action = action
+
+		seen_actions.add(action.id)
+
+	# If any cosponsorship records disappeared from the GovTrack API, typically
+	# from incorrect upstream data from Congress, mark those Actions as no longer
+	# active. Skip outcome=None Actions because we may have already marked them
+	# as obsoleted.
+	for obsolete_action in \
+		Action.objects.filter(execution=execution)\
+		.exclude(id__in=seen_actions)\
+		.exclude(outcome=None):
+		obsolete_action.outcome = None
+		obsolete_action.reason_for_no_outcome = "Cosponsorship record was removed on %s due to erroneous information reported by Congress." \
+			% now().strftime("%s")
+		obsolete_action.save()
+
+	# Update the execution's metadata.
+	from html import escape
+	execution.description = "<p>Contribution are being distributed to the %d sponsors/cosponsors of <a href='%s'>%s</a> and their opponents:</p>\n" % (
+		count, bill["link"], bill["display_number"])
+	execution.description += "<ul>\n"
+	if primary_sponsor_action:
+		execution.description += "<li>%s (primary sponsor)</li>\n" % escape(primary_sponsor_action.name_long)
+	for action in execution.actions.filter(outcome=0).exclude(id=primary_sponsor_action.id).order_by('action_time', 'name_sort'):
+		execution.description += "<li>%s%s</li>\n" % (
+			escape(action.name_long),
+			(" joined " + escape(action.action_time.strftime("%x")))
+				if (not primary_sponsor_action or action.action_time != primary_sponsor_action.action_time)
+				else ""
+		)
+	execution.description += "</ul>\n"
+	excluded_cosponsors = execution.actions.filter(outcome=None).order_by('action_time', 'name_sort')
+	if excluded_cosponsors.count():
+		execution.description += "<p>(Excluded cosponsors: %s</p>\n" % "; ".join(
+			escape(action.name_long + " (" + action.reason_for_no_outcome + ")")
+			for action in excluded_cosponsors)
+	execution.description_format = TextFormat.HTML
+	execution.save()
+
+	# Update the Trigger's status -- pause it if there are no sponsors.
+	t.status = TriggerStatus.Executed if (count > 0) else TriggerStatus.Paused
+	t.save()
+
+	return t
+		
+
 def geocode(address):
 	# Geocodes an address using the CDYNE Postal Address Verification API.
 	# address should be a tuple of of the street, city, state and zip code.
 
-	import requests, urllib.parse, lxml.etree, json
+	import requests, urllib.parse, json
 	from django.conf import settings
 
 		# http version: "http://pav3.cdyne.com/PavService.svc/VerifyAddressAdvanced"
@@ -315,7 +552,6 @@ def geocode(address):
 	if retcode in (1, 2):
 		raise Exception("CDYNE returned error code %d. See http://wiki.cdyne.com/index.php/PAV_VerifyAddressAdvanced_Output." % retcode)
 
-	from django.utils.timezone import now
 	ret = {
 		'timestamp': now().isoformat(), # Add a timestamp to the response in case we need to know later when we performed the geocode.
 		'cdyne': r,
