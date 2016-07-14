@@ -386,12 +386,6 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 	# Update metadata.
 	t.title = bill["title"][0:200]
 
-	# Since the trigger is executed, the description isn't used like it normally is.
-	# Instead, itfsite.views.create_automatic_campaign_from_trigger uses it to
-	# populate the campaign body.
-	t.description = "Make a campaign contribution to the sponsors and cosponsors of %s if you support the %s or to their opponents if you oppose it." % (bill["display_number"], bill["noun"])
-	t.description_format = TextFormat.Markdown
-
 	# This is a monovalent trigger type --- the only outcome that Actors can take
 	# is the first one. But users can choose either side.
 	t.outcomes = [
@@ -409,7 +403,6 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 		"govtrack_bill_id": bill["id"],
 		"bill_info": bill,
 	})
-	t.save()
 
 	# Get a current list of the bill's sponsor and cosponsors, with the date
 	# each joined.
@@ -440,7 +433,6 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 	from .models import Action
 	execution = t.execution
 	seen_actions = set()
-	count = 0
 	for record in sponsors:
 		# Convert GovTrack ID to Actor object.
 		try:
@@ -458,9 +450,8 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 			# The cosponsor withdrew.
 			reason_for_no_outcome = "Cosponsorship withdrawn on " + record["withdrawn"].strftime("%x") + "."
 		else:
-			# All good. Get a total count of real actions.
+			# All good.
 			reason_for_no_outcome = None
-			count += 1
 
 		# Update Actions.
 		action = Action.objects.filter(execution=execution, actor=actor).first()
@@ -506,35 +497,56 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 			% now().strftime("%s")
 		obsolete_action.save()
 
-	# Update the execution's metadata.
+	# Update the metadata.
+
+	# Since the trigger is executed, the description isn't used like it normally is.
+	# Instead, itfsite.views.create_automatic_campaign_from_trigger uses it to
+	# populate the campaign body.
+	body_a, body_b = build_sponsor_trigger_action_list(execution, bill)
+	t.description = "<p>Make a campaign contribution to the sponsors of %s if you support the %s or to their opponents if you oppose it.</p>" % (bill["title"], bill["noun"])
+	t.description += "<p>The sponsors are:</p>"
+	t.description += body_b
+	t.description_format = TextFormat.HTML
+	t.save()
+
+	execution.description = "<p>Contribution are being distributed to " + body_a + ".</p>"
+	execution.description_format = TextFormat.HTML
+	execution.save()
+
+	# Update the Trigger's status -- pause it if there are no sponsors.
+	t.status = TriggerStatus.Executed if (execution.actions.exclude(outcome=None).count() > 0) \
+	   else TriggerStatus.Paused
+	t.save()
+
+	return t
+
+def build_sponsor_trigger_action_list(trigger_execution, bill):
 	from html import escape
-	execution.description = "<p>Contribution are being distributed to the %d sponsors/cosponsors of <a href='%s'>%s</a> and their opponents:</p>\n" % (
-		count, bill["link"], bill["display_number"])
-	execution.description += "<ul>\n"
-	for action in execution.actions.filter(outcome=0).order_by('action_time', 'name_sort'):
+
+	ret1 = "the %d sponsors of <a href='%s'>%s</a> and their opponents" % (
+		trigger_execution.actions.filter(outcome=0).count(), bill["link"], bill["display_number"])
+	
+	ret = "<ul>\n"
+	for action in trigger_execution.actions.filter(outcome=0).order_by('action_time', 'name_sort'):
 		info = ""
 		if action.extra['usbill:sponsors:sponsor_type'] == "primary":
 			info = "primary sponsor"
 		elif action.extra['usbill:sponsors:sponsor_type'] == "joined-cosponsor":
 			info = "joined " + escape(action.action_time.strftime("%x"))
-		execution.description += "<li>%s%s</li>\n" % (
+		ret += "<li>%s%s</li>\n" % (
 			escape(action.name_long),
 			(" (" + escape(info) + ")") if info else ""
 		)
-	execution.description += "</ul>\n"
-	excluded_cosponsors = execution.actions.filter(outcome=None).order_by('action_time', 'name_sort')
+
+	excluded_cosponsors = trigger_execution.actions.filter(outcome=None).order_by('action_time', 'name_sort')
 	if excluded_cosponsors.count():
-		execution.description += "<p>(Excluded cosponsors: %s</p>\n" % "; ".join(
+		ret += "<p>Sponsors who cannot receive campaign contributions: %s</p>\n" % "; ".join(
 			escape(action.name_long + " (" + action.reason_for_no_outcome + ")")
 			for action in excluded_cosponsors)
-	execution.description_format = TextFormat.HTML
-	execution.save()
 
-	# Update the Trigger's status -- pause it if there are no sponsors.
-	t.status = TriggerStatus.Executed if (count > 0) else TriggerStatus.Paused
-	t.save()
+	ret += "</ul>\n"
 
-	return t
+	return ret1, ret
 		
 
 def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
@@ -621,11 +633,13 @@ def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
 	# Since the trigger is executed, the description isn't used like it normally is.
 	# Instead, itfsite.views.create_automatic_campaign_from_trigger uses it to
 	# populate the campaign body.
-	tt.description = "Make a campaign contribution to the sponsors and cosponsors of %s if you support the %s or to their opponents if you oppose it." % (
-		"/".join("[" + b["display_number"] + "](" + b["link"] + ")" for b in bills),
+	body_texts = [build_sponsor_trigger_action_list(t.execution, t.extra["bill_info"]) for t in triggers]
+	tt.description = "<p>Make a campaign contribution to the sponsors and cosponsors of %s if you support the %s or to their opponents if you oppose it.</p>" % (
+		"/".join(("<a href='%s'>%s</a>" % (b["link"], b["display_number"])) for b in bills),
 		bills[0]["noun"])
-	tt.description_format = TextFormat.Markdown
-	
+	tt.description += "<p>The sponsors are:</p>"
+	tt.description += "\n".join(r[1] for r in body_texts)
+	tt.description_format = TextFormat.HTML
 	tt.save(update_fields=['outcomes', 'title', 'description', 'description_format'])
 
 	# Ensure the super-trigger is executed.
@@ -635,7 +649,9 @@ def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
 
 	# Update the execution.
 	execution = tt.execution
-	execution.description = "\n\n".join(t.execution.description for t in triggers)
+	execution.description = "<p>Contribution are being distributed to " \
+	 + " and ".join(r[0] for r in body_texts) \
+	 + "</p>"
 	execution.description_format = TextFormat.HTML
 	execution.save()
 
