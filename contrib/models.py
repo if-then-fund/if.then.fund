@@ -143,9 +143,23 @@ class Trigger(models.Model):
 
 	def max_split(self):
 		if self.status != TriggerStatus.Executed:
+			# If the Trigger isn't executed yet, we don't know how
+			# many recipients there will be.
 			return self.trigger_type.extra['max_split']
 		else:
-			return self.execution.actions.exclude(outcome=None).count()
+			# The Trigger is executed and so we know exactly how many
+			# recipients there could be if the user does not apply
+			# any filters.
+			if self.extra and "subtriggers" in self.extra:
+				# This is a super-trigger. Add together the max_splits
+				# of the subtriggers.
+				return sum(
+					Trigger.objects.get(id=rec["trigger"]).max_split()
+					for rec in self.extra["subtriggers"])
+
+			else:
+				# This is a regular Trigger. Just look at its executed Actions.
+				return self.execution.actions.exclude(outcome=None).count()
 
 	# Execute.
 	@transaction.atomic

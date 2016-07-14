@@ -591,11 +591,11 @@ def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
 			"subtriggers": [
 				{
 					"trigger": t1.id,
-					"outcome-map": [0, 1],
+					"outcome-map": [0, 1], # for (super-trigger, sub-trigger) in enumerate(outcome-map)
 				},
 				{
 					"trigger": t2.id,
-					"outcome-map": [0, 1],
+					"outcome-map": [0, 1], # for (super-trigger, sub-trigger) in enumerate(outcome-map)
 				}
 			]
 		}

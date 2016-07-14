@@ -360,6 +360,18 @@ def create_pledge_object(request):
 	if tcust and tcust.filter_party and p.filter_party != tcust.filter_party:
 		raise InvalidArgumentError("filter_party is out of range (campaign customization)")
 
+	p.extra = { }
+
+	# If the Trigger was a super-trigger, copy in the sub-triggers to the Pledge,
+	# indicating the desired outcome of each sub-trigger through the outcome-map
+	# on the Trigger.
+	if p.trigger.extra and "subtriggers" in p.trigger.extra:
+		p.extra["triggers"] = [
+			[rec["trigger"], rec["outcome-map"][p.desired_outcome]]
+			for rec
+			in p.trigger.extra["subtriggers"]
+		]
+
 	return p
 
 def save_and_authorize_contributorinfo(p, request):

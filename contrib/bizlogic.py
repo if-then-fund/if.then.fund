@@ -108,8 +108,31 @@ def run_authorization_test(pledge, ccnum, cccvc, aux_data):
 def get_pledge_recipient_breakdown(trigger):
 	# Compute how many recipients there are in each category for a hypothetical
 	# pledge.
+
+	if trigger.extra and "subtriggers" in trigger.extra:
+		# This is a super-trigger. Add together the recipients for the subtriggers.
+		from contrib.models import Trigger
+		counts = [{ } for outcome in trigger.outcomes]
+		for rec in trigger.extra["subtriggers"]:
+			inner_counts = get_pledge_recipient_breakdown_simple(Trigger.objects.get(id=rec["trigger"]))
+			for (super_outcome_index, sub_outcome_index) in enumerate(rec["outcome-map"]):
+				for key, count in inner_counts[sub_outcome_index].items():
+					counts[super_outcome_index][key] = counts[super_outcome_index].get(key, 0) + count
+
+	else:
+		# This is a regular Trigger.
+		counts = get_pledge_recipient_breakdown_simple(trigger)
+
+	return [ [ { "incumbent": key[0], "party": key[1], "count": count }
+	           for key, count
+	           in outcome_counts.items() ]
+	         for outcome_counts in counts ]
+
+def get_pledge_recipient_breakdown_simple(trigger):
 	counts = [{ } for outcome in trigger.outcomes]
+
 	if len(trigger.outcomes) != 2: raise ValueError("counting assumes two outcomes")
+
 	for action in trigger.execution.actions.all().select_related('actor'):
 		# Actor did not take a counted action.
 		if action.outcome is None: continue
@@ -131,7 +154,7 @@ def get_pledge_recipient_breakdown(trigger):
 				key = (-1, action.actor.challenger.party.name[0])
 			counts[outcome][key] = counts[outcome].get(key, 0) + 1
 
-	return [ [ { "incumbent": key[0], "party": key[1], "count": count } for key, count in outcome.items()] for outcome in counts]
+	return counts
 
 def get_pledge_recipients(pledge):
 	# For pledge execution, figure out how to split the contribution
