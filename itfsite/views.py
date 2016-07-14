@@ -451,21 +451,36 @@ def create_automatic_campaign_from_trigger(trigger, slug_prefix, subhead):
 
 @anonymous_view
 def redirect_for_bill_cosponsors(request, bill_id):
-	# Redirect to an automaticallg generated campaign for the cosponsors
-	# of the given bill.
+	# Redirect to an automaticallg generated campaign for the (co)sponsors
+	# of the given bill and its companion bill.
+	from contrib.models import Trigger
 	from contrib.legislative import create_trigger_for_sponsors
 	try:
 		# Get the trigger. If it's already created, don't update it
 		# so that we don't have to wait on the GovTrack API to continue.
-		trigger = create_trigger_for_sponsors(bill_id, update=True) # TODO Set to False.
+		# TODO: Set update to False in production.
+		trigger = create_trigger_for_sponsors(bill_id, with_companion=True, update=True)
 	except ValueError:
+		# Invalid bill ID.
 		raise Http404()
+
+	# If we get a super-trigger, only the sub-triggers have bill info. Get an array of
+	# all of the bills for this Trigger. If a regular Trigger, the info is in this Trigger.
+	if "subtriggers" not in trigger.extra:
+		bills = [trigger.extra['bill_info']]
+	else:
+		bills = [
+			Trigger.objects.get(id=subtrigger_info['trigger'])\
+				.extra['bill_info']
+			for subtrigger_info
+			in trigger.extra['subtriggers']
+			]
 
 	# Get/update the campaign.
 	campaign = create_automatic_campaign_from_trigger(
 		trigger,
-		"sponsors of " + str(trigger.extra['bill_info']['congress']),
-		"Support or oppose the sponsors of the %s." % trigger.extra['bill_info']['noun'])
+		"sponsors of ",
+		"Support or oppose the sponsors of %s." % "/".join(b['display_number'] for b in bills))
 
 	# Redirect.
 	return redirect(campaign.get_absolute_url())

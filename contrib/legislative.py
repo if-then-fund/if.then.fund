@@ -293,11 +293,11 @@ def get_trigger_type_for_sponsors(chamber):
 	# needs to be created)
 	trigger_type, is_new = TriggerType.objects.get_or_create(
 		key = "congress_sponsors_%s" % chamber,
-		title = { 's': 'Senate', 'h': 'House' }[chamber] + ' Sponsors/Cosponsors',
+		title = { 's': 'Senate', 'h': 'House', 'x': 'Congressional' }[chamber] + ' Sponsors/Cosponsors',
 		defaults = {
 		"strings": {
-			"actor": { 's': 'senator', 'h': 'representative' }[chamber],
-			"actors": { 's': 'senators', 'h': 'representatives' }[chamber],
+			"actor": { 's': 'senator', 'h': 'representative', 'x': 'senator or representative' }[chamber],
+			"actors": { 's': 'senators', 'h': 'representatives', 'x': 'senators and representatives' }[chamber],
 			"action_noun": "bill",
 			"action_vb_inf": "sponsor",
 			"action_vb_past": "sponsored",
@@ -315,18 +315,25 @@ def get_trigger_type_for_sponsors(chamber):
 			# and then the actual split is known. But for completeness we'll include
 			# the info. House delegates can cosponsor bills, so 441 for the House
 			# rather than the usual 435.
-			"max_split":  { 's': 100, 'h': 441 }[chamber],
+			"max_split":  { 's': 100, 'h': 441, 'x': 541 }[chamber],
 		}
 		})
 	return trigger_type
 
-def create_trigger_for_sponsors(bill_id, update=True):
+def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 	# Gets or creates a Trigger that is immediately executed according to
 	# the sponsor and cosponsors of a federal bill. If the Trigger already
 	# exists, the Actions are updated according to the latest (co)sponsor
 	# information.
 	#
 	# bill_id is a congress-project-style bill ID like hr1024-114.
+	#
+	# If with_companion is True and the bill has a companion bill in the
+	# other chamber, then creates a Trigger for this bill, for the companion,
+	# and a super-trigger that combines them both.
+
+	if with_companion:
+		return create_trigger_for_sponsors_with_companion_bill(bill_id, update=update)
 
 	import re, requests
 	from .models import TriggerExecution, TriggerStatus
@@ -379,6 +386,9 @@ def create_trigger_for_sponsors(bill_id, update=True):
 	# Update metadata.
 	t.title = bill["title"][0:200]
 
+	# Since the trigger is executed, the description isn't used like it normally is.
+	# Instead, itfsite.views.create_automatic_campaign_from_trigger uses it to
+	# populate the campaign body.
 	t.description = "Make a campaign contribution to the sponsors and cosponsors of %s if you support the %s or to their opponents if you oppose it." % (bill["display_number"], bill["noun"])
 	t.description_format = TextFormat.Markdown
 
@@ -410,7 +420,7 @@ def create_trigger_for_sponsors(bill_id, update=True):
 		# Not all bills have a sponsor.
 		sponsors.append({
 			"id": bill['sponsor']['id'],
-			"joined": parse_uscapitol_local_time(bill.get('introduced_date')),
+			"joined": parse_uscapitol_local_time(bill['introduced_date']),
 			"withdrawn": None,
 			"is_primary_sponsor": True,
 		})
@@ -431,7 +441,6 @@ def create_trigger_for_sponsors(bill_id, update=True):
 	execution = t.execution
 	seen_actions = set()
 	count = 0
-	primary_sponsor_action = None
 	for record in sponsors:
 		# Convert GovTrack ID to Actor object.
 		try:
@@ -473,8 +482,14 @@ def create_trigger_for_sponsors(bill_id, update=True):
 				action.reason_for_no_outcome = reason_for_no_outcome
 			action.save()
 
+		if not action.extra: action.extra = { }
 		if record.get('is_primary_sponsor'):
-			primary_sponsor_action = action
+			action.extra['usbill:sponsors:sponsor_type'] = "primary"
+		elif record['joined'] == parse_uscapitol_local_time(bill['introduced_date']):
+			action.extra['usbill:sponsors:sponsor_type'] = "original-cosponsor"
+		else:
+			action.extra['usbill:sponsors:sponsor_type'] = "joined-cosponsor"
+		action.save(update_fields=['extra'])
 
 		seen_actions.add(action.id)
 
@@ -496,14 +511,15 @@ def create_trigger_for_sponsors(bill_id, update=True):
 	execution.description = "<p>Contribution are being distributed to the %d sponsors/cosponsors of <a href='%s'>%s</a> and their opponents:</p>\n" % (
 		count, bill["link"], bill["display_number"])
 	execution.description += "<ul>\n"
-	if primary_sponsor_action:
-		execution.description += "<li>%s (primary sponsor)</li>\n" % escape(primary_sponsor_action.name_long)
-	for action in execution.actions.filter(outcome=0).exclude(id=primary_sponsor_action.id).order_by('action_time', 'name_sort'):
+	for action in execution.actions.filter(outcome=0).order_by('action_time', 'name_sort'):
+		info = ""
+		if action.extra['usbill:sponsors:sponsor_type'] == "primary":
+			info = "primary sponsor"
+		elif action.extra['usbill:sponsors:sponsor_type'] == "joined-cosponsor":
+			info = "joined " + escape(action.action_time.strftime("%x"))
 		execution.description += "<li>%s%s</li>\n" % (
 			escape(action.name_long),
-			(" joined " + escape(action.action_time.strftime("%x")))
-				if (not primary_sponsor_action or action.action_time != primary_sponsor_action.action_time)
-				else ""
+			(" (" + escape(info) + ")") if info else ""
 		)
 	execution.description += "</ul>\n"
 	excluded_cosponsors = execution.actions.filter(outcome=None).order_by('action_time', 'name_sort')
@@ -520,6 +536,118 @@ def create_trigger_for_sponsors(bill_id, update=True):
 
 	return t
 		
+
+def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
+	import requests
+
+	# Get the trigger for the particular bill.
+	t1 = create_trigger_for_sponsors(bill_id, update=update)
+
+	# If the bill has any identical related bills, form a new Trigger,
+	# that is empty-executed, which merely lists the triggers of the
+	# two bills as sub-triggers.
+	companion_bill = None
+	for rb in t1.extra['bill_info'].get("related_bills", []):
+		if rb['relation'] == "identical":
+			companion_bill = rb['bill']
+
+	if not companion_bill:
+		# There is no companion bill. Just return this bill's trigger.
+		return t1
+
+	# Get a bill_id for the companion bill. Not so great code here.
+	b = requests.get('https://www.govtrack.us/api/v2/bill/%d' % companion_bill).json()
+	bill_id2 = b['bill_type_label'].replace(".", "").lower() + str(b['number']) + '-' + str(b['congress'])
+
+	# Get a trigger for it.
+	t2 = create_trigger_for_sponsors(bill_id2, update=update)
+
+	# Form a key for the super-trigger.
+	key = "usbill:sponsors-with-companion:" + bill_id
+
+	# If either bill's trigger already identify a super-trigger, then we'll return that.
+	# The key of the super-trigger is based on the ID of just one of the two bills, so
+	# we have to check both.
+	if t1.extra and t1.extra.get("supertrigger-with-companion"):
+		tt = Trigger.objects.get(id=t1.extra.get("supertrigger-with-companion"))
+	elif t2.extra and t2.extra.get("supertrigger-with-companion"):
+		tt = Trigger.objects.get(id=t2.extra.get("supertrigger-with-companion"))
+
+	elif Trigger.objects.filter(key=key).exists():
+		# We seem to have already created it, even though the triggers don't
+		# know about it.
+		tt =Trigger.objects.filter(key=key).first()
+
+	# Create a super-trigger. It lists t1 and t2 as subtriggers.
+	# It maps outcomes 0 and 1 of the supertrigger to the same
+	# outcomes as the subtrigger.
+	else:
+		tt = Trigger()
+		tt.owner = None
+		tt.key = key
+		tt.trigger_type = get_trigger_type_for_sponsors("x")
+		tt.outcomes = [] # set below
+		tt.extra = {
+			"subtriggers": [
+				{
+					"trigger": t1.id,
+					"outcome-map": [0, 1],
+				},
+				{
+					"trigger": t2.id,
+					"outcome-map": [0, 1],
+				}
+			]
+		}
+		tt.save()
+
+	# Update the Trigger's metadata. Get the bill metadata for the two triggers.
+	# Get the bills in a stable order so that it doesn't change depending on which
+	# of the two bills this function was called on.
+	triggers = sorted((t1, t2), key=lambda t : t.id)
+	bills = [t.extra['bill_info'] for t in triggers]
+	
+	tt.outcomes = [
+		{ "label": "Support the %s" % bills[0]['noun'],
+		  "object": "/".join(b["display_number"] for b in bills),
+		},
+		{ "label": "Oppose the %s" % bills[0]['noun'],
+		  "object": None, # only the first outcome's 'object' should ever be used in a monovalent trigger
+		},
+	]
+	
+	tt.title = bills[0]['title_without_number']
+
+	# Since the trigger is executed, the description isn't used like it normally is.
+	# Instead, itfsite.views.create_automatic_campaign_from_trigger uses it to
+	# populate the campaign body.
+	tt.description = "Make a campaign contribution to the sponsors and cosponsors of %s if you support the %s or to their opponents if you oppose it." % (
+		"/".join("[" + b["display_number"] + "](" + b["link"] + ")" for b in bills),
+		bills[0]["noun"])
+	tt.description_format = TextFormat.Markdown
+	
+	tt.save(update_fields=['outcomes', 'title', 'description', 'description_format'])
+
+	# Ensure the super-trigger is executed.
+	from .models import TriggerExecution, TriggerStatus
+	if not TriggerExecution.objects.filter(trigger=tt).exists():
+		tt.execute_empty()
+
+	# Update the execution.
+	execution = tt.execution
+	execution.description = "\n\n".join(t.execution.description for t in triggers)
+	execution.description_format = TextFormat.HTML
+	execution.save()
+
+	# Store the super-trigger ID on the two bill triggers so that the
+	# next time around we know we've already created the super-trigger.
+	for t in (t1, t2):
+		t.extra["supertrigger-with-companion"] = tt.id
+		t.save(update_fields=['extra'])
+
+	# Return it.
+	return tt
+
 
 def geocode(address):
 	# Geocodes an address using the CDYNE Postal Address Verification API.
