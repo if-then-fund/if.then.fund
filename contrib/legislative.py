@@ -381,7 +381,7 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 		t.execute_empty()
 
 	# Update metadata.
-	t.title = bill["title"][0:200]
+	t.title = "Sponsors of " + bill["title"][0:200]
 
 	# This is a monovalent trigger type --- the only outcome that Actors can take
 	# is the first one. But users can choose either side.
@@ -504,6 +504,8 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 	t.description += "<p>The sponsors are:</p>"
 	t.description += body_b
 	t.description_format = TextFormat.HTML
+	t.extra['auto-campaign-headline'] = bill['title']
+	t.extra['auto-campaign-subhead'] = "Support or oppose the sponsors of %s." % bill['display_number']
 	t.save()
 
 	execution.description = "<p>Contribution are being distributed to " + body_a + ".</p>"
@@ -623,7 +625,7 @@ def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
 		},
 	]
 	
-	tt.title = bills[0]['title_without_number']
+	tt.title = "Sponsors of " + bills[0]['title_without_number']
 
 	# Since the trigger is executed, the description isn't used like it normally is.
 	# Instead, itfsite.views.create_automatic_campaign_from_trigger uses it to
@@ -635,7 +637,9 @@ def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
 	tt.description += "<p>The sponsors are:</p>"
 	tt.description += "\n".join(r[1] for r in body_texts)
 	tt.description_format = TextFormat.HTML
-	tt.save(update_fields=['outcomes', 'title', 'description', 'description_format'])
+	tt.extra['auto-campaign-headline'] = bills[0]['title_without_number']
+	tt.extra['auto-campaign-subhead'] = "Support or oppose the sponsors of %s." % "/".join(b['display_number'] for b in bills)
+	tt.save(update_fields=['outcomes', 'title', 'description', 'description_format', 'extra'])
 
 	# Ensure the super-trigger is executed.
 	from .models import TriggerExecution, TriggerStatus

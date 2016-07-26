@@ -409,11 +409,9 @@ def campaign_user_view(request, id, action, api_format_ext):
 
 	return ret
 
-def create_automatic_campaign_from_trigger(trigger, slug_prefix, subhead):
+def create_automatic_campaign_from_trigger(trigger):
 	# Create/update a Campaign
-	if trigger.extra.get('auto-campaign'):
-		campaign = Campaign.objects.get(id=trigger.extra['auto-campaign'])
-	else:
+	if not trigger.extra.get('auto-campaign'):
 		# Create a new empty campaign - details are filled in below.
 		campaign = Campaign.objects.create(
 			brand=1,
@@ -427,18 +425,24 @@ def create_automatic_campaign_from_trigger(trigger, slug_prefix, subhead):
 		trigger.extra['auto-campaign'] = campaign.id
 		trigger.save()
 
-	if not campaign.extra: campaign.extra = { }
-	campaign.extra['auto'] = "create_automatic_campaign_from_trigger"
+		if not campaign.extra: campaign.extra = { }
+		campaign.extra['auto'] = "create_automatic_campaign_from_trigger"
 
+	return update_automatic_campaign_from_trigger(trigger)
+
+def update_automatic_campaign_from_trigger(trigger):
 	# Update the campaign based on the info in the trigger.
+
+	campaign = Campaign.objects.get(id=trigger.extra['auto-campaign'])
+
 	from contrib.models import TriggerStatus
 	from itfsite.utils import TextFormat
 	from django.template.defaultfilters import slugify
 	campaign.title = trigger.title
-	campaign.slug = slugify(slug_prefix + " " + trigger.title)
-	campaign.subhead = subhead
+	campaign.slug = slugify(trigger.title)
+	campaign.subhead = trigger.extra['auto-campaign-subhead']
 	campaign.subhead_format = TextFormat.Markdown
-	campaign.headline = trigger.title
+	campaign.headline = trigger.extra['auto-campaign-headline']
 	campaign.body_text = trigger.description
 	campaign.body_format = trigger.description_format
 	campaign.status = CampaignStatus.Open
@@ -464,23 +468,8 @@ def redirect_for_bill_cosponsors(request, bill_id):
 		# Invalid bill ID.
 		raise Http404()
 
-	# If we get a super-trigger, only the sub-triggers have bill info. Get an array of
-	# all of the bills for this Trigger. If a regular Trigger, the info is in this Trigger.
-	if "subtriggers" not in trigger.extra:
-		bills = [trigger.extra['bill_info']]
-	else:
-		bills = [
-			Trigger.objects.get(id=subtrigger_info['trigger'])\
-				.extra['bill_info']
-			for subtrigger_info
-			in trigger.extra['subtriggers']
-			]
-
 	# Get/update the campaign.
-	campaign = create_automatic_campaign_from_trigger(
-		trigger,
-		"sponsors of ",
-		"Support or oppose the sponsors of %s." % "/".join(b['display_number'] for b in bills))
+	campaign = create_automatic_campaign_from_trigger(trigger)
 
 	# Redirect.
 	return redirect(campaign.get_absolute_url())
