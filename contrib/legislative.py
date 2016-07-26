@@ -60,7 +60,7 @@ def create_congressional_vote_trigger(chamber, title, short_title):
 
 	return t
 
-def create_trigger_from_bill(bill_id, chamber, from_fixtures=False):
+def create_trigger_from_bill(bill_id, chamber):
 	import re
 
 	if bill_id.startswith("https://"):
@@ -84,8 +84,7 @@ def create_trigger_from_bill(bill_id, chamber, from_fixtures=False):
 	# get bill data from GovTrack
 	from contrib.utils import query_json_api
 	bill_search = query_json_api("https://www.govtrack.us/api/v2/bill", {
-		"bill_type": bill_type, "number": bill_number, "congress": bill_congress },
-		from_fixtures=from_fixtures)
+		"bill_type": bill_type, "number": bill_number, "congress": bill_congress })
 	if len(bill_search['objects']) == 0: raise ValueError("Not a bill.")
 	if len(bill_search['objects']) > 1: raise ValueError("Matched multiple bills?")
 
@@ -132,7 +131,7 @@ def map_outcome_indexes(trigger, flip):
 
 	return outcome_index
 
-def load_govtrack_vote(trigger, govtrack_url, flip, from_fixtures=False):
+def load_govtrack_vote(trigger, govtrack_url, flip):
 	from contrib.utils import query_json_api
 	import lxml.etree
 
@@ -140,7 +139,7 @@ def load_govtrack_vote(trigger, govtrack_url, flip, from_fixtures=False):
 
 	# Get vote metadata from GovTrack's API, via the undocumented
 	# '.json' extension added to vote pages.
-	vote = query_json_api(govtrack_url+'.json', {}, from_fixtures=from_fixtures)
+	vote = query_json_api(govtrack_url+'.json', {})
 
 	# Sanity check that the chamber of the vote matches the trigger type.
 	if trigger.trigger_type.key not in ('congress_floorvote_x', 'congress_floorvote_both', 'congress_floorvote_' + vote['chamber'][0], 'announced-positions'):
@@ -154,7 +153,7 @@ def load_govtrack_vote(trigger, govtrack_url, flip, from_fixtures=False):
 	# includes everything without limit/offset. The congress project vote
 	# JSON doesn't use GovTrack IDs, so it's more convenient to use GovTrack
 	# data.
-	r = query_json_api(govtrack_url+'/export/xml', {}, raw=True, from_fixtures=from_fixtures)
+	r = query_json_api(govtrack_url+'/export/xml', {}, raw=True)
 	dom = lxml.etree.fromstring(r)
 	actor_outcomes = [ ]
 	for voter in dom.findall('voter'):
@@ -201,7 +200,7 @@ def load_govtrack_vote(trigger, govtrack_url, flip, from_fixtures=False):
 
 	return (vote, when, actor_outcomes)
 
-def execute_trigger_from_data_urls(trigger, url_specs, from_fixtures=False):
+def execute_trigger_from_data_urls(trigger, url_specs):
 	import requests
 
 	if len(url_specs) == 0: raise ValueError("url_specs")
@@ -209,7 +208,7 @@ def execute_trigger_from_data_urls(trigger, url_specs, from_fixtures=False):
 	# Load all of the data details.
 	for url_spec in url_specs:
 		if "/votes/" in url_spec["url"]:
-			(vote, when, actor_outcomes) = load_govtrack_vote(trigger, url_spec["url"], flip=url_spec.get("flip", False), from_fixtures=from_fixtures)
+			(vote, when, actor_outcomes) = load_govtrack_vote(trigger, url_spec["url"], flip=url_spec.get("flip", False))
 			url_spec["noun"] = vote['chamber_label'] + " vote on " + when.strftime("%b. %d, %Y").replace(" 0", " ")
 			url_spec["link"] = vote['link']
 			url_spec["vote"] = vote

@@ -24,6 +24,10 @@ class SeleniumTest(StaticLiveServerTestCase):
 		import contrib.bizlogic, contrib.de
 		contrib.bizlogic.DemocracyEngineAPI = contrib.de.DummyDemocracyEngineAPIClient()
 
+		# Load remote data, e.g. from the GovTrack API, from pre-stored
+		# static fixture data.
+		settings.LOAD_REMOTE_DATA_FROM_FIXTURES = True
+
 		# Don't do email DNS checks so we can operate off-line.
 		settings.VALIDATE_EMAIL_DELIVERABILITY = False
 
@@ -107,7 +111,7 @@ class ContribTest(SeleniumTest):
 		# Create a Trigger.
 		from contrib.models import Trigger, TriggerStatus, Pledge
 		from contrib.legislative import create_trigger_from_bill
-		t = create_trigger_from_bill(bill_num, chamber, from_fixtures=True)
+		t = create_trigger_from_bill(bill_num, chamber)
 		t.status = TriggerStatus.Open
 		t.save()
 
@@ -280,7 +284,7 @@ class ContribTest(SeleniumTest):
 
 		# Execute the trigger.
 		from contrib.legislative import execute_trigger_from_data_urls
-		execute_trigger_from_data_urls(t, [{"url": vote_url }], from_fixtures=True)
+		execute_trigger_from_data_urls(t, [{"url": vote_url }])
 		t.refresh_from_db()
 		self.assertEqual(t.status, TriggerStatus.Executed)
 

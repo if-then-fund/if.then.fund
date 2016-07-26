@@ -4,13 +4,14 @@ from django.conf import settings
 from functools import wraps
 import json, datetime
 
-def query_json_api(base_url, params, from_fixtures=False, raw=False):
+def query_json_api(base_url, params, raw=False):
 	import urllib.request, urllib.parse, json
 	
 	url = base_url
 	if len(params) > 0: url += "?" + urllib.parse.urlencode(params)
 	
-	if not from_fixtures:
+	if not getattr(settings, 'LOAD_REMOTE_DATA_FROM_FIXTURES', False):
+		# Execute a web request.
 		req = urllib.request.urlopen(url)
 	
 	else:
