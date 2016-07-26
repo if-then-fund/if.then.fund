@@ -1,4 +1,6 @@
 from contrib.models import Trigger, TextFormat, TriggerType, Actor
+from contrib.utils import query_json_api
+
 from django.conf import settings
 from django.utils.timezone import now
 
@@ -82,7 +84,6 @@ def create_trigger_from_bill(bill_id, chamber):
 	if chamber not in ('s', 'h', 'x'): raise ValueError("Chamber must be one of 'h' or 's'.")
 
 	# get bill data from GovTrack
-	from contrib.utils import query_json_api
 	bill_search = query_json_api("https://www.govtrack.us/api/v2/bill", {
 		"bill_type": bill_type, "number": bill_number, "congress": bill_congress })
 	if len(bill_search['objects']) == 0: raise ValueError("Not a bill.")
@@ -132,7 +133,6 @@ def map_outcome_indexes(trigger, flip):
 	return outcome_index
 
 def load_govtrack_vote(trigger, govtrack_url, flip):
-	from contrib.utils import query_json_api
 	import lxml.etree
 
 	outcome_index = map_outcome_indexes(trigger, flip)
@@ -201,8 +201,6 @@ def load_govtrack_vote(trigger, govtrack_url, flip):
 	return (vote, when, actor_outcomes)
 
 def execute_trigger_from_data_urls(trigger, url_specs):
-	import requests
-
 	if len(url_specs) == 0: raise ValueError("url_specs")
 
 	# Load all of the data details.
@@ -217,7 +215,7 @@ def execute_trigger_from_data_urls(trigger, url_specs):
 		elif "/bills/" in url_spec["url"]:
 			# Get bill metadata from GovTrack's API, via the undocumented
 			# '.json' extension added to bill pages.
-			bill = requests.get(url_spec["url"]+'.json').json()
+			bill = query_json_api(url_spec["url"]+'.json')
 			(bill, actor_outcomes) = load_govtrack_sponsors(trigger, url_spec["url"], flip=url_spec.get("flip"))
 			url_spec["noun"] = "sponsors as of " + now().strftime("%b. %d, %Y").replace(" 0", " ")
 			url_spec["link"] = bill['link']
@@ -334,7 +332,7 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 	if with_companion:
 		return create_trigger_for_sponsors_with_companion_bill(bill_id, update=update)
 
-	import re, requests
+	import re
 	from .models import TriggerExecution, TriggerStatus
 
 	# Validate that this is a valid-looking bill ID.
@@ -351,7 +349,7 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 		# Get bill metadata from GovTrack's API, via the undocumented
 		# '.json' extension added to bill pages -- so that we don't have
 		# to query the API to get a numeric bill ID first.
-		bill = requests.get(govtrack_api_url).json()
+		bill = query_json_api(govtrack_api_url)
 
 		# Validate that we can create a new Trigger for this bill.
 		# Guard against an attack that generates Triggers for the ~200,000
@@ -376,7 +374,7 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 
 		# If the caller wants us to update the information, then
 		# fetch bill metadata from the API.
-		bill = requests.get(govtrack_api_url).json()
+		bill = query_json_api(govtrack_api_url)
 
 	# Execute the trigger. (Paused could mean there is or isn't a TriggerExecution.)
 	if not TriggerExecution.objects.filter(trigger=t).exists():
@@ -418,8 +416,8 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 		})
 
 	# Add cosponsors.
-	cosponsors = requests.get('https://www.govtrack.us/api/v2/cosponsorship?bill=%d'
-		% bill['id']).json()['objects']
+	cosponsors = query_json_api('https://www.govtrack.us/api/v2/cosponsorship?bill=%d'
+		% bill['id'])['objects']
 	for cosponsor in cosponsors:
 		sponsors.append({
 			"id": cosponsor['person'],
@@ -549,8 +547,6 @@ def build_sponsor_trigger_action_list(trigger_execution, bill):
 		
 
 def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
-	import requests
-
 	# Get the trigger for the particular bill.
 	t1 = create_trigger_for_sponsors(bill_id, update=update)
 
@@ -567,7 +563,7 @@ def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
 		return t1
 
 	# Get a bill_id for the companion bill. Not so great code here.
-	b = requests.get('https://www.govtrack.us/api/v2/bill/%d' % companion_bill).json()
+	b = query_json_api('https://www.govtrack.us/api/v2/bill/%d' % companion_bill)
 	bill_id2 = b['bill_type_label'].replace(".", "").lower() + str(b['number']) + '-' + str(b['congress'])
 
 	# Get a trigger for it.

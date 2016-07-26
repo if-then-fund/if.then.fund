@@ -4,7 +4,7 @@ from django.conf import settings
 from functools import wraps
 import json, datetime
 
-def query_json_api(base_url, params, raw=False):
+def query_json_api(base_url, params={}, raw=False):
 	import urllib.request, urllib.parse, json
 	
 	url = base_url
@@ -17,16 +17,22 @@ def query_json_api(base_url, params, raw=False):
 	else:
 		# For off-line testing, load JSON from fixtures path.
 		import os.path
-		orig_url = url
-		url = urllib.parse.urlparse(url)
+		urlparts = urllib.parse.urlparse(url)
 		fn = "fixtures/" + (
-			          url.hostname.replace("www.", "")
-			 + "--" + url.path
-			 + ("--" if url.query else "")
-			 + "-".join(k+"="+v[0] for (k, v) in sorted(urllib.parse.parse_qs(url.query).items()))
+			          urlparts.hostname.replace("www.", "")
+			 + "--" + urlparts.path
+			 + ("--" if urlparts.query else "")
+			 + "-".join(k+"="+v[0] for (k, v) in sorted(urllib.parse.parse_qs(urlparts.query).items()))
 			 ).replace("/", "-")
 		if not raw and not fn.endswith(".json"): fn += ".json"
-		if not os.path.exists(fn): raise Exception("Missing fixture at %s for %s." % (fn, orig_url))
+		if not os.path.exists(fn):
+			# This is probably the first time we're accessing this resource.
+			# Fetch and store the remote content.
+			print("%s => %s" % (url, fn))
+			remote_content = urllib.request.urlopen(url).read()
+			with open(fn, 'wb') as f:
+				f.write(remote_content)
+
 		req = open(fn, 'rb')
 	
 	if raw: return req.read()
