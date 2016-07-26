@@ -154,6 +154,7 @@ class ContribTest(SeleniumTest):
 
 	def _test_pledge_simple(self, campaign,
 			verb="vote",
+			desired_outcome=0,
 			pledge_summary="You MAINVERB a campaign contribution of AMOUNT for this vote. It will be split among up to COUNT representatives, each getting a part of your contribution if they VERB in favor of S. 1, but if they VERB against S. 1 their part of your contribution will go to their next general election opponent.",
 			pledge_summary_count=435,
 			pledge_summary_amount="$12.00",
@@ -186,10 +187,10 @@ class ContribTest(SeleniumTest):
 
 		# Load in browser. Check title.
 		self.browser.get(self.build_test_url(url))
-		self.assertRegex(self.browser.title, "Keystone XL")
+		self.assertRegex(self.browser.title, re.escape(campaign.title))
 
 		# Click one of the outcome buttons.
-		self.browser.execute_script("$('#action-buttons button[data-index=0]').click()")
+		self.browser.execute_script("$('#action-buttons button[data-index=%d]').click()" % desired_outcome)
 		#self.browser.find_element_by_css_selector("#action-buttons button").click() # first button?
 
 		# Enter pledge amount.
@@ -544,6 +545,35 @@ class ContribTest(SeleniumTest):
 		# Test that it appears executed on the site.
 		self._test_pledge_simple_execution(campaign, pledge_summary="You made a campaign contribution of $11.45 for this vote. It was split among the opponents in the next general election of representatives who voted against S. 1.")
 
+	def test_cosponsors_autocampaign(self):
+		# Test the route that automatically creates a campaign for a bill's
+		# sponsors plus its companion bill's sponsors.
+
+		# Visit the special route.
+		self.browser.get(self.build_test_url("/find-campaign/bill-sponsors/hr1524-114"))
+		self.assertRegex(self.browser.title, "To designate")
+
+		# Parse the redirect to figure out what campaign we're lookign at, since we need
+		# that to continue the test.
+		import urllib.parse, re
+		urlparts = urllib.parse.urlparse(self.browser.current_url)
+		m = re.match("/a/(\d+)/", urlparts.path)
+		from itfsite.models import Campaign
+		campaign = Campaign.objects.get(id=m.group(1))
+
+		# Continue the test.
+		self._test_pledge_simple(campaign,
+			pledge_summary_amount='$11.95',
+			pledge_summary="You MAINVERB a campaign contribution of AMOUNT for this bill. It was split among senators and representatives who sponsored H.R. 1524/S. 994.",
+		)
+
+		# Log out and do it again with the other outcome,
+		self.browser.get(self.build_test_url("/accounts/logout"))
+		self._test_pledge_simple(campaign,
+			desired_outcome=1,
+			pledge_summary_amount='$11.95',
+			pledge_summary="You MAINVERB a campaign contribution of AMOUNT for this bill. It was split among the opponents in the next general election of senators and representatives who sponsored H.R. 1524/S. 994.",
+		)
 
 def pop_email():
 	import django.core.mail

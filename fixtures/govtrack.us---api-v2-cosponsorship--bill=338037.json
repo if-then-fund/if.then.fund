@@ -1,0 +1,97 @@
+{
+ "meta": {
+  "limit": 100, 
+  "offset": 0, 
+  "total_count": 11
+ }, 
+ "objects": [
+  {
+   "bill": 338037, 
+   "id": 2983596, 
+   "joined": "2015-03-23", 
+   "person": 400142, 
+   "role": 43311, 
+   "withdrawn": null
+  }, 
+  {
+   "bill": 338037, 
+   "id": 2983598, 
+   "joined": "2015-03-23", 
+   "person": 400244, 
+   "role": 43341, 
+   "withdrawn": null
+  }, 
+  {
+   "bill": 338037, 
+   "id": 2983601, 
+   "joined": "2015-03-23", 
+   "person": 400308, 
+   "role": 43361, 
+   "withdrawn": null
+  }, 
+  {
+   "bill": 338037, 
+   "id": 2983602, 
+   "joined": "2015-03-23", 
+   "person": 400309, 
+   "role": 43362, 
+   "withdrawn": null
+  }, 
+  {
+   "bill": 338037, 
+   "id": 2983605, 
+   "joined": "2015-03-23", 
+   "person": 400380, 
+   "role": 43393, 
+   "withdrawn": null
+  }, 
+  {
+   "bill": 338037, 
+   "id": 2983604, 
+   "joined": "2015-03-23", 
+   "person": 412186, 
+   "role": 43440, 
+   "withdrawn": null
+  }, 
+  {
+   "bill": 338037, 
+   "id": 2983597, 
+   "joined": "2015-03-23", 
+   "person": 412290, 
+   "role": 43482, 
+   "withdrawn": null
+  }, 
+  {
+   "bill": 338037, 
+   "id": 2983603, 
+   "joined": "2015-03-23", 
+   "person": 412506, 
+   "role": 43593, 
+   "withdrawn": null
+  }, 
+  {
+   "bill": 338037, 
+   "id": 2983600, 
+   "joined": "2015-03-23", 
+   "person": 412606, 
+   "role": 43667, 
+   "withdrawn": null
+  }, 
+  {
+   "bill": 338037, 
+   "id": 2983599, 
+   "joined": "2015-03-23", 
+   "person": 412643, 
+   "role": 43704, 
+   "withdrawn": null
+  }, 
+  {
+   "bill": 338037, 
+   "id": 2983606, 
+   "joined": "2015-03-23", 
+   "person": 412644, 
+   "role": 43705, 
+   "withdrawn": null
+  }
+ ]
+}

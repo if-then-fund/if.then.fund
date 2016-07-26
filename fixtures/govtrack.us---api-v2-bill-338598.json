@@ -1,0 +1,219 @@
+{
+ "bill_resolution_type": "bill", 
+ "bill_type": "senate_bill", 
+ "bill_type_label": "S.", 
+ "committees": [
+  {
+   "abbrev": "O&GR", 
+   "code": "HSGO", 
+   "committee": null, 
+   "committee_type": "house", 
+   "committee_type_label": "House", 
+   "id": 2745, 
+   "jurisdiction": "The Committee on Oversight and Government Reform has legislative jurisdiction over the District of Columbia, the government procurement process, federal personnel systems, the Postal Service and other oversight matters across the government.", 
+   "jurisdiction_link": "http://oversight.house.gov/about-the-committee/", 
+   "name": "House Committee on Oversight and Government Reform", 
+   "obsolete": false, 
+   "url": "http://oversight.house.gov/"
+  }, 
+  {
+   "abbrev": "HS&GovAff", 
+   "code": "SSGA", 
+   "committee": null, 
+   "committee_type": "senate", 
+   "committee_type_label": "Senate", 
+   "id": 2639, 
+   "jurisdiction": null, 
+   "jurisdiction_link": null, 
+   "name": "Senate Committee on Homeland Security and Governmental Affairs", 
+   "obsolete": false, 
+   "url": "http://hsgac.senate.gov/"
+  }
+ ], 
+ "congress": 114, 
+ "cosponsors": [
+  {
+   "bioguideid": "M000639", 
+   "birthday": "1954-01-01", 
+   "cspanid": 29608, 
+   "firstname": "Robert", 
+   "gender": "male", 
+   "gender_label": "Male", 
+   "id": 400272, 
+   "lastname": "Menéndez", 
+   "link": "https://www.govtrack.us/congress/members/robert_menendez/400272", 
+   "middlename": "", 
+   "name": "Sen. Robert “Bob” Menéndez [D-NJ]", 
+   "namemod": "", 
+   "nickname": "Bob", 
+   "osid": "N00000699", 
+   "pvsid": "26961", 
+   "sortname": "Menéndez, Robert “Bob” (Sen.) [D-NJ]", 
+   "twitterid": "SenatorMenendez", 
+   "youtubeid": "SenatorMenendezNJ"
+  }
+ ], 
+ "current_status": "enacted_signed", 
+ "current_status_date": "2015-10-07", 
+ "current_status_description": "This bill was enacted after being signed by the President on October 7, 2015.", 
+ "current_status_label": "Enacted — Signed by the President", 
+ "display_number": "S. 994", 
+ "docs_house_gov_postdate": null, 
+ "id": 338598, 
+ "introduced_date": "2015-04-16", 
+ "is_alive": false, 
+ "is_current": true, 
+ "link": "https://www.govtrack.us/congress/bills/114/s994", 
+ "lock_title": false, 
+ "major_actions": [
+  [
+   "datetime.datetime(2015, 4, 16, 0, 0)", 
+   2, 
+   "Read twice and referred to the Committee on Homeland Security and Governmental Affairs.", 
+   "<action datetime=\"2015-04-16\" state=\"REFERRED\">\n      <text>Read twice and referred to the Committee on Homeland Security and Governmental Affairs.</text>\n    </action>\n    "
+  ], 
+  [
+   "datetime.datetime(2015, 5, 6, 0, 0)", 
+   3, 
+   "Committee on Homeland Security and Governmental Affairs. Ordered to be reported without amendment favorably.", 
+   "<calendar datetime=\"2015-05-06\" state=\"REPORTED\">\n      <text>Committee on Homeland Security and Governmental Affairs. Ordered to be reported without amendment favorably.</text>\n    </calendar>\n    "
+  ], 
+  [
+   "datetime.datetime(2015, 5, 11, 0, 0)", 
+   5, 
+   "Passed Senate without amendment by Unanimous Consent.", 
+   "<vote how=\"by Unanimous Consent\" type=\"vote\" datetime=\"2015-05-11\" where=\"s\" result=\"pass\" state=\"PASS_OVER:SENATE\">\n      <text>Passed Senate without amendment by Unanimous Consent.</text>\n      <reference ref=\"CR S2763\" label=\"consideration\"/>\n      <reference ref=\"CR S2763\" label=\"text as passed Senate\"/>\n    </vote>\n    "
+  ], 
+  [
+   "datetime.datetime(2015, 9, 24, 13, 40, 16)", 
+   9, 
+   "On motion to suspend the rules and pass the bill Agreed to by voice vote.", 
+   "<vote how=\"by voice vote\" type=\"vote2\" datetime=\"2015-09-24T13:40:16-04:00\" where=\"h\" result=\"pass\" state=\"PASSED:BILL\">\n      <text>On motion to suspend the rules and pass the bill Agreed to by voice vote.</text>\n      <reference ref=\"CR H6199\" label=\"text\"/>\n    </vote>\n    "
+  ], 
+  [
+   "datetime.datetime(2015, 10, 7, 0, 0)", 
+   28, 
+   "Signed by President.", 
+   "<signed datetime=\"2015-10-07\" state=\"ENACTED:SIGNED\">\n      <text>Signed by President.</text>\n    </signed>\n    "
+  ]
+ ], 
+ "noun": "bill", 
+ "number": 994, 
+ "related_bills": [
+  {
+   "bill": 338037, 
+   "relation": "identical"
+  }
+ ], 
+ "senate_floor_schedule_postdate": null, 
+ "sliplawnum": 66, 
+ "sliplawpubpriv": "PUB", 
+ "source": "thomas-congproj", 
+ "source_link": null, 
+ "sponsor": {
+  "bioguideid": "B001288", 
+  "birthday": "1969-04-27", 
+  "cspanid": 84679, 
+  "firstname": "Cory", 
+  "gender": "male", 
+  "gender_label": "Male", 
+  "id": 412598, 
+  "lastname": "Booker", 
+  "link": "https://www.govtrack.us/congress/members/cory_booker/412598", 
+  "middlename": "Anthony", 
+  "name": "Sen. Cory Booker [D-NJ]", 
+  "namemod": "", 
+  "nickname": "", 
+  "osid": "N00035267", 
+  "pvsid": "76151", 
+  "sortname": "Booker, Cory (Sen.) [D-NJ]", 
+  "twitterid": "CoryBooker", 
+  "youtubeid": "SenCoryBooker"
+ }, 
+ "sponsor_role": {
+  "caucus": null, 
+  "congress_numbers": [
+   114, 
+   115, 
+   116
+  ], 
+  "current": true, 
+  "description": "Junior Senator from New Jersey", 
+  "district": null, 
+  "enddate": "2021-01-03", 
+  "extra": {
+   "address": "359 Dirksen Senate Office Building Washington DC 20510", 
+   "contact_form": "http://www.booker.senate.gov/?p=contact", 
+   "fax": "202-224-8378", 
+   "office": "359 Dirksen Senate Office Building"
+  }, 
+  "id": 43661, 
+  "leadership_title": null, 
+  "party": "Democrat", 
+  "person": 412598, 
+  "phone": "202-224-3224", 
+  "role_type": "senator", 
+  "role_type_label": "Senator", 
+  "senator_class": "class2", 
+  "senator_class_label": "Class 2", 
+  "senator_rank": "junior", 
+  "senator_rank_label": "Junior", 
+  "startdate": "2015-01-06", 
+  "state": "NJ", 
+  "title": "Sen.", 
+  "title_long": "Senator", 
+  "website": "http://www.booker.senate.gov"
+ }, 
+ "terms": [
+  {
+   "id": 5867, 
+   "name": "Military personnel and dependents", 
+   "term_type": "new", 
+   "term_type_label": "New"
+  }, 
+  {
+   "id": 6096, 
+   "name": "Government Operations and Politics", 
+   "term_type": "new", 
+   "term_type_label": "New"
+  }, 
+  {
+   "id": 6103, 
+   "name": "Congressional tributes", 
+   "term_type": "new", 
+   "term_type_label": "New"
+  }, 
+  {
+   "id": 6109, 
+   "name": "Government buildings, facilities, and property", 
+   "term_type": "new", 
+   "term_type_label": "New"
+  }, 
+  {
+   "id": 6123, 
+   "name": "Postal service", 
+   "term_type": "new", 
+   "term_type_label": "New"
+  }, 
+  {
+   "id": 6680, 
+   "name": "New Jersey", 
+   "term_type": "new", 
+   "term_type_label": "New"
+  }
+ ], 
+ "title": "S. 994: A bill to designate the facility of the United States Postal Service located at 1 Walter Hammond Place in Waldwick, New Jersey, as the “Staff Sergeant Joseph D’Augustine Post Office Building”.", 
+ "title_without_number": "A bill to designate the facility of the United States Postal Service located at 1 Walter Hammond Place in Waldwick, New Jersey, as the “Staff Sergeant Joseph D’Augustine Post Office Building”.", 
+ "titles": [
+  [
+   "official", 
+   "introduced", 
+   "A bill to designate the facility of the United States Postal Service located at 1 Walter Hammond Place in Waldwick, New Jersey, as the \"Staff Sergeant Joseph D'Augustine Post Office Building\"."
+  ], 
+  [
+   "display", 
+   null, 
+   "A bill to designate the facility of the United States Postal Service located at 1 Walter Hammond Place in Waldwick, New Jersey, as the \"Staff Sergeant Joseph D'Augustine Post Office Building\"."
+  ]
+ ]
+}

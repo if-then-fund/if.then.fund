@@ -641,6 +641,8 @@ def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
 	from .models import TriggerExecution, TriggerStatus
 	if not TriggerExecution.objects.filter(trigger=tt).exists():
 		tt.execute_empty()
+		tt = Trigger.objects.get(id=tt.id) # reload
+	assert tt.status == TriggerStatus.Executed
 
 	# Update the execution.
 	execution = tt.execution

@@ -1,0 +1,17 @@
+{
+ "meta": {
+  "limit": 100, 
+  "offset": 0, 
+  "total_count": 1
+ }, 
+ "objects": [
+  {
+   "bill": 338598, 
+   "id": 2990922, 
+   "joined": "2015-04-21", 
+   "person": 400272, 
+   "role": 42792, 
+   "withdrawn": null
+  }
+ ]
+}
