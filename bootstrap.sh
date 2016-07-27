@@ -115,6 +115,7 @@ $PIP install --upgrade \
 	"requests==2.6.0" \
 	"markdown2" \
 	"jsonfield" \
+	"django-bootstrap3" \
 	"tqdm==1.0" \
 	"rtyaml" \
 	"email_validator==0.1.0-rc1" \

@@ -1,6 +1,3 @@
-[submodule "ext/django-bootstrap-form"]
-	path = ext/django-bootstrap-form
-	url = https://github.com/JoshData/django-bootstrap-form
 [submodule "ext/django-email-confirm-la"]
 	path = ext/django-email-confirm-la
 	url = https://github.com/if-then-fund/django-email-confirm-la-itf

@@ -1,5 +1,5 @@
 {% extends "master.html" %}
-{% load bootstrap %}
+{% load bootstrap3 %}
 
 {% block title %}Login{% endblock %}
 
@@ -16,7 +16,7 @@
     {% endif %}
 
     {% csrf_token %}
-    {{ form|bootstrap }}
+    {% bootstrap_form form %}
     <div class="form-group">
       <input type="submit" class="btn btn-primary" value="Log In" />
     </div>

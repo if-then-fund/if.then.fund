@@ -28,7 +28,7 @@ INSTALLED_APPS += [
 	# 3rd party apps. They go last so that we can override their
 	# templates.
 	'email_confirm_la',
-	'bootstrapform',
+	'bootstrap3',
 	'htmlemailer',
 	'dbstorage',
 ]
