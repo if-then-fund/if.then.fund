@@ -1,3 +1,5 @@
+import enum
+
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -5,11 +7,9 @@ from django.utils import timezone
 from django.template import Template, Context
 from django.conf import settings
 from django.http import Http404
+from enumfields import EnumIntegerField as EnumField
 
 from itfsite.accounts import User, NotificationsFrequency, AnonymousUser
-
-import enum
-from enum3field import EnumField, django_enum
 from itfsite.utils import JSONField, TextFormat
 
 #####################################################################
@@ -21,7 +21,6 @@ from itfsite.utils import JSONField, TextFormat
 from .middleware import load_brandings, get_branding
 load_brandings()
 
-@django_enum
 class OrganizationType(enum.Enum):
 	User = 1 # any user can create an 'organization'
 	C4 = 2 # a 501c4
@@ -80,7 +79,6 @@ class Organization(models.Model):
 	def open_campaigns(self):
 		return self.campaigns.filter(status=CampaignStatus.Open)
 
-@django_enum
 class CampaignStatus(enum.Enum):
 	Draft = 0
 	Open = 1
@@ -260,7 +258,6 @@ class Campaign(models.Model):
 #
 #####################################################################
 
-@django_enum
 class NotificationType(enum.Enum):
 	TriggerRecommendation = 1
 

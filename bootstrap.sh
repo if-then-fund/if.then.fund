@@ -119,7 +119,7 @@ $PIP install --upgrade \
 	"rtyaml" \
 	"email_validator==0.1.0-rc1" \
 	"git+https://github.com/JoshData/commonmark-py-plaintext" "git+https://github.com/if-then-fund/django-html-emailer" \
-	"enum3field"
+	"django-enumfields"
 
 $PIP install -r \
 	ext/django-email-confirm-la/requirements.txt

@@ -2,8 +2,8 @@ import enum, json, datetime
 
 from django.http import HttpResponse
 
-from enum3field import django_enum
 from jsonfield import JSONField as _JSONField
+from enumfields import EnumIntegerField as EnumField
 
 from .templatetags.itfsite_utils import render_text
 
@@ -12,7 +12,6 @@ class JSONField(_JSONField):
     def __init__(self, *args, **kwargs):
         super(_JSONField, self).__init__(*args, dump_kwargs={"sort_keys": True}, **kwargs)
 
-@django_enum
 class TextFormat(enum.Enum):
 	HTML = 0
 	Markdown = 1

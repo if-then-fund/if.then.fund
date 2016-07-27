@@ -4,19 +4,16 @@ import urllib.parse
 from django.db import models, transaction
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
-
 from django.conf import settings
+from enumfields import EnumIntegerField as EnumField
 
-from enum3field import EnumField, django_enum
 from itfsite.utils import JSONField
 
 # Bring the symbols into this module.
 from itfsite.betteruser import UserBase, UserManagerBase, DirectLoginBackend
 
-@django_enum
 class NotificationsFrequency(enum.Enum):
 	NoNotifications = 0
 	DailyNotifications = 1

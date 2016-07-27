@@ -5,11 +5,11 @@ from django.conf import settings
 from django.utils import timezone
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
+from enumfields import EnumIntegerField as EnumField
 
 from contrib.bizlogic import get_pledge_recipients, create_pledge_donation, void_pledge_transaction, HumanReadableValidationError
 
 from itfsite.utils import JSONField, TextFormat
-from enum3field import EnumField, django_enum
 from datetime import timedelta
 
 #####################################################################
@@ -18,7 +18,6 @@ from datetime import timedelta
 #
 #####################################################################
 
-@django_enum
 class ActorParty(enum.Enum):
 	Democratic = 1
 	Republican = 2
@@ -61,7 +60,6 @@ class TriggerType(models.Model):
 	def __str__(self):
 		return self.title
 
-@django_enum
 class TriggerStatus(enum.Enum):
 	Draft = 0
 	Open = 1
@@ -593,7 +591,6 @@ class ContributorInfo(models.Model):
 			},
 		})
 
-@django_enum
 class PledgeStatus(enum.Enum):
 	Open = 1
 	Executed = 2
@@ -995,7 +992,6 @@ class IncompletePledge(models.Model):
 		return self.via_campaign.get_short_url() \
 			+ "?" + urllib.parse.urlencode({ "utm_campaign": self.get_utm_campaign_string() })
 
-@django_enum
 class PledgeExecutionProblem(enum.Enum):
 	NoProblem = 0
 	EmailUnconfirmed = 1 # email address on the pledge was not confirmed
@@ -1273,7 +1269,6 @@ class Recipient(models.Model):
 	def is_challenger(self):
 		return self.actor is None
 
-@django_enum
 class ContributionRecipientType(enum.Enum):
 	Null = 0
 	Incumbent = 1 # the Actor that took the Action, i.e. the incumbent
