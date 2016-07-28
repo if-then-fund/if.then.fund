@@ -118,7 +118,7 @@ $PIP install --upgrade \
 	"django-bootstrap3" \
 	"tqdm==1.0" \
 	"rtyaml" \
-	"email_validator==0.1.0-rc1" \
+	"email-validator==1.0.1" \
 	"git+https://github.com/JoshData/commonmark-py-plaintext" "git+https://github.com/if-then-fund/django-html-emailer" \
 	"django-enumfields"
 
