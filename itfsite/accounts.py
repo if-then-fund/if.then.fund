@@ -188,11 +188,16 @@ class AnonymousUser(models.Model):
 
 	def email_confirmation_response_view(self, request):
 		# The user may be new, so take them to a welcome page.
+		from itfsite.middleware import get_branding
 		from itfsite.accounts import first_time_confirmed_user
 
-		# Redirect to any Pledge created by this user.
+		# Redirect to the most recent pledge of this user on
+		# the same brand site as this request is on.
 		from contrib.models import Pledge
-		pledge = Pledge.objects.filter(user=self.confirmed_user).first()
+		pledge = Pledge.objects.filter(
+			user=self.confirmed_user,
+			via_campaign__brand=get_branding(request)['BRAND_INDEX'],
+			).order_by('-created').first()
 
 		return first_time_confirmed_user(request, self.confirmed_user,
 			pledge.get_absolute_url() if pledge else "/home")
