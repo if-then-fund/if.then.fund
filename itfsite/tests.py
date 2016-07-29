@@ -571,6 +571,8 @@ class ContribTest(SeleniumTest):
 			pledge_summary_count=424,
 			pledge_summary_amount="$9.44")
 
+		# Test that all outbound emails are accounted for.
+		self._test_no_more_emails()
 
 	def test_triggercustomization_pledge(self):
 		# Create a customized trigger.
@@ -615,6 +617,9 @@ class ContribTest(SeleniumTest):
 			pledge_summary_amount='$11.95',
 			pledge_summary="You MAINVERB a campaign contribution of AMOUNT for this bill. It was split among the opponents in the next general election of senators and representatives who sponsored H.R. 1524/S. 994.",
 		)
+
+		# Test that all outbound emails are accounted for.
+		self._test_no_more_emails()
 
 def pop_email():
 	import django.core.mail

@@ -36,11 +36,17 @@ class Command(BaseCommand):
 
 		elif pre_or_post == "post":
 			# Executed pledges that were confirmed and have not yet
-			# been sent their post-execution email.
+			# been sent their post-execution email. Only send for
+			# pledges that had a pre-execution email, otherwise it's
+			# confusing. That's probably equivalent to not sending
+			# post-execution emails when a pledge was executed
+			# immediately -- in that case it is confusing to get an
+			# email the next night saying that it happened.
 			pledges = Pledge.objects.filter(
 				status=PledgeStatus.Executed,
 				post_execution_email_sent_at=None
-				).exclude(user=None)
+				).exclude(user=None)\
+			     .exclude(pre_execution_email_sent_at=None)
 			pledge_filter = lambda p : True
 
 		else:
