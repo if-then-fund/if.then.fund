@@ -61,9 +61,8 @@ class SeleniumTest(StaticLiveServerTestCase):
 	def build_test_url(self, path):
 		return urllib.parse.urljoin(self.live_server_url, path)
 
-	def follow_email_confirmation_link(self, test_string, already_has_account=False):
+	def follow_email_confirmation_link(self, msg, test_string, already_has_account=False):
 		# Get the email confirmation URL that we need to hit to confirm the user.
-		msg = pop_email().body
 		m = re.search(r"(http:\S*/ev/key/\S*/)", msg, re.S)
 		self.assertTrue(m)
 		conf_url = m.group(1)
@@ -253,12 +252,19 @@ class ContribTest(SeleniumTest):
 
 		# An email confirmation was sent.
 		self.assertFalse(p.anon_user.should_retry_email_confirmation())
+		email_confirmation_email = pop_email().body
+		if not p.is_executed:
+			self.assertIn("We need to confirm your email address before we can schedule your contribution",
+				email_confirmation_email)
+		else:
+			self.assertIn("Please confirm your email address by clicking the link below so that you can come back to if.then.fund later to see the status of your contributions",
+				email_confirmation_email)
 
 		# Some tests don't click the confirmation link.
 		if break_before_confirmation:
-			return
+			return email_confirmation_email
 
-		pw = self.follow_email_confirmation_link("has been confirmed")
+		pw = self.follow_email_confirmation_link(email_confirmation_email, "has been confirmed")
 
 		# We're back at the Trigger page, and after the user data is loaded
 		# the user sees an explanation of the pledge. If the trigger was
@@ -289,9 +295,13 @@ class ContribTest(SeleniumTest):
 		t.refresh_from_db()
 		self.assertEqual(t.status, TriggerStatus.Executed)
 
-		# Send pledge pre-execution emails.
+		# Send pledge pre-execution emails and test their content.
 		from contrib.management.commands.send_pledge_emails import Command as send_pledge_emails
 		send_pledge_emails().handle()
+		for i in range(pledge_count): # each pledge should have gotten an email
+			self.assertTrue(has_more_email())
+			self.assertIn("We are about to make your campaign contributions", pop_email().body)
+		self.assertFalse(has_more_email())
 
 		# Execute pledges.
 		from contrib.models import Pledge
@@ -299,8 +309,12 @@ class ContribTest(SeleniumTest):
 		from contrib.management.commands.execute_pledges import Command as execute_pledges
 		execute_pledges().do_execute_pledges()
 
-		# Send pledge post-execution emails.
+		# Send pledge post-execution emails and test their content.
 		send_pledge_emails().handle()
+		for i in range(pledge_count): # each pledge should have gotten an email
+			self.assertTrue(has_more_email())
+			self.assertIn("Your campaign contributions totalling $", pop_email().body)
+		self.assertFalse(has_more_email())
 
 	def _test_pledge_simple_execution(self, campaign,
 		pledge_summary="You made a campaign contribution of $9.44 for this vote. It was split among 424 representatives, each getting a part of your contribution if they voted in favor of S. 1, but if they voted against S. 1 their part of your contribution will go to their next general election opponent."):
@@ -450,6 +464,22 @@ class ContribTest(SeleniumTest):
 		self._test_trigger_execution(t1, 1, Decimal('12'), "https://www.govtrack.us/congress/votes/114-2015/h14")
 		self._test_pledge_simple_execution(c1)
 
+		# Test that all outbound emails are accounted for.
+		self._test_no_more_emails()
+
+	def _test_no_more_emails(self):
+		# Test that all outbound emails are accounted for.
+		#self.assertFalse(has_more_email()) # could do this, but want something where we can see the email in the test output
+		if has_more_email():
+			self.assertIsNone(pop_email().body)
+
+		# Send any emails that might be sent in a later job. Check that nothing is in the queue.
+		from contrib.management.commands.send_pledge_emails import Command as send_pledge_emails
+		send_pledge_emails().handle()
+		#self.assertFalse(has_more_email()) # could do this, but want something where we can see the email in the test output
+		if has_more_email():
+			self.assertIsNone(pop_email().body)
+
 	def test_returninguser(self):
 		# Create a pledge so the user has an account.
 		t1, c1 = self.create_test_campaign("s1-114", "h")
@@ -469,14 +499,17 @@ class ContribTest(SeleniumTest):
 		# the user confirms their address. Since the user already has an account,
 		# we have to end follow_email_confirmation_link early.
 		self.browser.get(self.build_test_url("/accounts/logout"))
-		self._test_pledge_simple(c1, use_email=email, break_before_confirmation=True)
-		self.follow_email_confirmation_link("You had a previous contribution already scheduled", already_has_account=True)
+		email_confirmation_email = self._test_pledge_simple(c1, use_email=email, break_before_confirmation=True)
+		self.follow_email_confirmation_link(email_confirmation_email, "You had a previous contribution already scheduled", already_has_account=True)
 
 		# We have to delete the latest Pledge, otherwise we keep trying to get
 		# the user to confirm it, even though the user has already clicked the
 		# confirmation link.
 		from contrib.models import Pledge
 		self.assertFalse(Pledge.objects.filter(trigger=t1, user=None).exists())
+
+		# Test that all outbound emails are accounted for.
+		self._test_no_more_emails()
 
 	def test_returning_without_confirmation_and_utm_campaign(self):
 		from contrib.models import ContributorInfo
@@ -494,6 +527,9 @@ class ContribTest(SeleniumTest):
 		t2, c2 = self.create_test_campaign("s1-114", "s")
 		self._test_pledge_with_defaults(c2, "Keystone XL", "S. 1", logged_in=False)
 		self.assertEqual(ContributorInfo.objects.count(), 1) # should not create 2nd profile
+
+		# Test that all outbound emails are accounted for.
+		self._test_no_more_emails()
 
 	def test_incomplete_pledge(self, with_utm_campaign=False):
 		# Create trigger.
@@ -517,6 +553,9 @@ class ContribTest(SeleniumTest):
 		# Start a pledge again
 		self._test_pledge_simple(campaign, return_from_incomplete_pledge=ip)
 
+		# Test that all outbound emails are accounted for.
+		self._test_no_more_emails()
+
 	def test_incomplete_pledge_with_utm_campaign(self):
 		self.test_incomplete_pledge(with_utm_campaign=True)
 
@@ -532,18 +571,20 @@ class ContribTest(SeleniumTest):
 			pledge_summary_count=424,
 			pledge_summary_amount="$9.44")
 
+
 	def test_triggercustomization_pledge(self):
 		# Create a customized trigger.
 		t, campaign = self.create_test_campaign("s1-114", "h", with_customization=True)
 		self._test_pledge_simple(campaign, pledge_summary="You have scheduled a campaign contribution of $12.00 for this vote. It will be split among the opponents in the next general election of representatives who vote against S. 1.")
 
-		# Execute it.
+		# Execute the trigger and the pledge.
 		self._test_trigger_execution(t, 1, Decimal('12'), "https://www.govtrack.us/congress/votes/114-2015/h14")
-		from contrib.management.commands.execute_pledges import Command as execute_pledges
-		execute_pledges().do_execute_pledges()
 
 		# Test that it appears executed on the site.
 		self._test_pledge_simple_execution(campaign, pledge_summary="You made a campaign contribution of $11.45 for this vote. It was split among the opponents in the next general election of representatives who voted against S. 1.")
+
+		# Test that all outbound emails are accounted for.
+		self._test_no_more_emails()
 
 	def test_cosponsors_autocampaign(self):
 		# Test the route that automatically creates a campaign for a bill's
@@ -578,8 +619,14 @@ class ContribTest(SeleniumTest):
 def pop_email():
 	import django.core.mail
 	try:
-		msg = django.core.mail.outbox.pop()
+		msg = django.core.mail.outbox.pop(0)
 	except:
 		raise ValueError("No email was sent.")
 	return msg
 
+def has_more_email():
+	import django.core.mail
+	try:
+		return len(django.core.mail.outbox) > 0
+	except:
+		return False
