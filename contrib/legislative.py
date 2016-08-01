@@ -499,16 +499,16 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 	# Since the trigger is executed, the description isn't used like it normally is.
 	# Instead, itfsite.views.create_automatic_campaign_from_trigger uses it to
 	# populate the campaign body.
-	body_a, body_b = build_sponsor_trigger_action_list(execution, bill)
+	from html import escape
 	t.description = "<p>Make a campaign contribution to the sponsors of %s if you support the %s or to their opponents if you oppose it.</p>" % (bill["title"], bill["noun"])
-	t.description += "<p>The sponsors are:</p>"
-	t.description += body_b
 	t.description_format = TextFormat.HTML
 	t.extra['auto-campaign-headline'] = bill['title']
 	t.extra['auto-campaign-subhead'] = "Support or oppose the sponsors of %s." % bill['display_number']
+	t.extra['target-display-html'] = "the %d sponsors of <a href='%s'>%s</a> or their opponents" % (
+		execution.actions.filter(outcome=0).count(), escape(bill["link"]), escape(bill["display_number"]))
 	t.save()
 
-	execution.description = "<p>Contribution are being distributed to " + body_a + ".</p>"
+	execution.description = "<p>Contribution are being distributed to " + t.extra['target-display-html'] + ".</p>"
 	execution.description_format = TextFormat.HTML
 	execution.save()
 
@@ -518,35 +518,6 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 	t.save()
 
 	return t
-
-def build_sponsor_trigger_action_list(trigger_execution, bill):
-	from html import escape
-
-	ret1 = "the %d sponsors of <a href='%s'>%s</a> or their opponents" % (
-		trigger_execution.actions.filter(outcome=0).count(), bill["link"], bill["display_number"])
-	
-	ret = "<ul>\n"
-	for action in trigger_execution.actions.filter(outcome=0).order_by('action_time', 'name_sort'):
-		info = ""
-		if action.extra['usbill:sponsors:sponsor_type'] == "primary":
-			info = "primary sponsor"
-		elif action.extra['usbill:sponsors:sponsor_type'] == "joined-cosponsor":
-			info = "joined " + escape(action.action_time.strftime("%x"))
-		ret += "<li>%s%s</li>\n" % (
-			escape(action.name_long),
-			(" (" + escape(info) + ")") if info else ""
-		)
-
-	excluded_cosponsors = trigger_execution.actions.filter(outcome=None).order_by('action_time', 'name_sort')
-	if excluded_cosponsors.count():
-		ret += "<p>Sponsors who cannot receive campaign contributions: %s</p>\n" % "; ".join(
-			escape(action.name_long + " (" + action.reason_for_no_outcome + ")")
-			for action in excluded_cosponsors)
-
-	ret += "</ul>\n"
-
-	return ret1, ret
-		
 
 def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
 	# Get the trigger for the particular bill.
@@ -630,12 +601,9 @@ def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
 	# Since the trigger is executed, the description isn't used like it normally is.
 	# Instead, itfsite.views.create_automatic_campaign_from_trigger uses it to
 	# populate the campaign body.
-	body_texts = [build_sponsor_trigger_action_list(t.execution, t.extra["bill_info"]) for t in triggers]
 	tt.description = "<p>Make a campaign contribution to the sponsors and cosponsors of %s if you support the %s or to their opponents if you oppose it.</p>" % (
 		"/".join(("<a href='%s'>%s</a>" % (b["link"], b["display_number"])) for b in bills),
 		bills[0]["noun"])
-	tt.description += "<p>The sponsors are:</p>"
-	tt.description += "\n".join(r[1] for r in body_texts)
 	tt.description_format = TextFormat.HTML
 	tt.extra['auto-campaign-headline'] = bills[0]['title_without_number']
 	tt.extra['auto-campaign-subhead'] = "Support or oppose the sponsors of %s." % "/".join(b['display_number'] for b in bills)
@@ -651,7 +619,7 @@ def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
 	# Update the execution.
 	execution = tt.execution
 	execution.description = "<p>Contribution are being distributed to " \
-	 + " and ".join(r[0] for r in body_texts) \
+	 + " and ".join(t.extra['target-display-html'] for t in triggers) \
 	 + "</p>"
 	execution.description_format = TextFormat.HTML
 	execution.save()
