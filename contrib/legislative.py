@@ -522,7 +522,7 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 def build_sponsor_trigger_action_list(trigger_execution, bill):
 	from html import escape
 
-	ret1 = "the %d sponsors of <a href='%s'>%s</a> and their opponents" % (
+	ret1 = "the %d sponsors of <a href='%s'>%s</a> or their opponents" % (
 		trigger_execution.actions.filter(outcome=0).count(), bill["link"], bill["display_number"])
 	
 	ret = "<ul>\n"
