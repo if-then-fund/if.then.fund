@@ -651,15 +651,15 @@ function contribution_update_display_text() {
       else
         total_challenger_recip += c.count;
     }
-    total_incumbent_recip += " ";
-    total_challenger_recip += " ";
+    total_incumbent_recip = "the " + total_incumbent_recip + " ";
+    total_challenger_recip = "the " + total_challenger_recip + " ";
   }
   {% if trigger.trigger_type.extra.monovalent %}
   else {
     // With monovalent triggers, we know that there are definitely
     // no recipients in certain cases:
-    if (outcome_index == 0) total_challenger_recip = "0 ";
-    if (outcome_index  > 0) total_incumbent_recip = "0 ";
+    if (outcome_index == 0) total_challenger_recip = "the 0 ";
+    if (outcome_index  > 0) total_incumbent_recip = "the 0 ";
   }
   {% endif %}
 
@@ -670,10 +670,10 @@ function contribution_update_display_text() {
   else {
     var who1 = total_incumbent_recip + party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + desired_action_text;
     var who2 = total_challenger_recip + party + "opponents in the next general election of " + anti_party + "{{trigger.trigger_type.strings.actors|escapejs}} who {{trigger.verb|escapejs}} " + opposed_action_text;
-    if (total_challenger_recip == "0 " || ic == 1)
+    if (total_challenger_recip == "the 0 " || ic == 1)
       // known to be no challengers, so only display incumbents
       who = who1;
-    else if (total_incumbent_recip == "0 " || ic == -1)
+    else if (total_incumbent_recip == "the 0 " || ic == -1)
       // known to be no incumbents, so only display challengers
       who = who2;
     else // both > 0
