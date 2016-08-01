@@ -743,8 +743,10 @@ class Pledge(models.Model):
 		antidesired_outcome_label = outcome_label(1 - self.desired_outcome)
 
 		party_filter = ""
+		anti_party_filter = ""
 		if self.filter_party is not None:
 			party_filter = self.filter_party.name + " "
+			anti_party_filter = self.filter_party.opposite().name + " "
 
 		noun = self.trigger.trigger_type.strings['actors']
 		verb = self.trigger.verb
@@ -756,8 +758,8 @@ class Pledge(models.Model):
 				% (party_filter, noun, verb, desired_outcome_label)
 		elif self.incumb_challgr == -1 or (is_monovalent and self.desired_outcome > 0):
 			# "throw em out"
-			return "the %sopponents in the next general election of %s who %s %s" \
-				% (party_filter, noun, verb, antidesired_outcome_label)
+			return "the %sopponents in the next general election of %s%s who %s %s" \
+				% (party_filter, anti_party_filter, noun, verb, antidesired_outcome_label)
 		elif party_filter == "":
 			# goes to incumbents and challengers, no party filter
 			if self.status != PledgeStatus.Executed:
@@ -769,9 +771,9 @@ class Pledge(models.Model):
 				   verb, antidesired_outcome_label)
 		else:
 			# goes to incumbents and challengers, with a party filter
-			return "%s%s who %s %s and the %sopponents in the next general election of %s who %s %s" \
+			return "%s%s who %s %s and the %sopponents in the next general election of %s%s who %s %s" \
 				% (party_filter, noun, verb, desired_outcome_label,
-				                 party_filter, noun, verb, antidesired_outcome_label)
+				                 party_filter, anti_party_filter, noun, verb, antidesired_outcome_label)
 
 	@property
 	def is_from_long_ago(self):
