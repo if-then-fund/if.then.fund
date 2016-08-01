@@ -500,7 +500,12 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 	# Instead, itfsite.views.create_automatic_campaign_from_trigger uses it to
 	# populate the campaign body.
 	from html import escape
-	t.description = "<p>Make a campaign contribution to the sponsors of %s if you support the %s or to their opponents if you oppose it.</p>" % (bill["title"], bill["noun"])
+	title = escape(bill["title"])
+	if bill["title"].endswith("."):
+		# Some bill titles are sentences, and that's confusing to embed within
+		# a sentence of our own.
+		title = "<i>" + escape(bill["title"].rstrip('.')) + "</i>"
+	t.description = "<p>Make a campaign contribution to the sponsors of %s if you support the %s or to their opponents if you oppose it.</p>" % (title, bill["noun"])
 	t.description_format = TextFormat.HTML
 	t.extra['auto-campaign-headline'] = bill['title']
 	t.extra['auto-campaign-subhead'] = "Support or oppose the sponsors of %s." % bill['display_number']
