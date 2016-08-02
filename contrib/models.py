@@ -106,6 +106,15 @@ class Trigger(models.Model):
 			# If the trigger has been executed, then use the past tense.
 			return self.trigger_type.strings['action_vb_past']
 
+	@property
+	def verb_pres_s(self):
+		if self.status != TriggerStatus.Executed:
+			# If the trigger has not yet been executed, then use the future tense.
+			return self.trigger_type.strings['action_vb_pres_s']
+		else:
+			# If the trigger has been executed, then use the past tense.
+			return self.trigger_type.strings['action_vb_past']
+
 	def outcome_strings(self):
 		# "overridden" by TriggerCustomizations
 		return self.outcomes
