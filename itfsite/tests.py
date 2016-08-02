@@ -46,10 +46,11 @@ class SeleniumTest(StaticLiveServerTestCase):
 
 	@classmethod
 	def tearDownClass(cls):
-		super(SeleniumTest, cls).tearDownClass()
+		# Terminate the Selenium browser.
+		cls.browser.quit()
 
 		# Terminate the debug server.
-		cls.browser.quit()
+		super(SeleniumTest, cls).tearDownClass()
 
 	def setUp(self):
 		# make it easier to access the browser instance by aliasing to self.browser
