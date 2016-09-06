@@ -381,7 +381,11 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 		t.execute_empty()
 
 	# Update metadata.
-	t.title = "Sponsors of " + bill["title"][0:200]
+	t.title = "Sponsors of " + bill["title"]
+
+	# Truncate title according to the field's max length.
+	from django.utils.text import Truncator
+	t.title = Truncator(t.title).chars(200)
 
 	# This is a monovalent trigger type --- the only outcome that Actors can take
 	# is the first one. But users can choose either side.
@@ -441,8 +445,12 @@ def create_trigger_for_sponsors(bill_id, update=True, with_companion=False):
 
 		# There are a few reasons why an Action would be marked as not having an outcome.
 		if actor.inactive_reason:
-			# The Actor is not currently a candidate for office.
+			# The Actor is marked as not currently a candidate for office.
 			reason_for_no_outcome = actor.inactive_reason
+		elif not actor.office:
+			# The Actor is not currently an incumbent, which implies they
+			# are no longer running for office.
+			reason_for_no_outcome = "No longer serving in office."
 		elif record['withdrawn']:
 			# The cosponsor withdrew.
 			reason_for_no_outcome = "Cosponsorship withdrawn on " + record["withdrawn"].strftime("%x") + "."
@@ -602,6 +610,10 @@ def create_trigger_for_sponsors_with_companion_bill(bill_id, update=True):
 	]
 	
 	tt.title = "Sponsors of " + bills[0]['title_without_number']
+
+	# Truncate title according to the field's max length.
+	from django.utils.text import Truncator
+	tt.title = Truncator(tt.title).chars(200)
 
 	# Since the trigger is executed, the description isn't used like it normally is.
 	# Instead, itfsite.views.create_automatic_campaign_from_trigger uses it to
