@@ -34,14 +34,19 @@ def homepage(request):
 	# How many to show?
 	count = 12 if not settings.DEBUG else 100
 
-	# Actually show recent campaigns + top performing campaigns.
+	# Actually show recent campaigns (with some activity) + top performing campaigns.
 	#
 	# To efficiently query top performing campaigns we order by the sum of total_pledged (which only contains
 	# Pledges made prior to trigger execution) and total_contributions (which only exists after the trigger
 	# has been executed), since we don't have a field that just counts a simple total (ugh).
+	open_campaigns = open_campaigns\
+		.annotate(total=Sum('contrib_triggers__total_pledged')+Sum('contrib_triggers__execution__total_contributions'))\
+		.exclude(total=None) # no Trigger associated with the Campaign
 	open_campaigns = set( # uniqify
-		  list(open_campaigns.order_by('-created')[0:count]) \
-		+ list(open_campaigns.annotate(total = Sum('contrib_triggers__total_pledged')+Sum('contrib_triggers__execution__total_contributions')).exclude(total=None).order_by("-total")[0:10])
+		c for c in 
+		  list(open_campaigns.order_by('-created')[0:count])
+		+ list(open_campaigns.order_by("-total")[0:count])
+		if c.total > 0
 		)
 	if len(open_campaigns) > 0:
 		# Order by a mix of recency and popularity. Prefer recency a bit.
