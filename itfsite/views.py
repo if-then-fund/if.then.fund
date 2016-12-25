@@ -443,11 +443,12 @@ def update_automatic_campaign_from_trigger(trigger):
 	from contrib.models import TriggerStatus
 	from itfsite.utils import TextFormat
 	from django.template.defaultfilters import slugify
+	from django.utils.text import Truncator
 	campaign.title = trigger.title
 	campaign.slug = slugify(trigger.title)
 	campaign.subhead = trigger.extra['auto-campaign-subhead']
 	campaign.subhead_format = TextFormat.Markdown
-	campaign.headline = trigger.extra['auto-campaign-headline']
+	campaign.headline = Truncator(trigger.extra['auto-campaign-headline']).chars(256)
 	campaign.body_text = trigger.description
 	campaign.body_format = trigger.description_format
 	campaign.status = CampaignStatus.Open
