@@ -63,8 +63,8 @@ EMAIL_CONFIRM_LA_CONFIRM_EXPIRE_SEC = 60 * 60 * 24 * 7  # 7 days (once it expire
 
 SITE_MODE = environment.get("mode")
 DE_API = environment.get('democracyengine') if "NO_DE" not in os.environ else {}
-CDYNE_API_KEY = environment['cdyne_key']
-FACEBOOK_ACCESS_TOKEN = environment['facebook_access_token']
+CDYNE_API_KEY = environment.get('cdyne_key')
+FACEBOOK_ACCESS_TOKEN = environment.get('facebook_access_token')
 VOTERVOICE_API_KEY = environment.get('votervoice', {}).get('api_key')
 VOTERVOICE_ASSOCIATION = environment.get('votervoice', {}).get('association')
 CURRENT_ELECTION_CYCLE = 2016
