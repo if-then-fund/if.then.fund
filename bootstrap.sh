@@ -108,20 +108,7 @@ if [ "$1" == "--local" ]; then
 fi
 
 # Install dependencies.
-$PIP install --upgrade \
-	"pytz" \
-	"django==1.9.7" \
-	"python3-memcached" \
-	"requests==2.6.0" \
-	"markdown2" \
-	"jsonfield" \
-	"django-bootstrap3" \
-	"tqdm==1.0" \
-	"rtyaml" \
-	"email-validator==1.0.1" \
-	"git+https://github.com/JoshData/commonmark-py-plaintext" "git+https://github.com/if-then-fund/django-html-emailer" \
-	"django-enumfields"
-
+$PIP install --upgrade -r requirements.txt
 $PIP install -r \
 	ext/django-email-confirm-la/requirements.txt
 
