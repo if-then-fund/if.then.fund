@@ -914,6 +914,9 @@ class Pledge(models.Model):
 			}
 			pe.save()
 
+			# We may have stored credit leftover.
+			extra_credit = pledge.amount - total_charge
+
 			# Create Contribution objects.
 			for action, recipient_type, recipient, amount in recip_contribs:
 				c = Contribution()

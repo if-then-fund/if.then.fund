@@ -55,10 +55,12 @@ def create_de_donation_basic_dict(pledge):
 	}
 
 def run_authorization_test(pledge, ccnum, cccvc, aux_data):
-	# Runs an authorization test at the time the user is making a pledge,
-	# which tests the card info and also gets a credit card token that
-	# can be used later to make a real charge without other billing
-	# details.
+	# Runs a store credit Deposit Donation at the time the user is making a pledge
+	# if the trigger is unexecuted, which charges the card the full amount of the
+	# pledge and also gets a token that can be used later to distribute the funds
+	# when the trigger is executed. OR, runs an authorization test if the trigger
+	# is executed, and gets a token that can be used to reference this payment info
+	# later.
 
 	# Logging.
 	aux_data.update({
@@ -73,18 +75,27 @@ def run_authorization_test(pledge, ccnum, cccvc, aux_data):
 	# Basic contributor details.
 	de_don_req = create_de_donation_basic_dict(pledge)
 
+	# Distinguish between a store credit Deposit Donation call and an Authorization test
+	if pledge.made_after_trigger_execution:
+		de_don_req.update({
+			"authtest_request": True,
+			})
+	else: # Charge the full amount to be distributed later
+		de_don_req.update({
+			"store_credit_deposit_amount": pledge.amount,
+			"store_credit_deposit_token": None, # It's possible Python's None will be different than DE, so this may cause a problem.
+			})
+
 	# Add billing details.
 	de_don_req.update({
-		"authtest_request":  True,
-		"token_request": True,
-
 		# billing details
+		"token_request": True,
 		"cc_number": ccnum,
 		"cc_month": pledge.profile.extra['billing']['cc_exp_month'],
 		"cc_year": pledge.profile.extra['billing']['cc_exp_year'],
 		"cc_verification_value": cccvc,
 
-		# no line items are necessary for an authorization test
+		# no line items are necessary for a deposit donation
 		"line_items": [],
 
 		# tracking info, which for an auth test stays private?
@@ -104,6 +115,10 @@ def run_authorization_test(pledge, ccnum, cccvc, aux_data):
 	# into the pledge.
 	pledge.profile.extra['billing']['authorization'] = de_txn
 	pledge.profile.extra['billing']['de_cc_token'] = de_txn['token']
+	if pledge.made_after_trigger_execution:
+		pledge.profile.extra['billing']['de_deposit_token'] = None
+	else:
+		pledge.profile.extra['billing']['de_deposit_token'] = de_txn['store_credit_deposit_token']
 
 def get_pledge_recipient_breakdown(trigger):
 	# Compute how many recipients there are in each category for a hypothetical
@@ -361,11 +376,21 @@ def create_pledge_donation(pledge, recipients):
 			})
 
 	# Prepare the donation record for authorization & capture.
-	de_don_req = create_de_donation_basic_dict(pledge)
+	# If we don't have a store credit token, make a normal donation.
+	if pledge.profile.extra['billing']['de_deposit_token'] == None:
+		de_don_req = create_de_donation_basic_dict(pledge)
+		de_don_req.update({
+			# billing info
+			"token": pledge.profile.extra['billing']['de_cc_token'],
+			})
+	else: # if we do, make a store credit withdrawal donation
+		de_don_req = {"payment_method": "store_credit"}
+		de_don_req.update({
+			# billing info
+			"token": pledge.profile.extra['billing']['de_deposit_token'],
+			})
+	# Now fill in line items
 	de_don_req.update({
-		# billing info
-		"token": pledge.profile.extra['billing']['de_cc_token'],
-
 		# line items
 		"line_items": line_items,
 
