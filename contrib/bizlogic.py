@@ -56,11 +56,9 @@ def create_de_donation_basic_dict(pledge):
 
 def run_authorization_test(pledge, ccnum, cccvc, aux_data):
 	# Runs a store credit Deposit Donation at the time the user is making a pledge
-	# if the trigger is unexecuted, which charges the card the full amount of the
-	# pledge and also gets a token that can be used later to distribute the funds
-	# when the trigger is executed. OR, runs an authorization test if the trigger
-	# is executed, and gets a token that can be used to reference this payment info
-	# later.
+	# which charges the card the full amount of the pledge if the trigger is unexecuted
+	# and also gets a token that can be used later to withdraw and distribute the funds
+	# when the trigger is executed. Also gets a cc token to be used for future deposits.
 
 	# Logging.
 	aux_data.update({
@@ -75,21 +73,24 @@ def run_authorization_test(pledge, ccnum, cccvc, aux_data):
 	# Basic contributor details.
 	de_don_req = create_de_donation_basic_dict(pledge)
 
-	# Distinguish between a store credit Deposit Donation call and an Authorization test
+	# If the trigger is already executed, we compute the correct amount to charge.
 	if pledge.made_after_trigger_execution:
+		recipients = get_pledge_recipients(pledge)
+		recip_contribs, fees, total_charge = compute_charge(pledge, recipients)
 		de_don_req.update({
-			"authtest_request": True,
+			"store_credit_deposit_amount": str(total_charge),
 			})
 	else: # Charge the full amount to be distributed later
 		de_don_req.update({
-			"store_credit_deposit_amount": pledge.amount,
-			"store_credit_deposit_token": None, # It's possible Python's None will be different than DE, so this may cause a problem.
+			"store_credit_deposit_amount": str(pledge.amount),
 			})
 
 	# Add billing details.
 	de_don_req.update({
-		# billing details
+		"store_credit_deposit_token": None, # It's possible Python's None will be different than DE, so this may cause a problem.
 		"token_request": True,
+
+		# billing details
 		"cc_number": ccnum,
 		"cc_month": pledge.profile.extra['billing']['cc_exp_month'],
 		"cc_year": pledge.profile.extra['billing']['cc_exp_year'],
@@ -115,10 +116,7 @@ def run_authorization_test(pledge, ccnum, cccvc, aux_data):
 	# into the pledge.
 	pledge.profile.extra['billing']['authorization'] = de_txn
 	pledge.profile.extra['billing']['de_cc_token'] = de_txn['token']
-	if pledge.made_after_trigger_execution:
-		pledge.profile.extra['billing']['de_deposit_token'] = None
-	else:
-		pledge.profile.extra['billing']['de_deposit_token'] = de_txn['store_credit_deposit_token']
+	pledge.profile.extra['billing']['de_deposit_token'] = de_txn['store_credit_deposit_token']
 
 def get_pledge_recipient_breakdown(trigger):
 	# Compute how many recipients there are in each category for a hypothetical
