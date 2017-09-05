@@ -36,6 +36,7 @@ class Command(BaseCommand):
 		# Pre-load all of the Democracy Engine recipients and build a map.
 		de_recips = DemocracyEngineAPI.recipients()
 		de_recips = { r['recipient_id']: r for r in de_recips }
+		missing_de_recips = []
 
 		# Create Actor instances.
 		seen_actors = set()
@@ -103,6 +104,7 @@ class Command(BaseCommand):
 			de_id = "p_%d" % actor.govtrack_id
 			if de_id not in de_recips:
 				self.stdout.write('Missing recipient %s for %s!' % (de_id, actor.name_long))
+				missing_de_recips.append([de_id, actor.name_long, ";".join(p["id"].get("fec", []))])
 				continue
 			else:
 				recipient, is_new = Recipient.objects.get_or_create(
@@ -136,7 +138,12 @@ class Command(BaseCommand):
 						party=party,
 						defaults={ "de_id": de_id }
 						)
-					actor.challenger = recipient
+					for a in Actor.objects.filter(challenger=recipient).exclude(id=actor.id):
+						self.stdout.write('Un-linked challenger recipient for %s (was %s).' %
+							(a.name_long, a.challenger))
+						a.challenger = None
+						a.save()
+					actor.challenger = recipient # is unique so must delink from other actors
 					actor.save()
 					self.stdout.write('%s challenger recipient for %s (%s).' %
 						("Created" if is_new else "Associated", actor.name_long, de_id))
@@ -152,6 +159,13 @@ class Command(BaseCommand):
 			actor.office = None
 			actor.challenger = None
 			actor.save()
+
+		# Make a table of needed DE updates.
+		if len(missing_de_recips) > 0:
+			import csv, sys
+			w = csv.writer(sys.stdout)
+			w.writerow(["de_id", "name", "fec_ids"])
+			for r in missing_de_recips: w.writerow(r)
 
 	def update_recipient_active(self, recipient, de_recips):
 		active = (de_recips[recipient.de_id]['status'] == 'active')
